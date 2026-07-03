@@ -1,0 +1,50 @@
+{
+  "id": "alaska",
+  "name": "Alaska",
+  "style": "retro-funny",
+  "studio": "TripperDeeLabs",
+  "status": "template-region",
+  "stages": [
+    {
+      "id": "midnight_sun_run",
+      "name": "Midnight Sun Run",
+      "season": "midnight_sun",
+      "boss": "Sunburn Sprite",
+      "placeholders": ["background_midnight_sun.svg", "gate_antlers.svg"]
+    },
+    {
+      "id": "salmon_rush",
+      "name": "Salmon Rush",
+      "season": "summer",
+      "boss": "Salmon Boss",
+      "placeholders": ["hazard_salmon.svg", "background_midnight_sun.svg"]
+    },
+    {
+      "id": "moose_pass",
+      "name": "Moose Pass",
+      "season": "summer",
+      "boss": "Moose Boss",
+      "placeholders": ["hazard_moose.svg", "gate_antlers.svg"]
+    },
+    {
+      "id": "dark_winter",
+      "name": "Dark Winter",
+      "season": "darkness",
+      "boss": "Darkness Boss",
+      "placeholders": ["background_dark_winter.svg"]
+    },
+    {
+      "id": "bear_country",
+      "name": "Bear Country",
+      "season": "winter",
+      "boss": "Bear Boss",
+      "placeholders": ["hazard_bear.svg", "background_dark_winter.svg"]
+    }
+  ],
+  "deathLines": [
+    "Alaska remains undefeated.",
+    "Blame the moose.",
+    "Almost tourist-proof.",
+    "Certified chaos legend."
+  ]
+}
