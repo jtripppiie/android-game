@@ -36,6 +36,7 @@ public class MooseRushView extends View {
     private final RectF customizeButtonBounds = new RectF();
     private final RectF topHitBox = new RectF();
     private final RectF bottomHitBox = new RectF();
+    private final RectF bodyBounds = new RectF();
     private final Matrix photoMatrix = new Matrix();
 
     private PhotoRequestListener photoRequestListener;
@@ -46,6 +47,7 @@ public class MooseRushView extends View {
     private long lastFrameNanos = 0L;
     private float spawnCooldown = 0f;
     private float groundScroll = 0f;
+    private float spriteClock = 0f;
     private int score = 0;
     private int bestScore = 0;
 
@@ -105,13 +107,15 @@ public class MooseRushView extends View {
 
         if (!paused && state == STATE_RUNNING) {
             updateGame(dt);
+        } else if (!paused) {
+            spriteClock += dt * 2.5f;
         }
 
         drawWorld(canvas);
         drawHud(canvas);
 
         if (state == STATE_READY) {
-            drawCenterPanel(canvas, "YOU RUSH", "Put your face in the game.", "Tap to bounce");
+            drawCenterPanel(canvas, "YOU RUSH", "Put your face on a tiny sprite.", "Tap to bounce");
         } else if (state == STATE_GAME_OVER) {
             drawCenterPanel(canvas, "BONKED", deathLine(), "Tap to retry");
         }
@@ -147,6 +151,7 @@ public class MooseRushView extends View {
         score = 0;
         spawnCooldown = 0.65f;
         groundScroll = 0f;
+        spriteClock = 0f;
         state = STATE_RUNNING;
         playerX = getWidth() * 0.32f;
         playerY = getHeight() * 0.45f;
@@ -164,6 +169,7 @@ public class MooseRushView extends View {
 
         float gateSpeed = dp(190) + Math.min(dp(90), score * dp(4));
         float gravity = dp(1120);
+        spriteClock += dt * (5.5f + Math.min(5f, score * 0.22f));
         playerVelocityY += gravity * dt;
         playerY += playerVelocityY * dt;
         groundScroll = (groundScroll + gateSpeed * dt) % dp(48);
@@ -296,46 +302,79 @@ public class MooseRushView extends View {
     }
 
     private void drawPlayer(Canvas canvas) {
-        paint.setStyle(Paint.Style.FILL);
-        paint.setColor(Color.rgb(255, 218, 121));
-        canvas.drawOval(playerX - playerRadius * 0.95f, playerY + playerRadius * 0.2f, playerX + playerRadius * 0.95f, playerY + playerRadius * 1.22f, paint);
+        float bob = (float) Math.sin(spriteClock * Math.PI * 2f) * dp(2.5f);
+        float cycle = (float) Math.sin(spriteClock * Math.PI * 2f);
+        float headY = playerY + bob;
 
-        paint.setColor(Color.rgb(255, 177, 70));
-        canvas.drawOval(playerX - playerRadius * 1.08f, playerY + playerRadius * 0.24f, playerX - playerRadius * 0.10f, playerY + playerRadius * 0.92f, paint);
+        drawWalkingSpriteBody(canvas, headY, cycle);
 
         if (playerPhoto != null) {
-            drawPlayerPhoto(canvas);
+            drawPlayerPhoto(canvas, headY);
         } else {
-            drawDefaultPlayerHead(canvas);
+            drawDefaultPlayerHead(canvas, headY);
         }
     }
 
-    private void drawDefaultPlayerHead(Canvas canvas) {
+    private void drawWalkingSpriteBody(Canvas canvas, float headY, float cycle) {
+        float bodyTop = headY + playerRadius * 0.72f;
+        float bodyBottom = bodyTop + dp(36);
+        float bodyHalfWidth = dp(15);
+        float step = cycle * dp(11);
+        float oppositeStep = -step;
+
+        paint.setShader(null);
+        paint.setStyle(Paint.Style.FILL);
+        paint.setColor(Color.rgb(255, 218, 121));
+        bodyBounds.set(playerX - bodyHalfWidth, bodyTop, playerX + bodyHalfWidth, bodyBottom);
+        canvas.drawRoundRect(bodyBounds, dp(7), dp(7), paint);
+
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setStrokeCap(Paint.Cap.ROUND);
+        paint.setStrokeWidth(dp(5));
+        paint.setColor(Color.rgb(255, 177, 70));
+        canvas.drawLine(playerX - dp(12), bodyTop + dp(10), playerX - dp(27) - step * 0.25f, bodyTop + dp(23) + step * 0.12f, paint);
+        canvas.drawLine(playerX + dp(12), bodyTop + dp(10), playerX + dp(27) + step * 0.25f, bodyTop + dp(23) - step * 0.12f, paint);
+
+        paint.setStrokeWidth(dp(6));
+        paint.setColor(Color.rgb(52, 134, 196));
+        canvas.drawLine(playerX - dp(7), bodyBottom - dp(3), playerX - dp(15) + step, bodyBottom + dp(25), paint);
+        canvas.drawLine(playerX + dp(7), bodyBottom - dp(3), playerX + dp(15) + oppositeStep, bodyBottom + dp(25), paint);
+
+        paint.setStrokeWidth(dp(8));
+        paint.setColor(Color.rgb(43, 32, 31));
+        canvas.drawPoint(playerX - dp(15) + step, bodyBottom + dp(25), paint);
+        canvas.drawPoint(playerX + dp(15) + oppositeStep, bodyBottom + dp(25), paint);
+
+        paint.setStrokeCap(Paint.Cap.BUTT);
+        paint.setStyle(Paint.Style.FILL);
+    }
+
+    private void drawDefaultPlayerHead(Canvas canvas, float headY) {
         paint.setShader(null);
         paint.setStyle(Paint.Style.FILL);
         paint.setColor(Color.rgb(255, 192, 81));
-        canvas.drawCircle(playerX, playerY, playerRadius, paint);
+        canvas.drawRoundRect(playerX - playerRadius, headY - playerRadius, playerX + playerRadius, headY + playerRadius, dp(8), dp(8), paint);
 
         paint.setColor(Color.rgb(43, 32, 31));
-        canvas.drawCircle(playerX - playerRadius * 0.35f, playerY - playerRadius * 0.12f, dp(3), paint);
-        canvas.drawCircle(playerX + playerRadius * 0.35f, playerY - playerRadius * 0.12f, dp(3), paint);
+        canvas.drawCircle(playerX - playerRadius * 0.35f, headY - playerRadius * 0.12f, dp(3), paint);
+        canvas.drawCircle(playerX + playerRadius * 0.35f, headY - playerRadius * 0.12f, dp(3), paint);
         canvas.drawRoundRect(
                 playerX - playerRadius * 0.35f,
-                playerY + playerRadius * 0.25f,
+                headY + playerRadius * 0.25f,
                 playerX + playerRadius * 0.35f,
-                playerY + playerRadius * 0.38f,
+                headY + playerRadius * 0.38f,
                 dp(5),
                 dp(5),
                 paint
         );
     }
 
-    private void drawPlayerPhoto(Canvas canvas) {
+    private void drawPlayerPhoto(Canvas canvas, float headY) {
         float diameter = playerRadius * 2f;
         BitmapShader shader = new BitmapShader(playerPhoto, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP);
         float scale = Math.max(diameter / playerPhoto.getWidth(), diameter / playerPhoto.getHeight());
         float dx = playerX - playerPhoto.getWidth() * scale / 2f;
-        float dy = playerY - playerPhoto.getHeight() * scale / 2f;
+        float dy = headY - playerPhoto.getHeight() * scale / 2f;
         photoMatrix.reset();
         photoMatrix.setScale(scale, scale);
         photoMatrix.postTranslate(dx, dy);
@@ -343,13 +382,13 @@ public class MooseRushView extends View {
 
         paint.setShader(shader);
         paint.setStyle(Paint.Style.FILL);
-        canvas.drawCircle(playerX, playerY, playerRadius, paint);
+        canvas.drawRoundRect(playerX - playerRadius, headY - playerRadius, playerX + playerRadius, headY + playerRadius, dp(8), dp(8), paint);
         paint.setShader(null);
 
         paint.setStyle(Paint.Style.STROKE);
         paint.setStrokeWidth(dp(3));
         paint.setColor(Color.WHITE);
-        canvas.drawCircle(playerX, playerY, playerRadius, paint);
+        canvas.drawRoundRect(playerX - playerRadius, headY - playerRadius, playerX + playerRadius, headY + playerRadius, dp(8), dp(8), paint);
         paint.setStyle(Paint.Style.FILL);
     }
 
