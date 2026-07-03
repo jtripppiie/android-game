@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.view.MotionEvent;
@@ -367,12 +368,14 @@ public class MooseRushView extends View {
         paint.setColor(Color.rgb(236, 126, 72));
         canvas.drawOval(b.left + dp(10), b.top + dp(4), b.right, b.bottom - dp(4), paint);
 
+        Path tail = new Path();
+        tail.moveTo(b.left + dp(11), b.centerY());
+        tail.lineTo(b.left, b.top);
+        tail.lineTo(b.left, b.bottom);
+        tail.close();
+
         paint.setColor(Color.rgb(255, 178, 99));
-        canvas.drawPath(Triangle.fromPoints(
-                b.left + dp(11), b.centerY(),
-                b.left, b.top,
-                b.left, b.bottom
-        ), paint);
+        canvas.drawPath(tail, paint);
 
         paint.setColor(Color.rgb(28, 34, 40));
         canvas.drawCircle(b.right - dp(10), b.centerY() - dp(4), dp(3), paint);
