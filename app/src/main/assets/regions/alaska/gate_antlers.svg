@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="512" viewBox="0 0 256 512">
+  <rect width="256" height="512" fill="none"/>
+  <rect x="88" y="0" width="80" height="512" rx="24" fill="#744626"/>
+  <rect x="70" y="205" width="116" height="34" rx="12" fill="#d2ad67"/>
+  <path d="M85 205 C38 160 36 110 70 88 M171 205 C218 160 220 110 186 88" stroke="#e9d39a" stroke-width="16" stroke-linecap="round" fill="none"/>
+  <path d="M72 116 L48 92 M75 142 L45 135 M184 116 L208 92 M181 142 L211 135" stroke="#e9d39a" stroke-width="12" stroke-linecap="round" fill="none"/>
+  <text x="128" y="475" text-anchor="middle" font-family="monospace" font-size="24" fill="#ffffff">ANTLER GATE</text>
+</svg>
