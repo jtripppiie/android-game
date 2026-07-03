@@ -44,12 +44,12 @@ public class MainActivity extends Activity {
         );
 
         prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-        gameView = new MooseRushView(this);
+        gameView = new JuicyMooseRushView(this);
         gameView.setPhotoRequestListener(this::openPhotoPicker);
         setContentView(createGameRoot());
         loadSavedPlayerPhoto();
         enableImmersiveMode();
-        Log.d(TAG, "onCreate: game view attached, version badge added, immersive mode enabled");
+        Log.d(TAG, "onCreate: juicy game view attached, version badge added, immersive mode enabled");
     }
 
     @Override
