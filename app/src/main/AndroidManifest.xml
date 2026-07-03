@@ -1,6 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
         android:allowBackup="true"
+        android:icon="@drawable/ic_you_rush_launcher"
         android:label="You Rush"
         android:supportsRtl="true"
         android:theme="@android:style/Theme.Material.NoActionBar">
