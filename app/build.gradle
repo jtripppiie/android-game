@@ -4,16 +4,12 @@ plugins {
 
 android {
     namespace "com.jtripppiie.mooserush"
-    compileSdk 36
+    compileSdk 35
 
     defaultConfig {
         applicationId "com.jtripppiie.mooserush"
-
-        // Android 14 is API 34. Keeping minSdk lower means Android 14+
-        // is supported while older devices can still install the game.
         minSdk 23
-        targetSdk 36
-
+        targetSdk 35
         versionCode 1
         versionName "0.1.0"
     }
