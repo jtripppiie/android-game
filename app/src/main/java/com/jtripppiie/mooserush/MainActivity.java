@@ -4,15 +4,22 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.graphics.ImageDecoder;
+import android.graphics.Typeface;
+import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.util.TypedValue;
+import android.view.Gravity;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.FrameLayout;
+import android.widget.TextView;
 
 import java.io.IOException;
 
@@ -23,12 +30,13 @@ public class MainActivity extends Activity {
     private static final String PREF_PLAYER_PHOTO_URI = "player_photo_uri";
 
     private MooseRushView gameView;
+    private TextView versionBadge;
     private SharedPreferences prefs;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.d(TAG, "onCreate: starting You Rush debug build");
+        Log.d(TAG, "onCreate: starting You Rush " + BuildConfig.BUILD_BADGE);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(
                 WindowManager.LayoutParams.FLAG_FULLSCREEN,
@@ -38,16 +46,16 @@ public class MainActivity extends Activity {
         prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         gameView = new MooseRushView(this);
         gameView.setPhotoRequestListener(this::openPhotoPicker);
-        setContentView(gameView);
+        setContentView(createGameRoot());
         loadSavedPlayerPhoto();
         enableImmersiveMode();
-        Log.d(TAG, "onCreate: game view attached and immersive mode enabled");
+        Log.d(TAG, "onCreate: game view attached, version badge added, immersive mode enabled");
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        Log.d(TAG, "onResume: resuming game view");
+        Log.d(TAG, "onResume: resuming game view " + BuildConfig.VERSION_NAME + " code " + BuildConfig.VERSION_CODE);
         enableImmersiveMode();
         if (gameView != null) {
             gameView.resume();
@@ -90,6 +98,42 @@ public class MainActivity extends Activity {
             Log.w(TAG, "onActivityResult: failed to decode selected photo");
         }
         enableImmersiveMode();
+    }
+
+    private FrameLayout createGameRoot() {
+        FrameLayout root = new FrameLayout(this);
+        root.addView(gameView, new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+        ));
+
+        if (BuildConfig.SHOW_VERSION_BADGE) {
+            versionBadge = new TextView(this);
+            versionBadge.setText(BuildConfig.BUILD_BADGE);
+            versionBadge.setTextColor(Color.rgb(7, 22, 41));
+            versionBadge.setTextSize(TypedValue.COMPLEX_UNIT_SP, 10);
+            versionBadge.setTypeface(Typeface.DEFAULT_BOLD);
+            versionBadge.setGravity(Gravity.CENTER);
+            versionBadge.setPadding(dp(9), dp(4), dp(9), dp(4));
+
+            GradientDrawable badgeBackground = new GradientDrawable();
+            badgeBackground.setColor(Color.rgb(255, 218, 121));
+            badgeBackground.setCornerRadius(dp(14));
+            badgeBackground.setStroke(dp(1), Color.WHITE);
+            versionBadge.setBackground(badgeBackground);
+            versionBadge.setAlpha(0.92f);
+            versionBadge.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+
+            FrameLayout.LayoutParams badgeParams = new FrameLayout.LayoutParams(
+                    FrameLayout.LayoutParams.WRAP_CONTENT,
+                    FrameLayout.LayoutParams.WRAP_CONTENT,
+                    Gravity.BOTTOM | Gravity.START
+            );
+            badgeParams.setMargins(dp(12), 0, 0, dp(88));
+            root.addView(versionBadge, badgeParams);
+        }
+
+        return root;
     }
 
     private void openPhotoPicker() {
@@ -150,6 +194,10 @@ public class MainActivity extends Activity {
         int scaledHeight = Math.round(height * scale);
         Log.d(TAG, "scaleBitmapDown: scaled to " + scaledWidth + "x" + scaledHeight);
         return Bitmap.createScaledBitmap(bitmap, scaledWidth, scaledHeight, true);
+    }
+
+    private int dp(int value) {
+        return Math.round(value * getResources().getDisplayMetrics().density);
     }
 
     private void enableImmersiveMode() {
