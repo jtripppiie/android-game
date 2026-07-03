@@ -11,6 +11,7 @@ import android.graphics.Paint;
 import android.graphics.RectF;
 import android.graphics.Shader;
 import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -79,6 +80,13 @@ public class MooseRushView extends View {
     private final RectF bodyBounds = new RectF();
     private final Matrix photoMatrix = new Matrix();
 
+    private final Drawable backgroundMidnightSun;
+    private final Drawable backgroundDarkWinter;
+    private final Drawable salmonAsset;
+    private final Drawable mooseAsset;
+    private final Drawable bearAsset;
+    private final Drawable antlerGateAsset;
+
     private PhotoRequestListener photoRequestListener;
     private Bitmap playerPhoto;
     private int state = STATE_SPLASH;
@@ -111,6 +119,13 @@ public class MooseRushView extends View {
         bestScore = prefs.getInt("best_score", 0);
         selectedStage = prefs.getInt("selected_stage", 0);
         selectedSeason = prefs.getInt("selected_season", 2);
+
+        backgroundMidnightSun = context.getDrawable(R.drawable.placeholder_background_midnight_sun);
+        backgroundDarkWinter = context.getDrawable(R.drawable.placeholder_background_dark_winter);
+        salmonAsset = context.getDrawable(R.drawable.placeholder_hazard_salmon);
+        mooseAsset = context.getDrawable(R.drawable.placeholder_hazard_moose);
+        bearAsset = context.getDrawable(R.drawable.placeholder_hazard_bear);
+        antlerGateAsset = context.getDrawable(R.drawable.placeholder_gate_antlers);
 
         textPaint.setColor(Color.WHITE);
         textPaint.setTypeface(Typeface.DEFAULT_BOLD);
@@ -508,45 +523,17 @@ public class MooseRushView extends View {
     }
 
     private void drawAlaskaBackdrop(Canvas canvas) {
-        int width = getWidth();
-        int height = getHeight();
         boolean dark = selectedSeason == 3 || selectedStage == 3;
         boolean winter = selectedSeason == 1 || selectedStage == 3 || selectedStage == 4;
+        Drawable background = dark || winter ? backgroundDarkWinter : backgroundMidnightSun;
+        if (background != null) {
+            drawDrawable(canvas, background, 0, 0, getWidth(), getHeight());
+            return;
+        }
 
         paint.setStyle(Paint.Style.FILL);
         paint.setColor(dark ? Color.rgb(8, 18, 36) : Color.rgb(25, 43, 68));
-        canvas.drawRect(0, 0, width, height, paint);
-
-        if (dark) {
-            paint.setColor(Color.rgb(94, 220, 169));
-            canvas.drawOval(width * 0.10f, height * 0.10f, width * 0.92f, height * 0.24f, paint);
-            paint.setColor(Color.rgb(8, 18, 36));
-            canvas.drawOval(width * 0.10f, height * 0.13f, width * 0.92f, height * 0.28f, paint);
-        } else {
-            paint.setColor(selectedSeason == 2 ? Color.rgb(245, 205, 92) : Color.rgb(240, 210, 108));
-            canvas.drawCircle(width - dp(58), dp(70), selectedSeason == 2 ? dp(34) : dp(24), paint);
-        }
-
-        paint.setColor(winter ? Color.rgb(218, 235, 238) : Color.rgb(38, 82, 92));
-        drawMountain(canvas, -dp(30), height * 0.50f, width * 0.38f, height * 0.22f);
-        drawMountain(canvas, width * 0.18f, height * 0.53f, width * 0.70f, height * 0.20f);
-        drawMountain(canvas, width * 0.54f, height * 0.51f, width + dp(40), height * 0.23f);
-
-        paint.setColor(Color.rgb(232, 242, 245));
-        drawMountain(canvas, width * 0.22f, height * 0.52f, width * 0.48f, height * 0.35f);
-
-        paint.setColor(winter ? Color.rgb(230, 239, 240) : Color.rgb(33, 92, 70));
-        canvas.drawRect(0, getGroundY() - dp(24), width, getGroundY(), paint);
-    }
-
-    private void drawMountain(Canvas canvas, float left, float baseY, float right, float peakY) {
-        float mid = (left + right) / 2f;
-        android.graphics.Path path = new android.graphics.Path();
-        path.moveTo(left, baseY);
-        path.lineTo(mid, peakY);
-        path.lineTo(right, baseY);
-        path.close();
-        canvas.drawPath(path, paint);
+        canvas.drawRect(0, 0, getWidth(), getHeight(), paint);
     }
 
     private void drawGround(Canvas canvas, int width) {
@@ -566,51 +553,26 @@ public class MooseRushView extends View {
         float topBottom = gate.gapCenter - gate.gapHeight / 2f;
         float bottomTop = gate.gapCenter + gate.gapHeight / 2f;
 
+        if (antlerGateAsset != null) {
+            drawDrawable(canvas, antlerGateAsset, gate.x, -dp(20), gate.x + gate.width, topBottom + dp(12));
+            drawDrawable(canvas, antlerGateAsset, gate.x, bottomTop - dp(12), gate.x + gate.width, getGroundY());
+            return;
+        }
+
         paint.setStyle(Paint.Style.FILL);
-        paint.setColor(selectedStage == 2 ? Color.rgb(92, 65, 48) : Color.rgb(104, 62, 36));
+        paint.setColor(Color.rgb(104, 62, 36));
         canvas.drawRoundRect(gate.x, -dp(20), gate.x + gate.width, topBottom, dp(14), dp(14), paint);
         canvas.drawRoundRect(gate.x, bottomTop, gate.x + gate.width, getGroundY(), dp(14), dp(14), paint);
-
-        paint.setColor(selectedStage == 2 ? Color.rgb(224, 217, 188) : Color.rgb(210, 173, 103));
-        canvas.drawRoundRect(gate.x - dp(8), topBottom - dp(18), gate.x + gate.width + dp(8), topBottom + dp(7), dp(8), dp(8), paint);
-        canvas.drawRoundRect(gate.x - dp(8), bottomTop - dp(7), gate.x + gate.width + dp(8), bottomTop + dp(18), dp(8), dp(8), paint);
-
-        paint.setStrokeWidth(dp(3));
-        paint.setStyle(Paint.Style.STROKE);
-        paint.setColor(Color.rgb(232, 196, 123));
-        canvas.drawLine(gate.x + dp(12), topBottom - dp(18), gate.x - dp(4), topBottom - dp(36), paint);
-        canvas.drawLine(gate.x + gate.width - dp(12), topBottom - dp(18), gate.x + gate.width + dp(4), topBottom - dp(36), paint);
-        canvas.drawLine(gate.x + dp(12), bottomTop + dp(18), gate.x - dp(4), bottomTop + dp(36), paint);
-        canvas.drawLine(gate.x + gate.width - dp(12), bottomTop + dp(18), gate.x + gate.width + dp(4), bottomTop + dp(36), paint);
-        paint.setStyle(Paint.Style.FILL);
     }
 
     private void drawBoss(Canvas canvas) {
+        Drawable bossDrawable = bossDrawableForStage();
         float radius = bossRadius();
-        paint.setStyle(Paint.Style.FILL);
-        paint.setColor(Color.rgb(255, 218, 121));
-        canvas.drawCircle(bossX, bossY, radius + dp(6), paint);
-
-        if (selectedStage == 1) {
-            paint.setColor(Color.rgb(228, 96, 76));
-            canvas.drawOval(bossX - radius * 1.2f, bossY - radius * 0.55f, bossX + radius * 1.2f, bossY + radius * 0.55f, paint);
-            paint.setColor(Color.WHITE);
-            canvas.drawCircle(bossX + radius * 0.55f, bossY - radius * 0.12f, dp(4), paint);
-        } else if (selectedStage == 2) {
-            paint.setColor(Color.rgb(116, 75, 46));
-            canvas.drawCircle(bossX, bossY, radius, paint);
-            paint.setStrokeWidth(dp(5));
-            paint.setStyle(Paint.Style.STROKE);
-            canvas.drawLine(bossX - radius * 0.55f, bossY - radius * 0.8f, bossX - radius * 1.25f, bossY - radius * 1.35f, paint);
-            canvas.drawLine(bossX + radius * 0.55f, bossY - radius * 0.8f, bossX + radius * 1.25f, bossY - radius * 1.35f, paint);
-            paint.setStyle(Paint.Style.FILL);
-        } else if (selectedStage == 4) {
-            paint.setColor(Color.rgb(73, 48, 35));
-            canvas.drawCircle(bossX, bossY, radius, paint);
-            canvas.drawCircle(bossX - radius * 0.58f, bossY - radius * 0.65f, radius * 0.34f, paint);
-            canvas.drawCircle(bossX + radius * 0.58f, bossY - radius * 0.65f, radius * 0.34f, paint);
+        if (bossDrawable != null) {
+            drawDrawable(canvas, bossDrawable, bossX - radius * 1.25f, bossY - radius * 1.25f, bossX + radius * 1.25f, bossY + radius * 1.25f);
         } else {
-            paint.setColor(Color.rgb(94, 220, 169));
+            paint.setStyle(Paint.Style.FILL);
+            paint.setColor(Color.rgb(255, 218, 121));
             canvas.drawCircle(bossX, bossY, radius, paint);
         }
 
@@ -618,6 +580,19 @@ public class MooseRushView extends View {
         textPaint.setTextSize(dp(13));
         textPaint.setColor(Color.WHITE);
         canvas.drawText(ALASKA_BOSSES[selectedStage], getWidth() / 2f, dp(104), textPaint);
+    }
+
+    private Drawable bossDrawableForStage() {
+        if (selectedStage == 1) {
+            return salmonAsset;
+        }
+        if (selectedStage == 2) {
+            return mooseAsset;
+        }
+        if (selectedStage == 4) {
+            return bearAsset;
+        }
+        return null;
     }
 
     private void drawCharacter(Canvas canvas, float x, float y, float radius) {
@@ -677,15 +652,7 @@ public class MooseRushView extends View {
         paint.setColor(Color.rgb(43, 32, 31));
         canvas.drawCircle(x - radius * 0.35f, headY - radius * 0.12f, dp(3), paint);
         canvas.drawCircle(x + radius * 0.35f, headY - radius * 0.12f, dp(3), paint);
-        canvas.drawRoundRect(
-                x - radius * 0.35f,
-                headY + radius * 0.25f,
-                x + radius * 0.35f,
-                headY + radius * 0.38f,
-                dp(5),
-                dp(5),
-                paint
-        );
+        canvas.drawRoundRect(x - radius * 0.35f, headY + radius * 0.25f, x + radius * 0.35f, headY + radius * 0.38f, dp(5), dp(5), paint);
     }
 
     private void drawPlayerPhoto(Canvas canvas, float x, float headY, float radius) {
@@ -725,7 +692,35 @@ public class MooseRushView extends View {
         textPaint.setTextSize(dp(13));
         canvas.drawText(ALASKA_STAGES[selectedStage], dp(18), dp(32), textPaint);
 
+        if (BuildConfig.DEBUG) {
+            drawDebugOverlay(canvas);
+        }
+
         textPaint.setTextAlign(Paint.Align.CENTER);
+    }
+
+    private void drawDebugOverlay(Canvas canvas) {
+        paint.setStyle(Paint.Style.FILL);
+        paint.setColor(Color.argb(150, 0, 0, 0));
+        canvas.drawRoundRect(dp(12), dp(46), dp(190), dp(122), dp(8), dp(8), paint);
+
+        textPaint.setTextAlign(Paint.Align.LEFT);
+        textPaint.setTextSize(dp(11));
+        textPaint.setColor(Color.rgb(255, 218, 121));
+        canvas.drawText("DEBUG", dp(22), dp(65), textPaint);
+        textPaint.setColor(Color.WHITE);
+        canvas.drawText("state=" + stateName(), dp(22), dp(82), textPaint);
+        canvas.drawText("stage=" + ALASKA_STAGES[selectedStage], dp(22), dp(99), textPaint);
+        canvas.drawText("boss=" + bossActive + " score=" + score, dp(22), dp(116), textPaint);
+    }
+
+    private String stateName() {
+        if (state == STATE_SPLASH) return "splash";
+        if (state == STATE_MENU) return "menu";
+        if (state == STATE_MAP) return "map";
+        if (state == STATE_CUSTOMIZE) return "customize";
+        if (state == STATE_RUNNING) return "running";
+        return "game_over";
     }
 
     private void drawGameOverPanel(Canvas canvas) {
@@ -798,6 +793,11 @@ public class MooseRushView extends View {
         textPaint.setTextSize(dp(12));
         textPaint.setColor(Color.WHITE);
         canvas.drawText(label, bounds.centerX(), bounds.centerY() + dp(4), textPaint);
+    }
+
+    private void drawDrawable(Canvas canvas, Drawable drawable, float left, float top, float right, float bottom) {
+        drawable.setBounds(Math.round(left), Math.round(top), Math.round(right), Math.round(bottom));
+        drawable.draw(canvas);
     }
 
     private void setButton(RectF bounds, float centerY, float width, float height) {
