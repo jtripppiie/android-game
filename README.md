@@ -14,6 +14,7 @@ This is the first playable seed of the viral loop. The goal is not complexity ye
 - Full-screen portrait gameplay
 - One-tap bounce controls
 - Uploaded photo as the player head
+- Generated walking-sprite body with animated arms/legs
 - Saved player photo URI when Android grants persistent access
 - Procedural gap/gate spawning
 - Collision detection
@@ -44,6 +45,12 @@ A viral mobile game needs an instantly understandable loop:
 2. One goal: pass the next gap.
 3. One emotional hook: that is *my* face getting bonked.
 4. One restart action: tap again.
+
+## Personalization direction
+
+The current MVP uses a practical sprite illusion: the uploaded photo becomes the character face, and the game generates a tiny animated body underneath it. That avoids heavy AI processing while still making the character feel personal.
+
+Later versions can add real photo cutout, crop/position controls, outfit selection, and shareable animated death cards.
 
 ## Next development steps
 
