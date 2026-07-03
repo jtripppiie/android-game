@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <rect width="256" height="256" fill="none"/>
+  <circle cx="80" cy="78" r="26" fill="#4b3124"/>
+  <circle cx="176" cy="78" r="26" fill="#4b3124"/>
+  <circle cx="128" cy="124" r="74" fill="#5e3d2d"/>
+  <circle cx="104" cy="116" r="7" fill="#111111"/>
+  <circle cx="152" cy="116" r="7" fill="#111111"/>
+  <ellipse cx="128" cy="145" rx="28" ry="20" fill="#c49a78"/>
+  <circle cx="128" cy="138" r="7" fill="#111111"/>
+  <path d="M105 160 Q128 178 151 160" stroke="#111111" stroke-width="6" stroke-linecap="round" fill="none"/>
+  <text x="128" y="235" text-anchor="middle" font-family="monospace" font-size="22" fill="#ffffff">BEAR</text>
+</svg>
