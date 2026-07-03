@@ -1,33 +1,61 @@
 # You Rush
 
-A personalized, Flappy Bird-style Android arcade prototype: upload a photo, become the player, tap to bounce, dodge chaos gates, fail fast, and retry immediately.
+A personalized, retro-funny Android arcade game by **TripperDeeLabs**.
+
+Upload your photo, become the tiny chaos character, pick a region, and survive local nonsense.
 
 ## Prototype status
 
 This is the first playable seed of the viral loop. The goal is not complexity yet. The goal is to prove the addictive core:
 
-> Add your face. Tap. Bonk. Retry.
+> Add your face. Pick a place. Get bonked. Retry.
 
-### Currently included
+## Current direction
 
-- Native Android Java app
-- Full-screen portrait gameplay
-- One-tap bounce controls
-- Uploaded photo as the player head
-- Generated walking-sprite body with animated arms and legs
-- Saved player photo URI when Android grants persistent access
-- Procedural gap and gate spawning
-- Collision detection
-- Score counter
-- Saved best score
-- Fast tap-to-restart loop
-- No ads, no account system, no network dependency
+The first region is **Alaska**. Alaska is also the template for how future regions should work.
 
-## Build
+Each region should eventually include:
 
-Open the repo in Android Studio and run the `app` configuration on an Android device or emulator.
+- A regional map
+- Seasonal or environment variants
+- Local obstacle placeholders
+- Local boss placeholders
+- Regional death jokes
+- A short stage progression
 
-The project uses Android Gradle Plugin `9.2.0`, `compileSdk 36`, and `targetSdk 36`.
+## Current game flow
+
+The app now has a full early game shell:
+
+1. **Splash screen**
+   - TripperDeeLabs retro boot-up vibe
+   - You Rush: Alaska identity
+
+2. **Main menu**
+   - Play selected Alaska stage
+   - Open Alaska map
+   - Open customization
+
+3. **Alaska map**
+   - Midnight Sun Run
+   - Salmon Rush
+   - Moose Pass
+   - Dark Winter
+   - Bear Country
+
+4. **Customization screen**
+   - Add or change player photo
+   - Preview the generated walking-sprite character
+   - Cycle season style
+
+5. **Gameplay**
+   - One-tap bounce controls
+   - Uploaded photo as the player head
+   - Generated walking-sprite body with animated arms and legs
+   - Alaska stage label in the HUD
+   - Gates and collision
+   - Placeholder boss phase
+   - Game-over retry loop
 
 ## Android compatibility
 
@@ -43,35 +71,51 @@ Android 14 is API level 34. Because the app minimum SDK is below 34 and the targ
 
 If the product decision changes to Android 14 only, set `minSdk 34` in `app/build.gradle`.
 
-## Game direction
+## Build
 
-The stronger product is not just an Alaska runner. It is a personal chaos game.
+Open the repo in Android Studio and run the `app` configuration on an Android device or emulator.
+
+The project uses Android Gradle Plugin `9.2.0`, `compileSdk 36`, and `targetSdk 36`.
+
+## Why this direction
+
+The stronger product is not just a runner. It is a personal chaos game.
 
 The $1.99 pitch:
 
-> A tiny arcade game starring you. Upload your face, dodge ridiculous chaos, and chase one more point. No ads. No in-app purchases.
-
-## Why this direction
+> A tiny arcade game starring you. Upload your face, dodge ridiculous local chaos, and chase one more point. No ads. No in-app purchases.
 
 A viral mobile game needs an instantly understandable loop:
 
 1. One input: tap.
-2. One goal: pass the next gap.
+2. One goal: survive the next obstacle.
 3. One emotional hook: that is my face getting bonked.
 4. One restart action: tap again.
 
-## Personalization direction
+## Alaska template
 
-The current MVP uses a practical sprite illusion: the uploaded photo becomes the character face, and the game generates a tiny animated body underneath it. That avoids heavy AI processing while still making the character feel personal.
+Alaska should prove the structure before other regions are added.
 
-Later versions can add real photo cutout, crop and position controls, outfit selection, and shareable animated death cards.
+Stage ideas:
+
+1. **Midnight Sun Run** - bright intro stage
+2. **Salmon Rush** - salmon chaos and flying-fish jokes
+3. **Moose Pass** - moose/antler hazard style
+4. **Dark Winter** - darker visual mode
+5. **Bear Country** - bear boss moment
+
+Future regions can copy this pattern:
+
+- Florida: gators, golf carts, storms, flamingos
+- Michigan: potholes, deer, snowplows, lake waves
+- City: manhole covers, pigeons, taxis, traffic cones
 
 ## Next development steps
 
-1. Add crop and position controls for the uploaded photo.
-2. Add a one-tap share card after game over.
-3. Add themed chaos packs: Alaska, Office, School, Family, Pets.
-4. Let users rename hazards, such as Boss, Homework, or Monday.
-5. Add sound effects and haptics.
-6. Add daily challenge seeds.
-7. Tune gravity, flap strength, gap size, and spawn pacing on a real device.
+1. Test the new shell on a real Android 14 device or emulator.
+2. Tune the Alaska map flow and touch targets.
+3. Replace placeholder bosses with better Alaska attack patterns.
+4. Add crop and position controls for the uploaded photo.
+5. Add one-tap share card after game over.
+6. Add real placeholder art files once the shell feels good.
+7. Create the second region only after Alaska feels fun.
