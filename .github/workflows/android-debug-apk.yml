@@ -24,12 +24,12 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v4
         with:
-          packages: 'platform-tools platforms;android-36 build-tools;36.0.0'
+          packages: 'platform-tools platforms;android-35 build-tools;35.0.0'
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: current
+          gradle-version: '8.10.2'
 
       - name: Print debug environment
         run: |
@@ -38,12 +38,28 @@ jobs:
           sdkmanager --list_installed
 
       - name: Build debug APK
-        run: gradle assembleDebug --stacktrace --info
+        run: |
+          mkdir -p build/ci-logs
+          set +e
+          gradle assembleDebug --stacktrace --warning-mode all 2>&1 | tee build/ci-logs/debug-apk-build.log
+          status=${PIPESTATUS[0]}
+          echo "Gradle exit status: ${status}"
+          exit ${status}
 
       - name: Upload debug APK
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: you-rush-alaska-debug-apk
           path: app/build/outputs/apk/debug/*.apk
-          if-no-files-found: error
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Upload build logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: you-rush-alaska-build-logs
+          path: build/ci-logs/*.log
+          if-no-files-found: warn
           retention-days: 14
