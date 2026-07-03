@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+  <rect width="1280" height="720" fill="#1b4565"/>
+  <circle cx="1090" cy="115" r="72" fill="#ffd96b"/>
+  <polygon points="-80,520 220,210 520,520" fill="#285c67"/>
+  <polygon points="290,520 640,170 990,520" fill="#32717b"/>
+  <polygon points="760,520 1060,230 1360,520" fill="#285c67"/>
+  <polygon points="545,265 640,170 735,265" fill="#eef7f8"/>
+  <rect x="0" y="520" width="1280" height="200" fill="#2f8559"/>
+  <text x="640" y="650" text-anchor="middle" font-family="monospace" font-size="44" fill="#ffffff">PLACEHOLDER: MIDNIGHT SUN BACKGROUND</text>
+</svg>
