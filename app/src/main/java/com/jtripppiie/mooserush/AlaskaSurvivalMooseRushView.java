@@ -14,24 +14,15 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-/**
- * Alaska-specific survival prototype layer.
- *
- * Adds first-pass survival mechanics on top of the existing Alaska runner
- * without rewriting the full core gameplay file yet.
- *
- * Prototype behavior:
- * - A tree is visible in the left/middle play lane.
- * - Tap CLIMB TREE when available to move the player to a branch briefly.
- * - While climbing, the wrapper pins the private player coordinates through
- *   reflection so normal hazard collision uses the branch position.
- * - Snowballs can now interact with normal hazards, not only bosses.
- */
 public class AlaskaSurvivalMooseRushView extends JuicyMooseRushView {
     private static final String TAG = "YouRushSurvival";
     private static final float CLIMB_SECONDS = 2.65f;
     private static final float CLIMB_COOLDOWN_SECONDS = 4.25f;
     private static final float POPUP_LIFETIME_SECONDS = 0.95f;
+    private static final float CLIMB_RANGE_DP = 108f;
+    private static final float TREE_PRESSURE_RANGE_DP = 155f;
+    private static final float TREE_SHAKE_SECONDS = 0.42f;
+    private static final float TREE_EVENT_COOLDOWN_SECONDS = 0.62f;
 
     private final Paint survivalPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final RectF climbButtonBounds = new RectF();
@@ -50,6 +41,8 @@ public class AlaskaSurvivalMooseRushView extends JuicyMooseRushView {
     private float climbTimer = 0f;
     private float climbCooldown = 0f;
     private float treePulse = 0f;
+    private float treeShakeTimer = 0f;
+    private float treeEventCooldown = 0f;
     private boolean reflectionReady = false;
     private boolean interactionReflectionReady = false;
     private boolean interactionReflectionWarningLogged = false;
@@ -63,6 +56,7 @@ public class AlaskaSurvivalMooseRushView extends JuicyMooseRushView {
     protected void onDraw(Canvas canvas) {
         float dt = computeDeltaSeconds();
         updateSurvival(dt);
+        applyTreePressure();
         applyTreeClimbPosition();
 
         super.onDraw(canvas);
@@ -73,7 +67,7 @@ public class AlaskaSurvivalMooseRushView extends JuicyMooseRushView {
         drawClimbStatus(canvas);
         drawSurvivalPopups(canvas);
 
-        if (climbTimer > 0f || climbCooldown > 0f || !survivalPopups.isEmpty()) {
+        if (climbTimer > 0f || climbCooldown > 0f || treeShakeTimer > 0f || !survivalPopups.isEmpty()) {
             postInvalidateOnAnimation();
         }
     }
@@ -85,8 +79,13 @@ public class AlaskaSurvivalMooseRushView extends JuicyMooseRushView {
             int index = event.getActionIndex();
             float x = event.getX(index);
             float y = event.getY(index);
-            if (canClimbNow() && climbButtonBounds.contains(x, y)) {
-                startTreeClimb();
+            if (shouldShowClimbButton() && climbButtonBounds.contains(x, y)) {
+                if (canClimbNow()) {
+                    startTreeClimb();
+                } else if (climbCooldown > 0f) {
+                    survivalPopups.add(new SurvivalPopup(treeX(), treeBranchY() - dp(42), "TREE REST"));
+                    postInvalidateOnAnimation();
+                }
                 return true;
             }
         }
@@ -136,6 +135,9 @@ public class AlaskaSurvivalMooseRushView extends JuicyMooseRushView {
 
     private void updateSurvival(float dt) {
         treePulse += dt * 3.4f;
+        treeShakeTimer = Math.max(0f, treeShakeTimer - dt);
+        treeEventCooldown = Math.max(0f, treeEventCooldown - dt);
+
         if (climbTimer > 0f) {
             climbTimer = Math.max(0f, climbTimer - dt);
             if (climbTimer == 0f) {
@@ -158,7 +160,11 @@ public class AlaskaSurvivalMooseRushView extends JuicyMooseRushView {
     }
 
     private boolean canClimbNow() {
-        return climbTimer <= 0f && climbCooldown <= 0f && isRunningState();
+        return climbTimer <= 0f && climbCooldown <= 0f && isRunningState() && isNearTree();
+    }
+
+    private boolean shouldShowClimbButton() {
+        return isRunningState() && (climbTimer > 0f || climbCooldown > 0f || isNearTree());
     }
 
     private boolean isRunningState() {
@@ -167,6 +173,17 @@ public class AlaskaSurvivalMooseRushView extends JuicyMooseRushView {
         }
         try {
             return stateField.getInt(this) == 4;
+        } catch (IllegalAccessException exception) {
+            return true;
+        }
+    }
+
+    private boolean isNearTree() {
+        if (!reflectionReady || playerXField == null) {
+            return true;
+        }
+        try {
+            return Math.abs(playerXField.getFloat(this) - treeX()) <= dp(CLIMB_RANGE_DP);
         } catch (IllegalAccessException exception) {
             return true;
         }
@@ -191,6 +208,47 @@ public class AlaskaSurvivalMooseRushView extends JuicyMooseRushView {
             playerVelocityYField.setFloat(this, 0f);
         } catch (IllegalAccessException exception) {
             Log.w(TAG, "Unable to pin player to tree branch.", exception);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void applyTreePressure() {
+        if (climbTimer <= 0f || treeEventCooldown > 0f || !interactionReflectionReady || !isRunningState()) {
+            return;
+        }
+
+        try {
+            List<Object> hazards = (List<Object>) hazardsField.get(this);
+            if (hazards == null || hazards.isEmpty()) {
+                return;
+            }
+
+            for (Object hazard : hazards) {
+                String label = getStringField(hazard, "label");
+                if (!isLargeHazard(label)) {
+                    continue;
+                }
+
+                float hazardX = getFloatField(hazard, "x");
+                float hazardY = getFloatField(hazard, "y");
+                float distanceToTree = Math.abs(hazardX - treeX());
+                boolean lowEnoughToPressureTree = hazardY > treeBranchY() - dp(18);
+
+                if (distanceToTree <= dp(TREE_PRESSURE_RANGE_DP) && lowEnoughToPressureTree) {
+                    climbTimer = Math.max(0.38f, climbTimer - 0.95f);
+                    treeShakeTimer = TREE_SHAKE_SECONDS;
+                    treeEventCooldown = TREE_EVENT_COOLDOWN_SECONDS;
+                    survivalPopups.add(new SurvivalPopup(treeX(), treeBranchY() - dp(54), "TREE HIT"));
+                    performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
+                    Log.d(TAG, "Large hazard shook tree climb.");
+                    return;
+                }
+            }
+        } catch (IllegalAccessException | NoSuchFieldException | ClassCastException exception) {
+            if (!interactionReflectionWarningLogged) {
+                interactionReflectionWarningLogged = true;
+                Log.w(TAG, "Tree pressure unavailable; core gameplay continues.", exception);
+            }
         }
     }
 
@@ -291,7 +349,8 @@ public class AlaskaSurvivalMooseRushView extends JuicyMooseRushView {
     }
 
     private void drawClimbTree(Canvas canvas) {
-        float x = treeX();
+        float shake = treeShakeOffset();
+        float x = treeX() + shake;
         float ground = getHeight() - dp(78);
         float trunkTop = treeBranchY() - dp(82);
         float trunkBottom = ground + dp(6);
@@ -319,14 +378,25 @@ public class AlaskaSurvivalMooseRushView extends JuicyMooseRushView {
             survivalPaint.setColor(Color.argb(alpha, 255, 218, 121));
             canvas.drawCircle(x, treeBranchY() - dp(8), dp(62), survivalPaint);
             survivalPaint.setStyle(Paint.Style.FILL);
+        } else if (isRunningState() && !isNearTree() && climbTimer <= 0f && climbCooldown <= 0f) {
+            survivalPaint.setTextAlign(Paint.Align.CENTER);
+            survivalPaint.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
+            survivalPaint.setTextSize(dp(10));
+            survivalPaint.setColor(Color.argb(190, 255, 255, 255));
+            canvas.drawText("GET CLOSE", x, treeBranchY() - dp(68), survivalPaint);
         }
     }
 
     private void drawClimbButton(Canvas canvas) {
+        if (!shouldShowClimbButton()) {
+            climbButtonBounds.setEmpty();
+            return;
+        }
+
         float width = dp(116);
         float height = dp(42);
-        float left = (getWidth() - width) / 2f;
-        float top = getHeight() - dp(68);
+        float left = clamp(treeX() - width / 2f, dp(12), getWidth() - width - dp(12));
+        float top = treeBranchY() + dp(34);
         climbButtonBounds.set(left, top, left + width, top + height);
 
         boolean available = canClimbNow();
@@ -392,6 +462,18 @@ public class AlaskaSurvivalMooseRushView extends JuicyMooseRushView {
 
     private float treeBranchY() {
         return Math.max(dp(128), getHeight() * 0.30f);
+    }
+
+    private float treeShakeOffset() {
+        if (treeShakeTimer <= 0f) {
+            return 0f;
+        }
+        float strength = treeShakeTimer / TREE_SHAKE_SECONDS;
+        return (float) Math.sin(treePulse * 12f) * dp(7) * strength;
+    }
+
+    private float clamp(float value, float min, float max) {
+        return Math.max(min, Math.min(max, value));
     }
 
     private float dp(float value) {
