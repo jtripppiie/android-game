@@ -2,11 +2,15 @@ package com.jtripppiie.mooserush;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapShader;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.RectF;
+import android.graphics.Shader;
 import android.graphics.Typeface;
 import android.view.MotionEvent;
 import android.view.View;
@@ -17,6 +21,10 @@ import java.util.List;
 import java.util.Random;
 
 public class MooseRushView extends View {
+    public interface PhotoRequestListener {
+        void onPhotoRequested();
+    }
+
     private static final int STATE_READY = 0;
     private static final int STATE_RUNNING = 1;
     private static final int STATE_GAME_OVER = 2;
@@ -32,7 +40,12 @@ public class MooseRushView extends View {
     private final Random random = new Random();
     private final List<Obstacle> obstacles = new ArrayList<>();
     private final SharedPreferences prefs;
+    private final RectF customizeButtonBounds = new RectF();
+    private final RectF photoDestination = new RectF();
+    private final Matrix photoMatrix = new Matrix();
 
+    private PhotoRequestListener photoRequestListener;
+    private Bitmap playerPhoto;
     private int state = STATE_READY;
     private boolean paused = false;
 
@@ -57,6 +70,15 @@ public class MooseRushView extends View {
         textPaint.setColor(Color.WHITE);
         textPaint.setTypeface(Typeface.DEFAULT_BOLD);
         textPaint.setTextAlign(Paint.Align.CENTER);
+    }
+
+    public void setPhotoRequestListener(PhotoRequestListener listener) {
+        this.photoRequestListener = listener;
+    }
+
+    public void setPlayerPhoto(Bitmap photo) {
+        this.playerPhoto = photo;
+        invalidate();
     }
 
     public void resume() {
@@ -99,7 +121,7 @@ public class MooseRushView extends View {
         drawHud(canvas);
 
         if (state == STATE_READY) {
-            drawCenterPanel(canvas, "MOOSE RUSH", "Drag to dodge Alaska chaos", "Tap to start");
+            drawCenterPanel(canvas, "MOOSE RUSH", "Upload your face. Dodge the chaos.", "Tap to start");
         } else if (state == STATE_GAME_OVER) {
             drawCenterPanel(canvas, "WIPED OUT", "Score: " + (int) score + "   Best: " + bestScore, "Tap to retry");
         }
@@ -113,6 +135,13 @@ public class MooseRushView extends View {
     public boolean onTouchEvent(MotionEvent event) {
         int action = event.getActionMasked();
         if (action == MotionEvent.ACTION_DOWN) {
+            if (state != STATE_RUNNING && isCustomizeButtonHit(event.getX(), event.getY())) {
+                if (photoRequestListener != null) {
+                    photoRequestListener.onPhotoRequested();
+                }
+                return true;
+            }
+
             if (state == STATE_READY || state == STATE_GAME_OVER) {
                 startGame();
             }
@@ -275,6 +304,27 @@ public class MooseRushView extends View {
 
     private void drawPlayer(Canvas canvas) {
         paint.setStyle(Paint.Style.FILL);
+        paint.setColor(Color.rgb(52, 134, 196));
+        canvas.drawRoundRect(
+                playerX - playerRadius * 0.62f,
+                playerY + playerRadius * 0.62f,
+                playerX + playerRadius * 0.62f,
+                playerY + playerRadius * 1.36f,
+                dp(9),
+                dp(9),
+                paint
+        );
+
+        if (playerPhoto != null) {
+            drawPlayerPhoto(canvas);
+        } else {
+            drawDefaultPlayerHead(canvas);
+        }
+    }
+
+    private void drawDefaultPlayerHead(Canvas canvas) {
+        paint.setShader(null);
+        paint.setStyle(Paint.Style.FILL);
         paint.setColor(Color.rgb(255, 192, 81));
         canvas.drawCircle(playerX, playerY, playerRadius, paint);
 
@@ -290,17 +340,31 @@ public class MooseRushView extends View {
                 dp(5),
                 paint
         );
+    }
 
-        paint.setColor(Color.rgb(52, 134, 196));
-        canvas.drawRoundRect(
-                playerX - playerRadius * 0.54f,
-                playerY + playerRadius * 0.70f,
-                playerX + playerRadius * 0.54f,
-                playerY + playerRadius * 1.28f,
-                dp(9),
-                dp(9),
-                paint
-        );
+    private void drawPlayerPhoto(Canvas canvas) {
+        float diameter = playerRadius * 2f;
+        photoDestination.set(playerX - playerRadius, playerY - playerRadius, playerX + playerRadius, playerY + playerRadius);
+
+        BitmapShader shader = new BitmapShader(playerPhoto, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP);
+        float scale = Math.max(diameter / playerPhoto.getWidth(), diameter / playerPhoto.getHeight());
+        float dx = playerX - playerPhoto.getWidth() * scale / 2f;
+        float dy = playerY - playerPhoto.getHeight() * scale / 2f;
+        photoMatrix.reset();
+        photoMatrix.setScale(scale, scale);
+        photoMatrix.postTranslate(dx, dy);
+        shader.setLocalMatrix(photoMatrix);
+
+        paint.setShader(shader);
+        paint.setStyle(Paint.Style.FILL);
+        canvas.drawCircle(playerX, playerY, playerRadius, paint);
+        paint.setShader(null);
+
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setStrokeWidth(dp(3));
+        paint.setColor(Color.WHITE);
+        canvas.drawCircle(playerX, playerY, playerRadius, paint);
+        paint.setStyle(Paint.Style.FILL);
     }
 
     private void drawObstacle(Canvas canvas, Obstacle obstacle) {
@@ -417,6 +481,37 @@ public class MooseRushView extends View {
 
         textPaint.setTextAlign(Paint.Align.RIGHT);
         canvas.drawText("Best " + bestScore, getWidth() - dp(18), dp(32), textPaint);
+
+        if (state != STATE_RUNNING) {
+            drawCustomizeButton(canvas);
+        }
+    }
+
+    private void drawCustomizeButton(Canvas canvas) {
+        calculateCustomizeButtonBounds();
+
+        paint.setStyle(Paint.Style.FILL);
+        paint.setColor(Color.argb(220, 255, 218, 121));
+        canvas.drawRoundRect(customizeButtonBounds, dp(15), dp(15), paint);
+
+        textPaint.setTextAlign(Paint.Align.CENTER);
+        textPaint.setTextSize(dp(13));
+        textPaint.setColor(Color.rgb(24, 30, 38));
+        String label = playerPhoto == null ? "ADD PHOTO" : "CHANGE PHOTO";
+        canvas.drawText(label, customizeButtonBounds.centerX(), customizeButtonBounds.centerY() + dp(5), textPaint);
+    }
+
+    private boolean isCustomizeButtonHit(float x, float y) {
+        calculateCustomizeButtonBounds();
+        return customizeButtonBounds.contains(x, y);
+    }
+
+    private void calculateCustomizeButtonBounds() {
+        float buttonWidth = playerPhoto == null ? dp(112) : dp(134);
+        float buttonHeight = dp(36);
+        float left = (getWidth() - buttonWidth) / 2f;
+        float top = dp(49);
+        customizeButtonBounds.set(left, top, left + buttonWidth, top + buttonHeight);
     }
 
     private void drawCenterPanel(Canvas canvas, String title, String lineOne, String lineTwo) {
