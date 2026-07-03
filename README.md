@@ -57,6 +57,24 @@ The app now has a full early game shell:
    - Placeholder boss phase
    - Game-over retry loop
 
+## Asset packs
+
+The first visible asset pack now lives here:
+
+`app/src/main/assets/regions/alaska/`
+
+Current Alaska placeholder files:
+
+- `region.json`
+- `background_midnight_sun.svg`
+- `background_dark_winter.svg`
+- `hazard_salmon.svg`
+- `hazard_moose.svg`
+- `hazard_bear.svg`
+- `gate_antlers.svg`
+
+Important: the game currently still draws most visuals directly with Canvas. These files are the visible regional asset structure and placeholder art target. The next step is wiring the runtime to load these assets instead of drawing every placeholder directly in Java.
+
 ## Android compatibility
 
 The app is intended to support Android 14 and newer.
@@ -76,6 +94,16 @@ If the product decision changes to Android 14 only, set `minSdk 34` in `app/buil
 Open the repo in Android Studio and run the `app` configuration on an Android device or emulator.
 
 The project uses Android Gradle Plugin `9.2.0`, `compileSdk 36`, and `targetSdk 36`.
+
+## Debug APK workflow
+
+GitHub Actions includes an Android Debug APK workflow at:
+
+`.github/workflows/android-debug-apk.yml`
+
+It builds `assembleDebug` and uploads the APK artifact as:
+
+`you-rush-alaska-debug-apk`
 
 ## Why this direction
 
@@ -113,9 +141,10 @@ Future regions can copy this pattern:
 ## Next development steps
 
 1. Test the new shell on a real Android 14 device or emulator.
-2. Tune the Alaska map flow and touch targets.
-3. Replace placeholder bosses with better Alaska attack patterns.
-4. Add crop and position controls for the uploaded photo.
-5. Add one-tap share card after game over.
-6. Add real placeholder art files once the shell feels good.
-7. Create the second region only after Alaska feels fun.
+2. Confirm the GitHub Actions debug APK build succeeds.
+3. Tune the Alaska map flow and touch targets.
+4. Wire runtime rendering to load the Alaska asset pack files.
+5. Replace placeholder bosses with better Alaska attack patterns.
+6. Add crop and position controls for the uploaded photo.
+7. Add one-tap share card after game over.
+8. Create the second region only after Alaska feels fun.
