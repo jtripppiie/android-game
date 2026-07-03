@@ -8,7 +8,6 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
-import android.graphics.Path;
 import android.graphics.RectF;
 import android.graphics.Shader;
 import android.graphics.Typeface;
@@ -29,19 +28,14 @@ public class MooseRushView extends View {
     private static final int STATE_RUNNING = 1;
     private static final int STATE_GAME_OVER = 2;
 
-    private static final int TYPE_MOOSE = 0;
-    private static final int TYPE_BEAR = 1;
-    private static final int TYPE_FISH = 2;
-    private static final int TYPE_ICE = 3;
-    private static final int TYPE_VAN = 4;
-
     private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Random random = new Random();
-    private final List<Obstacle> obstacles = new ArrayList<>();
+    private final List<Gate> gates = new ArrayList<>();
     private final SharedPreferences prefs;
     private final RectF customizeButtonBounds = new RectF();
-    private final RectF photoDestination = new RectF();
+    private final RectF topHitBox = new RectF();
+    private final RectF bottomHitBox = new RectF();
     private final Matrix photoMatrix = new Matrix();
 
     private PhotoRequestListener photoRequestListener;
@@ -51,15 +45,14 @@ public class MooseRushView extends View {
 
     private long lastFrameNanos = 0L;
     private float spawnCooldown = 0f;
-    private float score = 0f;
+    private float groundScroll = 0f;
+    private int score = 0;
     private int bestScore = 0;
 
     private float playerX;
     private float playerY;
-    private float targetX;
+    private float playerVelocityY;
     private float playerRadius;
-    private float roadLeft;
-    private float roadRight;
 
     public MooseRushView(Context context) {
         super(context);
@@ -94,12 +87,9 @@ public class MooseRushView extends View {
     @Override
     protected void onSizeChanged(int width, int height, int oldWidth, int oldHeight) {
         super.onSizeChanged(width, height, oldWidth, oldHeight);
-        roadLeft = dp(24);
-        roadRight = width - dp(24);
-        playerRadius = dp(22);
-        playerX = width / 2f;
-        targetX = playerX;
-        playerY = height - dp(96);
+        playerRadius = dp(24);
+        playerX = width * 0.32f;
+        playerY = height * 0.45f;
     }
 
     @Override
@@ -121,9 +111,9 @@ public class MooseRushView extends View {
         drawHud(canvas);
 
         if (state == STATE_READY) {
-            drawCenterPanel(canvas, "MOOSE RUSH", "Upload your face. Dodge the chaos.", "Tap to start");
+            drawCenterPanel(canvas, "YOU RUSH", "Put your face in the game.", "Tap to bounce");
         } else if (state == STATE_GAME_OVER) {
-            drawCenterPanel(canvas, "WIPED OUT", "Score: " + (int) score + "   Best: " + bestScore, "Tap to retry");
+            drawCenterPanel(canvas, "BONKED", deathLine(), "Tap to retry");
         }
 
         if (!paused) {
@@ -133,37 +123,38 @@ public class MooseRushView extends View {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        int action = event.getActionMasked();
-        if (action == MotionEvent.ACTION_DOWN) {
-            if (state != STATE_RUNNING && isCustomizeButtonHit(event.getX(), event.getY())) {
-                if (photoRequestListener != null) {
-                    photoRequestListener.onPhotoRequested();
-                }
-                return true;
-            }
-
-            if (state == STATE_READY || state == STATE_GAME_OVER) {
-                startGame();
-            }
-            targetX = clamp(event.getX(), roadLeft + playerRadius, roadRight - playerRadius);
+        if (event.getActionMasked() != MotionEvent.ACTION_DOWN) {
             return true;
         }
 
-        if (action == MotionEvent.ACTION_MOVE) {
-            targetX = clamp(event.getX(), roadLeft + playerRadius, roadRight - playerRadius);
+        if (state != STATE_RUNNING && isCustomizeButtonHit(event.getX(), event.getY())) {
+            if (photoRequestListener != null) {
+                photoRequestListener.onPhotoRequested();
+            }
             return true;
         }
 
+        if (state == STATE_READY || state == STATE_GAME_OVER) {
+            startGame();
+        }
+
+        flap();
         return true;
     }
 
     private void startGame() {
-        obstacles.clear();
-        score = 0f;
-        spawnCooldown = 0.2f;
+        gates.clear();
+        score = 0;
+        spawnCooldown = 0.65f;
+        groundScroll = 0f;
         state = STATE_RUNNING;
-        playerX = getWidth() / 2f;
-        targetX = playerX;
+        playerX = getWidth() * 0.32f;
+        playerY = getHeight() * 0.45f;
+        playerVelocityY = 0f;
+    }
+
+    private void flap() {
+        playerVelocityY = -dp(430);
     }
 
     private void updateGame(float dt) {
@@ -171,91 +162,70 @@ public class MooseRushView extends View {
             return;
         }
 
-        score += dt * 12f;
-        playerX += (targetX - playerX) * Math.min(1f, dt * 12f);
-        playerX = clamp(playerX, roadLeft + playerRadius, roadRight - playerRadius);
+        float gateSpeed = dp(190) + Math.min(dp(90), score * dp(4));
+        float gravity = dp(1120);
+        playerVelocityY += gravity * dt;
+        playerY += playerVelocityY * dt;
+        groundScroll = (groundScroll + gateSpeed * dt) % dp(48);
 
-        float worldSpeed = dp(250) + Math.min(dp(430), score * dp(1.2f));
         spawnCooldown -= dt;
         if (spawnCooldown <= 0f) {
-            spawnObstacle();
-            float minCooldown = Math.max(0.34f, 0.95f - score * 0.006f);
-            spawnCooldown = minCooldown + random.nextFloat() * 0.32f;
+            spawnGate();
+            spawnCooldown = Math.max(0.95f, 1.35f - score * 0.025f);
         }
 
-        Iterator<Obstacle> iterator = obstacles.iterator();
+        Iterator<Gate> iterator = gates.iterator();
         while (iterator.hasNext()) {
-            Obstacle obstacle = iterator.next();
-            obstacle.y += worldSpeed * obstacle.speedScale * dt;
-            obstacle.updateBounds();
+            Gate gate = iterator.next();
+            gate.x -= gateSpeed * dt;
 
-            if (circleHitsRect(playerX, playerY, playerRadius * 0.78f, obstacle.bounds)) {
-                endGame();
-                return;
+            if (!gate.passed && gate.x + gate.width < playerX) {
+                gate.passed = true;
+                score++;
             }
 
-            if (obstacle.y > getHeight() + obstacle.height) {
+            if (gate.x + gate.width < -dp(24)) {
                 iterator.remove();
+            }
+        }
+
+        if (playerY - playerRadius < dp(44) || playerY + playerRadius > getGroundY()) {
+            endGame();
+            return;
+        }
+
+        for (Gate gate : gates) {
+            if (hitsGate(gate)) {
+                endGame();
+                return;
             }
         }
     }
 
     private void endGame() {
         state = STATE_GAME_OVER;
-        int finalScore = (int) score;
-        if (finalScore > bestScore) {
-            bestScore = finalScore;
+        if (score > bestScore) {
+            bestScore = score;
             prefs.edit().putInt("best_score", bestScore).apply();
         }
     }
 
-    private void spawnObstacle() {
-        int type;
-        float roll = random.nextFloat();
-        if (score < 50f) {
-            type = roll < 0.58f ? TYPE_MOOSE : roll < 0.78f ? TYPE_FISH : TYPE_ICE;
-        } else if (score < 120f) {
-            type = roll < 0.38f ? TYPE_MOOSE : roll < 0.60f ? TYPE_BEAR : roll < 0.82f ? TYPE_FISH : TYPE_ICE;
-        } else {
-            type = roll < 0.30f ? TYPE_MOOSE : roll < 0.52f ? TYPE_BEAR : roll < 0.72f ? TYPE_VAN : roll < 0.88f ? TYPE_FISH : TYPE_ICE;
-        }
+    private void spawnGate() {
+        float gateWidth = dp(72);
+        float gapHeight = Math.max(dp(148), dp(196) - score * dp(1.2f));
+        float safeTop = dp(110);
+        float safeBottom = getGroundY() - dp(100);
+        float minGapCenter = safeTop + gapHeight / 2f;
+        float maxGapCenter = safeBottom - gapHeight / 2f;
+        float gapCenter = minGapCenter + random.nextFloat() * Math.max(dp(1), maxGapCenter - minGapCenter);
+        gates.add(new Gate(getWidth() + gateWidth, gapCenter, gapHeight, gateWidth));
+    }
 
-        float width;
-        float height;
-        float speedScale = 1f;
-        switch (type) {
-            case TYPE_BEAR:
-                width = dp(92);
-                height = dp(58);
-                speedScale = 0.92f;
-                break;
-            case TYPE_FISH:
-                width = dp(54);
-                height = dp(30);
-                speedScale = 1.34f;
-                break;
-            case TYPE_ICE:
-                width = dp(74);
-                height = dp(38);
-                speedScale = 1.04f;
-                break;
-            case TYPE_VAN:
-                width = dp(104);
-                height = dp(60);
-                speedScale = 1.10f;
-                break;
-            case TYPE_MOOSE:
-            default:
-                width = dp(116);
-                height = dp(70);
-                speedScale = 1f;
-                break;
-        }
-
-        float minX = roadLeft + width / 2f + dp(4);
-        float maxX = roadRight - width / 2f - dp(4);
-        float x = minX + random.nextFloat() * Math.max(1f, maxX - minX);
-        obstacles.add(new Obstacle(type, x, -height, width, height, speedScale));
+    private boolean hitsGate(Gate gate) {
+        topHitBox.set(gate.x, 0, gate.x + gate.width, gate.gapCenter - gate.gapHeight / 2f);
+        bottomHitBox.set(gate.x, gate.gapCenter + gate.gapHeight / 2f, gate.x + gate.width, getGroundY());
+        return circleHitsRect(playerX, playerY, playerRadius * 0.86f, topHitBox)
+                || circleHitsRect(playerX, playerY, playerRadius * 0.86f, bottomHitBox);
     }
 
     private void drawWorld(Canvas canvas) {
@@ -263,57 +233,75 @@ public class MooseRushView extends View {
         int height = getHeight();
 
         paint.setStyle(Paint.Style.FILL);
-        paint.setColor(Color.rgb(22, 37, 57));
+        paint.setColor(Color.rgb(25, 43, 68));
         canvas.drawRect(0, 0, width, height, paint);
 
-        drawMountains(canvas, width, height);
+        drawBackground(canvas, width, height);
 
-        paint.setColor(Color.rgb(42, 48, 56));
-        canvas.drawRoundRect(roadLeft, 0, roadRight, height + dp(32), dp(18), dp(18), paint);
-
-        paint.setColor(Color.rgb(92, 97, 103));
-        canvas.drawRect(roadLeft, 0, roadLeft + dp(5), height, paint);
-        canvas.drawRect(roadRight - dp(5), 0, roadRight, height, paint);
-
-        paint.setColor(Color.rgb(240, 214, 116));
-        float dashHeight = dp(42);
-        float gap = dp(36);
-        float centerX = width / 2f;
-        float offset = (score * dp(5)) % (dashHeight + gap);
-        for (float y = -dashHeight + offset; y < height + dashHeight; y += dashHeight + gap) {
-            canvas.drawRoundRect(centerX - dp(3), y, centerX + dp(3), y + dashHeight, dp(3), dp(3), paint);
-        }
-
-        for (Obstacle obstacle : obstacles) {
-            drawObstacle(canvas, obstacle);
+        for (Gate gate : gates) {
+            drawGate(canvas, gate);
         }
 
         drawPlayer(canvas);
+        drawGround(canvas, width);
     }
 
-    private void drawMountains(Canvas canvas, int width, int height) {
+    private void drawBackground(Canvas canvas, int width, int height) {
         paint.setStyle(Paint.Style.FILL);
-        paint.setColor(Color.rgb(35, 68, 77));
-        canvas.drawCircle(width * 0.12f, height * 0.13f, dp(96), paint);
-        canvas.drawCircle(width * 0.88f, height * 0.16f, dp(104), paint);
+        paint.setColor(Color.rgb(38, 82, 92));
+        canvas.drawCircle(width * 0.12f, height * 0.18f, dp(96), paint);
+        canvas.drawCircle(width * 0.88f, height * 0.20f, dp(104), paint);
 
-        paint.setColor(Color.rgb(210, 228, 232));
-        canvas.drawCircle(width * 0.12f, height * 0.10f, dp(38), paint);
-        canvas.drawCircle(width * 0.88f, height * 0.12f, dp(42), paint);
+        paint.setColor(Color.rgb(218, 235, 238));
+        canvas.drawCircle(width * 0.12f, height * 0.14f, dp(35), paint);
+        canvas.drawCircle(width * 0.88f, height * 0.15f, dp(40), paint);
+
+        paint.setColor(Color.rgb(240, 210, 108));
+        canvas.drawCircle(width - dp(58), dp(70), dp(24), paint);
+    }
+
+    private void drawGround(Canvas canvas, int width) {
+        float groundY = getGroundY();
+        paint.setStyle(Paint.Style.FILL);
+        paint.setColor(Color.rgb(46, 119, 82));
+        canvas.drawRect(0, groundY, width, getHeight(), paint);
+
+        paint.setColor(Color.rgb(35, 86, 63));
+        for (float x = -groundScroll; x < width + dp(60); x += dp(48)) {
+            canvas.drawRoundRect(x, groundY + dp(12), x + dp(28), groundY + dp(20), dp(4), dp(4), paint);
+        }
+    }
+
+    private void drawGate(Canvas canvas, Gate gate) {
+        float topBottom = gate.gapCenter - gate.gapHeight / 2f;
+        float bottomTop = gate.gapCenter + gate.gapHeight / 2f;
+
+        paint.setStyle(Paint.Style.FILL);
+        paint.setColor(Color.rgb(104, 62, 36));
+        canvas.drawRoundRect(gate.x, -dp(20), gate.x + gate.width, topBottom, dp(14), dp(14), paint);
+        canvas.drawRoundRect(gate.x, bottomTop, gate.x + gate.width, getGroundY(), dp(14), dp(14), paint);
+
+        paint.setColor(Color.rgb(210, 173, 103));
+        canvas.drawRoundRect(gate.x - dp(8), topBottom - dp(18), gate.x + gate.width + dp(8), topBottom + dp(7), dp(8), dp(8), paint);
+        canvas.drawRoundRect(gate.x - dp(8), bottomTop - dp(7), gate.x + gate.width + dp(8), bottomTop + dp(18), dp(8), dp(8), paint);
+
+        paint.setStrokeWidth(dp(3));
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setColor(Color.rgb(232, 196, 123));
+        canvas.drawLine(gate.x + dp(12), topBottom - dp(18), gate.x - dp(4), topBottom - dp(36), paint);
+        canvas.drawLine(gate.x + gate.width - dp(12), topBottom - dp(18), gate.x + gate.width + dp(4), topBottom - dp(36), paint);
+        canvas.drawLine(gate.x + dp(12), bottomTop + dp(18), gate.x - dp(4), bottomTop + dp(36), paint);
+        canvas.drawLine(gate.x + gate.width - dp(12), bottomTop + dp(18), gate.x + gate.width + dp(4), bottomTop + dp(36), paint);
+        paint.setStyle(Paint.Style.FILL);
     }
 
     private void drawPlayer(Canvas canvas) {
         paint.setStyle(Paint.Style.FILL);
-        paint.setColor(Color.rgb(52, 134, 196));
-        canvas.drawRoundRect(
-                playerX - playerRadius * 0.62f,
-                playerY + playerRadius * 0.62f,
-                playerX + playerRadius * 0.62f,
-                playerY + playerRadius * 1.36f,
-                dp(9),
-                dp(9),
-                paint
-        );
+        paint.setColor(Color.rgb(255, 218, 121));
+        canvas.drawOval(playerX - playerRadius * 0.95f, playerY + playerRadius * 0.2f, playerX + playerRadius * 0.95f, playerY + playerRadius * 1.22f, paint);
+
+        paint.setColor(Color.rgb(255, 177, 70));
+        canvas.drawOval(playerX - playerRadius * 1.08f, playerY + playerRadius * 0.24f, playerX - playerRadius * 0.10f, playerY + playerRadius * 0.92f, paint);
 
         if (playerPhoto != null) {
             drawPlayerPhoto(canvas);
@@ -344,8 +332,6 @@ public class MooseRushView extends View {
 
     private void drawPlayerPhoto(Canvas canvas) {
         float diameter = playerRadius * 2f;
-        photoDestination.set(playerX - playerRadius, playerY - playerRadius, playerX + playerRadius, playerY + playerRadius);
-
         BitmapShader shader = new BitmapShader(playerPhoto, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP);
         float scale = Math.max(diameter / playerPhoto.getWidth(), diameter / playerPhoto.getHeight());
         float dx = playerX - playerPhoto.getWidth() * scale / 2f;
@@ -367,119 +353,14 @@ public class MooseRushView extends View {
         paint.setStyle(Paint.Style.FILL);
     }
 
-    private void drawObstacle(Canvas canvas, Obstacle obstacle) {
-        switch (obstacle.type) {
-            case TYPE_BEAR:
-                drawBear(canvas, obstacle);
-                break;
-            case TYPE_FISH:
-                drawFish(canvas, obstacle);
-                break;
-            case TYPE_ICE:
-                drawIce(canvas, obstacle);
-                break;
-            case TYPE_VAN:
-                drawVan(canvas, obstacle);
-                break;
-            case TYPE_MOOSE:
-            default:
-                drawMoose(canvas, obstacle);
-                break;
-        }
-    }
-
-    private void drawMoose(Canvas canvas, Obstacle obstacle) {
-        RectF b = obstacle.bounds;
-        paint.setStyle(Paint.Style.FILL);
-        paint.setColor(Color.rgb(104, 62, 36));
-        canvas.drawRoundRect(b.left + dp(14), b.top + dp(22), b.right - dp(18), b.bottom - dp(8), dp(16), dp(16), paint);
-        canvas.drawCircle(b.right - dp(18), b.top + dp(25), dp(18), paint);
-
-        paint.setStrokeWidth(dp(4));
-        paint.setStyle(Paint.Style.STROKE);
-        paint.setColor(Color.rgb(210, 173, 103));
-        float antlerY = b.top + dp(12);
-        canvas.drawLine(b.right - dp(28), antlerY, b.right - dp(52), b.top + dp(2), paint);
-        canvas.drawLine(b.right - dp(22), antlerY, b.right - dp(2), b.top + dp(2), paint);
-        canvas.drawLine(b.right - dp(45), b.top + dp(6), b.right - dp(50), b.top + dp(18), paint);
-        canvas.drawLine(b.right - dp(9), b.top + dp(6), b.right - dp(4), b.top + dp(18), paint);
-
-        paint.setStyle(Paint.Style.FILL);
-        paint.setColor(Color.rgb(51, 30, 22));
-        canvas.drawRect(b.left + dp(24), b.bottom - dp(10), b.left + dp(31), b.bottom, paint);
-        canvas.drawRect(b.right - dp(42), b.bottom - dp(10), b.right - dp(35), b.bottom, paint);
-        canvas.drawCircle(b.right - dp(12), b.top + dp(22), dp(3), paint);
-    }
-
-    private void drawBear(Canvas canvas, Obstacle obstacle) {
-        RectF b = obstacle.bounds;
-        paint.setStyle(Paint.Style.FILL);
-        paint.setColor(Color.rgb(80, 50, 39));
-        canvas.drawRoundRect(b.left + dp(10), b.top + dp(18), b.right - dp(8), b.bottom - dp(6), dp(18), dp(18), paint);
-        canvas.drawCircle(b.left + dp(23), b.top + dp(18), dp(14), paint);
-        canvas.drawCircle(b.left + dp(13), b.top + dp(9), dp(6), paint);
-        canvas.drawCircle(b.left + dp(30), b.top + dp(8), dp(6), paint);
-
-        paint.setColor(Color.rgb(32, 22, 18));
-        canvas.drawCircle(b.left + dp(28), b.top + dp(19), dp(3), paint);
-        canvas.drawRect(b.left + dp(22), b.bottom - dp(10), b.left + dp(29), b.bottom, paint);
-        canvas.drawRect(b.right - dp(30), b.bottom - dp(10), b.right - dp(23), b.bottom, paint);
-    }
-
-    private void drawFish(Canvas canvas, Obstacle obstacle) {
-        RectF b = obstacle.bounds;
-        paint.setStyle(Paint.Style.FILL);
-        paint.setColor(Color.rgb(236, 126, 72));
-        canvas.drawOval(b.left + dp(10), b.top + dp(4), b.right, b.bottom - dp(4), paint);
-
-        Path tail = new Path();
-        tail.moveTo(b.left + dp(11), b.centerY());
-        tail.lineTo(b.left, b.top);
-        tail.lineTo(b.left, b.bottom);
-        tail.close();
-
-        paint.setColor(Color.rgb(255, 178, 99));
-        canvas.drawPath(tail, paint);
-
-        paint.setColor(Color.rgb(28, 34, 40));
-        canvas.drawCircle(b.right - dp(10), b.centerY() - dp(4), dp(3), paint);
-    }
-
-    private void drawIce(Canvas canvas, Obstacle obstacle) {
-        RectF b = obstacle.bounds;
-        paint.setStyle(Paint.Style.FILL);
-        paint.setColor(Color.rgb(144, 214, 232));
-        canvas.drawRoundRect(b, dp(12), dp(12), paint);
-
-        paint.setStyle(Paint.Style.STROKE);
-        paint.setStrokeWidth(dp(3));
-        paint.setColor(Color.rgb(230, 250, 255));
-        canvas.drawLine(b.left + dp(12), b.centerY(), b.right - dp(12), b.centerY() - dp(8), paint);
-        canvas.drawLine(b.left + dp(28), b.bottom - dp(8), b.right - dp(24), b.top + dp(8), paint);
-    }
-
-    private void drawVan(Canvas canvas, Obstacle obstacle) {
-        RectF b = obstacle.bounds;
-        paint.setStyle(Paint.Style.FILL);
-        paint.setColor(Color.rgb(214, 68, 57));
-        canvas.drawRoundRect(b.left, b.top + dp(13), b.right, b.bottom - dp(8), dp(10), dp(10), paint);
-
-        paint.setColor(Color.rgb(184, 231, 247));
-        canvas.drawRoundRect(b.left + dp(14), b.top + dp(19), b.right - dp(46), b.top + dp(38), dp(5), dp(5), paint);
-        canvas.drawRoundRect(b.right - dp(40), b.top + dp(19), b.right - dp(12), b.top + dp(38), dp(5), dp(5), paint);
-
-        paint.setColor(Color.rgb(28, 28, 28));
-        canvas.drawCircle(b.left + dp(22), b.bottom - dp(8), dp(8), paint);
-        canvas.drawCircle(b.right - dp(22), b.bottom - dp(8), dp(8), paint);
-    }
-
     private void drawHud(Canvas canvas) {
-        textPaint.setTextAlign(Paint.Align.LEFT);
-        textPaint.setTextSize(dp(18));
+        textPaint.setTextAlign(Paint.Align.CENTER);
+        textPaint.setTextSize(dp(42));
         textPaint.setColor(Color.WHITE);
-        canvas.drawText("Score " + (int) score, dp(18), dp(32), textPaint);
+        canvas.drawText(String.valueOf(score), getWidth() / 2f, dp(66), textPaint);
 
         textPaint.setTextAlign(Paint.Align.RIGHT);
+        textPaint.setTextSize(dp(16));
         canvas.drawText("Best " + bestScore, getWidth() - dp(18), dp(32), textPaint);
 
         if (state != STATE_RUNNING) {
@@ -491,13 +372,13 @@ public class MooseRushView extends View {
         calculateCustomizeButtonBounds();
 
         paint.setStyle(Paint.Style.FILL);
-        paint.setColor(Color.argb(220, 255, 218, 121));
+        paint.setColor(Color.argb(225, 255, 218, 121));
         canvas.drawRoundRect(customizeButtonBounds, dp(15), dp(15), paint);
 
         textPaint.setTextAlign(Paint.Align.CENTER);
         textPaint.setTextSize(dp(13));
         textPaint.setColor(Color.rgb(24, 30, 38));
-        String label = playerPhoto == null ? "ADD PHOTO" : "CHANGE PHOTO";
+        String label = playerPhoto == null ? "ADD YOUR PHOTO" : "CHANGE PHOTO";
         canvas.drawText(label, customizeButtonBounds.centerX(), customizeButtonBounds.centerY() + dp(5), textPaint);
     }
 
@@ -507,10 +388,10 @@ public class MooseRushView extends View {
     }
 
     private void calculateCustomizeButtonBounds() {
-        float buttonWidth = playerPhoto == null ? dp(112) : dp(134);
+        float buttonWidth = playerPhoto == null ? dp(142) : dp(134);
         float buttonHeight = dp(36);
         float left = (getWidth() - buttonWidth) / 2f;
-        float top = dp(49);
+        float top = dp(82);
         customizeButtonBounds.set(left, top, left + buttonWidth, top + buttonHeight);
     }
 
@@ -527,7 +408,7 @@ public class MooseRushView extends View {
 
         textPaint.setTextAlign(Paint.Align.CENTER);
         textPaint.setColor(Color.WHITE);
-        textPaint.setTextSize(dp(32));
+        textPaint.setTextSize(dp(34));
         canvas.drawText(title, getWidth() / 2f, top + dp(54), textPaint);
 
         textPaint.setTextSize(dp(16));
@@ -536,6 +417,23 @@ public class MooseRushView extends View {
         textPaint.setTextSize(dp(15));
         textPaint.setColor(Color.rgb(255, 218, 121));
         canvas.drawText(lineTwo, getWidth() / 2f, top + dp(132), textPaint);
+    }
+
+    private String deathLine() {
+        if (score == 0) {
+            return "Score 0. Personally embarrassing.";
+        }
+        if (score < 5) {
+            return "Score " + score + ". One more try.";
+        }
+        if (score < 10) {
+            return "Score " + score + ". That was almost viral.";
+        }
+        return "Score " + score + ". New chaos legend.";
+    }
+
+    private float getGroundY() {
+        return getHeight() - dp(72);
     }
 
     private boolean circleHitsRect(float cx, float cy, float radius, RectF rect) {
@@ -554,27 +452,18 @@ public class MooseRushView extends View {
         return value * getResources().getDisplayMetrics().density;
     }
 
-    private static class Obstacle {
-        final int type;
-        final float x;
-        float y;
+    private static class Gate {
+        float x;
+        final float gapCenter;
+        final float gapHeight;
         final float width;
-        final float height;
-        final float speedScale;
-        final RectF bounds = new RectF();
+        boolean passed = false;
 
-        Obstacle(int type, float x, float y, float width, float height, float speedScale) {
-            this.type = type;
+        Gate(float x, float gapCenter, float gapHeight, float width) {
             this.x = x;
-            this.y = y;
+            this.gapCenter = gapCenter;
+            this.gapHeight = gapHeight;
             this.width = width;
-            this.height = height;
-            this.speedScale = speedScale;
-            updateBounds();
-        }
-
-        void updateBounds() {
-            bounds.set(x - width / 2f, y, x + width / 2f, y + height);
         }
     }
 }
