@@ -14,9 +14,9 @@ This is the first playable seed of the viral loop. The goal is not complexity ye
 - Full-screen portrait gameplay
 - One-tap bounce controls
 - Uploaded photo as the player head
-- Generated walking-sprite body with animated arms/legs
+- Generated walking-sprite body with animated arms and legs
 - Saved player photo URI when Android grants persistent access
-- Procedural gap/gate spawning
+- Procedural gap and gate spawning
 - Collision detection
 - Score counter
 - Saved best score
@@ -28,6 +28,20 @@ This is the first playable seed of the viral loop. The goal is not complexity ye
 Open the repo in Android Studio and run the `app` configuration on an Android device or emulator.
 
 The project uses Android Gradle Plugin `9.2.0`, `compileSdk 36`, and `targetSdk 36`.
+
+## Android compatibility
+
+The app is intended to support Android 14 and newer.
+
+Current SDK settings:
+
+- `minSdk 23`
+- `targetSdk 36`
+- `compileSdk 36`
+
+Android 14 is API level 34. Because the app minimum SDK is below 34 and the target SDK is above 34, Android 14 devices are included while older supported devices can still install the game.
+
+If the product decision changes to Android 14 only, set `minSdk 34` in `app/build.gradle`.
 
 ## Game direction
 
@@ -43,21 +57,21 @@ A viral mobile game needs an instantly understandable loop:
 
 1. One input: tap.
 2. One goal: pass the next gap.
-3. One emotional hook: that is *my* face getting bonked.
+3. One emotional hook: that is my face getting bonked.
 4. One restart action: tap again.
 
 ## Personalization direction
 
 The current MVP uses a practical sprite illusion: the uploaded photo becomes the character face, and the game generates a tiny animated body underneath it. That avoids heavy AI processing while still making the character feel personal.
 
-Later versions can add real photo cutout, crop/position controls, outfit selection, and shareable animated death cards.
+Later versions can add real photo cutout, crop and position controls, outfit selection, and shareable animated death cards.
 
 ## Next development steps
 
-1. Add crop/position controls for the uploaded photo.
+1. Add crop and position controls for the uploaded photo.
 2. Add a one-tap share card after game over.
 3. Add themed chaos packs: Alaska, Office, School, Family, Pets.
-4. Let users rename hazards, such as “Boss,” “Homework,” or “Monday.”
+4. Let users rename hazards, such as Boss, Homework, or Monday.
 5. Add sound effects and haptics.
 6. Add daily challenge seeds.
 7. Tune gravity, flap strength, gap size, and spawn pacing on a real device.
