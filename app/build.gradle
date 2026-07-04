@@ -14,11 +14,11 @@ android {
         applicationId "com.jtripppiie.mooserush"
         minSdk 23
         targetSdk 35
-        versionCode 8
-        versionName "0.2.6-alpha"
+        versionCode 9
+        versionName "0.2.7-alpha"
 
         buildConfigField "String", "BUILD_CHANNEL", '"ALASKA DEV"'
-        buildConfigField "String", "BUILD_BADGE", '"ALASKA DEV v0.2.6-alpha"'
+        buildConfigField "String", "BUILD_BADGE", '"ALASKA DEV v0.2.7-alpha"'
         buildConfigField "boolean", "SHOW_VERSION_BADGE", "true"
     }
 }
