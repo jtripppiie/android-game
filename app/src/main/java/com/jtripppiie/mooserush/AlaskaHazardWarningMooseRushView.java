@@ -10,22 +10,21 @@ import android.util.Log;
 import java.lang.reflect.Field;
 import java.util.List;
 
-/**
- * Adds right-edge callouts for incoming Alaska hazards.
- *
- * This is a readability layer: it does not change collision, scoring, or speed.
- */
 public class AlaskaHazardWarningMooseRushView extends AlaskaStageIntroMooseRushView {
     private static final String TAG = "YouRushWarnings";
     private static final float WARNING_ZONE_DP = 170f;
 
     private final Paint warningPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final RectF warningPill = new RectF();
+    private final RectF countPill = new RectF();
 
     private Field hazardsField;
     private Field stateField;
     private boolean bindingReady = false;
     private boolean warningLogged = false;
+    private long lastWarningFrameNanos = 0L;
+    private float warningPulse = 0f;
+    private int lastVisibleWarnings = 0;
 
     public AlaskaHazardWarningMooseRushView(Context context) {
         super(context);
@@ -34,8 +33,13 @@ public class AlaskaHazardWarningMooseRushView extends AlaskaStageIntroMooseRushV
 
     @Override
     protected void onDraw(Canvas canvas) {
+        updateWarningPulse();
         super.onDraw(canvas);
         drawHazardWarnings(canvas);
+        drawIncomingCount(canvas);
+        if (lastVisibleWarnings > 0) {
+            postInvalidateOnAnimation();
+        }
     }
 
     private void bindWarningFields() {
@@ -53,8 +57,19 @@ public class AlaskaHazardWarningMooseRushView extends AlaskaStageIntroMooseRushV
         }
     }
 
+    private void updateWarningPulse() {
+        long now = System.nanoTime();
+        float dt = 0f;
+        if (lastWarningFrameNanos != 0L) {
+            dt = Math.min((now - lastWarningFrameNanos) / 1_000_000_000f, 0.033f);
+        }
+        lastWarningFrameNanos = now;
+        warningPulse += dt * 5.2f;
+    }
+
     @SuppressWarnings("unchecked")
     private void drawHazardWarnings(Canvas canvas) {
+        lastVisibleWarnings = 0;
         if (!bindingReady) {
             return;
         }
@@ -69,9 +84,9 @@ public class AlaskaHazardWarningMooseRushView extends AlaskaStageIntroMooseRushV
                 return;
             }
 
-            int drawn = 0;
             for (Object hazard : hazards) {
-                if (drawn >= 3) {
+                if (lastVisibleWarnings >= 3) {
+                    drawAlertRail(canvas);
                     return;
                 }
 
@@ -82,8 +97,12 @@ public class AlaskaHazardWarningMooseRushView extends AlaskaStageIntroMooseRushV
                 }
 
                 String label = getStringField(hazard, "label");
-                drawWarningPill(canvas, label, hazardY, drawn);
-                drawn++;
+                drawWarningPill(canvas, label, hazardY, lastVisibleWarnings);
+                lastVisibleWarnings++;
+            }
+
+            if (lastVisibleWarnings > 0) {
+                drawAlertRail(canvas);
             }
         } catch (IllegalAccessException | NoSuchFieldException | ClassCastException exception) {
             if (!warningLogged) {
@@ -93,7 +112,35 @@ public class AlaskaHazardWarningMooseRushView extends AlaskaStageIntroMooseRushV
         }
     }
 
+    private void drawAlertRail(Canvas canvas) {
+        float pulse = 0.5f + 0.5f * (float) Math.sin(warningPulse);
+        int alpha = 80 + Math.round(90 * pulse);
+        warningPaint.setStyle(Paint.Style.FILL);
+        warningPaint.setColor(Color.argb(alpha, 255, 218, 121));
+        canvas.drawRoundRect(getWidth() - dp(5), dp(96), getWidth() - dp(2), getHeight() - dp(108), dp(2), dp(2), warningPaint);
+    }
+
+    private void drawIncomingCount(Canvas canvas) {
+        if (lastVisibleWarnings <= 0) {
+            return;
+        }
+        float width = dp(104);
+        float height = dp(24);
+        float left = getWidth() - width - dp(10);
+        float top = dp(88);
+        countPill.set(left, top, left + width, top + height);
+        warningPaint.setStyle(Paint.Style.FILL);
+        warningPaint.setColor(Color.argb(205, 7, 22, 41));
+        canvas.drawRoundRect(countPill, dp(12), dp(12), warningPaint);
+        warningPaint.setTextAlign(Paint.Align.CENTER);
+        warningPaint.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
+        warningPaint.setTextSize(dp(9));
+        warningPaint.setColor(Color.rgb(255, 218, 121));
+        canvas.drawText("INCOMING x" + lastVisibleWarnings, countPill.centerX(), countPill.centerY() + dp(3), warningPaint);
+    }
+
     private void drawWarningPill(Canvas canvas, String label, float hazardY, int index) {
+        float pulse = 0.5f + 0.5f * (float) Math.sin(warningPulse + index);
         float width = dp(92);
         float height = dp(28);
         float right = getWidth() - dp(10);
@@ -101,7 +148,7 @@ public class AlaskaHazardWarningMooseRushView extends AlaskaStageIntroMooseRushV
         warningPill.set(right - width, centerY - height / 2f, right, centerY + height / 2f);
 
         warningPaint.setStyle(Paint.Style.FILL);
-        warningPaint.setColor(Color.argb(210, 7, 22, 41));
+        warningPaint.setColor(Color.argb(198 + Math.round(35 * pulse), 7, 22, 41));
         canvas.drawRoundRect(warningPill, dp(14), dp(14), warningPaint);
 
         warningPaint.setStyle(Paint.Style.STROKE);
