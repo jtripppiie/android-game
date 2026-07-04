@@ -1,11 +1,11 @@
 # Alaska 0.9 Beta Readiness
 
-The current target is **0.9.4-beta**, not final 2.0.
+The current target is **0.9.5-beta**, not final 2.0.
 
 ```text
-versionCode 23
-versionName 0.9.4-beta
-badge ALASKA BETA v0.9.4
+versionCode 24
+versionName 0.9.5-beta
+badge ALASKA BETA v0.9.5
 ```
 
 ## What 0.9 means
@@ -25,6 +25,10 @@ It does mean the game should now have enough complete systems to judge whether i
 - Local saved progress
 - Five Alaska stages
 - Stage intro overlay
+- Stage progress HUD
+- Gate progress bar
+- Run timer
+- Stage challenge phase messaging
 - Main arcade run
 - Stage challenge phase
 - Stage clear / retry loop
@@ -80,30 +84,32 @@ Mobile mapping:
 6. Photo restores after app restart.
 7. All five stages start.
 8. Stage intro appears.
-9. Movement controls respond.
-10. Jump responds.
-11. Snowball throw responds.
-12. Tree button appears only when close.
-13. Near-miss scoring appears without spam.
-14. Combo HUD appears and expires.
-15. Incoming callouts appear before obstacles reach the player.
-16. Pause button appears during gameplay.
-17. Pause overlay stops the game and resumes cleanly.
-18. Three lives appear during a run.
-19. Losing a life respawns at the latest checkpoint area.
-20. Final life still reaches normal game over.
-21. Contra code activates unlimited lives and shows `∞ LIVES`.
-22. Bonus stars appear during runs.
-23. Collecting a bonus star gives score.
-24. Every third collected star can restore one life if below normal max.
-25. Aurora shield pickups appear during longer runs.
-26. Collecting a shield adds a visible shield ring.
-27. Shield absorbs one failure before a life is spent.
-28. Stage challenge phase starts after enough gates.
-29. Stage clear unlocks the next stage.
-30. Game over retry works.
-31. Pause/resume from Android app lifecycle does not crash.
-32. A 15-minute play session has no obvious crash.
+9. Stage progress HUD shows stage name and gate progress.
+10. Run timer advances only during active play.
+11. Movement controls respond.
+12. Jump responds.
+13. Snowball throw responds.
+14. Tree button appears only when close.
+15. Near-miss scoring appears without spam.
+16. Combo HUD appears and expires.
+17. Incoming callouts appear before obstacles reach the player.
+18. Pause button appears during gameplay.
+19. Pause overlay stops the game and resumes cleanly.
+20. Three lives appear during a run.
+21. Losing a life respawns at the latest checkpoint area.
+22. Final life still reaches normal game over.
+23. Contra code activates unlimited lives and shows `∞ LIVES`.
+24. Bonus stars appear during runs.
+25. Collecting a bonus star gives score.
+26. Every third collected star can restore one life if below normal max.
+27. Aurora shield pickups appear during longer runs.
+28. Collecting a shield adds a visible shield ring.
+29. Shield absorbs one failure before a life is spent.
+30. Stage challenge phase starts after enough gates and shows phase messaging.
+31. Stage clear unlocks the next stage.
+32. Game over retry works.
+33. Pause/resume from Android app lifecycle does not crash.
+34. A 15-minute play session has no obvious crash.
 
 ## Known not-final items
 
