@@ -1,11 +1,11 @@
 # Alaska 0.9 Beta Readiness
 
-The current target is **0.9.1-beta**, not final 2.0.
+The current target is **0.9.2-beta**, not final 2.0.
 
 ```text
-versionCode 20
-versionName 0.9.1-beta
-badge ALASKA BETA v0.9.1
+versionCode 21
+versionName 0.9.2-beta
+badge ALASKA BETA v0.9.2
 ```
 
 ## What 0.9 means
@@ -28,6 +28,9 @@ It does mean the game should now have enough complete systems to judge whether i
 - Main arcade run
 - Stage challenge phase
 - Stage clear / retry loop
+- Three-life run system
+- Checkpoint respawn after passed gates
+- Contra-code unlimited-lives cheat
 - Directional controls
 - Jump control
 - Snowball throw control
@@ -44,6 +47,24 @@ It does mean the game should now have enough complete systems to judge whether i
 - Hardened manifest
 - Safer launcher icon vector paths
 - APK workflow with logs and artifact output
+
+## Contra code mapping
+
+Classic sequence:
+
+```text
+UP UP DOWN DOWN LEFT RIGHT LEFT RIGHT B A START
+```
+
+Mobile mapping:
+
+- `UP` = tap upper screen
+- `DOWN` = tap lower middle screen, away from controls
+- `LEFT` = left control
+- `RIGHT` = right control
+- `B` = throw control
+- `A` = jump control
+- `START` = pause control
 
 ## 0.9 must pass
 
@@ -64,11 +85,15 @@ It does mean the game should now have enough complete systems to judge whether i
 15. Incoming callouts appear before obstacles reach the player.
 16. Pause button appears during gameplay.
 17. Pause overlay stops the game and resumes cleanly.
-18. Stage challenge phase starts after enough gates.
-19. Stage clear unlocks the next stage.
-20. Game over retry works.
-21. Pause/resume from Android app lifecycle does not crash.
-22. A 15-minute play session has no obvious crash.
+18. Three lives appear during a run.
+19. Losing a life respawns at the latest checkpoint area.
+20. Final life still reaches normal game over.
+21. Contra code activates unlimited lives and shows `∞ LIVES`.
+22. Stage challenge phase starts after enough gates.
+23. Stage clear unlocks the next stage.
+24. Game over retry works.
+25. Pause/resume from Android app lifecycle does not crash.
+26. A 15-minute play session has no obvious crash.
 
 ## Known not-final items
 
