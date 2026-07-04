@@ -2,16 +2,16 @@
 
 A personalized Android arcade game by **TripperDeeLabs**.
 
-**Current status: Alaska 0.9.2 beta.**
+**Current status: Alaska 0.9.4 beta.**
 
 This build is beta-ready for APK testing, tuning, and bug fixing. It is not final 1.0 or 2.0 until it builds, installs, and plays well on a real phone.
 
 ## Current beta
 
 ```text
-versionCode: 21
-versionName: 0.9.2-beta
-build badge: ALASKA BETA v0.9.2
+versionCode: 23
+versionName: 0.9.4-beta
+build badge: ALASKA BETA v0.9.4
 ```
 
 ## Game flow
@@ -23,10 +23,11 @@ build badge: ALASKA BETA v0.9.2
 5. Stage intro
 6. Main arcade run
 7. Pause / quick help
-8. Checkpoint respawn if lives remain
-9. Stage challenge phase
-10. Stage clear or retry
-11. Next stage unlock / score chase
+8. Collect bonus stars and shields
+9. Checkpoint respawn if lives remain
+10. Stage challenge phase
+11. Stage clear or retry
+12. Next stage unlock / score chase
 
 ## Controls
 
@@ -65,6 +66,10 @@ Mobile mapping:
 - Three lives per run
 - Checkpoint respawn after passed gates
 - Contra-code unlimited lives
+- Bonus star pickups
+- Life restore after every third collected star when below normal max
+- Aurora shield pickup
+- Shield save before a life is spent
 - Tree timing mechanic
 - Snowball interactions
 - Near-miss rewards
@@ -83,7 +88,7 @@ Mobile mapping:
 `MainActivity` currently loads:
 
 ```java
-new AlaskaContraCodeMooseRushView(this)
+new AlaskaShieldMooseRushView(this)
 ```
 
 That layer inherits:
@@ -99,6 +104,8 @@ AlaskaHazardWarningMooseRushView
 AlaskaPauseHelpMooseRushView
 AlaskaLivesMooseRushView
 AlaskaContraCodeMooseRushView
+AlaskaCollectibleMooseRushView
+AlaskaShieldMooseRushView
 ```
 
 ## Build
@@ -122,7 +129,7 @@ Artifacts:
 2. Install the APK on a real Android device.
 3. Verify photo picker and photo restore.
 4. Verify all five Alaska stages.
-5. Verify movement, jump, throw, tree, pause, lives, respawn, cheat code, near-miss, combo, and incoming-callout systems.
+5. Verify movement, jump, throw, tree, pause, lives, respawn, cheat code, stars, shield, near-miss, combo, and incoming-callout systems.
 6. Tune movement, spacing, scoring, and difficulty.
 7. Confirm no crash in a 15-minute phone test.
 8. Keep 2.0 as the future cleanup and polish milestone.
