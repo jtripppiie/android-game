@@ -44,12 +44,12 @@ public class MainActivity extends Activity {
         );
 
         prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-        gameView = new AlaskaPauseHelpMooseRushView(this);
+        gameView = new AlaskaContraCodeMooseRushView(this);
         gameView.setPhotoRequestListener(this::openPhotoPicker);
         setContentView(createGameRoot());
         loadSavedPlayerPhoto();
         enableImmersiveMode();
-        Log.d(TAG, "onCreate: Alaska pause/help game view attached, version badge added, immersive mode enabled");
+        Log.d(TAG, "onCreate: Alaska lives and cheat game view attached, version badge added, immersive mode enabled");
     }
 
     @Override
