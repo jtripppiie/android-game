@@ -10,6 +10,7 @@ jobs:
   build-debug-apk:
     name: Build debug APK
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
       - name: Checkout repository
@@ -37,6 +38,14 @@ jobs:
           gradle --version
           sdkmanager --list_installed
 
+      - name: Check project files
+        run: |
+          test -f settings.gradle
+          test -f build.gradle
+          test -f app/build.gradle
+          test -f app/src/main/AndroidManifest.xml
+          test -f app/src/main/java/com/jtripppiie/mooserush/MainActivity.java
+
       - name: Build debug APK
         run: |
           mkdir -p build/ci-logs
@@ -45,6 +54,11 @@ jobs:
           status=${PIPESTATUS[0]}
           echo "Gradle exit status: ${status}"
           exit ${status}
+
+      - name: Print APK listing
+        if: always()
+        run: |
+          find app/build/outputs -maxdepth 5 -type f | sort | tee build/ci-logs/output-files.log || true
 
       - name: Upload debug APK
         if: always()
