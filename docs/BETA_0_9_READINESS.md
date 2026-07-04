@@ -1,11 +1,11 @@
 # Alaska 0.9 Beta Readiness
 
-The current target is **0.9.0-beta**, not final 2.0.
+The current target is **0.9.1-beta**, not final 2.0.
 
 ```text
-versionCode 19
-versionName 0.9.0-beta
-badge ALASKA BETA v0.9.0
+versionCode 20
+versionName 0.9.1-beta
+badge ALASKA BETA v0.9.1
 ```
 
 ## What 0.9 means
@@ -36,6 +36,7 @@ It does mean the game should now have enough complete systems to judge whether i
 - Near-miss scoring
 - Combo streaks
 - Incoming callouts
+- Pause and quick-help overlay
 - Touch ripple polish
 - Haptic feedback where supported
 - Debug overlay
@@ -61,11 +62,13 @@ It does mean the game should now have enough complete systems to judge whether i
 13. Near-miss scoring appears without spam.
 14. Combo HUD appears and expires.
 15. Incoming callouts appear before obstacles reach the player.
-16. Stage challenge phase starts after enough gates.
-17. Stage clear unlocks the next stage.
-18. Game over retry works.
-19. Pause/resume does not crash.
-20. A 15-minute play session has no obvious crash.
+16. Pause button appears during gameplay.
+17. Pause overlay stops the game and resumes cleanly.
+18. Stage challenge phase starts after enough gates.
+19. Stage clear unlocks the next stage.
+20. Game over retry works.
+21. Pause/resume from Android app lifecycle does not crash.
+22. A 15-minute play session has no obvious crash.
 
 ## Known not-final items
 
