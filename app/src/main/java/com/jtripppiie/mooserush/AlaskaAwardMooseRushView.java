@@ -12,7 +12,7 @@ import android.view.HapticFeedbackConstants;
 import java.lang.reflect.Field;
 
 /** Adds persistent medal awards based on the run grade. */
-public class AlaskaAwardMooseRushView extends AlaskaRunSummaryMooseRushView {
+public class AlaskaAwardMooseRushView extends AlaskaLevelMooseRushView {
     private static final String TAG = "YouRushAwards";
     private static final String PREFS_NAME = "moose_rush";
     private static final String PREF_BRONZE = "medal_bronze_total";

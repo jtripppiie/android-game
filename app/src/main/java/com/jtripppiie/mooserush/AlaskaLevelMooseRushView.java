@@ -153,7 +153,7 @@ public class AlaskaLevelMooseRushView extends AlaskaRunSummaryMooseRushView {
         }
         float width = Math.min(dp(188), getWidth() - dp(28));
         float left = getWidth() - width - dp(12);
-        float top = dp(84);
+        float top = dp(100);
         panel.set(left, top, left + width, top + dp(54));
 
         levelPaint.setStyle(Paint.Style.FILL);

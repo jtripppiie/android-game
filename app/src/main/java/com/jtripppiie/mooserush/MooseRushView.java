@@ -112,7 +112,7 @@ public class MooseRushView extends View {
     private boolean paused = false;
     private boolean bossActive = false;
     private boolean bossDefeated = false;
-    private boolean debugOverlay = true;
+    private boolean debugOverlay = false;
     private boolean leftPressed = false;
     private boolean rightPressed = false;
     private boolean jumpPressed = false;
@@ -147,7 +147,7 @@ public class MooseRushView extends View {
         selectedStage = clampInt(prefs.getInt(PREF_SELECTED_STAGE, 0), 0, STAGES.length - 1);
         selectedSeason = clampInt(prefs.getInt(PREF_SELECTED_SEASON, STAGES[selectedStage].season), 0, SEASONS.length - 1);
         unlockedStage = clampInt(prefs.getInt(PREF_UNLOCKED_STAGE, 0), 0, STAGES.length - 1);
-        debugOverlay = prefs.getBoolean(PREF_DEBUG_OVERLAY, true);
+        debugOverlay = prefs.getBoolean(PREF_DEBUG_OVERLAY, false);
 
         backgroundMidnightSun = context.getDrawable(R.drawable.placeholder_background_midnight_sun);
         backgroundDarkWinter = context.getDrawable(R.drawable.placeholder_background_dark_winter);
@@ -459,7 +459,7 @@ public class MooseRushView extends View {
         if (shotCooldown > 0f || state != STATE_RUNNING) {
             return;
         }
-        shots.add(new Shot(playerX + playerRadius * 0.9f, playerY + playerRadius * 0.05f, dp(460)));
+        shots.add(new Shot(playerX + playerRadius * 0.9f, playerY + playerRadius * 0.05f, dp(460), dp(7)));
         shotCooldown = 0.32f;
         logEvent("Snowball fired.");
     }
@@ -1420,11 +1420,11 @@ public class MooseRushView extends View {
         final float radius;
         float wobble = 0f;
 
-        Shot(float x, float y, float speed) {
+        Shot(float x, float y, float speed, float radius) {
             this.x = x;
             this.y = y;
             this.speed = speed;
-            this.radius = 7f;
+            this.radius = radius;
         }
     }
 }

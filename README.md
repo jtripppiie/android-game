@@ -2,16 +2,16 @@
 
 A personalized Android arcade game by **TripperDeeLabs**.
 
-**Current status: Alaska 1.2.8 beta.**
+**Current status: Alaska 1.3.0 beta.**
 
 This build is beta-ready for APK testing, tuning, and bug fixing. It is not final 1.0 or a larger milestone until it installs and plays well across all Alaska stages on a real phone.
 
 ## Current beta
 
 ```text
-versionCode: 128
-versionName: 1.2.8-beta
-build badge: ALASKA BETA v1.2.8
+versionCode: 130
+versionName: 1.3.0-beta
+build badge: ALASKA BETA v1.3.0
 ```
 
 ## Game flow
@@ -82,7 +82,7 @@ Mobile mapping:
 - Run missions
 - Mission score bonuses
 - Persistent mission totals
-- XP and local levels
+- XP and local levels (active in the render stack, HUD top-right during runs)
 - Run grades from F through S
 - Best grade tracking
 - Gold, silver, and bronze medal awards
@@ -92,7 +92,7 @@ Mobile mapping:
 - Longest run tracking
 - Touch ripples
 - Haptic feedback where supported
-- Debug overlay
+- Debug overlay (off by default; toggle from the menu)
 - Version badge
 - Build-log artifact workflow
 - Safer launcher vector paths
@@ -124,6 +124,7 @@ AlaskaShieldMooseRushView
 AlaskaProgressMooseRushView
 AlaskaMissionMooseRushView
 AlaskaRunSummaryMooseRushView
+AlaskaLevelMooseRushView
 AlaskaAwardMooseRushView
 ```
 
