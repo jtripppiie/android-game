@@ -2,16 +2,16 @@
 
 A personalized Android arcade game by **TripperDeeLabs**.
 
-**Current status: Alaska 0.9.5 beta.**
+**Current status: Alaska 1.2.8 beta.**
 
-This build is beta-ready for APK testing, tuning, and bug fixing. It is not final 1.0 or 2.0 until it builds, installs, and plays well on a real phone.
+This build is beta-ready for APK testing, tuning, and bug fixing. It is not final 1.0 or a larger milestone until it installs and plays well across all Alaska stages on a real phone.
 
 ## Current beta
 
 ```text
-versionCode: 24
-versionName: 0.9.5-beta
-build badge: ALASKA BETA v0.9.5
+versionCode: 128
+versionName: 1.2.8-beta
+build badge: ALASKA BETA v1.2.8
 ```
 
 ## Game flow
@@ -79,6 +79,17 @@ Mobile mapping:
 - Near-miss rewards
 - Combo streaks
 - Incoming callouts
+- Run missions
+- Mission score bonuses
+- Persistent mission totals
+- XP and local levels
+- Run grades from F through S
+- Best grade tracking
+- Gold, silver, and bronze medal awards
+- Persistent medal totals
+- Run summary screen
+- Best gates tracking
+- Longest run tracking
 - Touch ripples
 - Haptic feedback where supported
 - Debug overlay
@@ -92,7 +103,7 @@ Mobile mapping:
 `MainActivity` currently loads:
 
 ```java
-new AlaskaProgressMooseRushView(this)
+new AlaskaAwardMooseRushView(this)
 ```
 
 That layer inherits:
@@ -111,6 +122,9 @@ AlaskaContraCodeMooseRushView
 AlaskaCollectibleMooseRushView
 AlaskaShieldMooseRushView
 AlaskaProgressMooseRushView
+AlaskaMissionMooseRushView
+AlaskaRunSummaryMooseRushView
+AlaskaAwardMooseRushView
 ```
 
 ## Build
@@ -134,7 +148,7 @@ Artifacts:
 2. Install the APK on a real Android device.
 3. Verify photo picker and photo restore.
 4. Verify all five Alaska stages.
-5. Verify movement, jump, throw, tree, pause, lives, respawn, cheat code, stars, shield, progress HUD, near-miss, combo, and incoming-callout systems.
-6. Tune movement, spacing, scoring, and difficulty.
+5. Verify movement, jump, throw, tree, pause, lives, checkpoint respawn, Contra code, stars, extra-life reward, shield save, progress HUD, near-miss, combo, incoming callouts, missions, grades, medals, XP, best gates, and longest run.
+6. Tune movement, spacing, scoring, spawn rates, stage difficulty, and HUD overlap.
 7. Confirm no crash in a 15-minute phone test.
-8. Keep 2.0 as the future cleanup and polish milestone.
+8. Keep 1.3.0 focused on stability, testability, balancing, settings, and cleaner game-state integration.
