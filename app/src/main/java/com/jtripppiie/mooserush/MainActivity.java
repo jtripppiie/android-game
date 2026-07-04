@@ -44,12 +44,12 @@ public class MainActivity extends Activity {
         );
 
         prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-        gameView = new AlaskaCollectibleMooseRushView(this);
+        gameView = new AlaskaShieldMooseRushView(this);
         gameView.setPhotoRequestListener(this::openPhotoPicker);
         setContentView(createGameRoot());
         loadSavedPlayerPhoto();
         enableImmersiveMode();
-        Log.d(TAG, "onCreate: Alaska collectible game view attached, version badge added, immersive mode enabled");
+        Log.d(TAG, "onCreate: Alaska shield game view attached, version badge added, immersive mode enabled");
     }
 
     @Override
@@ -207,7 +207,7 @@ public class MainActivity extends Activity {
                         | View.SYSTEM_UI_FLAG_FULLSCREEN
                         | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
                         | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
                         | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
         );
     }
