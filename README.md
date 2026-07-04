@@ -2,16 +2,16 @@
 
 A personalized Android arcade game by **TripperDeeLabs**.
 
-**Current status: Alaska 1.3.5 beta.**
+**Current status: Alaska 1.5.0 beta.**
 
 This build is beta-ready for APK testing, tuning, and bug fixing. It is not final 1.0 or a larger milestone until it installs and plays well across all Alaska stages on a real phone.
 
 ## Current beta
 
 ```text
-versionCode: 135
-versionName: 1.3.5-beta
-build badge: ALASKA BETA v1.3.5
+versionCode: 150
+versionName: 1.5.0-beta
+build badge: ALASKA BETA v1.5.0
 ```
 
 ## Game flow
@@ -61,11 +61,13 @@ Mobile mapping:
 
 - Splash and menu flow
 - Alaska map
-- Photo-personalized player character
+- Photo-personalized player sprite with outfit color selection
 - Local saved progress
 - Five Alaska stages
 - Unified run HUD
 - Hurdle progress bar
+- Collectible star paths
+- Parallax Alaska scenery
 - Three lives per run
 - Checkpoint respawn after passed hurdles
 - Snowball interactions
@@ -106,7 +108,7 @@ The debug APK lands in `app/build/outputs/apk/debug/` with the version in the
 filename, for example:
 
 ```text
-you-rush-alaska-1.3.5-beta-135-debug.apk
+you-rush-alaska-1.5.0-beta-150-debug.apk
 ```
 
 GitHub Actions also builds a debug APK using:

@@ -8,6 +8,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.graphics.RectF;
 import android.graphics.Shader;
 import android.graphics.Typeface;
@@ -55,6 +56,14 @@ public class MooseRushView extends View {
     private static final String PREF_DEBUG_OVERLAY = "debug_overlay";
     private static final String PREF_MUTED = "muted";
     private static final String PREF_XP = "xp";
+    private static final String PREF_OUTFIT = "outfit";
+
+    private static final int[] OUTFIT_COLORS = {
+            Color.rgb(52, 134, 196),
+            Color.rgb(228, 81, 87),
+            Color.rgb(65, 155, 104),
+            Color.rgb(156, 105, 202)
+    };
 
     private static final String[] SEASONS = {
             "Summer",
@@ -76,6 +85,7 @@ public class MooseRushView extends View {
     private final Random random = new Random();
     private final List<Gate> gates = new ArrayList<>();
     private final List<Hazard> hazards = new ArrayList<>();
+    private final List<Star> stars = new ArrayList<>();
     private final List<Shot> shots = new ArrayList<>();
     private final List<String> debugEvents = new ArrayList<>();
     private final SharedPreferences prefs;
@@ -87,6 +97,7 @@ public class MooseRushView extends View {
     private final RectF photoButtonBounds = new RectF();
     private final RectF backButtonBounds = new RectF();
     private final RectF seasonButtonBounds = new RectF();
+    private final RectF outfitButtonBounds = new RectF();
     private final RectF debugButtonBounds = new RectF();
     private final RectF muteButtonBounds = new RectF();
     private final RectF leftPadBounds = new RectF();
@@ -113,6 +124,7 @@ public class MooseRushView extends View {
     private int selectedStage = 0;
     private int selectedSeason = SEASON_MIDNIGHT_SUN;
     private int unlockedStage = 0;
+    private int selectedOutfit = 0;
     private int gatesPassed = 0;
     private int stageAttempts = 0;
     private int bossHealth = 0;
@@ -168,6 +180,7 @@ public class MooseRushView extends View {
         selectedStage = clampInt(prefs.getInt(PREF_SELECTED_STAGE, 0), 0, STAGES.length - 1);
         selectedSeason = clampInt(prefs.getInt(PREF_SELECTED_SEASON, STAGES[selectedStage].season), 0, SEASONS.length - 1);
         unlockedStage = clampInt(prefs.getInt(PREF_UNLOCKED_STAGE, 0), 0, STAGES.length - 1);
+        selectedOutfit = clampInt(prefs.getInt(PREF_OUTFIT, 0), 0, OUTFIT_COLORS.length - 1);
         debugOverlay = prefs.getBoolean(PREF_DEBUG_OVERLAY, false);
         gameState.muted = prefs.getBoolean(PREF_MUTED, false);
         gameState.xp = prefs.getInt(PREF_XP, 0);
@@ -374,6 +387,10 @@ public class MooseRushView extends View {
                 selectedSeason = (selectedSeason + 1) % SEASONS.length;
                 saveChoices();
                 logEvent("Season set to " + SEASONS[selectedSeason] + ".");
+            } else if (outfitButtonBounds.contains(x, y)) {
+                selectedOutfit = (selectedOutfit + 1) % OUTFIT_COLORS.length;
+                saveChoices();
+                logEvent("Outfit color changed.");
             }
             return true;
         }
@@ -480,6 +497,7 @@ public class MooseRushView extends View {
         StageConfig stage = STAGES[selectedStage];
         gates.clear();
         hazards.clear();
+        stars.clear();
         shots.clear();
         score = 0;
         runStageScore = 0;
@@ -596,6 +614,7 @@ public class MooseRushView extends View {
         }
 
         updateShots(dt);
+        updateStars(dt, gateSpeed);
 
         if (!bossDefeated && !bossActive && gatesPassed >= stage.goalGates) {
             startBossPhase();
@@ -709,6 +728,7 @@ public class MooseRushView extends View {
     private void startBossPhase() {
         gates.clear();
         hazards.clear();
+        stars.clear();
         bossActive = true;
         bossTimer = 0f;
         bossHealth = STAGES[selectedStage].bossHealth;
@@ -795,6 +815,7 @@ public class MooseRushView extends View {
     private void resetAfterHit() {
         gates.clear();
         hazards.clear();
+        stars.clear();
         shots.clear();
         playerX = getWidth() * 0.24f;
         playerY = getGroundY() - playerRadius;
@@ -821,6 +842,29 @@ public class MooseRushView extends View {
         float gateWidth = gameplayDp(34) + random.nextFloat() * gameplayDp(18);
         float hurdleHeight = RunnerTuning.gateHeight(getResources().getDisplayMetrics().density, selectedStage, gatesPassed, random.nextFloat());
         gates.add(new Gate(getWidth() + gateWidth, hurdleHeight, gateWidth));
+        if (random.nextFloat() < 0.72f) {
+            float starY = getGroundY() - hurdleHeight - gameplayDp(34 + random.nextFloat() * 18);
+            stars.add(new Star(getWidth() + gateWidth + gameplayDp(46), Math.max(dp(86), starY), gameplayDp(8)));
+        }
+    }
+
+    private void updateStars(float dt, float speed) {
+        Iterator<Star> iterator = stars.iterator();
+        while (iterator.hasNext()) {
+            Star star = iterator.next();
+            star.x -= speed * dt;
+            star.spin += dt * 7f;
+            if (circleHitsCircle(playerX, playerY, playerRadius * 0.95f, star.x, star.y, star.radius * 1.35f)) {
+                iterator.remove();
+                gameState.stars++;
+                addScore(15, "Star collected");
+                playSound("medal");
+                continue;
+            }
+            if (star.x + star.radius < -dp(24)) {
+                iterator.remove();
+            }
+        }
     }
 
     private void spawnHazard() {
@@ -955,20 +999,24 @@ public class MooseRushView extends View {
             drawCharacterPreview(canvas, getWidth() / 2f, getHeight() * 0.33f, dp(34));
         }
 
-        float y = isLandscape() ? getHeight() * 0.42f : getHeight() * 0.53f;
+        float y = isLandscape() ? getHeight() * 0.34f : getHeight() * 0.50f;
         float x = isLandscape() ? getWidth() * 0.68f : getWidth() / 2f;
-        setButton(photoButtonBounds, x, y, dp(226), dp(48));
-        setButton(seasonButtonBounds, x, y + dp(64), dp(226), dp(48));
+        float buttonGap = isLandscape() ? dp(48) : dp(60);
+        setButton(photoButtonBounds, x, y, dp(226), isLandscape() ? dp(40) : dp(48));
+        setButton(seasonButtonBounds, x, y + buttonGap, dp(226), isLandscape() ? dp(40) : dp(48));
+        setButton(outfitButtonBounds, x, y + buttonGap * 2f, dp(226), isLandscape() ? dp(38) : dp(44));
 
         drawButton(canvas, photoButtonBounds, playerPhoto == null ? "SELECT PLAYER PHOTO" : "CHANGE PLAYER PHOTO");
         drawButton(canvas, seasonButtonBounds, "SEASON: " + SEASONS[selectedSeason]);
+        drawButton(canvas, outfitButtonBounds, "OUTFIT COLOR");
+        drawOutfitSwatch(canvas, outfitButtonBounds);
 
         textPaint.setTextSize(dp(14));
         textPaint.setColor(playerPhoto == null ? Color.rgb(255, 218, 121) : Color.WHITE);
-        canvas.drawText(playerPhoto == null ? "Photo missing: default runner will be used." : "Photo sprite ready for this run.", x, y + dp(140), textPaint);
+        canvas.drawText(playerPhoto == null ? "Photo missing: default runner will be used." : "Photo sprite ready for this run.", x, y + buttonGap * 2f + dp(42), textPaint);
         textPaint.setTextSize(dp(12));
         textPaint.setColor(Color.rgb(220, 235, 239));
-        canvas.drawText("Stage: " + STAGES[selectedStage].name + "   Controls: LEFT / RIGHT / JUMP / FIRE", x, y + dp(166), textPaint);
+        canvas.drawText("Stage: " + STAGES[selectedStage].name + "   Controls: LEFT / RIGHT / JUMP / FIRE", x, y + buttonGap * 2f + dp(62), textPaint);
     }
 
     private void drawWorld(Canvas canvas) {
@@ -979,6 +1027,9 @@ public class MooseRushView extends View {
         }
         for (Hazard hazard : hazards) {
             drawHazard(canvas, hazard);
+        }
+        for (Star star : stars) {
+            drawStar(canvas, star);
         }
         for (Shot shot : shots) {
             drawShot(canvas, shot);
@@ -1006,6 +1057,23 @@ public class MooseRushView extends View {
         if (dark) {
             paint.setColor(Color.argb(68, 0, 0, 0));
             canvas.drawRect(0, 0, getWidth(), getHeight(), paint);
+        }
+
+        drawParallaxScenery(canvas, dark, winter);
+    }
+
+    private void drawParallaxScenery(Canvas canvas, boolean dark, boolean winter) {
+        float horizon = getGroundY() - dp(72);
+        paint.setStyle(Paint.Style.FILL);
+        paint.setColor(dark ? Color.rgb(34, 52, 82) : Color.rgb(82, 126, 152));
+        for (float x = -(groundScroll * 0.18f) % dp(180) - dp(60); x < getWidth() + dp(220); x += dp(180)) {
+            PathCompat.triangle(canvas, paint, x, horizon, x + dp(82), horizon - dp(92), x + dp(172), horizon);
+        }
+
+        paint.setColor(winter ? Color.rgb(228, 238, 242) : Color.rgb(56, 118, 78));
+        for (float x = -(groundScroll * 0.45f) % dp(92) - dp(30); x < getWidth() + dp(120); x += dp(92)) {
+            canvas.drawRoundRect(x, getGroundY() - dp(38), x + dp(16), getGroundY(), dp(4), dp(4), paint);
+            PathCompat.triangle(canvas, paint, x - dp(18), getGroundY() - dp(34), x + dp(8), getGroundY() - dp(76), x + dp(34), getGroundY() - dp(34));
         }
     }
 
@@ -1059,6 +1127,16 @@ public class MooseRushView extends View {
         textPaint.setTextSize(dp(9));
         textPaint.setColor(Color.WHITE);
         canvas.drawText(hazard.label, hazard.x, hazard.y + hazard.radius + dp(12), textPaint);
+    }
+
+    private void drawStar(Canvas canvas, Star star) {
+        float pulse = 1f + (float) Math.sin(star.spin) * 0.12f;
+        float r = star.radius * pulse;
+        paint.setStyle(Paint.Style.FILL);
+        paint.setColor(Color.rgb(255, 218, 121));
+        PathCompat.star(canvas, paint, star.x, star.y, r);
+        paint.setColor(Color.argb(170, 255, 255, 255));
+        canvas.drawCircle(star.x - r * 0.25f, star.y - r * 0.32f, r * 0.22f, paint);
     }
 
     private void drawShot(Canvas canvas, Shot shot) {
@@ -1132,7 +1210,7 @@ public class MooseRushView extends View {
     }
 
     private void drawCharacter(Canvas canvas, float x, float y, float radius) {
-        float bob = (float) Math.sin(spriteClock * Math.PI * 2f) * dp(2.5f);
+        float bob = (float) Math.sin(spriteClock * Math.PI * 2f) * dp(4.0f);
         float cycle = (float) Math.sin(spriteClock * Math.PI * 2f);
         float headY = y + bob;
 
@@ -1156,12 +1234,12 @@ public class MooseRushView extends View {
         float bodyTop = headY + radius * 0.72f;
         float bodyBottom = bodyTop + radius * 1.5f;
         float bodyHalfWidth = radius * 0.62f;
-        float step = cycle * radius * 0.46f;
+        float step = cycle * radius * 0.72f;
         float oppositeStep = -step;
 
         paint.setShader(null);
         paint.setStyle(Paint.Style.FILL);
-        paint.setColor(playerPhoto == null ? Color.rgb(255, 218, 121) : Color.rgb(52, 134, 196));
+        paint.setColor(playerPhoto == null ? Color.rgb(255, 218, 121) : OUTFIT_COLORS[selectedOutfit]);
         bodyBounds.set(x - bodyHalfWidth, bodyTop, x + bodyHalfWidth, bodyBottom);
         canvas.drawRoundRect(bodyBounds, dp(7), dp(7), paint);
 
@@ -1170,13 +1248,13 @@ public class MooseRushView extends View {
 
         paint.setStyle(Paint.Style.STROKE);
         paint.setStrokeCap(Paint.Cap.ROUND);
-        paint.setStrokeWidth(radius * 0.2f);
+        paint.setStrokeWidth(radius * 0.22f);
         paint.setColor(Color.rgb(255, 177, 70));
-        canvas.drawLine(x - radius * 0.5f, bodyTop + radius * 0.42f, x - radius * 1.12f - step * 0.25f, bodyTop + radius * 0.95f + step * 0.12f, paint);
-        canvas.drawLine(x + radius * 0.5f, bodyTop + radius * 0.42f, x + radius * 1.12f + step * 0.25f, bodyTop + radius * 0.95f - step * 0.12f, paint);
+        canvas.drawLine(x - radius * 0.5f, bodyTop + radius * 0.42f, x - radius * 1.10f - step * 0.42f, bodyTop + radius * 0.96f + step * 0.18f, paint);
+        canvas.drawLine(x + radius * 0.5f, bodyTop + radius * 0.42f, x + radius * 1.10f + step * 0.42f, bodyTop + radius * 0.96f - step * 0.18f, paint);
 
         paint.setStrokeWidth(radius * 0.25f);
-        paint.setColor(playerPhoto == null ? Color.rgb(52, 134, 196) : Color.rgb(31, 50, 86));
+        paint.setColor(playerPhoto == null ? Color.rgb(52, 134, 196) : darkerOutfitColor());
         canvas.drawLine(x - radius * 0.3f, bodyBottom - radius * 0.12f, x - radius * 0.62f + step, bodyBottom + radius * 1.04f, paint);
         canvas.drawLine(x + radius * 0.3f, bodyBottom - radius * 0.12f, x + radius * 0.62f + oppositeStep, bodyBottom + radius * 1.04f, paint);
 
@@ -1281,7 +1359,7 @@ public class MooseRushView extends View {
         textPaint.setColor(Color.rgb(255, 218, 121));
         canvas.drawText("Hurdles " + gatesPassed + "/" + STAGES[selectedStage].goalGates, getWidth() / 2f, dp(25), textPaint);
         textPaint.setColor(Color.WHITE);
-        canvas.drawText("Lives " + gameState.lives + "   Combo x" + Math.max(1, gameState.combo + 1), getWidth() / 2f, dp(45), textPaint);
+        canvas.drawText("Lives " + gameState.lives + "   Stars " + gameState.stars + "   Combo x" + Math.max(1, gameState.combo + 1), getWidth() / 2f, dp(45), textPaint);
 
         textPaint.setTextAlign(Paint.Align.RIGHT);
         textPaint.setTextSize(dp(11));
@@ -1544,6 +1622,20 @@ public class MooseRushView extends View {
         canvas.drawText(label, bounds.centerX(), bounds.centerY() + dp(5), textPaint);
     }
 
+    private void drawOutfitSwatch(Canvas canvas, RectF bounds) {
+        float size = dp(20);
+        float left = bounds.right - dp(34);
+        float top = bounds.centerY() - size / 2f;
+        paint.setStyle(Paint.Style.FILL);
+        paint.setColor(OUTFIT_COLORS[selectedOutfit]);
+        canvas.drawRoundRect(left, top, left + size, top + size, dp(5), dp(5), paint);
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setStrokeWidth(dp(2));
+        paint.setColor(Color.rgb(24, 30, 38));
+        canvas.drawRoundRect(left, top, left + size, top + size, dp(5), dp(5), paint);
+        paint.setStyle(Paint.Style.FILL);
+    }
+
     private void drawSmallButton(Canvas canvas, RectF bounds, String label) {
         paint.setStyle(Paint.Style.FILL);
         paint.setColor(Color.argb(230, 16, 25, 37));
@@ -1603,6 +1695,7 @@ public class MooseRushView extends View {
         prefs.edit()
                 .putInt(PREF_SELECTED_STAGE, selectedStage)
                 .putInt(PREF_SELECTED_SEASON, selectedSeason)
+                .putInt(PREF_OUTFIT, selectedOutfit)
                 .apply();
     }
 
@@ -1680,6 +1773,15 @@ public class MooseRushView extends View {
         return dp(value * 0.82f);
     }
 
+    private int darkerOutfitColor() {
+        int color = OUTFIT_COLORS[selectedOutfit];
+        return Color.rgb(
+                Math.max(0, Math.round(Color.red(color) * 0.52f)),
+                Math.max(0, Math.round(Color.green(color) * 0.52f)),
+                Math.max(0, Math.round(Color.blue(color) * 0.52f))
+        );
+    }
+
     private static class StageConfig {
         final String name;
         final String line;
@@ -1752,6 +1854,49 @@ public class MooseRushView extends View {
             this.y = y;
             this.speed = speed;
             this.radius = radius;
+        }
+    }
+
+    private static class Star {
+        float x;
+        final float y;
+        final float radius;
+        float spin = 0f;
+
+        Star(float x, float y, float radius) {
+            this.x = x;
+            this.y = y;
+            this.radius = radius;
+        }
+    }
+
+    private static class PathCompat {
+        private static final Path PATH = new Path();
+
+        static void triangle(Canvas canvas, Paint paint, float ax, float ay, float bx, float by, float cx, float cy) {
+            PATH.reset();
+            PATH.moveTo(ax, ay);
+            PATH.lineTo(bx, by);
+            PATH.lineTo(cx, cy);
+            PATH.close();
+            canvas.drawPath(PATH, paint);
+        }
+
+        static void star(Canvas canvas, Paint paint, float cx, float cy, float radius) {
+            PATH.reset();
+            for (int i = 0; i < 10; i++) {
+                double angle = -Math.PI / 2.0 + i * Math.PI / 5.0;
+                float r = i % 2 == 0 ? radius : radius * 0.46f;
+                float x = cx + (float) Math.cos(angle) * r;
+                float y = cy + (float) Math.sin(angle) * r;
+                if (i == 0) {
+                    PATH.moveTo(x, y);
+                } else {
+                    PATH.lineTo(x, y);
+                }
+            }
+            PATH.close();
+            canvas.drawPath(PATH, paint);
         }
     }
 }

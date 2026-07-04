@@ -5,16 +5,16 @@ Use this after GitHub Actions produces the debug APK artifact.
 Current packaged beta:
 
 ```text
-versionCode: 135
-versionName: 1.3.5-beta
-build badge: ALASKA BETA v1.3.5
+versionCode: 150
+versionName: 1.5.0-beta
+build badge: ALASKA BETA v1.5.0
 ```
 
 ## Install test
 
 1. Download `you-rush-alaska-debug-apk` from the latest successful workflow run.
 2. Extract the ZIP if GitHub downloaded it as a ZIP.
-3. Install `you-rush-alaska-1.3.5-beta-135-debug.apk` on an Android phone.
+3. Install `you-rush-alaska-1.5.0-beta-150-debug.apk` on an Android phone.
 4. Allow installation from the browser/files app if Android prompts you.
 5. Open **You Rush**.
 6. Confirm the debug/version badge is visible and matches the packaged beta.
@@ -30,6 +30,7 @@ Confirm these screens work:
 - Photo picker opens from Customize.
 - A picked player photo appears in-game.
 - The selected player photo restores after closing and reopening the app.
+- Outfit color selection persists after closing and reopening the app.
 - Back buttons return to menu.
 - Play starts the selected stage.
 
@@ -59,6 +60,7 @@ Confirm the beta loop behaves consistently:
 Confirm score changes:
 
 - Clearing antler hurdles increases score.
+- Collecting stars increases score and the HUD star count.
 - Dodging hazards gives small score bumps.
 - Combo streaks build from successful play and reset on mistakes.
 - Hitting a boss with snowballs increases score.

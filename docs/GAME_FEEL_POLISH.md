@@ -43,9 +43,9 @@ Photo picker and lifecycle wiring stay attached directly to the core view.
 This polish pass is versioned as:
 
 ```text
-1.3.5-beta
-versionCode 135
-badge: ALASKA BETA v1.3.5
+1.5.0-beta
+versionCode 150
+badge: ALASKA BETA v1.5.0
 ```
 
 ## Test checklist
@@ -57,7 +57,7 @@ On device, confirm:
 - A buffered jump fires when landing shortly after a tap.
 - Double jump works once while airborne.
 - FIRE launches snowballs.
-- The APK badge shows `ALASKA BETA v1.3.5`.
+- The APK badge shows `ALASKA BETA v1.5.0`.
 - Photo upload still works.
 - Game over and stage clear still work.
 

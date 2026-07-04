@@ -5,10 +5,10 @@ You Rush uses explicit Android version metadata.
 ## Current version
 
 ```text
-versionCode: 135
-versionName: 1.3.5-beta
+versionCode: 150
+versionName: 1.5.0-beta
 build channel: ALASKA BETA
-badge: ALASKA BETA v1.3.5
+badge: ALASKA BETA v1.5.0
 ```
 
 ## File
@@ -22,11 +22,11 @@ app/build.gradle
 ## Current fields
 
 ```gradle
-versionCode 135
-versionName "1.3.5-beta"
+versionCode 150
+versionName "1.5.0-beta"
 
 buildConfigField "String", "BUILD_CHANNEL", '"ALASKA BETA"'
-buildConfigField "String", "BUILD_BADGE", '"ALASKA BETA v1.3.5"'
+buildConfigField "String", "BUILD_BADGE", '"ALASKA BETA v1.5.0"'
 buildConfigField "boolean", "SHOW_VERSION_BADGE", "true"
 ```
 
@@ -39,8 +39,8 @@ Turn it off for a public store package.
 ## Version path
 
 ```text
-1.3.5-beta   current playfield scale beta
-1.3.6-beta   next graphics or tuning build
+1.5.0-beta   current milestone polish beta
+1.5.1-beta   next graphics or tuning build
 1.4.0        next larger feature milestone after device QA
 2.0.0        later cleanup and polish milestone
 ```

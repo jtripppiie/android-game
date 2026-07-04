@@ -5,6 +5,7 @@ final class GameState {
     int runStageScore;
     int lives = 3;
     int gatesPassed;
+    int stars;
     int combo;
     int bestCombo;
     int xp;
@@ -17,6 +18,7 @@ final class GameState {
         runStageScore = 0;
         lives = 3;
         gatesPassed = 0;
+        stars = 0;
         combo = 0;
         bestCombo = 0;
         shieldActive = false;
