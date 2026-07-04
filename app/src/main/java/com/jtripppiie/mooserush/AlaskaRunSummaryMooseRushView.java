@@ -20,6 +20,7 @@ public class AlaskaRunSummaryMooseRushView extends AlaskaMissionMooseRushView {
     private static final String PREF_BEST_GATES = "best_gates_single_run";
     private static final String PREF_LONGEST_RUN = "longest_run_seconds";
     private static final String PREF_TOTAL_XP = "total_xp";
+    private static final String PREF_BEST_GRADE = "best_run_grade";
     private static final int STATE_RUNNING = 4;
     private static final int STATE_GAME_OVER = 5;
     private static final int STATE_STAGE_CLEAR = 6;
@@ -57,10 +58,14 @@ public class AlaskaRunSummaryMooseRushView extends AlaskaMissionMooseRushView {
     private int finalStars = 0;
     private int finalSeconds = 0;
     private int finalMissions = 0;
+    private int finalGradeRank = 0;
+    private int bestGradeRank = 0;
+    private int finalGradeBonus = 0;
     private float runTimer = 0f;
     private float levelPopTimer = 0f;
     private String levelPopupText = "";
     private String finalStageName = "ALASKA";
+    private String finalGrade = "D";
 
     public AlaskaRunSummaryMooseRushView(Context context) {
         super(context);
@@ -68,6 +73,7 @@ public class AlaskaRunSummaryMooseRushView extends AlaskaMissionMooseRushView {
         bestGates = prefs.getInt(PREF_BEST_GATES, 0);
         longestRunSeconds = prefs.getInt(PREF_LONGEST_RUN, 0);
         totalXp = Math.max(0, prefs.getInt(PREF_TOTAL_XP, 0));
+        bestGradeRank = Math.max(0, prefs.getInt(PREF_BEST_GRADE, 0));
         levelIndex = computeLevel(totalXp);
         bindSummaryFields();
     }
@@ -197,6 +203,12 @@ public class AlaskaRunSummaryMooseRushView extends AlaskaMissionMooseRushView {
         finalSeconds = Math.max(0, Math.round(runTimer));
         finalMissions = getMissionCompletedCountForSummary();
         finalStageName = loadStageName();
+        finalGradeRank = computeRunGradeRank(state == STATE_STAGE_CLEAR);
+        finalGrade = gradeName(finalGradeRank);
+        finalGradeBonus = gradeBonus(finalGradeRank);
+        if (finalGradeBonus > 0) {
+            addXp(finalGradeBonus);
+        }
 
         boolean changed = false;
         if (finalGates > bestGates) {
@@ -207,13 +219,51 @@ public class AlaskaRunSummaryMooseRushView extends AlaskaMissionMooseRushView {
             longestRunSeconds = finalSeconds;
             changed = true;
         }
+        if (finalGradeRank > bestGradeRank) {
+            bestGradeRank = finalGradeRank;
+            changed = true;
+        }
         if (changed) {
             prefs.edit()
                     .putInt(PREF_BEST_GATES, bestGates)
                     .putInt(PREF_LONGEST_RUN, longestRunSeconds)
+                    .putInt(PREF_BEST_GRADE, bestGradeRank)
                     .apply();
         }
-        Log.d(TAG, "Run summary captured for state " + state + ".");
+        Log.d(TAG, "Run summary captured with grade " + finalGrade + ".");
+    }
+
+    private int computeRunGradeRank(boolean stageClear) {
+        int value = finalScore + finalGates * 30 + finalStars * 25 + finalMissions * 60 + finalSeconds * 2;
+        if (stageClear) {
+            value += 180;
+        }
+        if (value >= 900) return 5;
+        if (value >= 680) return 4;
+        if (value >= 460) return 3;
+        if (value >= 260) return 2;
+        if (value >= 120) return 1;
+        return 0;
+    }
+
+    private String gradeName(int rank) {
+        switch (rank) {
+            case 5: return "S";
+            case 4: return "A";
+            case 3: return "B";
+            case 2: return "C";
+            case 1: return "D";
+            default: return "F";
+        }
+    }
+
+    private int gradeBonus(int rank) {
+        switch (rank) {
+            case 5: return 90;
+            case 4: return 60;
+            case 3: return 35;
+            default: return 0;
+        }
     }
 
     private String loadStageName() throws IllegalAccessException, NoSuchFieldException {
@@ -296,9 +346,9 @@ public class AlaskaRunSummaryMooseRushView extends AlaskaMissionMooseRushView {
         }
 
         float width = Math.min(getWidth() - dp(38), dp(360));
-        float height = dp(244);
+        float height = dp(270);
         float left = (getWidth() - width) / 2f;
-        float top = getHeight() * 0.16f;
+        float top = getHeight() * 0.13f;
         summaryPanel.set(left, top, left + width, top + height);
 
         summaryPaint.setStyle(Paint.Style.FILL);
@@ -321,12 +371,13 @@ public class AlaskaRunSummaryMooseRushView extends AlaskaMissionMooseRushView {
         summaryPaint.setColor(Color.WHITE);
         canvas.drawText(shortText(finalStageName, 30), summaryPanel.centerX(), top + dp(62), summaryPaint);
 
-        drawSummaryLine(canvas, "Score", String.valueOf(finalScore), left + dp(28), top + dp(94));
-        drawSummaryLine(canvas, "Gates", finalGates + "  best " + bestGates, left + dp(28), top + dp(120));
-        drawSummaryLine(canvas, "Stars", String.valueOf(finalStars), left + dp(28), top + dp(146));
-        drawSummaryLine(canvas, "Time", finalSeconds + "s  best " + longestRunSeconds + "s", left + dp(28), top + dp(172));
-        drawSummaryLine(canvas, "Missions", finalMissions + "/4  total " + getTotalMissionsForSummary(), left + dp(28), top + dp(198));
-        drawSummaryLine(canvas, "Level", (levelIndex + 1) + "  XP " + totalXp, left + dp(28), top + dp(224));
+        drawSummaryLine(canvas, "Grade", finalGrade + "  best " + gradeName(bestGradeRank), left + dp(28), top + dp(94));
+        drawSummaryLine(canvas, "Score", String.valueOf(finalScore), left + dp(28), top + dp(120));
+        drawSummaryLine(canvas, "Gates", finalGates + "  best " + bestGates, left + dp(28), top + dp(146));
+        drawSummaryLine(canvas, "Stars", String.valueOf(finalStars), left + dp(28), top + dp(172));
+        drawSummaryLine(canvas, "Time", finalSeconds + "s  best " + longestRunSeconds + "s", left + dp(28), top + dp(198));
+        drawSummaryLine(canvas, "Missions", finalMissions + "/4  total " + getTotalMissionsForSummary(), left + dp(28), top + dp(224));
+        drawSummaryLine(canvas, "Level", (levelIndex + 1) + "  XP " + totalXp + (finalGradeBonus > 0 ? " +" + finalGradeBonus : ""), left + dp(28), top + dp(250));
     }
 
     private void drawSummaryLine(Canvas canvas, String label, String value, float x, float y) {
