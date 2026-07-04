@@ -2,18 +2,18 @@
 
 A personalized Android arcade game by **TripperDeeLabs**.
 
-**Current status: Alaska 0.4.0 alpha.**
+**Current status: Alaska 0.9.0 beta.**
 
-This build is a stronger Alaska prototype with several 2.0-style systems, but it has not earned a final 2.0 label yet. A true 2.0 needs build validation, device playtesting, balancing, cleanup, and release packaging.
+This build is now treated as beta-ready: the main Alaska loop is feature-complete enough for serious APK testing, balancing, and bug fixing. It is still not final 1.0 or 2.0 until the APK is build-verified, installed, playtested, and tuned.
 
 > Add your face. Pick Alaska. Survive local chaos. Build combos. Clear stages. Chase a better score.
 
-## Current alpha
+## Current beta
 
 ```text
-versionCode: 11
-versionName: 0.4.0-alpha
-build badge: ALASKA ALPHA v0.4.0
+versionCode: 19
+versionName: 0.9.0-beta
+build badge: ALASKA BETA v0.9.0
 ```
 
 ## Current game flow
@@ -50,7 +50,7 @@ The visible control pad includes:
 
 A normal screen tap during gameplay still bounces the character.
 
-## Current gameplay systems
+## Beta gameplay systems
 
 The active Alaska build includes:
 
@@ -78,6 +78,8 @@ The active Alaska build includes:
 - Version badge
 - Debug overlay
 - Build-log artifact workflow
+- Safer launcher vector paths
+- Hardened app manifest
 
 ## Active view stack
 
@@ -150,15 +152,15 @@ Artifacts:
 
 ## Release docs
 
+- `docs/BETA_0_9_READINESS.md`
 - `docs/REAL_2_0_ROADMAP.md`
 - `docs/PRIVACY.md`
 - `docs/STORE_LISTING_DRAFT.md`
 - `docs/ANDROID_TEST_CHECKLIST.md`
-- `docs/ALASKA_NEXT_10_PASS.md`
 
-## Real 2.0 checklist
+## Beta readiness checklist
 
-Before calling this a true 2.0 release:
+Before calling this beta stable:
 
 1. Confirm GitHub Actions builds the APK.
 2. Install the APK on a real Android device.
@@ -167,6 +169,6 @@ Before calling this a true 2.0 release:
 5. Verify stage challenge phase.
 6. Verify snowball, tree, near-miss, combo, and incoming-callout systems.
 7. Tune movement, spacing, scoring, and difficulty.
-8. Clean up wrapper-layer/reflection architecture.
-9. Produce final screenshots, listing, and hosted privacy policy.
-10. Tag the final release only after device QA.
+8. Confirm no crash in a 15-minute phone test.
+9. Confirm the game is understandable without developer notes.
+10. Keep 2.0 as the future architectural cleanup and polish milestone.
