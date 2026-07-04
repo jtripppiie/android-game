@@ -1,68 +1,42 @@
 # You Rush
 
-A personalized, retro-funny Android arcade game by **TripperDeeLabs**.
+A personalized Android arcade game by **TripperDeeLabs**.
 
-Upload your photo, become the tiny chaos character, pick a region, and survive local nonsense.
+**You Rush: Alaska 2.0 RC1** is a local-first release-candidate build focused on one complete, polished region instead of many shallow regions.
 
-## Prototype status
+> Add your face. Pick Alaska. Survive local chaos. Build combos. Clear stages. Chase a better score.
 
-This is now an Alaska-first gameplay prototype. The goal is still to prove the addictive core before expanding to Florida, Michigan, City, or other regions.
+## Current release candidate
 
-> Add your face. Pick a place. Get bonked. Retry. Beat the boss. Unlock the next stage.
+```text
+versionCode: 20
+versionName: 2.0.0-rc1
+build badge: ALASKA RC v2.0.0-rc1
+```
 
-## Current direction
-
-The first region is **Alaska**. Alaska is also the template for how future regions should work.
-
-Each region should eventually include:
-
-- A regional map
-- Seasonal or environment variants
-- Local obstacle placeholders
-- Local boss placeholders
-- Regional death jokes
-- A short stage progression
-- Region-specific scoring and boss interactions
+This is a release candidate until a fresh GitHub Actions APK build is confirmed and installed on a real Android device.
 
 ## Current game flow
 
-The app currently includes:
+1. Splash screen
+2. Main menu
+3. Alaska map
+4. Customization / photo personalization
+5. Stage intro
+6. Main arcade run
+7. Stage challenge phase
+8. Stage clear or retry
+9. Next stage unlock / score chase
 
-1. **Splash screen**
-   - TripperDeeLabs retro boot-up vibe
-   - You Rush: Alaska identity
+## Alaska stages
 
-2. **Main menu**
-   - Play selected Alaska stage
-   - Open Alaska map
-   - Open customization
-   - Toggle debug overlay
-
-3. **Alaska map**
-   - Midnight Sun Run
-   - Salmon Rush
-   - Moose Pass
-   - Dark Winter
-   - Bear Country
-
-4. **Customization screen**
-   - Add or change player photo
-   - Preview the generated walking-sprite character
-   - Cycle season style
-
-5. **Gameplay**
-   - Virtual directional controls
-   - Jump control
-   - Fire/snowball control
-   - Uploaded photo as the player head
-   - Generated walking-sprite body with animated arms and legs
-   - Alaska stage label in the HUD
-   - Antler gates
-   - Stage hazards
-   - Boss phases with health
-   - Scoring
-   - Stage clear screen
-   - Game-over retry loop
+| Stage | Style | Goal |
+|---|---|---|
+| Midnight Sun Run | warm-up | clear 6 gates |
+| Salmon Rush | summer | clear 8 gates |
+| Moose Pass | summer | clear 10 gates |
+| Dark Winter | darkness | clear 12 gates |
+| Bear Country | winter | clear 14 gates |
 
 ## Controls
 
@@ -71,139 +45,128 @@ The visible control pad includes:
 - **LEFT**: move left
 - **RIGHT**: move right
 - **JUMP**: bounce upward
-- **FIRE**: shoot a snowball at the boss
+- **THROW**: launch a snowball
+- **CLIMB TREE**: appears only when close enough to the tree
 
-A normal screen tap during gameplay still bounces the character, but the control pad is now the preferred test interface.
+A normal screen tap during gameplay still bounces the character.
 
-## Alaska stage structure
+## 2.0 gameplay systems
 
-| Stage | Season | Hazard | Boss | Goal before boss |
-|---|---|---|---|---|
-| Midnight Sun Run | Midnight Sun | SUN placeholder | Sunburn Sprite | 6 gates |
-| Salmon Rush | Summer | SALMON | Salmon Boss | 8 gates |
-| Moose Pass | Summer | MOOSE | Moose Boss | 10 gates |
-| Dark Winter | Darkness | DARK | Darkness Boss | 12 gates |
-| Bear Country | Winter | BEAR | Bear Boss | 14 gates |
+The active Alaska game includes:
 
-Each stage transitions into a boss phase after the gate goal is reached. Bosses are defeated by landing snowball hits with the **FIRE** control.
+- Splash and menu flow
+- Alaska map
+- Photo-personalized player character
+- Animated generated body
+- Local saved progress
+- Five Alaska stages
+- Seasonal backdrops
+- Antler gate challenge
+- Regional moving obstacles
+- Stage challenge phase
+- Snowball interactions
+- Tree timing mechanic
+- Large-obstacle tree disruption
+- Directional controls
+- Jump and throw controls
+- Stage intro overlay
+- Near-miss rewards
+- Combo streaks
+- Incoming callouts
+- Touch ripples
+- Haptic feedback where supported
+- Version badge
+- Debug overlay
+- Build-log artifact workflow
+
+## Active view stack
+
+`MainActivity` currently loads:
+
+```java
+new AlaskaHazardWarningMooseRushView(this)
+```
+
+That layer inherits the full gameplay stack:
+
+```text
+MooseRushView
+JuicyMooseRushView
+AlaskaSurvivalMooseRushView
+AlaskaNearMissMooseRushView
+AlaskaComboMooseRushView
+AlaskaStageIntroMooseRushView
+AlaskaHazardWarningMooseRushView
+```
 
 ## Scoring
 
-Current scoring values:
+Current scoring includes:
 
-- Clear a gate: **+10**
-- Dodge a hazard: **+4**
-- Hit a boss: **+25**
-- Defeat a boss: **+100 + stage bonus**
+- Gate clears
+- Hazard dodges
+- Snowball interactions
+- Stage challenge hits
+- Stage completion bonuses
+- Near-miss bonuses
+- Combo bonuses
 
 Best score persists locally.
 
-## Asset packs
+## Privacy posture
 
-The first visible asset pack lives here:
+The app is local-first.
 
-`app/src/main/assets/regions/alaska/`
+- No account required
+- No server profile
+- No network requirement for normal play
+- Photo personalization uses Android's system picker
+- Selected photo reference and scores are saved locally
 
-Current Alaska placeholder files:
-
-- `region.json`
-- `background_midnight_sun.svg`
-- `background_dark_winter.svg`
-- `hazard_salmon.svg`
-- `hazard_moose.svg`
-- `hazard_bear.svg`
-- `gate_antlers.svg`
-
-The runtime uses Android vector drawables for now:
-
-`app/src/main/res/drawable/`
-
-This lets the APK render placeholders immediately while the region asset-pack folder remains the future source of truth for real art.
+See `docs/PRIVACY.md`.
 
 ## Android compatibility
-
-The debug build is currently pinned conservatively for CI stability:
 
 - `minSdk 23`
 - `targetSdk 35`
 - `compileSdk 35`
 - Android Gradle Plugin `8.7.3`
-- Gradle `8.10.2` in the GitHub Actions workflow
-
-Android 14 is API level 34, so Android 14 devices remain supported.
+- Gradle `8.10.2` in GitHub Actions
 
 ## Build
 
-Open the repo in Android Studio and run the `app` configuration on an Android device or emulator.
+Open the repo in Android Studio and run the `app` configuration on a device or emulator.
 
-## Debug APK workflow
+GitHub Actions also builds a debug APK using:
 
-GitHub Actions includes an Android Debug APK workflow at:
+```text
+.github/workflows/android-debug-apk.yml
+```
 
-`.github/workflows/android-debug-apk.yml`
-
-It builds `assembleDebug` and uploads:
+Artifacts:
 
 - `you-rush-alaska-debug-apk`
 - `you-rush-alaska-build-logs`
 
-The logs artifact is uploaded even when the APK fails, so build errors can be diagnosed quickly.
+## Release docs
 
-## Debugging
+- `docs/RELEASE_2_0_RC1.md`
+- `docs/PRIVACY.md`
+- `docs/STORE_LISTING_DRAFT.md`
+- `docs/ANDROID_TEST_CHECKLIST.md`
+- `docs/ALASKA_NEXT_10_PASS.md`
 
-There are two debug layers:
+## Final 2.0 checklist
 
-- Android logcat lifecycle/photo tag: `YouRushDebug`
-- Gameplay event tag: `YouRushGame`
+Before calling this a public final release:
 
-The in-game debug overlay shows:
-
-- State
-- Score
-- Boss status and HP
-- Player position
-- Active shots and hazards
-- Recent game events
-
-## More documentation
-
-Detailed Alaska gameplay notes live here:
-
-`docs/ALASKA_GAMEPLAY_BUILD.md`
-
-## Why this direction
-
-The stronger product is not just a runner. It is a personal chaos game.
-
-The $1.99 pitch:
-
-> A tiny arcade game starring you. Upload your face, dodge ridiculous local chaos, and chase one more point. No ads. No in-app purchases.
-
-A viral mobile game needs an instantly understandable loop:
-
-1. One input: tap/control.
-2. One goal: survive the next obstacle.
-3. One emotional hook: that is my face getting bonked.
-4. One escalation: boss phase.
-5. One restart action: retry.
-
-## Future regions
-
-Future regions can copy the Alaska pattern:
-
-- Florida: gators, golf carts, storms, flamingos
-- Michigan: potholes, deer, snowplows, lake waves
-- City: manhole covers, pigeons, taxis, traffic cones
-
-Do not start these until Alaska feels fun.
-
-## Next development steps
-
-1. Confirm the GitHub Actions debug APK build succeeds.
-2. Install the debug APK on a real Android phone.
-3. Tune the LEFT / RIGHT / JUMP / FIRE touch targets.
-4. Tune gravity, gate spacing, hazard speed, and boss HP.
-5. Add crop and position controls for the uploaded photo.
-6. Improve individual boss attack patterns.
-7. Add one-tap share card after game over.
-8. Create the second region only after Alaska feels fun.
+1. Confirm GitHub Actions builds the APK.
+2. Install the APK on a real Android device.
+3. Verify photo picker and photo restore.
+4. Verify all five Alaska stages.
+5. Verify stage challenge phase.
+6. Verify snowball, tree, near-miss, combo, and incoming-callout systems.
+7. Disable the visible RC badge for public release.
+8. Replace privacy notes with a final hosted privacy policy.
+9. Produce final screenshots and store listing assets.
+10. Tag the final release.
