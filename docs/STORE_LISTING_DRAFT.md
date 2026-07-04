@@ -14,7 +14,7 @@ You Rush is a fast, funny, local-first arcade game by TripperDeeLabs.
 
 Pick an Alaska stage, add your face if you want, and survive a ridiculous local arcade challenge. Move, jump, throw snowballs, use trees carefully, chase combos, and try to clear each stage.
 
-The 2.0 Alaska build includes five stages, personalized character art, stage intros, near-miss scoring, combo streaks, incoming callouts, tree timing, snowball interactions, boss-style stage challenges, and local saved progress.
+The Alaska beta includes five stages, personalized character art, stage intros, near-miss scoring, combo streaks, incoming callouts, tree timing, snowball interactions, stage challenges, and local saved progress.
 
 No account is required for the current build.
 
@@ -41,4 +41,4 @@ No account is required for the current build.
 
 ## Store readiness note
 
-Do not publish until the release APK is built, installed, tested, and reviewed against store policy requirements.
+This is store-copy draft material only. Do not publish until a release APK or AAB is built, installed, tested, signed, and reviewed against store policy requirements.
