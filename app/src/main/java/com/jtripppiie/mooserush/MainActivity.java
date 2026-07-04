@@ -81,7 +81,7 @@ public class MainActivity extends Activity {
         }
 
         Uri selectedImageUri = data.getData();
-        int flags = data.getFlags() & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+        int flags = Intent.FLAG_GRANT_READ_URI_PERMISSION;
         try {
             getContentResolver().takePersistableUriPermission(selectedImageUri, flags);
             Log.d(TAG, "onActivityResult: persistent photo permission granted");
