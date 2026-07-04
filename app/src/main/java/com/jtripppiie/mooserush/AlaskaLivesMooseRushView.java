@@ -13,9 +13,9 @@ import java.util.List;
 /**
  * Adds a real beta lives/respawn layer.
  *
- * A run starts with three lives. The first two failures respawn the player and
- * clear immediate danger so the run can continue. The final failure keeps the
- * normal game-over flow.
+ * A run starts with three lives. The first two failures respawn the player at
+ * the latest checkpoint and clear immediate danger so the run can continue.
+ * The final failure keeps the normal game-over flow.
  */
 public class AlaskaLivesMooseRushView extends AlaskaPauseHelpMooseRushView {
     private static final String TAG = "YouRushLives";
@@ -36,13 +36,18 @@ public class AlaskaLivesMooseRushView extends AlaskaPauseHelpMooseRushView {
     private Field spawnCooldownField;
     private Field hazardCooldownField;
     private Field damageFlashField;
+    private Field gatesPassedField;
 
     private int lives = STARTING_LIVES;
     private int lastState = -1;
+    private int lastGatesPassed = 0;
+    private float checkpointX = 0f;
+    private float checkpointY = 0f;
     private float respawnTimer = 0f;
     private float respawnPopTimer = 0f;
     private long lastLivesFrameNanos = 0L;
     private boolean bindingReady = false;
+    private boolean checkpointReady = false;
     private boolean warningLogged = false;
 
     public AlaskaLivesMooseRushView(Context context) {
@@ -74,6 +79,7 @@ public class AlaskaLivesMooseRushView extends AlaskaPauseHelpMooseRushView {
             spawnCooldownField = core.getDeclaredField("spawnCooldown");
             hazardCooldownField = core.getDeclaredField("hazardCooldown");
             damageFlashField = core.getDeclaredField("damageFlash");
+            gatesPassedField = core.getDeclaredField("gatesPassed");
 
             stateField.setAccessible(true);
             playerXField.setAccessible(true);
@@ -84,9 +90,11 @@ public class AlaskaLivesMooseRushView extends AlaskaPauseHelpMooseRushView {
             spawnCooldownField.setAccessible(true);
             hazardCooldownField.setAccessible(true);
             damageFlashField.setAccessible(true);
+            gatesPassedField.setAccessible(true);
 
             bindingReady = true;
             lastState = stateField.getInt(this);
+            lastGatesPassed = gatesPassedField.getInt(this);
             Log.d(TAG, "Lives binding ready.");
         } catch (NoSuchFieldException | IllegalAccessException exception) {
             bindingReady = false;
@@ -114,17 +122,20 @@ public class AlaskaLivesMooseRushView extends AlaskaPauseHelpMooseRushView {
         try {
             int state = stateField.getInt(this);
             if (state == STATE_RUNNING && lastState != STATE_RUNNING) {
-                if (lastState != STATE_GAME_OVER) {
-                    lives = STARTING_LIVES;
-                    respawnTimer = 0f;
-                    respawnPopTimer = 0f;
+                if (lastState != STATE_GAME_OVER || lives <= 1) {
+                    resetLivesForNewRun();
                 }
+            }
+
+            if (state == STATE_RUNNING) {
+                updateCheckpoint();
             }
 
             if (state == STATE_GAME_OVER && lastState == STATE_RUNNING && lives > 1) {
                 lives--;
                 respawnRun();
-                state = STATE_RUNNING;
+                lastState = STATE_RUNNING;
+                return;
             }
 
             lastState = state;
@@ -133,6 +144,39 @@ public class AlaskaLivesMooseRushView extends AlaskaPauseHelpMooseRushView {
                 warningLogged = true;
                 Log.w(TAG, "Lives update unavailable; normal game-over flow remains active.", exception);
             }
+        }
+    }
+
+    private void resetLivesForNewRun() throws IllegalAccessException {
+        lives = STARTING_LIVES;
+        respawnTimer = 0f;
+        respawnPopTimer = 0f;
+        lastGatesPassed = gatesPassedField.getInt(this);
+        checkpointX = getWidth() * 0.32f;
+        checkpointY = getHeight() * 0.42f;
+        checkpointReady = true;
+        Log.d(TAG, "Lives reset for new run.");
+    }
+
+    private void updateCheckpoint() throws IllegalAccessException {
+        int gatesPassed = gatesPassedField.getInt(this);
+        if (!checkpointReady) {
+            checkpointX = getWidth() * 0.32f;
+            checkpointY = getHeight() * 0.42f;
+            checkpointReady = true;
+            lastGatesPassed = gatesPassed;
+            return;
+        }
+
+        if (gatesPassed > lastGatesPassed) {
+            checkpointX = playerXField.getFloat(this);
+            checkpointY = playerYField.getFloat(this);
+            lastGatesPassed = gatesPassed;
+            Log.d(TAG, "Checkpoint updated after gate " + gatesPassed + ".");
+        } else if (gatesPassed < lastGatesPassed) {
+            lastGatesPassed = gatesPassed;
+            checkpointX = getWidth() * 0.32f;
+            checkpointY = getHeight() * 0.42f;
         }
     }
 
@@ -147,8 +191,10 @@ public class AlaskaLivesMooseRushView extends AlaskaPauseHelpMooseRushView {
             shots.clear();
         }
 
-        playerXField.setFloat(this, getWidth() * 0.32f);
-        playerYField.setFloat(this, getHeight() * 0.42f);
+        float safeX = checkpointReady ? checkpointX : getWidth() * 0.32f;
+        float safeY = checkpointReady ? checkpointY : getHeight() * 0.42f;
+        playerXField.setFloat(this, safeX);
+        playerYField.setFloat(this, clamp(safeY, getHeight() * 0.22f, getHeight() * 0.58f));
         playerVelocityYField.setFloat(this, 0f);
         spawnCooldownField.setFloat(this, 0.85f);
         hazardCooldownField.setFloat(this, 1.45f);
@@ -157,7 +203,7 @@ public class AlaskaLivesMooseRushView extends AlaskaPauseHelpMooseRushView {
         respawnTimer = RESPAWN_SECONDS;
         respawnPopTimer = RESPAWN_POP_SECONDS;
         performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
-        Log.d(TAG, "Respawn used. Lives left: " + lives);
+        Log.d(TAG, "Respawn used at checkpoint. Lives left: " + lives);
     }
 
     private void drawLivesHud(Canvas canvas) {
@@ -203,10 +249,14 @@ public class AlaskaLivesMooseRushView extends AlaskaPauseHelpMooseRushView {
         livesPaint.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
         livesPaint.setTextSize(dp(22 + 4 * pct));
         livesPaint.setColor(Color.argb(alpha, 255, 218, 121));
-        canvas.drawText("RESPAWN", getWidth() / 2f, getHeight() * 0.36f, livesPaint);
+        canvas.drawText("CHECKPOINT", getWidth() / 2f, getHeight() * 0.36f, livesPaint);
         livesPaint.setTextSize(dp(13));
         livesPaint.setColor(Color.argb(alpha, 255, 255, 255));
-        canvas.drawText("Lives left: " + lives, getWidth() / 2f, getHeight() * 0.36f + dp(28), livesPaint);
+        canvas.drawText("Respawn · Lives left: " + lives, getWidth() / 2f, getHeight() * 0.36f + dp(28), livesPaint);
+    }
+
+    private float clamp(float value, float min, float max) {
+        return Math.max(min, Math.min(max, value));
     }
 
     private float dp(float value) {
