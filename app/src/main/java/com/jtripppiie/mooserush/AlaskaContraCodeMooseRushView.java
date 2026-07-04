@@ -56,6 +56,7 @@ public class AlaskaContraCodeMooseRushView extends AlaskaLivesMooseRushView {
     private Field rightPadBoundsField;
     private Field jumpPadBoundsField;
     private Field firePadBoundsField;
+    private Field pauseButtonBoundsField;
     private Field livesField;
 
     private int codeIndex = 0;
@@ -113,6 +114,8 @@ public class AlaskaContraCodeMooseRushView extends AlaskaLivesMooseRushView {
             jumpPadBoundsField.setAccessible(true);
             firePadBoundsField.setAccessible(true);
 
+            pauseButtonBoundsField = AlaskaPauseHelpMooseRushView.class.getDeclaredField("pauseButtonBounds");
+            pauseButtonBoundsField.setAccessible(true);
             livesField = AlaskaLivesMooseRushView.class.getDeclaredField("lives");
             livesField.setAccessible(true);
 
@@ -140,11 +143,13 @@ public class AlaskaContraCodeMooseRushView extends AlaskaLivesMooseRushView {
         }
 
         try {
+            RectF pause = (RectF) pauseButtonBoundsField.get(this);
             RectF left = (RectF) leftPadBoundsField.get(this);
             RectF right = (RectF) rightPadBoundsField.get(this);
             RectF jump = (RectF) jumpPadBoundsField.get(this);
             RectF fire = (RectF) firePadBoundsField.get(this);
 
+            if (pause != null && pause.contains(x, y)) return CODE_START;
             if (left != null && left.contains(x, y)) return CODE_LEFT;
             if (right != null && right.contains(x, y)) return CODE_RIGHT;
             if (fire != null && fire.contains(x, y)) return CODE_B;
