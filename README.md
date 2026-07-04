@@ -2,16 +2,16 @@
 
 A personalized Android arcade game by **TripperDeeLabs**.
 
-**Current status: Alaska 1.3.0 beta.**
+**Current status: Alaska 1.3.1 beta.**
 
 This build is beta-ready for APK testing, tuning, and bug fixing. It is not final 1.0 or a larger milestone until it installs and plays well across all Alaska stages on a real phone.
 
 ## Current beta
 
 ```text
-versionCode: 130
-versionName: 1.3.0-beta
-build badge: ALASKA BETA v1.3.0
+versionCode: 131
+versionName: 1.3.1-beta
+build badge: ALASKA BETA v1.3.1
 ```
 
 ## Game flow
@@ -33,10 +33,18 @@ build badge: ALASKA BETA v1.3.0
 
 - **LEFT**: move left
 - **RIGHT**: move right
-- **JUMP**: bounce upward
+- **JUMP**: jump from the ground; tap again in the air for a double jump
 - **THROW**: launch a snowball
-- **CLIMB TREE**: appears only when close enough to the tree
 - **PAUSE**: opens quick help and stops the run until resumed
+
+## Gameplay style
+
+You Rush is a side-scrolling platform runner (Mario-style), not a flap-to-fly
+game. Your character runs along the ground under gravity. Antler hurdles rise
+from the ground and hazards fly in from the right — jump (or double jump) to
+clear them. The ground is safe to land on; only hitting a hurdle, a hazard, or
+the boss ends the run.
+
 
 ## Contra code
 

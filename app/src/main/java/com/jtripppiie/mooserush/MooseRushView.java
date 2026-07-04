@@ -119,6 +119,8 @@ public class MooseRushView extends View {
     private boolean firePressed = false;
     private boolean jumpWasPressed = false;
     private boolean fireWasPressed = false;
+    private boolean grounded = false;
+    private int jumpsUsed = 0;
 
     private long lastFrameNanos = 0L;
     private float splashTimer = 0f;
@@ -189,8 +191,9 @@ public class MooseRushView extends View {
     protected void onSizeChanged(int width, int height, int oldWidth, int oldHeight) {
         super.onSizeChanged(width, height, oldWidth, oldHeight);
         playerRadius = dp(23);
-        playerX = width * 0.32f;
-        playerY = height * 0.45f;
+        playerX = width * 0.28f;
+        playerY = height - dp(78) - playerRadius;
+        grounded = true;
     }
 
     @Override
@@ -444,15 +447,27 @@ public class MooseRushView extends View {
         damageFlash = 0f;
         stageClearTimer = 0f;
         state = STATE_RUNNING;
-        playerX = getWidth() * 0.32f;
-        playerY = getHeight() * 0.45f;
+        playerX = getWidth() * 0.28f;
+        playerY = getGroundY() - playerRadius;
         playerVelocityY = 0f;
+        grounded = true;
+        jumpsUsed = 0;
         stageAttempts++;
         logEvent("Start stage: " + stage.name + ". Goal " + stage.goalGates + " gates, boss HP " + stage.bossHealth + ".");
     }
 
     private void flap() {
-        playerVelocityY = -dp(425);
+        if (state != STATE_RUNNING) {
+            return;
+        }
+        if (grounded) {
+            playerVelocityY = -dp(560);
+            grounded = false;
+            jumpsUsed = 1;
+        } else if (jumpsUsed < 2) {
+            playerVelocityY = -dp(500);
+            jumpsUsed++;
+        }
     }
 
     private void fireSnowball() {
@@ -471,7 +486,7 @@ public class MooseRushView extends View {
 
         StageConfig stage = STAGES[selectedStage];
         float gateSpeed = dp(stage.baseSpeed) + Math.min(dp(90), gatesPassed * dp(7));
-        float gravity = selectedSeason == SEASON_DARKNESS ? dp(1180) : dp(1120);
+        float gravity = selectedSeason == SEASON_DARKNESS ? dp(1750) : dp(1650);
         float horizontalSpeed = dp(210);
 
         spriteClock += dt * (5.5f + Math.min(4.5f, gatesPassed * 0.28f));
@@ -490,6 +505,23 @@ public class MooseRushView extends View {
         playerY += playerVelocityY * dt;
         groundScroll = (groundScroll + gateSpeed * dt) % dp(48);
 
+        float restY = getGroundY() - playerRadius;
+        if (playerY >= restY) {
+            playerY = restY;
+            playerVelocityY = 0f;
+            grounded = true;
+            jumpsUsed = 0;
+        } else {
+            grounded = false;
+        }
+        float ceiling = dp(44) + playerRadius;
+        if (playerY < ceiling) {
+            playerY = ceiling;
+            if (playerVelocityY < 0f) {
+                playerVelocityY = 0f;
+            }
+        }
+
         updateShots(dt);
 
         if (!bossDefeated && !bossActive && gatesPassed >= stage.goalGates) {
@@ -501,11 +533,6 @@ public class MooseRushView extends View {
         } else {
             updateGates(dt, gateSpeed);
             updateHazards(dt, gateSpeed * 1.15f);
-        }
-
-        if (playerY - playerRadius < dp(44) || playerY + playerRadius > getGroundY()) {
-            endGame("Terrain got you.");
-            return;
         }
 
         if (bossActive && circleHitsCircle(playerX, playerY, playerRadius * 0.86f, bossX, bossY, bossRadius())) {
@@ -678,30 +705,28 @@ public class MooseRushView extends View {
     }
 
     private void spawnGate() {
-        float gateWidth = dp(76);
-        float gapHeight = Math.max(dp(132), dp(200) - gatesPassed * dp(3.1f) - selectedStage * dp(5));
-        float safeTop = dp(106);
-        float safeBottom = getGroundY() - dp(100);
-        float minGapCenter = safeTop + gapHeight / 2f;
-        float maxGapCenter = safeBottom - gapHeight / 2f;
-        float gapCenter = minGapCenter + random.nextFloat() * Math.max(dp(1), maxGapCenter - minGapCenter);
-        gates.add(new Gate(getWidth() + gateWidth, gapCenter, gapHeight, gateWidth));
+        float gateWidth = dp(44) + random.nextFloat() * dp(28);
+        float maxHurdle = dp(52) + Math.min(dp(30), gatesPassed * dp(1.2f)) + selectedStage * dp(3);
+        float hurdleHeight = dp(38) + random.nextFloat() * maxHurdle;
+        gates.add(new Gate(getWidth() + gateWidth, hurdleHeight, gateWidth));
     }
 
     private void spawnHazard() {
         StageConfig stage = STAGES[selectedStage];
         float radius = dp(20 + Math.min(11, selectedStage * 3));
-        float y = dp(120) + random.nextFloat() * Math.max(dp(1), getGroundY() - dp(210));
+        // Bias toward low, jump-over heights, with the occasional mid-air flyer.
+        float lowBand = getGroundY() - radius - dp(6);
+        float y = lowBand;
+        if (random.nextFloat() < 0.35f) {
+            y = getGroundY() - dp(120) - random.nextFloat() * dp(60);
+        }
         Drawable drawable = hazardDrawableForStage(selectedStage);
         hazards.add(new Hazard(getWidth() + dp(50), y, radius, 0.86f + random.nextFloat() * 0.32f, random.nextFloat() * 4f, stage.hazardLabel, drawable));
     }
 
     private boolean hitsGate(Gate gate) {
-        tempRect.set(gate.x, 0, gate.x + gate.width, gate.gapCenter - gate.gapHeight / 2f);
-        boolean hitsTop = circleHitsRect(playerX, playerY, playerRadius * 0.82f, tempRect);
-        tempRect.set(gate.x, gate.gapCenter + gate.gapHeight / 2f, gate.x + gate.width, getGroundY());
-        boolean hitsBottom = circleHitsRect(playerX, playerY, playerRadius * 0.82f, tempRect);
-        return hitsTop || hitsBottom;
+        tempRect.set(gate.x, getGroundY() - gate.height, gate.x + gate.width, getGroundY());
+        return circleHitsRect(playerX, playerY, playerRadius * 0.82f, tempRect);
     }
 
     private void drawSplashScreen(Canvas canvas) {
@@ -866,23 +891,20 @@ public class MooseRushView extends View {
     }
 
     private void drawGate(Canvas canvas, Gate gate) {
-        float topBottom = gate.gapCenter - gate.gapHeight / 2f;
-        float bottomTop = gate.gapCenter + gate.gapHeight / 2f;
+        float top = getGroundY() - gate.height;
 
         if (antlerGateAsset != null) {
-            drawDrawable(canvas, antlerGateAsset, gate.x, -dp(20), gate.x + gate.width, topBottom + dp(12));
-            drawDrawable(canvas, antlerGateAsset, gate.x, bottomTop - dp(12), gate.x + gate.width, getGroundY());
+            drawDrawable(canvas, antlerGateAsset, gate.x, top, gate.x + gate.width, getGroundY());
         } else {
             paint.setStyle(Paint.Style.FILL);
             paint.setColor(Color.rgb(104, 62, 36));
-            canvas.drawRoundRect(gate.x, -dp(20), gate.x + gate.width, topBottom, dp(14), dp(14), paint);
-            canvas.drawRoundRect(gate.x, bottomTop, gate.x + gate.width, getGroundY(), dp(14), dp(14), paint);
+            canvas.drawRoundRect(gate.x, top, gate.x + gate.width, getGroundY(), dp(10), dp(10), paint);
         }
 
         textPaint.setTextAlign(Paint.Align.CENTER);
         textPaint.setTextSize(dp(9));
         textPaint.setColor(Color.WHITE);
-        canvas.drawText("ANTLERS", gate.x + gate.width / 2f, topBottom - dp(10), textPaint);
+        canvas.drawText("ANTLERS", gate.x + gate.width / 2f, top - dp(8), textPaint);
     }
 
     private void drawHazard(Canvas canvas, Hazard hazard) {
@@ -1372,15 +1394,13 @@ public class MooseRushView extends View {
 
     private static class Gate {
         float x;
-        final float gapCenter;
-        final float gapHeight;
+        final float height;
         final float width;
         boolean passed = false;
 
-        Gate(float x, float gapCenter, float gapHeight, float width) {
+        Gate(float x, float height, float width) {
             this.x = x;
-            this.gapCenter = gapCenter;
-            this.gapHeight = gapHeight;
+            this.height = height;
             this.width = width;
         }
     }
