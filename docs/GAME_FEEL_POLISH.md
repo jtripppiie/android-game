@@ -1,80 +1,69 @@
-# Game Feel Polish Layer
+# Game Feel Polish
 
-This build adds a lightweight polish wrapper around the main `MooseRushView`.
+This note is historical. As of Alaska 1.3.2, feel polish belongs in the single
+`MooseRushView` runtime instead of a wrapper subclass.
 
 ## Why
 
 The game already has a playable Alaska loop, but it needed more immediate tactile feedback. A mobile arcade game should feel responsive every time the player taps.
 
-This feature improves perceived quality without rewriting the core gameplay file.
+This feature improves perceived quality while keeping gameplay state in one
+place.
 
-## New class
+## Current classes
 
 ```text
-app/src/main/java/com/jtripppiie/mooserush/JuicyMooseRushView.java
+app/src/main/java/com/jtripppiie/mooserush/MooseRushView.java
+app/src/main/java/com/jtripppiie/mooserush/GameState.java
+app/src/main/java/com/jtripppiie/mooserush/RunnerTuning.java
 ```
 
-`JuicyMooseRushView` extends `MooseRushView` and adds:
+`MooseRushView` owns rendering, input, and the game loop. `GameState` holds run
+state such as lives, combo, XP, and mute. `RunnerTuning` holds platformer feel
+constants such as coyote time, jump buffer, and spawn-spacing floors.
 
-- Touch ripples
-- Tiny screen jolt on input
-- Android haptic tap feedback where supported
+- Coyote time
+- Jump buffer
+- Double jump
+- Fair spawn cooldown floors
+- SoundPool generated SFX with a persisted mute toggle
 
 ## MainActivity change
 
-`MainActivity` now instantiates:
+`MainActivity` instantiates:
 
 ```java
-new JuicyMooseRushView(this)
+new MooseRushView(this)
 ```
 
-instead of the base `MooseRushView`.
-
-The variable type remains `MooseRushView`, so existing photo picker and lifecycle wiring continue to work.
-
-## Why this is safer
-
-This keeps the huge gameplay file stable while adding feel polish as a separate layer.
-
-The core systems are unchanged:
-
-- Alaska stages
-- Boss health
-- Gates
-- Hazards
-- Score
-- Photo upload
-- Debug overlay
+Photo picker and lifecycle wiring stay attached directly to the core view.
 
 ## Version
 
 This polish pass is versioned as:
 
 ```text
-0.2.1-alpha
-versionCode 3
-badge: ALASKA DEV v0.2.1-alpha
+1.3.4-beta
+versionCode 134
+badge: ALASKA BETA v1.3.4
 ```
 
 ## Test checklist
 
 On device, confirm:
 
-- Tapping creates a yellow ripple.
 - Controls still work normally.
-- JUMP still bounces.
-- THROW still launches snowballs.
-- There is a subtle screen jolt when pressing controls.
-- The APK badge shows `ALASKA DEV v0.2.1-alpha`.
+- JUMP works from the ground with coyote time.
+- A buffered jump fires when landing shortly after a tap.
+- Double jump works once while airborne.
+- FIRE launches snowballs.
+- The APK badge shows `ALASKA BETA v1.3.4`.
 - Photo upload still works.
 - Game over and stage clear still work.
 
 ## Future polish ideas
 
+- Richer bundled SoundPool samples for each audio event
 - Score popups when points are earned
-- Boss hit flash effects
-- Stage intro countdown
-- Stronger victory confetti
 - Better game-over impact animation
-- Sound effects
 - Optional vibration toggle

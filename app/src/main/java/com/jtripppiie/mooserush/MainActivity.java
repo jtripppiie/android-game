@@ -17,12 +17,15 @@ import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
 import android.view.Window;
+import android.view.WindowInsets;
+import android.view.WindowInsetsController;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 
 import java.io.IOException;
 
+@SuppressWarnings("deprecation")
 public class MainActivity extends Activity {
     private static final String TAG = "YouRushDebug";
     private static final int REQUEST_PLAYER_PHOTO = 1001;
@@ -44,7 +47,7 @@ public class MainActivity extends Activity {
         );
 
         prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-        gameView = new AlaskaAwardMooseRushView(this);
+        gameView = new MooseRushView(this);
         gameView.setPhotoRequestListener(this::openPhotoPicker);
         setContentView(createGameRoot());
         loadSavedPlayerPhoto();
@@ -72,6 +75,7 @@ public class MainActivity extends Activity {
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         Log.d(TAG, "onActivityResult: requestCode=" + requestCode + ", resultCode=" + resultCode);
@@ -142,6 +146,11 @@ public class MainActivity extends Activity {
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent.setType("image/*");
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
+        launchPhotoPicker(intent);
+    }
+
+    @SuppressWarnings("deprecation")
+    private void launchPhotoPicker(Intent intent) {
         startActivityForResult(intent, REQUEST_PLAYER_PHOTO);
     }
 
@@ -201,8 +210,20 @@ public class MainActivity extends Activity {
     }
 
     private void enableImmersiveMode() {
-        View decorView = getWindow().getDecorView();
-        decorView.setSystemUiVisibility(
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            WindowInsetsController controller = getWindow().getInsetsController();
+            if (controller != null) {
+                controller.hide(WindowInsets.Type.statusBars() | WindowInsets.Type.navigationBars());
+                controller.setSystemBarsBehavior(WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+            }
+        } else {
+            enableLegacyImmersiveMode();
+        }
+    }
+
+    @SuppressWarnings("deprecation")
+    private void enableLegacyImmersiveMode() {
+        getWindow().getDecorView().setSystemUiVisibility(
                 View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
                         | View.SYSTEM_UI_FLAG_FULLSCREEN
                         | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION

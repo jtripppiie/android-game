@@ -12,10 +12,15 @@ import android.graphics.RectF;
 import android.graphics.Shader;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
+import android.media.AudioAttributes;
+import android.media.SoundPool;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -35,6 +40,7 @@ public class MooseRushView extends View {
     private static final int STATE_RUNNING = 4;
     private static final int STATE_GAME_OVER = 5;
     private static final int STATE_STAGE_CLEAR = 6;
+    private static final int STATE_READY = 7;
 
     private static final int SEASON_SUMMER = 0;
     private static final int SEASON_WINTER = 1;
@@ -47,6 +53,8 @@ public class MooseRushView extends View {
     private static final String PREF_SELECTED_SEASON = "selected_season";
     private static final String PREF_UNLOCKED_STAGE = "unlocked_stage";
     private static final String PREF_DEBUG_OVERLAY = "debug_overlay";
+    private static final String PREF_MUTED = "muted";
+    private static final String PREF_XP = "xp";
 
     private static final String[] SEASONS = {
             "Summer",
@@ -56,11 +64,11 @@ public class MooseRushView extends View {
     };
 
     private static final StageConfig[] STAGES = {
-            new StageConfig("Midnight Sun Run", "Warm up under the endless sun.", SEASON_MIDNIGHT_SUN, "Sunburn Sprite", "SUN", 6, 2, 230, 1.18f, 0),
-            new StageConfig("Salmon Rush", "Flying fish. Questionable physics.", SEASON_SUMMER, "Salmon Boss", "SALMON", 8, 3, 250, 1.05f, 1),
-            new StageConfig("Moose Pass", "Antlers everywhere. Stay humble.", SEASON_SUMMER, "Moose Boss", "MOOSE", 10, 4, 270, 0.96f, 2),
-            new StageConfig("Dark Winter", "Low light, high panic.", SEASON_DARKNESS, "Darkness Boss", "DARK", 12, 4, 285, 0.90f, 3),
-            new StageConfig("Bear Country", "The bear is not impressed.", SEASON_WINTER, "Bear Boss", "BEAR", 14, 6, 300, 0.86f, 4)
+            new StageConfig("Midnight Sun Run", "Learn the jump. Clear the hurdles.", SEASON_MIDNIGHT_SUN, "Sunburn Sprite", "SUN", 5, 2, 150, 2.35f, 0),
+            new StageConfig("Salmon Rush", "Fish arc in after the first hurdles.", SEASON_SUMMER, "Salmon Boss", "SALMON", 7, 3, 165, 2.15f, 1),
+            new StageConfig("Moose Pass", "Moose enemies are real now. Take your time.", SEASON_SUMMER, "Moose Boss", "MOOSE", 8, 4, 178, 2.05f, 2),
+            new StageConfig("Dark Winter", "Low light, careful jumps.", SEASON_DARKNESS, "Darkness Boss", "DARK", 9, 4, 188, 1.95f, 3),
+            new StageConfig("Bear Country", "A hard final level, not a blur.", SEASON_WINTER, "Bear Boss", "BEAR", 10, 6, 198, 1.85f, 4)
     };
 
     private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -71,6 +79,7 @@ public class MooseRushView extends View {
     private final List<Shot> shots = new ArrayList<>();
     private final List<String> debugEvents = new ArrayList<>();
     private final SharedPreferences prefs;
+    private final GameState gameState = new GameState();
 
     private final RectF primaryButtonBounds = new RectF();
     private final RectF secondaryButtonBounds = new RectF();
@@ -79,6 +88,7 @@ public class MooseRushView extends View {
     private final RectF backButtonBounds = new RectF();
     private final RectF seasonButtonBounds = new RectF();
     private final RectF debugButtonBounds = new RectF();
+    private final RectF muteButtonBounds = new RectF();
     private final RectF leftPadBounds = new RectF();
     private final RectF rightPadBounds = new RectF();
     private final RectF jumpPadBounds = new RectF();
@@ -92,7 +102,6 @@ public class MooseRushView extends View {
     private final Drawable salmonAsset;
     private final Drawable mooseAsset;
     private final Drawable bearAsset;
-    private final Drawable antlerGateAsset;
 
     private PhotoRequestListener photoRequestListener;
     private Bitmap playerPhoto;
@@ -132,6 +141,9 @@ public class MooseRushView extends View {
     private float shotCooldown = 0f;
     private float damageFlash = 0f;
     private float stageClearTimer = 0f;
+    private float readyTimer = 0f;
+    private float coyoteTimer = 0f;
+    private float jumpBufferTimer = 0f;
     private float playerX;
     private float playerY;
     private float playerVelocityY;
@@ -139,6 +151,13 @@ public class MooseRushView extends View {
     private float bossX = 0f;
     private float bossY = 0f;
     private float bossVelocityY = 0f;
+    private SoundPool soundPool;
+    private int soundJump;
+    private int soundDoubleJump;
+    private int soundThrow;
+    private int soundHit;
+    private int soundHurt;
+    private int soundMedal;
 
     public MooseRushView(Context context) {
         super(context);
@@ -150,17 +169,21 @@ public class MooseRushView extends View {
         selectedSeason = clampInt(prefs.getInt(PREF_SELECTED_SEASON, STAGES[selectedStage].season), 0, SEASONS.length - 1);
         unlockedStage = clampInt(prefs.getInt(PREF_UNLOCKED_STAGE, 0), 0, STAGES.length - 1);
         debugOverlay = prefs.getBoolean(PREF_DEBUG_OVERLAY, false);
+        gameState.muted = prefs.getBoolean(PREF_MUTED, false);
+        gameState.xp = prefs.getInt(PREF_XP, 0);
+        gameState.updateLevel();
 
         backgroundMidnightSun = context.getDrawable(R.drawable.placeholder_background_midnight_sun);
         backgroundDarkWinter = context.getDrawable(R.drawable.placeholder_background_dark_winter);
         salmonAsset = context.getDrawable(R.drawable.placeholder_hazard_salmon);
         mooseAsset = context.getDrawable(R.drawable.placeholder_hazard_moose);
         bearAsset = context.getDrawable(R.drawable.placeholder_hazard_bear);
-        antlerGateAsset = context.getDrawable(R.drawable.placeholder_gate_antlers);
 
         textPaint.setColor(Color.WHITE);
         textPaint.setTypeface(Typeface.DEFAULT_BOLD);
         textPaint.setTextAlign(Paint.Align.CENTER);
+
+        initAudio();
 
         logEvent("Game view ready. Alaska build loaded.");
     }
@@ -185,6 +208,15 @@ public class MooseRushView extends View {
     public void pause() {
         paused = true;
         logEvent("Pause.");
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        if (soundPool != null) {
+            soundPool.release();
+            soundPool = null;
+        }
+        super.onDetachedFromWindow();
     }
 
     @Override
@@ -223,6 +255,10 @@ public class MooseRushView extends View {
             drawMapScreen(canvas);
         } else if (state == STATE_CUSTOMIZE) {
             drawCustomizeScreen(canvas);
+        } else if (state == STATE_READY) {
+            drawWorld(canvas);
+            drawHud(canvas);
+            drawReadyScreen(canvas);
         } else {
             drawWorld(canvas);
             drawHud(canvas);
@@ -243,10 +279,12 @@ public class MooseRushView extends View {
         spriteClock += dt * 2.5f;
         if (state == STATE_SPLASH) {
             splashTimer += dt;
-            if (splashTimer > 1.8f) {
+            if (splashTimer > 3.0f) {
                 state = STATE_MENU;
                 logEvent("Splash complete.");
             }
+        } else if (state == STATE_READY) {
+            readyTimer += dt;
         } else if (state == STATE_STAGE_CLEAR) {
             stageClearTimer += dt;
         }
@@ -288,15 +326,19 @@ public class MooseRushView extends View {
             if (primaryButtonBounds.contains(x, y)) {
                 startGame();
             } else if (secondaryButtonBounds.contains(x, y)) {
-                state = STATE_MAP;
-                logEvent("Opened Alaska map.");
-            } else if (thirdButtonBounds.contains(x, y)) {
                 state = STATE_CUSTOMIZE;
                 logEvent("Opened customize screen.");
+            } else if (thirdButtonBounds.contains(x, y)) {
+                state = STATE_MAP;
+                logEvent("Opened Alaska map.");
             } else if (debugButtonBounds.contains(x, y)) {
                 debugOverlay = !debugOverlay;
                 prefs.edit().putBoolean(PREF_DEBUG_OVERLAY, debugOverlay).apply();
                 logEvent("Debug overlay " + (debugOverlay ? "on" : "off") + ".");
+            } else if (muteButtonBounds.contains(x, y)) {
+                gameState.muted = !gameState.muted;
+                prefs.edit().putBoolean(PREF_MUTED, gameState.muted).apply();
+                logEvent("Audio " + (gameState.muted ? "muted" : "on") + ".");
             }
             return true;
         }
@@ -348,7 +390,7 @@ public class MooseRushView extends View {
                 return true;
             }
             startGame();
-            flap();
+            requestJump();
             return true;
         }
 
@@ -368,9 +410,17 @@ public class MooseRushView extends View {
             return true;
         }
 
+        if (state == STATE_READY) {
+            state = STATE_RUNNING;
+            readyTimer = 0f;
+            lastFrameNanos = 0L;
+            logEvent("Run started after ready screen.");
+            return true;
+        }
+
         if (state == STATE_RUNNING) {
             if (!isControlTouch(x, y)) {
-                flap();
+                requestJump();
             }
             return true;
         }
@@ -410,7 +460,7 @@ public class MooseRushView extends View {
         }
 
         if (jumpPressed && !wasJumpPressed) {
-            flap();
+            requestJump();
         }
         if (firePressed && !wasFirePressed) {
             fireSnowball();
@@ -434,39 +484,56 @@ public class MooseRushView extends View {
         score = 0;
         runStageScore = 0;
         gatesPassed = 0;
+        gameState.resetRun();
         bossTimer = 0f;
         bossActive = false;
         bossDefeated = false;
         bossHealth = stage.bossHealth;
         bossMaxHealth = stage.bossHealth;
-        spawnCooldown = 0.55f;
-        hazardCooldown = 1.1f;
+        spawnCooldown = selectedStage == 0 ? 2.0f : 1.65f;
+        hazardCooldown = selectedStage == 0 ? 4.0f : 3.25f;
         shotCooldown = 0f;
         groundScroll = 0f;
         spriteClock = 0f;
         damageFlash = 0f;
         stageClearTimer = 0f;
-        state = STATE_RUNNING;
+        state = STATE_READY;
+        readyTimer = 0f;
         playerX = getWidth() * 0.28f;
         playerY = getGroundY() - playerRadius;
         playerVelocityY = 0f;
         grounded = true;
         jumpsUsed = 0;
+        coyoteTimer = RunnerTuning.COYOTE_SECONDS;
+        jumpBufferTimer = 0f;
         stageAttempts++;
-        logEvent("Start stage: " + stage.name + ". Goal " + stage.goalGates + " gates, boss HP " + stage.bossHealth + ".");
+        logEvent("Start stage: " + stage.name + ". Goal " + stage.goalGates + " hurdles, boss HP " + stage.bossHealth + ".");
     }
 
-    private void flap() {
+    private void requestJump() {
         if (state != STATE_RUNNING) {
             return;
         }
-        if (grounded) {
-            playerVelocityY = -dp(560);
+        jumpBufferTimer = RunnerTuning.JUMP_BUFFER_SECONDS;
+        tryConsumeJumpBuffer();
+    }
+
+    private void tryConsumeJumpBuffer() {
+        if (jumpBufferTimer <= 0f) {
+            return;
+        }
+        if (grounded || coyoteTimer > 0f) {
+            playerVelocityY = -dp(RunnerTuning.GROUND_JUMP_VELOCITY_DP);
             grounded = false;
+            coyoteTimer = 0f;
             jumpsUsed = 1;
+            jumpBufferTimer = 0f;
+            playSound("jump");
         } else if (jumpsUsed < 2) {
-            playerVelocityY = -dp(500);
+            playerVelocityY = -dp(RunnerTuning.DOUBLE_JUMP_VELOCITY_DP);
             jumpsUsed++;
+            jumpBufferTimer = 0f;
+            playSound("double-jump");
         }
     }
 
@@ -476,6 +543,7 @@ public class MooseRushView extends View {
         }
         shots.add(new Shot(playerX + playerRadius * 0.9f, playerY + playerRadius * 0.05f, dp(460), dp(7)));
         shotCooldown = 0.32f;
+        playSound("throw");
         logEvent("Snowball fired.");
     }
 
@@ -485,13 +553,16 @@ public class MooseRushView extends View {
         }
 
         StageConfig stage = STAGES[selectedStage];
-        float gateSpeed = dp(stage.baseSpeed) + Math.min(dp(90), gatesPassed * dp(7));
-        float gravity = selectedSeason == SEASON_DARKNESS ? dp(1750) : dp(1650);
+        float gateSpeed = dp(RunnerTuning.scrollSpeedDp(stage.baseSpeed, gatesPassed));
+        float gravity = selectedSeason == SEASON_DARKNESS ? dp(RunnerTuning.DARKNESS_GRAVITY_DP) : dp(RunnerTuning.GRAVITY_DP);
         float horizontalSpeed = dp(210);
 
         spriteClock += dt * (5.5f + Math.min(4.5f, gatesPassed * 0.28f));
         shotCooldown = Math.max(0f, shotCooldown - dt);
         damageFlash = Math.max(0f, damageFlash - dt);
+        jumpBufferTimer = Math.max(0f, jumpBufferTimer - dt);
+        coyoteTimer = grounded ? RunnerTuning.COYOTE_SECONDS : Math.max(0f, coyoteTimer - dt);
+        tryConsumeJumpBuffer();
 
         if (leftPressed) {
             playerX -= horizontalSpeed * dt;
@@ -511,6 +582,8 @@ public class MooseRushView extends View {
             playerVelocityY = 0f;
             grounded = true;
             jumpsUsed = 0;
+            coyoteTimer = RunnerTuning.COYOTE_SECONDS;
+            tryConsumeJumpBuffer();
         } else {
             grounded = false;
         }
@@ -542,7 +615,7 @@ public class MooseRushView extends View {
 
         for (Gate gate : gates) {
             if (hitsGate(gate)) {
-                endGame("Antler gate bonk.");
+                endGame("Antler hurdle bonk.");
                 return;
             }
         }
@@ -559,7 +632,7 @@ public class MooseRushView extends View {
         spawnCooldown -= dt;
         if (spawnCooldown <= 0f) {
             spawnGate();
-            spawnCooldown = Math.max(0.72f, STAGES[selectedStage].spawnSeconds - gatesPassed * 0.018f);
+            spawnCooldown = RunnerTuning.nextGateCooldown(STAGES[selectedStage].spawnSeconds, gatesPassed);
         }
 
         Iterator<Gate> iterator = gates.iterator();
@@ -570,8 +643,9 @@ public class MooseRushView extends View {
             if (!gate.passed && gate.x + gate.width < playerX) {
                 gate.passed = true;
                 gatesPassed++;
-                addScore(10, "Gate cleared");
-                logEvent("Gate " + gatesPassed + "/" + STAGES[selectedStage].goalGates + " cleared.");
+                gameState.gatesPassed = gatesPassed;
+                addScore(10, "Hurdle cleared");
+                logEvent("Hurdle " + gatesPassed + "/" + STAGES[selectedStage].goalGates + " cleared.");
             }
 
             if (gate.x + gate.width < -dp(24)) {
@@ -581,10 +655,13 @@ public class MooseRushView extends View {
     }
 
     private void updateHazards(float dt, float speed) {
+        if (gatesPassed < 2) {
+            return;
+        }
         hazardCooldown -= dt;
         if (hazardCooldown <= 0f) {
             spawnHazard();
-            hazardCooldown = Math.max(0.85f, 1.7f - selectedStage * 0.12f - gatesPassed * 0.018f);
+            hazardCooldown = RunnerTuning.nextHazardCooldown(selectedStage, gatesPassed);
         }
 
         Iterator<Hazard> iterator = hazards.iterator();
@@ -595,6 +672,7 @@ public class MooseRushView extends View {
             if (!hazard.passed && hazard.x + hazard.radius < playerX) {
                 hazard.passed = true;
                 addScore(4, hazard.label + " dodged");
+                gameState.addCombo();
             }
             if (hazard.x + hazard.radius < -dp(36)) {
                 iterator.remove();
@@ -618,6 +696,7 @@ public class MooseRushView extends View {
                 bossHealth--;
                 damageFlash = 0.16f;
                 addScore(25, "Boss hit");
+                playSound("hit");
                 logEvent(STAGES[selectedStage].bossName + " hit. HP " + Math.max(0, bossHealth) + "/" + bossMaxHealth + ".");
                 if (bossHealth <= 0) {
                     completeStage();
@@ -672,6 +751,7 @@ public class MooseRushView extends View {
         bossActive = false;
         bossDefeated = true;
         addScore(100 + selectedStage * 40, "Boss defeated");
+        playSound("medal");
         if (score > bestScore) {
             bestScore = score;
         }
@@ -681,6 +761,7 @@ public class MooseRushView extends View {
         prefs.edit()
                 .putInt(PREF_BEST_SCORE, bestScore)
                 .putInt(PREF_UNLOCKED_STAGE, unlockedStage)
+                .putInt(PREF_XP, gameState.xp)
                 .apply();
         state = STATE_STAGE_CLEAR;
         stageClearTimer = 0f;
@@ -688,17 +769,49 @@ public class MooseRushView extends View {
     }
 
     private void endGame(String reason) {
+        gameState.breakCombo();
+        if (gameState.shieldActive) {
+            gameState.shieldActive = false;
+            resetAfterHit();
+            playSound("hurt");
+            logEvent("Shield absorbed hit: " + reason);
+            return;
+        }
+        if (gameState.lives > 1) {
+            gameState.lives--;
+            resetAfterHit();
+            playSound("hurt");
+            logEvent("Life lost: " + reason + " Lives " + gameState.lives + ".");
+            return;
+        }
         state = STATE_GAME_OVER;
         if (score > bestScore) {
             bestScore = score;
-            prefs.edit().putInt(PREF_BEST_SCORE, bestScore).apply();
+            prefs.edit().putInt(PREF_BEST_SCORE, bestScore).putInt(PREF_XP, gameState.xp).apply();
         }
         logEvent("Game over: " + reason + " Score " + score + ".");
+    }
+
+    private void resetAfterHit() {
+        gates.clear();
+        hazards.clear();
+        shots.clear();
+        playerX = getWidth() * 0.28f;
+        playerY = getGroundY() - playerRadius;
+        playerVelocityY = 0f;
+        grounded = true;
+        jumpsUsed = 0;
+        coyoteTimer = RunnerTuning.COYOTE_SECONDS;
+        jumpBufferTimer = 0f;
+        spawnCooldown = 0.75f;
+        hazardCooldown = 1.25f;
+        damageFlash = 0.18f;
     }
 
     private void addScore(int amount, String reason) {
         score += amount;
         runStageScore += amount;
+        gameState.addScore(amount);
         if (amount >= 10) {
             logEvent(reason + " +" + amount + ".");
         }
@@ -706,8 +819,7 @@ public class MooseRushView extends View {
 
     private void spawnGate() {
         float gateWidth = dp(44) + random.nextFloat() * dp(28);
-        float maxHurdle = dp(52) + Math.min(dp(30), gatesPassed * dp(1.2f)) + selectedStage * dp(3);
-        float hurdleHeight = dp(38) + random.nextFloat() * maxHurdle;
+        float hurdleHeight = RunnerTuning.gateHeight(getResources().getDisplayMetrics().density, selectedStage, gatesPassed, random.nextFloat());
         gates.add(new Gate(getWidth() + gateWidth, hurdleHeight, gateWidth));
     }
 
@@ -746,25 +858,40 @@ public class MooseRushView extends View {
 
         textPaint.setTextSize(dp(15));
         textPaint.setColor(Color.rgb(210, 232, 238));
-        canvas.drawText("Alaska chaos build", getWidth() / 2f, getHeight() * 0.57f, textPaint);
+        canvas.drawText("Alaska platform runner", getWidth() / 2f, getHeight() * 0.57f, textPaint);
+
+        textPaint.setTextSize(dp(14));
+        textPaint.setColor(Color.rgb(255, 218, 121));
+        canvas.drawText("For the best playing experience, rotate your phone.", getWidth() / 2f, getHeight() * 0.68f, textPaint);
+
+        textPaint.setTextSize(dp(11));
+        textPaint.setColor(Color.WHITE);
+        canvas.drawText("Tap to continue", getWidth() / 2f, getHeight() * 0.78f, textPaint);
     }
 
     private void drawMenuScreen(Canvas canvas) {
         drawAlaskaBackdrop(canvas);
         drawTopBrand(canvas, "YOU RUSH: ALASKA", "Upload your face. Beat local chaos.");
 
-        drawCharacter(canvas, getWidth() / 2f, getHeight() * 0.33f, dp(28));
+        if (isLandscape()) {
+            drawCharacterPreview(canvas, getWidth() * 0.28f, getHeight() * 0.42f, dp(27));
+        } else {
+            drawCharacterPreview(canvas, getWidth() / 2f, getHeight() * 0.33f, dp(28));
+        }
 
-        float y = getHeight() * 0.53f;
-        setButton(primaryButtonBounds, y, dp(220), dp(48));
-        setButton(secondaryButtonBounds, y + dp(62), dp(220), dp(48));
-        setButton(thirdButtonBounds, y + dp(124), dp(220), dp(48));
-        setButton(debugButtonBounds, y + dp(186), dp(220), dp(40));
+        float y = isLandscape() ? getHeight() * 0.34f : getHeight() * 0.53f;
+        float x = isLandscape() ? getWidth() * 0.68f : getWidth() / 2f;
+        setButton(primaryButtonBounds, x, y, dp(230), dp(44));
+        setButton(secondaryButtonBounds, x, y + dp(54), dp(230), dp(44));
+        setButton(thirdButtonBounds, x, y + dp(108), dp(230), dp(44));
+        setButton(debugButtonBounds, x - dp(58), y + dp(160), dp(104), dp(36));
+        setButton(muteButtonBounds, x + dp(58), y + dp(160), dp(104), dp(36));
 
         drawButton(canvas, primaryButtonBounds, "PLAY " + STAGES[selectedStage].name);
-        drawButton(canvas, secondaryButtonBounds, "ALASKA MAP");
-        drawButton(canvas, thirdButtonBounds, "CUSTOMIZE");
+        drawButton(canvas, secondaryButtonBounds, playerPhoto == null ? "CREATE YOUR SPRITE" : "EDIT YOUR SPRITE");
+        drawButton(canvas, thirdButtonBounds, "ALASKA MAP");
         drawSmallButton(canvas, debugButtonBounds, "DEBUG: " + (debugOverlay ? "ON" : "OFF"));
+        drawSmallButton(canvas, muteButtonBounds, gameState.muted ? "MUTED" : "AUDIO");
 
         textPaint.setTextAlign(Paint.Align.CENTER);
         textPaint.setTextSize(dp(13));
@@ -778,8 +905,8 @@ public class MooseRushView extends View {
         setBackButton();
         drawSmallButton(canvas, backButtonBounds, "BACK");
 
-        float startY = dp(132);
-        float gap = dp(76);
+        float startY = isLandscape() ? dp(82) : dp(132);
+        float gap = isLandscape() ? dp(48) : dp(76);
         for (int i = 0; i < STAGES.length; i++) {
             RectF node = stageBounds(i, startY, gap);
             boolean selected = i == selectedStage;
@@ -793,21 +920,21 @@ public class MooseRushView extends View {
             } else {
                 paint.setColor(Color.argb(214, 55, 58, 65));
             }
-            canvas.drawRoundRect(node, dp(16), dp(16), paint);
+            canvas.drawRoundRect(node, isLandscape() ? dp(10) : dp(16), isLandscape() ? dp(10) : dp(16), paint);
 
             textPaint.setTextAlign(Paint.Align.LEFT);
             textPaint.setColor(selected ? Color.rgb(23, 29, 38) : Color.WHITE);
-            textPaint.setTextSize(dp(17));
-            canvas.drawText((i + 1) + ". " + STAGES[i].name, node.left + dp(16), node.top + dp(27), textPaint);
+            textPaint.setTextSize(isLandscape() ? dp(14) : dp(17));
+            canvas.drawText((i + 1) + ". " + STAGES[i].name, node.left + dp(16), node.top + (isLandscape() ? dp(18) : dp(27)), textPaint);
 
-            textPaint.setTextSize(dp(12));
+            textPaint.setTextSize(isLandscape() ? dp(10) : dp(12));
             textPaint.setColor(selected ? Color.rgb(58, 65, 78) : Color.rgb(204, 223, 230));
-            canvas.drawText(STAGES[i].line, node.left + dp(16), node.top + dp(49), textPaint);
+            canvas.drawText(STAGES[i].line, node.left + dp(16), node.top + (isLandscape() ? dp(35) : dp(49)), textPaint);
 
             textPaint.setTextAlign(Paint.Align.RIGHT);
-            textPaint.setTextSize(dp(11));
+            textPaint.setTextSize(isLandscape() ? dp(10) : dp(11));
             String bossLabel = unlocked ? STAGES[i].bossName : "LOCKED";
-            canvas.drawText(bossLabel, node.right - dp(14), node.top + dp(49), textPaint);
+            canvas.drawText(bossLabel, node.right - dp(14), node.top + (isLandscape() ? dp(35) : dp(49)), textPaint);
         }
 
         textPaint.setTextAlign(Paint.Align.CENTER);
@@ -818,25 +945,30 @@ public class MooseRushView extends View {
 
     private void drawCustomizeScreen(Canvas canvas) {
         drawAlaskaBackdrop(canvas);
-        drawTopBrand(canvas, "CUSTOMIZE", "Face, season, and test feel.");
+        drawTopBrand(canvas, "CREATE YOUR SPRITE", "Pick a photo, preview your runner, then play.");
         setBackButton();
         drawSmallButton(canvas, backButtonBounds, "BACK");
 
-        drawCharacter(canvas, getWidth() / 2f, getHeight() * 0.33f, dp(34));
+        if (isLandscape()) {
+            drawCharacterPreview(canvas, getWidth() * 0.30f, getHeight() * 0.45f, dp(34));
+        } else {
+            drawCharacterPreview(canvas, getWidth() / 2f, getHeight() * 0.33f, dp(34));
+        }
 
-        float y = getHeight() * 0.53f;
-        setButton(photoButtonBounds, y, dp(226), dp(48));
-        setButton(seasonButtonBounds, y + dp(64), dp(226), dp(48));
+        float y = isLandscape() ? getHeight() * 0.42f : getHeight() * 0.53f;
+        float x = isLandscape() ? getWidth() * 0.68f : getWidth() / 2f;
+        setButton(photoButtonBounds, x, y, dp(226), dp(48));
+        setButton(seasonButtonBounds, x, y + dp(64), dp(226), dp(48));
 
-        drawButton(canvas, photoButtonBounds, playerPhoto == null ? "ADD YOUR PHOTO" : "CHANGE PHOTO");
+        drawButton(canvas, photoButtonBounds, playerPhoto == null ? "SELECT PLAYER PHOTO" : "CHANGE PLAYER PHOTO");
         drawButton(canvas, seasonButtonBounds, "SEASON: " + SEASONS[selectedSeason]);
 
         textPaint.setTextSize(dp(14));
-        textPaint.setColor(Color.WHITE);
-        canvas.drawText("Stage: " + STAGES[selectedStage].name, getWidth() / 2f, y + dp(140), textPaint);
+        textPaint.setColor(playerPhoto == null ? Color.rgb(255, 218, 121) : Color.WHITE);
+        canvas.drawText(playerPhoto == null ? "Photo missing: default runner will be used." : "Photo sprite ready for this run.", x, y + dp(140), textPaint);
         textPaint.setTextSize(dp(12));
         textPaint.setColor(Color.rgb(220, 235, 239));
-        canvas.drawText("Controls: LEFT / RIGHT / JUMP / FIRE", getWidth() / 2f, y + dp(166), textPaint);
+        canvas.drawText("Stage: " + STAGES[selectedStage].name + "   Controls: LEFT / RIGHT / JUMP / FIRE", x, y + dp(166), textPaint);
     }
 
     private void drawWorld(Canvas canvas) {
@@ -855,7 +987,7 @@ public class MooseRushView extends View {
             drawBoss(canvas);
         }
 
-        drawCharacter(canvas, playerX, playerY, playerRadius);
+        drawCharacter(canvas, playerX, playerY - playerRadius * 2.26f, playerRadius);
         drawGround(canvas, getWidth());
     }
 
@@ -893,18 +1025,26 @@ public class MooseRushView extends View {
     private void drawGate(Canvas canvas, Gate gate) {
         float top = getGroundY() - gate.height;
 
-        if (antlerGateAsset != null) {
-            drawDrawable(canvas, antlerGateAsset, gate.x, top, gate.x + gate.width, getGroundY());
-        } else {
-            paint.setStyle(Paint.Style.FILL);
-            paint.setColor(Color.rgb(104, 62, 36));
-            canvas.drawRoundRect(gate.x, top, gate.x + gate.width, getGroundY(), dp(10), dp(10), paint);
-        }
+        paint.setStyle(Paint.Style.FILL);
+        paint.setColor(Color.rgb(99, 58, 34));
+        canvas.drawRoundRect(gate.x, top, gate.x + gate.width, getGroundY(), dp(8), dp(8), paint);
+
+        paint.setColor(Color.rgb(255, 218, 121));
+        canvas.drawRoundRect(gate.x + dp(5), top + dp(6), gate.x + gate.width - dp(5), top + dp(15), dp(4), dp(4), paint);
+
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setStrokeWidth(dp(3));
+        paint.setStrokeCap(Paint.Cap.ROUND);
+        paint.setColor(Color.rgb(216, 199, 155));
+        canvas.drawLine(gate.x + dp(7), top + dp(2), gate.x - dp(8), top - dp(15), paint);
+        canvas.drawLine(gate.x + gate.width - dp(7), top + dp(2), gate.x + gate.width + dp(8), top - dp(15), paint);
+        paint.setStrokeCap(Paint.Cap.BUTT);
+        paint.setStyle(Paint.Style.FILL);
 
         textPaint.setTextAlign(Paint.Align.CENTER);
         textPaint.setTextSize(dp(9));
         textPaint.setColor(Color.WHITE);
-        canvas.drawText("ANTLERS", gate.x + gate.width / 2f, top - dp(8), textPaint);
+        canvas.drawText("HURDLE", gate.x + gate.width / 2f, top - dp(8), textPaint);
     }
 
     private void drawHazard(Canvas canvas, Hazard hazard) {
@@ -1005,6 +1145,13 @@ public class MooseRushView extends View {
         }
     }
 
+    private void drawCharacterPreview(Canvas canvas, float x, float y, float radius) {
+        float oldClock = spriteClock;
+        spriteClock += 0.08f;
+        drawCharacter(canvas, x, y, radius);
+        spriteClock = oldClock;
+    }
+
     private void drawWalkingSpriteBody(Canvas canvas, float x, float headY, float radius, float cycle) {
         float bodyTop = headY + radius * 0.72f;
         float bodyBottom = bodyTop + radius * 1.5f;
@@ -1014,9 +1161,12 @@ public class MooseRushView extends View {
 
         paint.setShader(null);
         paint.setStyle(Paint.Style.FILL);
-        paint.setColor(Color.rgb(255, 218, 121));
+        paint.setColor(playerPhoto == null ? Color.rgb(255, 218, 121) : Color.rgb(52, 134, 196));
         bodyBounds.set(x - bodyHalfWidth, bodyTop, x + bodyHalfWidth, bodyBottom);
         canvas.drawRoundRect(bodyBounds, dp(7), dp(7), paint);
+
+        paint.setColor(Color.argb(155, 255, 255, 255));
+        canvas.drawRoundRect(x - bodyHalfWidth * 0.62f, bodyTop + radius * 0.18f, x + bodyHalfWidth * 0.62f, bodyTop + radius * 0.42f, dp(4), dp(4), paint);
 
         paint.setStyle(Paint.Style.STROKE);
         paint.setStrokeCap(Paint.Cap.ROUND);
@@ -1026,7 +1176,7 @@ public class MooseRushView extends View {
         canvas.drawLine(x + radius * 0.5f, bodyTop + radius * 0.42f, x + radius * 1.12f + step * 0.25f, bodyTop + radius * 0.95f - step * 0.12f, paint);
 
         paint.setStrokeWidth(radius * 0.25f);
-        paint.setColor(Color.rgb(52, 134, 196));
+        paint.setColor(playerPhoto == null ? Color.rgb(52, 134, 196) : Color.rgb(31, 50, 86));
         canvas.drawLine(x - radius * 0.3f, bodyBottom - radius * 0.12f, x - radius * 0.62f + step, bodyBottom + radius * 1.04f, paint);
         canvas.drawLine(x + radius * 0.3f, bodyBottom - radius * 0.12f, x + radius * 0.62f + oppositeStep, bodyBottom + radius * 1.04f, paint);
 
@@ -1074,21 +1224,70 @@ public class MooseRushView extends View {
         paint.setStyle(Paint.Style.FILL);
     }
 
-    private void drawHud(Canvas canvas) {
+    private void drawReadyScreen(Canvas canvas) {
+        float panelWidth = Math.min(getWidth() - dp(56), dp(430));
+        float panelHeight = dp(168);
+        float left = (getWidth() - panelWidth) / 2f;
+        float top = Math.max(dp(84), getHeight() * 0.26f);
+        RectF panel = new RectF(left, top, left + panelWidth, top + panelHeight);
+
+        paint.setStyle(Paint.Style.FILL);
+        paint.setColor(Color.argb(220, 12, 20, 31));
+        canvas.drawRoundRect(panel, dp(14), dp(14), paint);
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setStrokeWidth(dp(2));
+        paint.setColor(Color.rgb(255, 218, 121));
+        canvas.drawRoundRect(panel, dp(14), dp(14), paint);
+        paint.setStyle(Paint.Style.FILL);
+
         textPaint.setTextAlign(Paint.Align.CENTER);
-        textPaint.setTextSize(dp(36));
+        textPaint.setColor(Color.rgb(255, 218, 121));
+        textPaint.setTextSize(dp(13));
+        canvas.drawText("LEVEL " + (selectedStage + 1), getWidth() / 2f, top + dp(28), textPaint);
+
         textPaint.setColor(Color.WHITE);
-        canvas.drawText(String.valueOf(score), getWidth() / 2f, dp(62), textPaint);
+        textPaint.setTextSize(dp(28));
+        canvas.drawText(STAGES[selectedStage].name, getWidth() / 2f, top + dp(64), textPaint);
+
+        textPaint.setTextSize(dp(13));
+        textPaint.setColor(Color.rgb(210, 232, 238));
+        canvas.drawText("Start slow. Learn the jumps. Then reach the boss.", getWidth() / 2f, top + dp(96), textPaint);
+        canvas.drawText("Tap when ready", getWidth() / 2f, top + dp(124), textPaint);
+
+        textPaint.setTextSize(dp(11));
+        textPaint.setColor(Color.rgb(255, 218, 121));
+        canvas.drawText("JUMP clears hurdles. FIRE stops bosses.", getWidth() / 2f, top + dp(148), textPaint);
+    }
+
+    private void drawHud(Canvas canvas) {
+        float barLeft = dp(10);
+        float barTop = dp(10);
+        float barRight = getWidth() - dp(10);
+        float barBottom = dp(70);
+        paint.setStyle(Paint.Style.FILL);
+        paint.setColor(Color.argb(172, 10, 18, 29));
+        canvas.drawRoundRect(barLeft, barTop, barRight, barBottom, dp(10), dp(10), paint);
 
         textPaint.setTextAlign(Paint.Align.LEFT);
+        textPaint.setTextSize(dp(11));
+        textPaint.setColor(Color.rgb(210, 232, 238));
+        canvas.drawText(STAGES[selectedStage].name, dp(20), dp(29), textPaint);
+        textPaint.setTextSize(dp(18));
+        textPaint.setColor(Color.WHITE);
+        canvas.drawText(String.valueOf(score), dp(20), dp(55), textPaint);
+
+        textPaint.setTextAlign(Paint.Align.CENTER);
         textPaint.setTextSize(dp(12));
-        canvas.drawText(STAGES[selectedStage].name, dp(14), dp(28), textPaint);
-        canvas.drawText("Gates " + gatesPassed + "/" + STAGES[selectedStage].goalGates, dp(14), dp(46), textPaint);
+        textPaint.setColor(Color.rgb(255, 218, 121));
+        canvas.drawText("Hurdles " + gatesPassed + "/" + STAGES[selectedStage].goalGates, getWidth() / 2f, dp(30), textPaint);
+        textPaint.setColor(Color.WHITE);
+        canvas.drawText("Lives " + gameState.lives + "   Combo x" + Math.max(1, gameState.combo + 1), getWidth() / 2f, dp(52), textPaint);
 
         textPaint.setTextAlign(Paint.Align.RIGHT);
         textPaint.setTextSize(dp(12));
-        canvas.drawText("Best " + bestScore, getWidth() - dp(14), dp(28), textPaint);
-        canvas.drawText(SEASONS[selectedSeason], getWidth() - dp(14), dp(46), textPaint);
+        textPaint.setColor(Color.WHITE);
+        canvas.drawText("Best " + bestScore, getWidth() - dp(20), dp(30), textPaint);
+        canvas.drawText("Lv " + gameState.level + (gameState.muted ? "  MUTE" : ""), getWidth() - dp(20), dp(52), textPaint);
 
         if (debugOverlay) {
             drawDebugOverlay(canvas);
@@ -1116,6 +1315,107 @@ public class MooseRushView extends View {
             String event = debugEvents.get(debugEvents.size() - 1 - i);
             canvas.drawText("• " + event, dp(18), top + dp(70 + i * 14), textPaint);
         }
+    }
+
+    @SuppressWarnings("deprecation")
+    private void initAudio() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+            AudioAttributes attributes = new AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_GAME)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .build();
+            soundPool = new SoundPool.Builder()
+                    .setAudioAttributes(attributes)
+                    .setMaxStreams(4)
+                    .build();
+        } else {
+            soundPool = new SoundPool(4, android.media.AudioManager.STREAM_MUSIC, 0);
+        }
+        soundJump = loadGeneratedSound("jump", 660, 80);
+        soundDoubleJump = loadGeneratedSound("double_jump", 820, 80);
+        soundThrow = loadGeneratedSound("throw", 440, 70);
+        soundHit = loadGeneratedSound("hit", 560, 90);
+        soundHurt = loadGeneratedSound("hurt", 190, 140);
+        soundMedal = loadGeneratedSound("medal", 980, 160);
+    }
+
+    private void playSound(String event) {
+        if (gameState.muted || soundPool == null) {
+            return;
+        }
+        int soundId = 0;
+        if ("jump".equals(event)) {
+            soundId = soundJump;
+        } else if ("double-jump".equals(event)) {
+            soundId = soundDoubleJump;
+        } else if ("throw".equals(event)) {
+            soundId = soundThrow;
+        } else if ("hit".equals(event)) {
+            soundId = soundHit;
+        } else if ("hurt".equals(event)) {
+            soundId = soundHurt;
+        } else if ("medal".equals(event)) {
+            soundId = soundMedal;
+        }
+        if (soundId != 0) {
+            soundPool.play(soundId, 0.45f, 0.45f, 1, 0, 1f);
+        }
+    }
+
+    private int loadGeneratedSound(String name, int frequencyHz, int durationMs) {
+        try {
+            File file = new File(getContext().getCacheDir(), "you_rush_" + name + ".wav");
+            writeToneWav(file, frequencyHz, durationMs);
+            return soundPool.load(file.getAbsolutePath(), 1);
+        } catch (IOException exception) {
+            Log.w(TAG, "Unable to prepare sound " + name, exception);
+            return 0;
+        }
+    }
+
+    private void writeToneWav(File file, int frequencyHz, int durationMs) throws IOException {
+        int sampleRate = 22050;
+        int sampleCount = sampleRate * durationMs / 1000;
+        int dataSize = sampleCount * 2;
+        try (FileOutputStream out = new FileOutputStream(file)) {
+            writeAscii(out, "RIFF");
+            writeLittleEndianInt(out, 36 + dataSize);
+            writeAscii(out, "WAVEfmt ");
+            writeLittleEndianInt(out, 16);
+            writeLittleEndianShort(out, 1);
+            writeLittleEndianShort(out, 1);
+            writeLittleEndianInt(out, sampleRate);
+            writeLittleEndianInt(out, sampleRate * 2);
+            writeLittleEndianShort(out, 2);
+            writeLittleEndianShort(out, 16);
+            writeAscii(out, "data");
+            writeLittleEndianInt(out, dataSize);
+
+            for (int i = 0; i < sampleCount; i++) {
+                double t = i / (double) sampleRate;
+                double envelope = 1.0 - (i / (double) sampleCount);
+                short sample = (short) (Math.sin(2.0 * Math.PI * frequencyHz * t) * envelope * 12000);
+                writeLittleEndianShort(out, sample);
+            }
+        }
+    }
+
+    private void writeAscii(FileOutputStream out, String value) throws IOException {
+        for (int i = 0; i < value.length(); i++) {
+            out.write(value.charAt(i));
+        }
+    }
+
+    private void writeLittleEndianInt(FileOutputStream out, int value) throws IOException {
+        out.write(value & 0xff);
+        out.write((value >> 8) & 0xff);
+        out.write((value >> 16) & 0xff);
+        out.write((value >> 24) & 0xff);
+    }
+
+    private void writeLittleEndianShort(FileOutputStream out, int value) throws IOException {
+        out.write(value & 0xff);
+        out.write((value >> 8) & 0xff);
     }
 
     private void drawVirtualControls(Canvas canvas) {
@@ -1169,7 +1469,7 @@ public class MooseRushView extends View {
 
         textPaint.setTextSize(dp(13));
         textPaint.setColor(Color.rgb(255, 218, 121));
-        canvas.drawText("Score " + score + " · Gates " + gatesPassed + " · Attempt " + stageAttempts, getWidth() / 2f, top + dp(118), textPaint);
+        canvas.drawText("Score " + score + " · Hurdles " + gatesPassed + " · Attempt " + stageAttempts, getWidth() / 2f, top + dp(118), textPaint);
         canvas.drawText("Tap anywhere to retry", getWidth() / 2f, top + dp(144), textPaint);
 
         setButton(secondaryButtonBounds, top + dp(174), dp(118), dp(36));
@@ -1216,20 +1516,21 @@ public class MooseRushView extends View {
     private void drawTopBrand(Canvas canvas, String title, String subtitle) {
         paint.setStyle(Paint.Style.FILL);
         paint.setColor(Color.argb(150, 0, 0, 0));
-        canvas.drawRect(0, 0, getWidth(), dp(112), paint);
+        float height = isLandscape() ? dp(76) : dp(112);
+        canvas.drawRect(0, 0, getWidth(), height, paint);
 
         textPaint.setTextAlign(Paint.Align.CENTER);
         textPaint.setColor(Color.rgb(255, 218, 121));
-        textPaint.setTextSize(dp(12));
-        canvas.drawText("TRIPPERDEELABS", getWidth() / 2f, dp(25), textPaint);
+        textPaint.setTextSize(isLandscape() ? dp(10) : dp(12));
+        canvas.drawText("TRIPPERDEELABS", getWidth() / 2f, isLandscape() ? dp(18) : dp(25), textPaint);
 
         textPaint.setColor(Color.WHITE);
-        textPaint.setTextSize(dp(28));
-        canvas.drawText(title, getWidth() / 2f, dp(61), textPaint);
+        textPaint.setTextSize(isLandscape() ? dp(22) : dp(28));
+        canvas.drawText(title, getWidth() / 2f, isLandscape() ? dp(45) : dp(61), textPaint);
 
         textPaint.setColor(Color.rgb(210, 232, 238));
-        textPaint.setTextSize(dp(13));
-        canvas.drawText(subtitle, getWidth() / 2f, dp(88), textPaint);
+        textPaint.setTextSize(isLandscape() ? dp(11) : dp(13));
+        canvas.drawText(subtitle, getWidth() / 2f, isLandscape() ? dp(65) : dp(88), textPaint);
     }
 
     private void drawButton(Canvas canvas, RectF bounds, String label) {
@@ -1260,7 +1561,11 @@ public class MooseRushView extends View {
     }
 
     private void setButton(RectF bounds, float centerY, float width, float height) {
-        float left = (getWidth() - width) / 2f;
+        setButton(bounds, getWidth() / 2f, centerY, width, height);
+    }
+
+    private void setButton(RectF bounds, float centerX, float centerY, float width, float height) {
+        float left = centerX - width / 2f;
         bounds.set(left, centerY - height / 2f, left + width, centerY + height / 2f);
     }
 
@@ -1272,12 +1577,12 @@ public class MooseRushView extends View {
         float left = dp(22);
         float right = getWidth() - dp(22);
         float top = startY + index * gap;
-        return new RectF(left, top, right, top + dp(62));
+        return new RectF(left, top, right, top + (isLandscape() ? dp(42) : dp(62)));
     }
 
     private int findTappedStage(float x, float y) {
-        float startY = dp(132);
-        float gap = dp(76);
+        float startY = isLandscape() ? dp(82) : dp(132);
+        float gap = isLandscape() ? dp(48) : dp(76);
         for (int i = 0; i < STAGES.length; i++) {
             if (stageBounds(i, startY, gap).contains(x, y)) {
                 return i;
@@ -1331,6 +1636,7 @@ public class MooseRushView extends View {
         if (state == STATE_CUSTOMIZE) return "customize";
         if (state == STATE_RUNNING) return "running";
         if (state == STATE_STAGE_CLEAR) return "stage_clear";
+        if (state == STATE_READY) return "ready";
         return "game_over";
     }
 
@@ -1344,6 +1650,10 @@ public class MooseRushView extends View {
 
     private float getGroundY() {
         return getHeight() - dp(78);
+    }
+
+    private boolean isLandscape() {
+        return getWidth() > getHeight();
     }
 
     private boolean circleHitsRect(float cx, float cy, float radius, RectF rect) {

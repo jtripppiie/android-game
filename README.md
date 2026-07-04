@@ -2,16 +2,16 @@
 
 A personalized Android arcade game by **TripperDeeLabs**.
 
-**Current status: Alaska 1.3.1 beta.**
+**Current status: Alaska 1.3.4 beta.**
 
 This build is beta-ready for APK testing, tuning, and bug fixing. It is not final 1.0 or a larger milestone until it installs and plays well across all Alaska stages on a real phone.
 
 ## Current beta
 
 ```text
-versionCode: 131
-versionName: 1.3.1-beta
-build badge: ALASKA BETA v1.3.1
+versionCode: 134
+versionName: 1.3.4-beta
+build badge: ALASKA BETA v1.3.4
 ```
 
 ## Game flow
@@ -20,22 +20,17 @@ build badge: ALASKA BETA v1.3.1
 2. Main menu
 3. Alaska map
 4. Customization / photo personalization
-5. Stage intro
-6. Main arcade run with progress HUD
-7. Pause / quick help
-8. Collect bonus stars and shields
-9. Checkpoint respawn if lives remain
-10. Stage challenge phase
-11. Stage clear or retry
-12. Next stage unlock / score chase
+5. Main arcade run with a single unified HUD
+6. Boss phase
+7. Stage clear or retry
+8. Next stage unlock / score chase
 
 ## Controls
 
 - **LEFT**: move left
 - **RIGHT**: move right
 - **JUMP**: jump from the ground; tap again in the air for a double jump
-- **THROW**: launch a snowball
-- **PAUSE**: opens quick help and stops the run until resumed
+- **FIRE**: launch a snowball
 
 ## Gameplay style
 
@@ -69,72 +64,31 @@ Mobile mapping:
 - Photo-personalized player character
 - Local saved progress
 - Five Alaska stages
-- Stage intro overlay
-- Stage progress HUD
-- Gate progress bar
-- Run timer
-- Stage challenge phase messaging
-- Pause and quick-help overlay
+- Unified run HUD
+- Hurdle progress bar
 - Three lives per run
-- Checkpoint respawn after passed gates
-- Contra-code unlimited lives
-- Bonus star pickups
-- Life restore after every third collected star when below normal max
-- Aurora shield pickup
-- Shield save before a life is spent
-- Tree timing mechanic
+- Checkpoint respawn after passed hurdles
 - Snowball interactions
-- Near-miss rewards
-- Combo streaks
-- Incoming callouts
-- Run missions
-- Mission score bonuses
-- Persistent mission totals
-- XP and local levels (active in the render stack, HUD top-right during runs)
-- Run grades from F through S
-- Best grade tracking
-- Gold, silver, and bronze medal awards
-- Persistent medal totals
-- Run summary screen
-- Best gates tracking
-- Longest run tracking
-- Touch ripples
-- Haptic feedback where supported
+- Combo counter
+- Persistent XP and local levels
+- SoundPool generated SFX with persisted mute toggle
 - Debug overlay (off by default; toggle from the menu)
 - Version badge
 - Build-log artifact workflow
 - Safer launcher vector paths
 - Hardened app manifest
 
-## Active view stack
+## Runtime architecture
 
-`MainActivity` currently loads:
+`MainActivity` loads one game view:
 
 ```java
-new AlaskaAwardMooseRushView(this)
+new MooseRushView(this)
 ```
 
-That layer inherits:
-
-```text
-MooseRushView
-JuicyMooseRushView
-AlaskaSurvivalMooseRushView
-AlaskaNearMissMooseRushView
-AlaskaComboMooseRushView
-AlaskaStageIntroMooseRushView
-AlaskaHazardWarningMooseRushView
-AlaskaPauseHelpMooseRushView
-AlaskaLivesMooseRushView
-AlaskaContraCodeMooseRushView
-AlaskaCollectibleMooseRushView
-AlaskaShieldMooseRushView
-AlaskaProgressMooseRushView
-AlaskaMissionMooseRushView
-AlaskaRunSummaryMooseRushView
-AlaskaLevelMooseRushView
-AlaskaAwardMooseRushView
-```
+The previous subclass stack was removed in 1.3.2. Gameplay state now flows
+through `GameState`, platformer constants live in `RunnerTuning`, and the HUD is
+drawn once by `MooseRushView`.
 
 ## Build
 
@@ -148,7 +102,12 @@ From the command line, use the committed Gradle wrapper:
 ./gradlew lintDebug            # run Android lint
 ```
 
-The debug APK lands in `app/build/outputs/apk/debug/`.
+The debug APK lands in `app/build/outputs/apk/debug/` with the version in the
+filename, for example:
+
+```text
+you-rush-alaska-1.3.4-beta-134-debug.apk
+```
 
 GitHub Actions also builds a debug APK using:
 
@@ -168,6 +127,7 @@ unit tests:
 
 - `GameMath` — clamp and circle/rect collision helpers used by the game loop.
 - `LevelCurve` — XP thresholds and level/progress math used by the level HUD.
+- `RunnerTuning` — coyote time, jump buffer, and spawn-spacing fairness floors.
 
 Run them with `./gradlew testDebugUnitTest`.
 
@@ -184,7 +144,7 @@ full-bleed vector fallback in `res/mipmap-anydpi/` for API 23–25.
 2. Install the APK on a real Android device.
 3. Verify photo picker and photo restore.
 4. Verify all five Alaska stages.
-5. Verify movement, jump, throw, tree, pause, lives, checkpoint respawn, Contra code, stars, extra-life reward, shield save, progress HUD, near-miss, combo, incoming callouts, missions, grades, medals, XP, best gates, and longest run.
+5. Verify movement, jump, double jump, fire, lives, checkpoint respawn, unified HUD, combo, XP, all bosses, and mute toggle.
 6. Tune movement, spacing, scoring, spawn rates, stage difficulty, and HUD overlap.
 7. Confirm no crash in a 15-minute phone test.
-8. Keep 1.3.0 focused on stability, testability, balancing, settings, and cleaner game-state integration.
+8. Keep 1.3.x focused on stability, testability, balancing, audio assets, and cleaner game-state integration.
