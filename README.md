@@ -2,16 +2,16 @@
 
 A personalized Android arcade game by **TripperDeeLabs**.
 
-**Current status: Alaska 0.9.4 beta.**
+**Current status: Alaska 0.9.5 beta.**
 
 This build is beta-ready for APK testing, tuning, and bug fixing. It is not final 1.0 or 2.0 until it builds, installs, and plays well on a real phone.
 
 ## Current beta
 
 ```text
-versionCode: 23
-versionName: 0.9.4-beta
-build badge: ALASKA BETA v0.9.4
+versionCode: 24
+versionName: 0.9.5-beta
+build badge: ALASKA BETA v0.9.5
 ```
 
 ## Game flow
@@ -21,7 +21,7 @@ build badge: ALASKA BETA v0.9.4
 3. Alaska map
 4. Customization / photo personalization
 5. Stage intro
-6. Main arcade run
+6. Main arcade run with progress HUD
 7. Pause / quick help
 8. Collect bonus stars and shields
 9. Checkpoint respawn if lives remain
@@ -62,6 +62,10 @@ Mobile mapping:
 - Local saved progress
 - Five Alaska stages
 - Stage intro overlay
+- Stage progress HUD
+- Gate progress bar
+- Run timer
+- Stage challenge phase messaging
 - Pause and quick-help overlay
 - Three lives per run
 - Checkpoint respawn after passed gates
@@ -88,7 +92,7 @@ Mobile mapping:
 `MainActivity` currently loads:
 
 ```java
-new AlaskaShieldMooseRushView(this)
+new AlaskaProgressMooseRushView(this)
 ```
 
 That layer inherits:
@@ -106,6 +110,7 @@ AlaskaLivesMooseRushView
 AlaskaContraCodeMooseRushView
 AlaskaCollectibleMooseRushView
 AlaskaShieldMooseRushView
+AlaskaProgressMooseRushView
 ```
 
 ## Build
@@ -129,7 +134,7 @@ Artifacts:
 2. Install the APK on a real Android device.
 3. Verify photo picker and photo restore.
 4. Verify all five Alaska stages.
-5. Verify movement, jump, throw, tree, pause, lives, respawn, cheat code, stars, shield, near-miss, combo, and incoming-callout systems.
+5. Verify movement, jump, throw, tree, pause, lives, respawn, cheat code, stars, shield, progress HUD, near-miss, combo, and incoming-callout systems.
 6. Tune movement, spacing, scoring, and difficulty.
 7. Confirm no crash in a 15-minute phone test.
 8. Keep 2.0 as the future cleanup and polish milestone.
