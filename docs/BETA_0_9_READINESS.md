@@ -1,11 +1,11 @@
 # Alaska 0.9 Beta Readiness
 
-The current target is **0.9.3-beta**, not final 2.0.
+The current target is **0.9.4-beta**, not final 2.0.
 
 ```text
-versionCode 22
-versionName 0.9.3-beta
-badge ALASKA BETA v0.9.3
+versionCode 23
+versionName 0.9.4-beta
+badge ALASKA BETA v0.9.4
 ```
 
 ## What 0.9 means
@@ -33,6 +33,8 @@ It does mean the game should now have enough complete systems to judge whether i
 - Contra-code unlimited-lives cheat
 - Bonus star pickups
 - Life restore after every third collected star when below normal max
+- Aurora shield pickup
+- Shield save before a life is spent
 - Directional controls
 - Jump control
 - Snowball throw control
@@ -94,11 +96,14 @@ Mobile mapping:
 22. Bonus stars appear during runs.
 23. Collecting a bonus star gives score.
 24. Every third collected star can restore one life if below normal max.
-25. Stage challenge phase starts after enough gates.
-26. Stage clear unlocks the next stage.
-27. Game over retry works.
-28. Pause/resume from Android app lifecycle does not crash.
-29. A 15-minute play session has no obvious crash.
+25. Aurora shield pickups appear during longer runs.
+26. Collecting a shield adds a visible shield ring.
+27. Shield absorbs one failure before a life is spent.
+28. Stage challenge phase starts after enough gates.
+29. Stage clear unlocks the next stage.
+30. Game over retry works.
+31. Pause/resume from Android app lifecycle does not crash.
+32. A 15-minute play session has no obvious crash.
 
 ## Known not-final items
 
