@@ -1,11 +1,11 @@
 # Alaska 0.9 Beta Readiness
 
-The current target is **0.9.2-beta**, not final 2.0.
+The current target is **0.9.3-beta**, not final 2.0.
 
 ```text
-versionCode 21
-versionName 0.9.2-beta
-badge ALASKA BETA v0.9.2
+versionCode 22
+versionName 0.9.3-beta
+badge ALASKA BETA v0.9.3
 ```
 
 ## What 0.9 means
@@ -31,6 +31,8 @@ It does mean the game should now have enough complete systems to judge whether i
 - Three-life run system
 - Checkpoint respawn after passed gates
 - Contra-code unlimited-lives cheat
+- Bonus star pickups
+- Life restore after every third collected star when below normal max
 - Directional controls
 - Jump control
 - Snowball throw control
@@ -89,11 +91,14 @@ Mobile mapping:
 19. Losing a life respawns at the latest checkpoint area.
 20. Final life still reaches normal game over.
 21. Contra code activates unlimited lives and shows `∞ LIVES`.
-22. Stage challenge phase starts after enough gates.
-23. Stage clear unlocks the next stage.
-24. Game over retry works.
-25. Pause/resume from Android app lifecycle does not crash.
-26. A 15-minute play session has no obvious crash.
+22. Bonus stars appear during runs.
+23. Collecting a bonus star gives score.
+24. Every third collected star can restore one life if below normal max.
+25. Stage challenge phase starts after enough gates.
+26. Stage clear unlocks the next stage.
+27. Game over retry works.
+28. Pause/resume from Android app lifecycle does not crash.
+29. A 15-minute play session has no obvious crash.
 
 ## Known not-final items
 
