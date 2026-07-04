@@ -2,19 +2,19 @@
 
 A personalized Android arcade game by **TripperDeeLabs**.
 
-**You Rush: Alaska 2.0 RC1** is a local-first release-candidate build focused on one complete, polished region instead of many shallow regions.
+**Current status: Alaska 0.4.0 alpha.**
+
+This build is a stronger Alaska prototype with several 2.0-style systems, but it has not earned a final 2.0 label yet. A true 2.0 needs build validation, device playtesting, balancing, cleanup, and release packaging.
 
 > Add your face. Pick Alaska. Survive local chaos. Build combos. Clear stages. Chase a better score.
 
-## Current release candidate
+## Current alpha
 
 ```text
-versionCode: 20
-versionName: 2.0.0-rc1
-build badge: ALASKA RC v2.0.0-rc1
+versionCode: 11
+versionName: 0.4.0-alpha
+build badge: ALASKA ALPHA v0.4.0
 ```
-
-This is a release candidate until a fresh GitHub Actions APK build is confirmed and installed on a real Android device.
 
 ## Current game flow
 
@@ -50,9 +50,9 @@ The visible control pad includes:
 
 A normal screen tap during gameplay still bounces the character.
 
-## 2.0 gameplay systems
+## Current gameplay systems
 
-The active Alaska game includes:
+The active Alaska build includes:
 
 - Splash and menu flow
 - Alaska map
@@ -150,15 +150,15 @@ Artifacts:
 
 ## Release docs
 
-- `docs/RELEASE_2_0_RC1.md`
+- `docs/REAL_2_0_ROADMAP.md`
 - `docs/PRIVACY.md`
 - `docs/STORE_LISTING_DRAFT.md`
 - `docs/ANDROID_TEST_CHECKLIST.md`
 - `docs/ALASKA_NEXT_10_PASS.md`
 
-## Final 2.0 checklist
+## Real 2.0 checklist
 
-Before calling this a public final release:
+Before calling this a true 2.0 release:
 
 1. Confirm GitHub Actions builds the APK.
 2. Install the APK on a real Android device.
@@ -166,7 +166,7 @@ Before calling this a public final release:
 4. Verify all five Alaska stages.
 5. Verify stage challenge phase.
 6. Verify snowball, tree, near-miss, combo, and incoming-callout systems.
-7. Disable the visible RC badge for public release.
-8. Replace privacy notes with a final hosted privacy policy.
-9. Produce final screenshots and store listing assets.
-10. Tag the final release.
+7. Tune movement, spacing, scoring, and difficulty.
+8. Clean up wrapper-layer/reflection architecture.
+9. Produce final screenshots, listing, and hosted privacy policy.
+10. Tag the final release only after device QA.
