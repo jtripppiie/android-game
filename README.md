@@ -132,6 +132,16 @@ AlaskaAwardMooseRushView
 
 Open the repo in Android Studio and run the `app` configuration on a device or emulator.
 
+From the command line, use the committed Gradle wrapper:
+
+```bash
+./gradlew assembleDebug        # build the debug APK
+./gradlew testDebugUnitTest    # run JVM unit tests (GameMath, LevelCurve)
+./gradlew lintDebug            # run Android lint
+```
+
+The debug APK lands in `app/build/outputs/apk/debug/`.
+
 GitHub Actions also builds a debug APK using:
 
 ```text
@@ -142,6 +152,23 @@ Artifacts:
 
 - `you-rush-alaska-debug-apk`
 - `you-rush-alaska-build-logs`
+
+## Tests
+
+Pure game math lives in dependency-free classes so it can be covered by fast JVM
+unit tests:
+
+- `GameMath` — clamp and circle/rect collision helpers used by the game loop.
+- `LevelCurve` — XP thresholds and level/progress math used by the level HUD.
+
+Run them with `./gradlew testDebugUnitTest`.
+
+## App icon
+
+The launcher uses an adaptive icon (`res/mipmap-anydpi-v26/ic_launcher.xml`) with
+separate background, foreground, and monochrome (themed-icon) layers, plus a
+full-bleed vector fallback in `res/mipmap-anydpi/` for API 23–25.
+
 
 ## Beta test checklist
 

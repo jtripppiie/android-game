@@ -17,7 +17,6 @@ public class AlaskaLevelMooseRushView extends AlaskaRunSummaryMooseRushView {
     private static final String PREFS_NAME = "moose_rush";
     private static final String PREF_TOTAL_XP = "total_xp";
     private static final int STATE_RUNNING = 4;
-    private static final int[] LEVEL_XP = {0, 150, 400, 800, 1350, 2100, 3100, 4500, 6200, 8200};
     private static final float POP_SECONDS = 1.5f;
 
     private final Paint levelPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -44,7 +43,7 @@ public class AlaskaLevelMooseRushView extends AlaskaRunSummaryMooseRushView {
         super(context);
         prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         totalXp = Math.max(0, prefs.getInt(PREF_TOTAL_XP, 0));
-        levelIndex = computeLevel(totalXp);
+        levelIndex = LevelCurve.levelIndex(totalXp);
         bindFields();
     }
 
@@ -119,7 +118,7 @@ public class AlaskaLevelMooseRushView extends AlaskaRunSummaryMooseRushView {
     private void addXp(int amount) {
         int oldLevel = levelIndex;
         totalXp += amount;
-        levelIndex = computeLevel(totalXp);
+        levelIndex = LevelCurve.levelIndex(totalXp);
         prefs.edit().putInt(PREF_TOTAL_XP, totalXp).apply();
         if (levelIndex > oldLevel) {
             popText = "LEVEL UP " + (levelIndex + 1);
@@ -129,22 +128,12 @@ public class AlaskaLevelMooseRushView extends AlaskaRunSummaryMooseRushView {
         }
     }
 
-    private int computeLevel(int xp) {
-        int index = 0;
-        for (int i = 0; i < LEVEL_XP.length; i++) {
-            if (xp >= LEVEL_XP[i]) {
-                index = i;
-            }
-        }
-        return Math.min(index, LEVEL_XP.length - 1);
-    }
-
     private int currentFloor() {
-        return LEVEL_XP[levelIndex];
+        return LevelCurve.currentFloor(levelIndex);
     }
 
     private int nextGoal() {
-        return levelIndex >= LEVEL_XP.length - 1 ? LEVEL_XP[LEVEL_XP.length - 1] : LEVEL_XP[levelIndex + 1];
+        return LevelCurve.nextGoal(levelIndex);
     }
 
     private void drawLevelHud(Canvas canvas) {

@@ -22,3 +22,8 @@ android {
         buildConfigField "boolean", "SHOW_VERSION_BADGE", "true"
     }
 }
+
+dependencies {
+    testImplementation "junit:junit:4.13.2"
+}
+

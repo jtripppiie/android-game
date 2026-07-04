@@ -1325,26 +1325,19 @@ public class MooseRushView extends View {
     }
 
     private boolean circleHitsRect(float cx, float cy, float radius, RectF rect) {
-        float closestX = clamp(cx, rect.left, rect.right);
-        float closestY = clamp(cy, rect.top, rect.bottom);
-        float dx = cx - closestX;
-        float dy = cy - closestY;
-        return dx * dx + dy * dy < radius * radius;
+        return GameMath.circleHitsRect(cx, cy, radius, rect.left, rect.top, rect.right, rect.bottom);
     }
 
     private boolean circleHitsCircle(float ax, float ay, float ar, float bx, float by, float br) {
-        float dx = ax - bx;
-        float dy = ay - by;
-        float radius = ar + br;
-        return dx * dx + dy * dy < radius * radius;
+        return GameMath.circleHitsCircle(ax, ay, ar, bx, by, br);
     }
 
     private float clamp(float value, float min, float max) {
-        return Math.max(min, Math.min(max, value));
+        return GameMath.clamp(value, min, max);
     }
 
     private int clampInt(int value, int min, int max) {
-        return Math.max(min, Math.min(max, value));
+        return GameMath.clampInt(value, min, max);
     }
 
     private float dp(float value) {

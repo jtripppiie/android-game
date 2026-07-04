@@ -1,0 +1,29 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Content kept inside the central safe zone (~36..72) so masks do not clip it -->
+
+    <!-- Antlers -->
+    <path android:fillColor="#B5794A" android:strokeColor="#B5794A" android:strokeWidth="2"
+        android:pathData="M45,42 C42,36 38,33 34,33 M45,42 C43,38 40,36 37,37" />
+    <path android:fillColor="#B5794A" android:strokeColor="#B5794A" android:strokeWidth="2"
+        android:pathData="M63,42 C66,36 70,33 74,33 M63,42 C65,38 68,36 71,37" />
+
+    <!-- Face -->
+    <path android:fillColor="#FFDA79" android:pathData="M42,40 L66,40 C72,40 76,44 76,50 L76,62 C76,68 72,72 66,72 L42,72 C36,72 32,68 32,62 L32,50 C32,44 36,40 42,40 Z" />
+
+    <!-- Cheek shading -->
+    <path android:fillColor="#F2C25A" android:pathData="M34,58 L36,58 L36,66 C36,68 37,69 39,70 L34,70 Z" />
+
+    <!-- Eyes -->
+    <path android:fillColor="#1B1E26" android:pathData="M45,51 C47,51 48,52 48,54 C48,56 47,57 45,57 C43,57 42,56 42,54 C42,52 43,51 45,51 Z" />
+    <path android:fillColor="#1B1E26" android:pathData="M63,51 C65,51 66,52 66,54 C66,56 65,57 63,57 C61,57 60,56 60,54 C60,52 61,51 63,51 Z" />
+    <path android:fillColor="#FFFFFF" android:pathData="M46,52 C47,52 47.5,52.5 47.5,53 C47.5,53.5 47,54 46,54 C45.5,54 45,53.5 45,53 C45,52.5 45.5,52 46,52 Z" />
+    <path android:fillColor="#FFFFFF" android:pathData="M64,52 C65,52 65.5,52.5 65.5,53 C65.5,53.5 65,54 64,54 C63.5,54 63,53.5 63,53 C63,52.5 63.5,52 64,52 Z" />
+
+    <!-- Smile -->
+    <path android:fillColor="#1B1E26" android:pathData="M47,62 C50,66 58,66 61,62 C58,64 50,64 47,62 Z" />
+</vector>

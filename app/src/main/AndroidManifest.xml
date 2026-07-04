@@ -2,8 +2,9 @@
     <application
         android:allowBackup="false"
         android:fullBackupContent="false"
-        android:icon="@drawable/ic_you_rush_launcher"
+        android:icon="@mipmap/ic_launcher"
         android:label="You Rush"
+        android:roundIcon="@mipmap/ic_launcher_round"
         android:resizeableActivity="false"
         android:supportsRtl="true"
         android:theme="@android:style/Theme.Material.NoActionBar">
