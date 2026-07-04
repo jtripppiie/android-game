@@ -2,16 +2,16 @@
 
 A personalized Android arcade game by **TripperDeeLabs**.
 
-**Current status: Alaska 0.9.1 beta.**
+**Current status: Alaska 0.9.2 beta.**
 
 This build is beta-ready for APK testing, tuning, and bug fixing. It is not final 1.0 or 2.0 until it builds, installs, and plays well on a real phone.
 
 ## Current beta
 
 ```text
-versionCode: 20
-versionName: 0.9.1-beta
-build badge: ALASKA BETA v0.9.1
+versionCode: 21
+versionName: 0.9.2-beta
+build badge: ALASKA BETA v0.9.2
 ```
 
 ## Game flow
@@ -23,9 +23,10 @@ build badge: ALASKA BETA v0.9.1
 5. Stage intro
 6. Main arcade run
 7. Pause / quick help
-8. Stage challenge phase
-9. Stage clear or retry
-10. Next stage unlock / score chase
+8. Checkpoint respawn if lives remain
+9. Stage challenge phase
+10. Stage clear or retry
+11. Next stage unlock / score chase
 
 ## Controls
 
@@ -36,6 +37,22 @@ build badge: ALASKA BETA v0.9.1
 - **CLIMB TREE**: appears only when close enough to the tree
 - **PAUSE**: opens quick help and stops the run until resumed
 
+## Contra code
+
+```text
+UP UP DOWN DOWN LEFT RIGHT LEFT RIGHT B A START
+```
+
+Mobile mapping:
+
+- `UP` = tap upper screen
+- `DOWN` = tap lower middle screen
+- `LEFT` = left control
+- `RIGHT` = right control
+- `B` = throw
+- `A` = jump
+- `START` = pause
+
 ## Beta systems
 
 - Splash and menu flow
@@ -45,6 +62,9 @@ build badge: ALASKA BETA v0.9.1
 - Five Alaska stages
 - Stage intro overlay
 - Pause and quick-help overlay
+- Three lives per run
+- Checkpoint respawn after passed gates
+- Contra-code unlimited lives
 - Tree timing mechanic
 - Snowball interactions
 - Near-miss rewards
@@ -63,7 +83,7 @@ build badge: ALASKA BETA v0.9.1
 `MainActivity` currently loads:
 
 ```java
-new AlaskaPauseHelpMooseRushView(this)
+new AlaskaContraCodeMooseRushView(this)
 ```
 
 That layer inherits:
@@ -77,6 +97,8 @@ AlaskaComboMooseRushView
 AlaskaStageIntroMooseRushView
 AlaskaHazardWarningMooseRushView
 AlaskaPauseHelpMooseRushView
+AlaskaLivesMooseRushView
+AlaskaContraCodeMooseRushView
 ```
 
 ## Build
@@ -100,7 +122,7 @@ Artifacts:
 2. Install the APK on a real Android device.
 3. Verify photo picker and photo restore.
 4. Verify all five Alaska stages.
-5. Verify movement, jump, throw, tree, pause, near-miss, combo, and incoming-callout systems.
+5. Verify movement, jump, throw, tree, pause, lives, respawn, cheat code, near-miss, combo, and incoming-callout systems.
 6. Tune movement, spacing, scoring, and difficulty.
 7. Confirm no crash in a 15-minute phone test.
 8. Keep 2.0 as the future cleanup and polish milestone.
