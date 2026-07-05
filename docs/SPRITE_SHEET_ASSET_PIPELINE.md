@@ -17,9 +17,9 @@ into real raster game art:
 ## Current Package
 
 ```text
-versionCode: 186
-versionName: 1.8.6-alpha
-badge: ALASKA ART v1.8.6
+versionCode: 187
+versionName: 1.8.7-alpha
+badge: ALASKA QUEST v1.8.7
 ```
 
 ## Generated Assets
@@ -389,6 +389,12 @@ animation. It also removes the vector-style triangle mountain overlay from the
 runtime scene and uses denser generated tree-sprite layers, including extra
 snow-covered tree bands in winter/dark stages. The same pass adds polar bear,
 wolf, and roaring bear assets for winter-mode variety.
+
+`1.8.7-alpha` keeps the same generated sheets but tightens runtime sampling:
+wildlife sheets use wider atlas-edge guards, the player body uses an extra
+source inset, and flying/walking animation cadence is driven by animal age
+instead of the faster world scroll clock. This is the reference behavior for
+future sprite-sheet imports.
 
 ## Not Yet Wired
 

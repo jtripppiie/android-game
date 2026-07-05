@@ -14,7 +14,8 @@ import android.graphics.Shader;
 
 final class SpriteRenderer {
     private static final int RUNNER_FRAMES = 6;
-    private static final int SPRITE_EDGE_GUARD_PX = 1;
+    private static final int SPRITE_EDGE_GUARD_PX = 2;
+    private static final int RUNNER_TRIM_INSET_PX = 1;
     private static final float RUNNER_BODY_HEIGHT_RUNNING = 2.68f;
     private static final float RUNNER_BODY_HEIGHT_STANDING = 2.62f;
     private static final float RUNNER_BODY_WIDTH_SCALE = 1.18f;
@@ -104,10 +105,10 @@ final class SpriteRenderer {
     }
 
     static int[] trimmedRunnerSourceValues(int frameIndex, int frameWidth, int sheetHeight, int[] trim) {
-        int left = trim[0] == 0 ? SPRITE_EDGE_GUARD_PX : trim[0];
-        int top = trim[1];
-        int right = trim[2] >= frameWidth ? frameWidth - SPRITE_EDGE_GUARD_PX : trim[2];
-        int bottom = Math.min(trim[3], sheetHeight);
+        int left = (trim[0] == 0 ? SPRITE_EDGE_GUARD_PX : trim[0]) + RUNNER_TRIM_INSET_PX;
+        int top = trim[1] + RUNNER_TRIM_INSET_PX;
+        int right = (trim[2] >= frameWidth ? frameWidth - SPRITE_EDGE_GUARD_PX : trim[2]) - RUNNER_TRIM_INSET_PX;
+        int bottom = Math.min(trim[3], sheetHeight) - RUNNER_TRIM_INSET_PX;
         if (right <= left || bottom <= top) {
             return new int[0];
         }

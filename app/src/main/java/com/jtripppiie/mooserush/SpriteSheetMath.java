@@ -1,7 +1,7 @@
 package com.jtripppiie.mooserush;
 
 final class SpriteSheetMath {
-    private static final int SPRITE_EDGE_GUARD_PX = 1;
+    private static final int SPRITE_EDGE_GUARD_PX = 2;
 
     private SpriteSheetMath() {
     }

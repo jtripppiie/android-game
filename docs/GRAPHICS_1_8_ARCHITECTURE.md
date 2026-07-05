@@ -50,8 +50,8 @@ effects should not remain tangled into the main view.
 - `MooseRushView.java`: reduced direct graphics ownership by delegating player
   drawing, drawable lookup, particle updates, and popup drawing to dedicated
   classes.
-- `app/build.gradle`: bumped the debug package to `1.8.6-alpha` /
-  `versionCode 186` and updated the visible build badge.
+- `app/build.gradle`: tracks the current `1.8.x` graphics alpha package and
+  visible build badge.
 - `README.md`, `docs/VERSIONING.md`, and `docs/ANDROID_TEST_CHECKLIST.md`:
   updated package names, badge text, and test instructions for the current
   1.8.x graphics alpha.
@@ -154,9 +154,9 @@ Now:
 The active beta package is:
 
 ```text
-versionCode: 186
-versionName: 1.8.6-alpha
-badge: ALASKA ART v1.8.6
+versionCode: 187
+versionName: 1.8.7-alpha
+badge: ALASKA QUEST v1.8.7
 ```
 
 This branch is an architecture alpha. It is intended for testing the new
@@ -204,6 +204,19 @@ as a runner under the uploaded/default head.
   panels.
 - Makes the debug APK workflow run on `graphics-1.8.0` so pushed builds publish
   APK artifacts for this active graphics branch.
+
+`1.8.7-alpha` is the smooth-retention pass:
+
+- Slows eagle animation on a per-hazard clock so wing flaps read naturally
+  instead of speeding up with the world scroll clock.
+- Smooths bear/polar bear movement by anchoring hazards to a stable base lane.
+- Removes decorative animal halo/circle glows while keeping grounding shadows.
+- Tightens runner and wildlife sprite source trims to reduce edge artifacts.
+- Moves the playfield ground slightly lower and nudges the top clamp for more
+  double-jump headroom without clipping the runner.
+- Adds run missions and shield pickups for a clearer one-more-run loop.
+- Nudges the progressive difficulty curve upward while preserving fair minimum
+  spawn spacing.
 
 ## What still needs extraction
 

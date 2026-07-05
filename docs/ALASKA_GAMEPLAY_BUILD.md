@@ -27,11 +27,11 @@ The current Alaska map has five stages:
 
 | Stage | Season style | Main hazard | Boss | Goal before boss |
 |---|---|---|---|---|
-| Midnight Sun Run | Midnight Sun | SUN placeholder | Sunburn Sprite | 6 gates |
-| Salmon Rush | Summer | SALMON | Salmon Boss | 8 gates |
-| Moose Pass | Summer | MOOSE | Moose Boss | 10 gates |
-| Dark Winter | Darkness | DARK | Darkness Boss | 12 gates |
-| Bear Country | Winter | BEAR | Bear Boss | 14 gates |
+| Midnight Sun Run | Midnight Sun | SUN | Sunburn Sprite | 5 gates |
+| Salmon Rush | Summer | SALMON | Salmon Boss | 7 gates |
+| Moose Pass | Summer | MOOSE | Moose Boss | 8 gates |
+| Dark Winter | Darkness | EAGLE | Eagle Boss | 9 gates |
+| Bear Country | Winter | BEAR / POLAR / WOLF | Polar Bear Boss | 10 gates |
 
 ## Controls
 
@@ -49,11 +49,16 @@ A normal screen tap during gameplay still works as a quick bounce, but the virtu
 Current scoring values:
 
 - Clear a gate: **+10**
+- Collect a star: **+15**
 - Dodge a hazard: **+4**
+- Near miss: **+6**
+- Shield pickup: **+20**
+- Run mission: **+35 + stage bonus**
 - Hit a boss with a snowball: **+25**
 - Defeat a boss: **+100 + stage bonus**
 
-Best score persists in shared preferences.
+Combo multipliers increase rewards during clean play. Best score, XP, and local
+level persist in shared preferences.
 
 ## Stage progression
 
@@ -70,7 +75,8 @@ The map still shows every stage so the Alaska template can be inspected during d
 
 ## Boss design
 
-Bosses currently use placeholder vector assets and simple movement patterns.
+Bosses currently use generated raster sprite sheets and simple movement
+patterns.
 
 The player defeats a boss by pressing **FIRE** and landing snowball hits.
 
@@ -79,8 +85,8 @@ Current boss health:
 - Sunburn Sprite: 2
 - Salmon Boss: 3
 - Moose Boss: 4
-- Darkness Boss: 4
-- Bear Boss: 6
+- Eagle Boss: 4
+- Polar Bear Boss: 6
 
 The boss phase has a fail timer. If the player does not defeat the boss quickly enough, the boss wins.
 
@@ -166,6 +172,13 @@ also use guarded per-frame source rects to prevent adjacent-frame artifacts
 during animation. Winter mode adds polar bear and wolf enemies, plus dedicated
 brown bear and polar bear roar sprites that appear when bears stand on hind
 legs as a warning moment.
+
+`1.8.7-alpha` smooths the runtime presentation and retention loop: eagle and
+boss sheets animate from stable animal timers instead of the world scroll clock,
+bear/polar bear motion is anchored to the ground lane, decorative animal halos
+are removed, runner and wildlife source trims are stricter, the ground and jump
+ceiling allow more double-jump headroom without clipping the runner, and runs
+now include missions plus shield pickups that absorb one hit.
 
 ## Current development priorities
 

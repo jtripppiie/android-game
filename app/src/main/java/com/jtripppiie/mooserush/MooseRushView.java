@@ -82,6 +82,8 @@ public class MooseRushView extends View {
     private static final int SPRITE_SHEET_FRAMES = 6;
     private static final float PLAYER_START_X_FRACTION = 0.265f;
     private static final float PLAYER_HEAD_DRAW_OFFSET = 2.18f;
+    private static final float PLAYFIELD_BOTTOM_MARGIN_DP = 62f;
+    private static final float JUMP_CEILING_TOP_MARGIN_DP = 40f;
     private static final int[][] MOOSE_FRAME_TRIMS = {
             {14, 226, 362, 527},
             {0, 224, 362, 528},
@@ -138,6 +140,7 @@ public class MooseRushView extends View {
     private final List<Gate> gates = new ArrayList<>();
     private final List<Hazard> hazards = new ArrayList<>();
     private final List<Star> stars = new ArrayList<>();
+    private final List<PowerUp> powerUps = new ArrayList<>();
     private final List<Shot> shots = new ArrayList<>();
     private final List<String> debugEvents = new ArrayList<>();
     private final SharedPreferences prefs;
@@ -178,6 +181,9 @@ public class MooseRushView extends View {
     private int stageAttempts = 0;
     private int bossHealth = 0;
     private int bossMaxHealth = 0;
+    private int missionStarGoal = 0;
+    private int missionComboGoal = 0;
+    private int missionsCompleted = 0;
     private int backdropCacheWidth = 0;
     private int backdropCacheHeight = 0;
     private int backdropCacheKey = Integer.MIN_VALUE;
@@ -193,6 +199,9 @@ public class MooseRushView extends View {
     private boolean jumpWasPressed = false;
     private boolean fireWasPressed = false;
     private boolean grounded = false;
+    private boolean missionHurdlesComplete = false;
+    private boolean missionStarsComplete = false;
+    private boolean missionComboComplete = false;
     private int jumpsUsed = 0;
 
     private long lastFrameNanos = 0L;
@@ -304,7 +313,7 @@ public class MooseRushView extends View {
         super.onSizeChanged(width, height, oldWidth, oldHeight);
         playerRadius = gameplayDp(20.5f);
         playerX = playerStartX();
-        playerY = height - dp(78) - playerRadius;
+        playerY = getGroundY() - playerRadius;
         grounded = true;
         backdropCache = null;
         backdropCacheWidth = 0;
@@ -579,12 +588,14 @@ public class MooseRushView extends View {
         gates.clear();
         hazards.clear();
         stars.clear();
+        powerUps.clear();
         shots.clear();
         effects.clearAll();
         score = 0;
         runStageScore = 0;
         gatesPassed = 0;
         gameState.resetRun();
+        setupRunMissions(stage);
         bossTimer = 0f;
         bossActive = false;
         bossDefeated = false;
@@ -615,6 +626,16 @@ public class MooseRushView extends View {
         jumpBufferTimer = 0f;
         stageAttempts++;
         logEvent("Start stage: " + stage.name + ". Goal " + stage.goalGates + " hurdles, boss HP " + stage.bossHealth + ".");
+    }
+
+    private void setupRunMissions(StageConfig stage) {
+        missionStarGoal = 2 + Math.min(3, selectedStage);
+        missionComboGoal = 4 + selectedStage * 2;
+        missionsCompleted = 0;
+        missionHurdlesComplete = false;
+        missionStarsComplete = false;
+        missionComboComplete = false;
+        logEvent("Missions: clear " + stage.goalGates + ", collect " + missionStarGoal + " stars, combo " + missionComboGoal + ".");
     }
 
     private void requestJump() {
@@ -707,7 +728,7 @@ public class MooseRushView extends View {
         } else {
             grounded = false;
         }
-        float ceiling = dp(44) + playerRadius;
+        float ceiling = dp(JUMP_CEILING_TOP_MARGIN_DP) + playerRadius;
         if (playerY < ceiling) {
             playerY = ceiling;
             if (playerVelocityY < 0f) {
@@ -717,6 +738,7 @@ public class MooseRushView extends View {
 
         updateShots(dt);
         updateStars(dt, gateSpeed);
+        updatePowerUps(dt, gateSpeed);
 
         if (!bossDefeated && !bossActive && gatesPassed >= stage.goalGates) {
             startBossPhase();
@@ -800,7 +822,7 @@ public class MooseRushView extends View {
             updateHazardRoar(hazard, dt);
             hazard.x -= speed * hazard.speedMultiplier * dt;
             if (!hazard.roaring) {
-                hazard.y += (float) Math.sin((spriteClock + hazard.phase) * 2.0f) * dp(0.55f);
+                hazard.y = hazard.baseY + hazardBobOffset(hazard);
             }
             maybeAwardNearMiss(hazard);
             if (!hazard.passed && hazard.x + hazard.radius < playerX) {
@@ -814,6 +836,30 @@ public class MooseRushView extends View {
                 iterator.remove();
             }
         }
+    }
+
+    private float hazardBobOffset(Hazard hazard) {
+        float phase = hazardVisualPhase(hazard);
+        if ("BEAR".equals(hazard.label) || "POLAR".equals(hazard.label)) {
+            return (float) Math.sin(phase * 1.05f) * dp(0.18f);
+        }
+        if ("MOOSE".equals(hazard.label)) {
+            return (float) Math.sin(phase * 1.20f) * dp(0.28f);
+        }
+        if ("WOLF".equals(hazard.label)) {
+            return (float) Math.sin(phase * 2.9f) * dp(0.62f);
+        }
+        if ("EAGLE".equals(hazard.label) || "DARK".equals(hazard.label)) {
+            return (float) Math.sin(phase * 1.55f) * dp(4.6f);
+        }
+        if ("SALMON".equals(hazard.label)) {
+            return (float) Math.sin(phase * 3.1f) * dp(2.4f);
+        }
+        return (float) Math.sin(phase * 1.6f) * dp(0.36f);
+    }
+
+    private float hazardVisualPhase(Hazard hazard) {
+        return hazard.age + hazard.phase;
     }
 
     private void maybeAwardNearMiss(Hazard hazard) {
@@ -1000,6 +1046,7 @@ public class MooseRushView extends View {
         gates.clear();
         hazards.clear();
         stars.clear();
+        powerUps.clear();
         shots.clear();
         effects.clearParticles();
         playerX = playerStartX();
@@ -1035,11 +1082,38 @@ public class MooseRushView extends View {
         if (gameState.combo >= 3 || multiplier > 1) {
             showRunCallout("COMBO " + gameState.combo + "  SCORE x" + multiplier, 1.15f);
         }
+        checkMissionProgress();
     }
 
     private void showRunCallout(String label, float seconds) {
         runCallout = label;
         runCalloutTimer = Math.max(runCalloutTimer, seconds);
+    }
+
+    private void checkMissionProgress() {
+        StageConfig stage = STAGES[selectedStage];
+        if (!missionHurdlesComplete && gatesPassed >= stage.goalGates) {
+            missionHurdlesComplete = true;
+            completeMission("HURDLE HERO");
+        }
+        if (!missionStarsComplete && gameState.stars >= missionStarGoal) {
+            missionStarsComplete = true;
+            completeMission("STAR TRAIL");
+        }
+        if (!missionComboComplete && gameState.bestCombo >= missionComboGoal) {
+            missionComboComplete = true;
+            completeMission("COMBO KID");
+        }
+    }
+
+    private void completeMission(String label) {
+        missionsCompleted++;
+        int awarded = addScore(35 + selectedStage * 5, "Mission " + label);
+        effects.spawnScorePopup(label + " +" + awarded, getWidth() / 2f, getHeight() * 0.34f, Color.rgb(132, 213, 232));
+        effects.spawnSparkBurst(getWidth() / 2f, getHeight() * 0.34f, 18, Color.rgb(132, 213, 232));
+        showRunCallout("MISSION COMPLETE", 1.45f);
+        playSound("medal");
+        logEvent("Mission complete: " + label + ".");
     }
 
     static int scoreMultiplierForCombo(int combo) {
@@ -1058,6 +1132,16 @@ public class MooseRushView extends View {
             float starY = getGroundY() - hurdleHeight - gameplayDp(34 + random.nextFloat() * 18);
             stars.add(new Star(getWidth() + gateWidth + gameplayDp(46), Math.max(dp(86), starY), gameplayDp(8)));
         }
+        if (!gameState.shieldActive && gatesPassed >= 1 && random.nextFloat() < powerUpSpawnChance()) {
+            float shieldY = getGroundY() - hurdleHeight - gameplayDp(58 + random.nextFloat() * 16);
+            powerUps.add(new PowerUp(getWidth() + gateWidth + gameplayDp(86), Math.max(dp(92), shieldY), gameplayDp(10), "SHIELD"));
+        }
+    }
+
+    private float powerUpSpawnChance() {
+        if (selectedStage == 0) return 0.18f;
+        if (selectedStage >= 4) return 0.25f;
+        return 0.22f;
     }
 
     private void updateStars(float dt, float speed) {
@@ -1080,6 +1164,37 @@ public class MooseRushView extends View {
             if (star.x + star.radius < -dp(24)) {
                 iterator.remove();
             }
+        }
+    }
+
+    private void updatePowerUps(float dt, float speed) {
+        Iterator<PowerUp> iterator = powerUps.iterator();
+        while (iterator.hasNext()) {
+            PowerUp powerUp = iterator.next();
+            powerUp.x -= speed * dt;
+            powerUp.spin += dt * 5.5f;
+            powerUp.bob += dt * 4.5f;
+            if (circleHitsCircle(playerX, playerY, playerRadius * 1.05f, powerUp.x, powerUp.y, powerUp.radius * 1.55f)) {
+                iterator.remove();
+                activatePowerUp(powerUp);
+                continue;
+            }
+            if (powerUp.x + powerUp.radius < -dp(28)) {
+                iterator.remove();
+            }
+        }
+    }
+
+    private void activatePowerUp(PowerUp powerUp) {
+        if ("SHIELD".equals(powerUp.type)) {
+            gameState.shieldActive = true;
+            gameState.addCombo();
+            int awarded = addScore(20, "Shield pickup");
+            effects.spawnScorePopup("SHIELD +" + awarded, powerUp.x, powerUp.y - dp(12), Color.rgb(132, 213, 232));
+            effects.spawnSparkBurst(powerUp.x, powerUp.y, 16, Color.rgb(132, 213, 232));
+            showRunCallout("AURORA SHIELD", 1.35f);
+            playSound("medal");
+            checkMissionProgress();
         }
     }
 
@@ -1324,6 +1439,9 @@ public class MooseRushView extends View {
         for (Star star : stars) {
             drawStar(canvas, star);
         }
+        for (PowerUp powerUp : powerUps) {
+            drawPowerUp(canvas, powerUp);
+        }
         for (Shot shot : shots) {
             drawShot(canvas, shot);
         }
@@ -1333,6 +1451,7 @@ public class MooseRushView extends View {
 
         drawPlayerLaneGuide(canvas);
         effects.drawParticles(canvas);
+        drawShieldAura(canvas);
         drawCharacter(canvas, playerX, playerY - playerRadius * PLAYER_HEAD_DRAW_OFFSET, playerRadius);
         effects.drawScorePopups(canvas);
         drawWorldFlash(canvas);
@@ -1573,9 +1692,6 @@ public class MooseRushView extends View {
         paint.setColor(Color.argb(85, 0, 0, 0));
         canvas.drawOval(hazard.x - xRadius * 0.72f, hazard.y + yRadius * 0.66f, hazard.x + xRadius * 0.72f, hazard.y + yRadius * 0.88f, paint);
 
-        paint.setColor(Color.argb(80, 255, 246, 207));
-        canvas.drawOval(hazard.x - xRadius * 1.08f, hazard.y - yRadius * 1.12f, hazard.x + xRadius * 1.08f, hazard.y + yRadius * 1.12f, paint);
-
         drawHazardMotionAccent(canvas, hazard, xRadius, yRadius);
 
         Bitmap roarSprite = roarSpriteForHazard(hazard.label);
@@ -1594,7 +1710,7 @@ public class MooseRushView extends View {
 
     private void drawHazardMotionAccent(Canvas canvas, Hazard hazard, float xRadius, float yRadius) {
         paint.setStyle(Paint.Style.FILL);
-        float phase = spriteClock + hazard.phase;
+        float phase = hazardVisualPhase(hazard);
         if ("SALMON".equals(hazard.label)) {
             paint.setColor(Color.argb(100, 132, 213, 232));
             for (int i = 0; i < 3; i++) {
@@ -1620,9 +1736,6 @@ public class MooseRushView extends View {
                 float top = hazard.y + yRadius * (0.58f + i * 0.05f);
                 canvas.drawOval(left, top, left + xRadius * 0.38f, top + yRadius * 0.14f, paint);
             }
-        } else if ("MOOSE".equals(hazard.label) || "BEAR".equals(hazard.label) || "POLAR".equals(hazard.label)) {
-            paint.setColor(Color.argb(74, 235, 245, 248));
-            canvas.drawOval(hazard.x + xRadius * 0.20f, hazard.y + yRadius * 0.62f, hazard.x + xRadius * 1.05f, hazard.y + yRadius * 0.82f, paint);
         }
     }
 
@@ -1684,7 +1797,7 @@ public class MooseRushView extends View {
         float height = yRadius * ("POLAR".equals(hazard.label) ? 3.75f : 3.58f);
         float width = height * (sprite.getWidth() / (float) sprite.getHeight());
         float bottom = getGroundY() + dp(1);
-        float shake = (float) Math.sin((spriteClock + hazard.phase) * 22.0f) * dp(1.6f);
+        float shake = (float) Math.sin(hazardVisualPhase(hazard) * 13.0f) * dp(0.7f);
         tempRect.set(hazard.x - width * 0.50f + shake, bottom - height, hazard.x + width * 0.50f + shake, bottom);
         canvas.drawBitmap(sprite, null, tempRect, spriteBitmapPaint);
     }
@@ -1710,8 +1823,8 @@ public class MooseRushView extends View {
 
     private void drawAnimatedHazardSheet(Canvas canvas, Hazard hazard, Bitmap sheet, float yRadius) {
         String label = hazard.label;
-        float phase = spriteClock + hazard.phase;
-        float rate = "SALMON".equals(label) ? 10.0f : ("WOLF".equals(label) ? 8.6f : ("EAGLE".equals(label) ? 8.0f : 6.0f));
+        float phase = hazardVisualPhase(hazard);
+        float rate = hazardAnimationRate(label);
         int frame = Math.floorMod((int) (phase * rate), 6);
         if (hazard.roaring) {
             frame = 3;
@@ -1725,14 +1838,14 @@ public class MooseRushView extends View {
             height = yRadius * 2.0f;
             rotation = (float) Math.sin(phase * 6.0f) * 9.0f;
         } else if ("EAGLE".equals(label) || "DARK".equals(label)) {
-            centerY += (float) Math.sin(phase * 4.0f) * dp(7.0f);
+            centerY += (float) Math.sin(phase * 1.8f) * dp(4.5f);
             height = yRadius * 2.55f;
-            rotation = (float) Math.sin(phase * 3.0f) * 3.0f;
+            rotation = (float) Math.sin(phase * 1.4f) * 2.2f;
         } else if ("BEAR".equals(label)) {
-            centerY += (float) Math.sin(phase * 8.0f) * dp(1.2f);
+            centerY += (float) Math.sin(phase * 1.55f) * dp(0.35f);
             height = yRadius * 2.45f;
         } else if ("POLAR".equals(label)) {
-            centerY += (float) Math.sin(phase * 7.5f) * dp(0.9f);
+            centerY += (float) Math.sin(phase * 1.45f) * dp(0.30f);
             height = yRadius * 2.35f;
         } else if ("WOLF".equals(label)) {
             centerY += (float) Math.sin(phase * 10.0f) * dp(1.6f);
@@ -1751,6 +1864,15 @@ public class MooseRushView extends View {
         drawSpriteSheetFrame(canvas, sheet, SPRITE_SHEET_FRAMES, frame, hazard.x, centerY, height, rotation);
     }
 
+    private float hazardAnimationRate(String label) {
+        if ("EAGLE".equals(label) || "DARK".equals(label)) return 3.05f;
+        if ("BEAR".equals(label) || "POLAR".equals(label)) return 2.85f;
+        if ("MOOSE".equals(label)) return 3.10f;
+        if ("WOLF".equals(label)) return 4.80f;
+        if ("SALMON".equals(label)) return 4.25f;
+        return 3.0f;
+    }
+
     private void drawStar(Canvas canvas, Star star) {
         float pulse = 1f + (float) Math.sin(star.spin) * 0.12f;
         float r = star.radius * pulse;
@@ -1759,6 +1881,43 @@ public class MooseRushView extends View {
         PathCompat.star(canvas, paint, star.x, star.y, r);
         paint.setColor(Color.argb(170, 255, 255, 255));
         canvas.drawCircle(star.x - r * 0.25f, star.y - r * 0.32f, r * 0.22f, paint);
+    }
+
+    private void drawPowerUp(Canvas canvas, PowerUp powerUp) {
+        float bob = (float) Math.sin(powerUp.bob) * dp(4);
+        float pulse = 1f + (float) Math.sin(powerUp.spin * 1.8f) * 0.10f;
+        float r = powerUp.radius * pulse;
+        float x = powerUp.x;
+        float y = powerUp.y + bob;
+
+        paint.setStyle(Paint.Style.FILL);
+        paint.setColor(Color.argb(80, 132, 213, 232));
+        canvas.drawCircle(x, y, r * 2.0f, paint);
+        paint.setColor(Color.rgb(132, 213, 232));
+        canvas.drawCircle(x, y, r * 1.15f, paint);
+        paint.setColor(Color.rgb(12, 24, 36));
+        canvas.drawCircle(x, y, r * 0.76f, paint);
+        paint.setColor(Color.rgb(255, 246, 207));
+        PathCompat.star(canvas, paint, x, y - r * 0.05f, r * 0.52f);
+    }
+
+    private void drawShieldAura(Canvas canvas) {
+        if (!gameState.shieldActive) {
+            return;
+        }
+        float pulse = 0.5f + 0.5f * (float) Math.sin(spriteClock * 6.0f);
+        float headY = playerY - playerRadius * PLAYER_HEAD_DRAW_OFFSET;
+        float centerY = headY + playerRadius * 1.70f;
+        float width = playerRadius * (2.65f + pulse * 0.20f);
+        float height = playerRadius * (4.15f + pulse * 0.25f);
+        paint.setStyle(Paint.Style.FILL);
+        paint.setColor(Color.argb(42 + Math.round(38 * pulse), 132, 213, 232));
+        canvas.drawOval(playerX - width * 0.50f, centerY - height * 0.50f, playerX + width * 0.50f, centerY + height * 0.50f, paint);
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setStrokeWidth(dp(2));
+        paint.setColor(Color.argb(150 + Math.round(70 * pulse), 255, 246, 207));
+        canvas.drawOval(playerX - width * 0.50f, centerY - height * 0.50f, playerX + width * 0.50f, centerY + height * 0.50f, paint);
+        paint.setStyle(Paint.Style.FILL);
     }
 
     private void drawShot(Canvas canvas, Shot shot) {
@@ -1787,15 +1946,11 @@ public class MooseRushView extends View {
         float xRadius = radius * bossHorizontalScale(selectedStage);
         float yRadius = radius * bossVerticalScale(selectedStage);
 
-        if (damageFlash > 0f) {
-            paint.setStyle(Paint.Style.FILL);
-            paint.setColor(Color.argb(150, 255, 255, 255));
-            canvas.drawOval(bossX - xRadius * 1.12f, bossY - yRadius * 1.12f, bossX + xRadius * 1.12f, bossY + yRadius * 1.12f, paint);
-        }
-
         paint.setStyle(Paint.Style.FILL);
-        paint.setColor(Color.argb(90, 255, 218, 121));
-        canvas.drawOval(bossX - xRadius * 1.12f, bossY - yRadius * 1.12f, bossX + xRadius * 1.12f, bossY + yRadius * 1.12f, paint);
+        if (damageFlash > 0f) {
+            paint.setColor(Color.argb(125, 255, 255, 255));
+            canvas.drawOval(bossX - xRadius * 0.96f, bossY - yRadius * 0.96f, bossX + xRadius * 0.96f, bossY + yRadius * 0.96f, paint);
+        }
         paint.setColor(Color.argb(120, 0, 0, 0));
         canvas.drawOval(bossX - xRadius * 0.88f, bossY + yRadius * 0.80f, bossX + xRadius * 0.88f, bossY + yRadius * 1.08f, paint);
 
@@ -1843,21 +1998,21 @@ public class MooseRushView extends View {
     }
 
     private void drawAnimatedBossSheet(Canvas canvas, Bitmap sheet, float radius) {
-        float phase = spriteClock + bossTimer * 0.25f;
-        float rate = selectedStage == 3 ? 8.0f : selectedStage == 1 ? 10.0f : 5.5f;
+        float phase = bossTimer + selectedStage * 0.37f;
+        float rate = selectedStage == 3 ? 3.05f : selectedStage == 1 ? 4.25f : 2.85f;
         int frame = Math.floorMod((int) (phase * rate), 6);
         float centerY = bossY;
         float height = radius * 3.3f;
         float rotation = 0f;
 
         if (selectedStage == 1) {
-            centerY += (float) Math.sin(phase * 6.0f) * dp(5.0f);
+            centerY += (float) Math.sin(phase * 2.5f) * dp(4.0f);
             height = radius * 2.45f;
-            rotation = (float) Math.sin(phase * 4.0f) * 9.0f;
+            rotation = (float) Math.sin(phase * 2.1f) * 7.0f;
         } else if (selectedStage == 3) {
-            centerY += (float) Math.sin(phase * 5.0f) * dp(8.0f);
+            centerY += (float) Math.sin(phase * 1.9f) * dp(5.0f);
             height = radius * 3.15f;
-            rotation = (float) Math.sin(phase * 3.0f) * 4.0f;
+            rotation = (float) Math.sin(phase * 1.5f) * 2.4f;
         } else if (selectedStage == 4) {
             height = radius * 2.95f;
         }
@@ -1986,7 +2141,7 @@ public class MooseRushView extends View {
         float chipWidth = (panelWidth - dp(52)) / 3f;
         drawBriefingChip(canvas, left + dp(16), chipTop, chipWidth, "GOAL", stage.goalGates + " HURDLES");
         drawBriefingChip(canvas, left + dp(26) + chipWidth, chipTop, chipWidth, "BOSS", stage.bossName);
-        drawBriefingChip(canvas, left + dp(36) + chipWidth * 2f, chipTop, chipWidth, "BONUS", "COMBO SCORE");
+        drawBriefingChip(canvas, left + dp(36) + chipWidth * 2f, chipTop, chipWidth, "MISSION", missionBriefLine());
 
         textPaint.setTextSize(dp(11));
         textPaint.setColor(Color.rgb(255, 218, 121));
@@ -2072,6 +2227,7 @@ public class MooseRushView extends View {
 
         drawHudIcons(canvas);
         drawActionOverlay(canvas);
+        drawMissionTracker(canvas);
 
         if (debugOverlay) {
             drawDebugOverlay(canvas);
@@ -2105,6 +2261,46 @@ public class MooseRushView extends View {
             paint.setColor(Color.rgb(255, 218, 121));
             canvas.drawCircle(getWidth() - dp(39), dp(42), dp(7) * (1f - pct), paint);
         }
+
+        if (gameState.shieldActive) {
+            float shieldX = getWidth() - dp(54);
+            float shieldY = dp(22);
+            paint.setColor(Color.rgb(132, 213, 232));
+            canvas.drawCircle(shieldX, shieldY, dp(7), paint);
+            paint.setColor(Color.rgb(12, 24, 36));
+            canvas.drawCircle(shieldX, shieldY, dp(4.5f), paint);
+            paint.setColor(Color.WHITE);
+            PathCompat.star(canvas, paint, shieldX, shieldY, dp(3.2f));
+        }
+    }
+
+    private void drawMissionTracker(Canvas canvas) {
+        if (state == STATE_SPLASH || state == STATE_MENU || state == STATE_MAP || state == STATE_CUSTOMIZE) {
+            return;
+        }
+        if (bossActive) {
+            return;
+        }
+        if (bossWarningTimer > 0f || runCalloutTimer > 0f) {
+            return;
+        }
+        float width = Math.min(getWidth() - dp(70), dp(430));
+        float height = dp(22);
+        float left = (getWidth() - width) / 2f;
+        float top = dp(69);
+        paint.setStyle(Paint.Style.FILL);
+        paint.setColor(Color.argb(138, 8, 18, 30));
+        canvas.drawRoundRect(left, top, left + width, top + height, dp(8), dp(8), paint);
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setStrokeWidth(dp(1));
+        paint.setColor(Color.argb(160, 132, 213, 232));
+        canvas.drawRoundRect(left, top, left + width, top + height, dp(8), dp(8), paint);
+        paint.setStyle(Paint.Style.FILL);
+
+        textPaint.setTextAlign(Paint.Align.CENTER);
+        textPaint.setTextSize(dp(8.5f));
+        textPaint.setColor(Color.rgb(220, 235, 239));
+        canvas.drawText(missionProgressLine(), getWidth() / 2f, top + dp(14.5f), textPaint);
     }
 
     private void drawActionOverlay(Canvas canvas) {
@@ -2330,7 +2526,7 @@ public class MooseRushView extends View {
         textPaint.setTextSize(dp(13));
         textPaint.setColor(Color.rgb(255, 218, 121));
         canvas.drawText("Score " + score + " · Hurdles " + gatesPassed + " · Attempt " + stageAttempts, getWidth() / 2f, top + dp(118), textPaint);
-        canvas.drawText("Best combo " + gameState.bestCombo + " · Stars " + gameState.stars + " · Rank " + runRank(), getWidth() / 2f, top + dp(142), textPaint);
+        canvas.drawText("Missions " + missionsCompleted + "/3 · Combo " + gameState.bestCombo + " · Rank " + runRank(), getWidth() / 2f, top + dp(142), textPaint);
 
         textPaint.setColor(Color.rgb(210, 232, 238));
         canvas.drawText("Tap anywhere to retry", getWidth() / 2f, top + dp(169), textPaint);
@@ -2366,7 +2562,7 @@ public class MooseRushView extends View {
 
         textPaint.setColor(Color.rgb(210, 232, 238));
         textPaint.setTextSize(dp(13));
-        canvas.drawText("Rank " + runRank() + " · Combo " + gameState.bestCombo + " · Stars " + gameState.stars, getWidth() / 2f, top + dp(134), textPaint);
+        canvas.drawText("Rank " + runRank() + " · Missions " + missionsCompleted + "/3 · Stars " + gameState.stars, getWidth() / 2f, top + dp(134), textPaint);
         canvas.drawText(stageClearLine(), getWidth() / 2f, top + dp(160), textPaint);
 
         setButton(secondaryButtonBounds, top + dp(205), dp(118), dp(36));
@@ -2515,6 +2711,16 @@ public class MooseRushView extends View {
         return "Next Alaska stage unlocked.";
     }
 
+    private String missionBriefLine() {
+        return missionStarGoal + " STARS";
+    }
+
+    private String missionProgressLine() {
+        return "MISSIONS " + missionsCompleted + "/3  GATES " + Math.min(gatesPassed, STAGES[selectedStage].goalGates) + "/" + STAGES[selectedStage].goalGates
+                + "  STARS " + gameState.stars + "/" + missionStarGoal
+                + "  COMBO " + gameState.bestCombo + "/" + missionComboGoal;
+    }
+
     private String runRank() {
         if (score >= 850 || gameState.bestCombo >= 14) {
             return "S";
@@ -2551,7 +2757,7 @@ public class MooseRushView extends View {
     }
 
     private float getGroundY() {
-        return getHeight() - dp(78);
+        return getHeight() - dp(PLAYFIELD_BOTTOM_MARGIN_DP);
     }
 
     private float playerStartX() {
@@ -2631,6 +2837,7 @@ public class MooseRushView extends View {
     private static class Hazard {
         float x;
         float y;
+        final float baseY;
         final float radius;
         final float baseSpeedMultiplier;
         float speedMultiplier;
@@ -2647,6 +2854,7 @@ public class MooseRushView extends View {
         Hazard(float x, float y, float radius, float speedMultiplier, float phase, String label, Drawable drawable) {
             this.x = x;
             this.y = y;
+            this.baseY = y;
             this.radius = radius;
             this.baseSpeedMultiplier = speedMultiplier;
             this.speedMultiplier = speedMultiplier;
@@ -2681,6 +2889,22 @@ public class MooseRushView extends View {
             this.x = x;
             this.y = y;
             this.radius = radius;
+        }
+    }
+
+    private static class PowerUp {
+        float x;
+        final float y;
+        final float radius;
+        final String type;
+        float spin = 0f;
+        float bob = 0f;
+
+        PowerUp(float x, float y, float radius, String type) {
+            this.x = x;
+            this.y = y;
+            this.radius = radius;
+            this.type = type;
         }
     }
 

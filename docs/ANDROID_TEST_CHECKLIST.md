@@ -5,16 +5,16 @@ Use this after GitHub Actions produces the debug APK artifact.
 Current packaged beta:
 
 ```text
-versionCode: 186
-versionName: 1.8.6-alpha
-build badge: ALASKA ART v1.8.6
+versionCode: 187
+versionName: 1.8.7-alpha
+build badge: ALASKA QUEST v1.8.7
 ```
 
 ## Install test
 
 1. Download `you-rush-alaska-debug-apk` from the latest successful workflow run.
 2. Extract the ZIP if GitHub downloaded it as a ZIP.
-3. Install `you-rush-alaska-1.8.6-alpha-186-debug.apk` on an Android phone.
+3. Install `you-rush-alaska-1.8.7-alpha-187-debug.apk` on an Android phone.
 4. Allow installation from the browser/files app if Android prompts you.
 5. Open **You Rush**.
 6. Confirm the debug/version badge is visible and matches the packaged beta.
@@ -64,6 +64,8 @@ Confirm score changes:
 - Dodging hazards gives small score bumps.
 - Combo streaks build from successful play, unlock score multipliers, and reset on mistakes.
 - Tight dodges can trigger a near-miss score popup without feeling unfair.
+- Run missions appear before/during runs and report progress on result screens.
+- Shield pickups appear, activate an obvious aura, and absorb one hit.
 - Hitting a boss with snowballs increases score.
 - Defeating a boss gives a larger stage-clear bonus with combo and star rewards.
 - Best score persists after restarting the app.
@@ -103,6 +105,10 @@ Check small and large screens:
 - Generated background plates carry the mountains; old vector-style mountain layers should not appear.
 - Winter/dark stages show denser snow-covered tree layers without jumpy resets.
 - Polar bear and wolf sprites animate cleanly without magenta background artifacts.
+- Eagle wings flap at a natural pace instead of strobing.
+- Bear and polar bear movement stays planted instead of jumping vertically.
+- Animal sprites do not have decorative halo/circle glows around them.
+- Double-jumps have enough headroom after the ground/play area shift.
 
 ## Debug test
 

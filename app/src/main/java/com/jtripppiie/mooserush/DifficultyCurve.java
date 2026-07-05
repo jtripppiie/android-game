@@ -11,14 +11,14 @@ final class DifficultyCurve {
     }
 
     static float speedMultiplier(float tension) {
-        return 1f + Math.min(1f, Math.max(0f, tension)) * 0.12f;
+        return 1f + Math.min(1f, Math.max(0f, tension)) * 0.16f;
     }
 
     static float gateCooldown(float baseCooldown, float tension) {
-        return Math.max(1.35f, baseCooldown * (1f - Math.min(1f, Math.max(0f, tension)) * 0.10f));
+        return Math.max(1.32f, baseCooldown * (1f - Math.min(1f, Math.max(0f, tension)) * 0.14f));
     }
 
     static float hazardCooldown(float baseCooldown, float tension) {
-        return Math.max(1.58f, baseCooldown * (1f - Math.min(1f, Math.max(0f, tension)) * 0.18f));
+        return Math.max(1.52f, baseCooldown * (1f - Math.min(1f, Math.max(0f, tension)) * 0.22f));
     }
 }
