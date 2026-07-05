@@ -1,7 +1,7 @@
 # Sprite Sheet Asset Pipeline
 
-This document captures the repeatable process used for the `1.8.3-alpha`
-graphics pass.
+This document captures the repeatable process used for the `1.8.x` graphics
+passes.
 
 ## Goal
 
@@ -17,9 +17,9 @@ into real raster game art:
 ## Current Package
 
 ```text
-versionCode: 183
-versionName: 1.8.3-alpha
-badge: ALASKA ART v1.8.3
+versionCode: 184
+versionName: 1.8.4-alpha
+badge: ALASKA ART v1.8.4
 ```
 
 ## Generated Assets
@@ -324,6 +324,15 @@ sheet_player_run_headless.png
 
 The uploaded/default head is still drawn separately on top of the headless
 runner body.
+
+`1.8.4-alpha` fixes runtime runner readability:
+
+- The game uses a separate runner animation clock instead of the faster world
+  sprite clock.
+- Runtime drawing trims each headless runner sheet frame to its non-transparent
+  body bounds before scaling.
+- The body renders from a larger visible target height so the runner no longer
+  appears tiny next to the uploaded/default head.
 
 ## Not Yet Wired
 

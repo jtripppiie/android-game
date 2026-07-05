@@ -150,6 +150,7 @@ public class MooseRushView extends View {
     private float groundScroll = 0f;
     private float sceneryScroll = 0f;
     private float spriteClock = 0f;
+    private float runnerClock = 0f;
     private float bossTimer = 0f;
     private float shotCooldown = 0f;
     private float damageFlash = 0f;
@@ -304,6 +305,7 @@ public class MooseRushView extends View {
 
     private void updatePassive(float dt) {
         spriteClock += dt * 2.5f;
+        runnerClock += dt * 0.75f;
         updateVisualEffects(dt);
         if (state == STATE_SPLASH) {
             splashTimer += dt;
@@ -538,6 +540,7 @@ public class MooseRushView extends View {
         groundScroll = 0f;
         sceneryScroll = 0f;
         spriteClock = 0f;
+        runnerClock = 0f;
         damageFlash = 0f;
         screenShake = 0f;
         worldFlash = 0f;
@@ -608,6 +611,7 @@ public class MooseRushView extends View {
         boolean wasGrounded = grounded;
 
         spriteClock += dt * (5.5f + Math.min(4.5f, gatesPassed * 0.28f));
+        runnerClock += dt * (grounded ? 1.22f + Math.min(0.34f, gatesPassed * 0.018f) : 0.55f);
         updateVisualEffects(dt);
         shotCooldown = Math.max(0f, shotCooldown - dt);
         damageFlash = Math.max(0f, damageFlash - dt);
@@ -1552,7 +1556,7 @@ public class MooseRushView extends View {
 
     private SpriteRenderer.PlayerFrame playerFrame(float x, float y, float radius) {
         int outfitColor = playerPhoto == null ? Color.rgb(255, 218, 121) : OUTFIT_COLORS[selectedOutfit];
-        return new SpriteRenderer.PlayerFrame(x, y, radius, spriteClock, grounded, playerVelocityY, playerPhoto, outfitColor);
+        return new SpriteRenderer.PlayerFrame(x, y, radius, runnerClock, grounded, playerVelocityY, playerPhoto, outfitColor);
     }
 
     private void drawReadyScreen(Canvas canvas) {

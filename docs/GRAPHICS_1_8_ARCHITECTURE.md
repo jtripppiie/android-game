@@ -39,14 +39,15 @@ effects should not remain tangled into the main view.
 
 - `GameAssets.java`: new asset registry for backgrounds, stage hazards, and
   boss lookup.
-- `SpriteRenderer.java`: new player renderer for standing previews, running
-  frames, default heads, uploaded face heads, limbs, boots, and outfit color.
+- `SpriteRenderer.java`: player renderer for standing previews, running
+  frames, default heads, uploaded face heads, limbs, boots, outfit color,
+  runner sheet trimming, and readable runner animation cadence.
 - `VisualEffects.java`: new effects manager for particles and score popups.
 - `MooseRushView.java`: reduced direct graphics ownership by delegating player
   drawing, drawable lookup, particle updates, and popup drawing to dedicated
   classes.
-- `app/build.gradle`: bumped the debug package to `1.8.3-alpha` /
-  `versionCode 183` and updated the visible build badge.
+- `app/build.gradle`: bumped the debug package to `1.8.4-alpha` /
+  `versionCode 184` and updated the visible build badge.
 - `README.md`, `docs/VERSIONING.md`, and `docs/ANDROID_TEST_CHECKLIST.md`:
   updated package names, badge text, and test instructions for the current
   1.8.x graphics alpha.
@@ -149,9 +150,9 @@ Now:
 The active beta package is:
 
 ```text
-versionCode: 183
-versionName: 1.8.3-alpha
-badge: ALASKA ART v1.8.3
+versionCode: 184
+versionName: 1.8.4-alpha
+badge: ALASKA ART v1.8.4
 ```
 
 This branch is an architecture alpha. It is intended for testing the new

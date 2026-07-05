@@ -14,6 +14,17 @@ import android.graphics.Shader;
 
 final class SpriteRenderer {
     private static final int RUNNER_FRAMES = 6;
+    private static final float RUNNER_BODY_HEIGHT_RUNNING = 2.68f;
+    private static final float RUNNER_BODY_HEIGHT_STANDING = 2.62f;
+    private static final float RUNNER_BODY_WIDTH_SCALE = 1.18f;
+    private static final int[][] RUNNER_FRAME_TRIMS = {
+            {24, 198, 328, 643},
+            {0, 207, 328, 638},
+            {0, 221, 325, 638},
+            {18, 173, 289, 624},
+            {3, 222, 328, 642},
+            {0, 218, 307, 639}
+    };
 
     private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final RectF bodyBounds = new RectF();
@@ -62,19 +73,35 @@ final class SpriteRenderer {
             return false;
         }
 
-        int frameIndex = animated
-                ? Math.floorMod((int) (frame.spriteClock * 12.0f), RUNNER_FRAMES)
-                : 0;
-        sourceRect.set(frameIndex * frameWidth, 0, (frameIndex + 1) * frameWidth, runnerBodySheet.getHeight());
+        int frameIndex = animated ? runnerSheetFrame(frame.spriteClock) : 0;
+        int[] trim = RUNNER_FRAME_TRIMS[frameIndex];
+        int sourceLeft = frameIndex * frameWidth + trim[0];
+        int sourceTop = trim[1];
+        int sourceRight = frameIndex * frameWidth + Math.min(trim[2], frameWidth);
+        int sourceBottom = Math.min(trim[3], runnerBodySheet.getHeight());
+        if (sourceRight <= sourceLeft || sourceBottom <= sourceTop) {
+            return false;
+        }
+        sourceRect.set(sourceLeft, sourceTop, sourceRight, sourceBottom);
 
-        float bodyHeight = frame.radius * (animated ? 3.52f : 3.42f);
-        float bodyWidth = bodyHeight * (frameWidth / (float) runnerBodySheet.getHeight());
-        float top = headY + frame.radius * 0.42f;
+        float sourceWidth = sourceRight - sourceLeft;
+        float sourceHeight = sourceBottom - sourceTop;
+        float bodyHeight = runnerSheetBodyHeight(frame.radius, animated);
+        float bodyWidth = bodyHeight * (sourceWidth / sourceHeight) * RUNNER_BODY_WIDTH_SCALE;
+        float top = headY + frame.radius * 0.60f;
         float centerX = frame.x + frame.radius * 0.10f;
 
         tempRect.set(centerX - bodyWidth * 0.50f, top, centerX + bodyWidth * 0.50f, top + bodyHeight);
         canvas.drawBitmap(runnerBodySheet, sourceRect, tempRect, null);
         return true;
+    }
+
+    static int runnerSheetFrame(float runnerClock) {
+        return Math.floorMod((int) (runnerClock * RUNNER_FRAMES), RUNNER_FRAMES);
+    }
+
+    static float runnerSheetBodyHeight(float radius, boolean animated) {
+        return radius * (animated ? RUNNER_BODY_HEIGHT_RUNNING : RUNNER_BODY_HEIGHT_STANDING);
     }
 
     private void drawStandingBody(Canvas canvas, PlayerFrame frame) {
