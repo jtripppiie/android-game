@@ -45,8 +45,8 @@ effects should not remain tangled into the main view.
 - `MooseRushView.java`: reduced direct graphics ownership by delegating player
   drawing, drawable lookup, particle updates, and popup drawing to dedicated
   classes.
-- `app/build.gradle`: bumped the debug package to `1.8.2-alpha` /
-  `versionCode 182` and updated the visible build badge.
+- `app/build.gradle`: bumped the debug package to `1.8.3-alpha` /
+  `versionCode 183` and updated the visible build badge.
 - `README.md`, `docs/VERSIONING.md`, and `docs/ANDROID_TEST_CHECKLIST.md`:
   updated package names, badge text, and test instructions for the current
   1.8.x graphics alpha.
@@ -149,9 +149,9 @@ Now:
 The active beta package is:
 
 ```text
-versionCode: 182
-versionName: 1.8.2-alpha
-badge: ALASKA ARCH v1.8.2
+versionCode: 183
+versionName: 1.8.3-alpha
+badge: ALASKA ART v1.8.3
 ```
 
 This branch is an architecture alpha. It is intended for testing the new
@@ -164,6 +164,11 @@ clean rail obstacle instead of an antler-stump shape.
 `1.8.2-alpha` moves the in-game moose hazard and Moose Boss off the rectangular
 drawable path and draws the moose directly in Canvas. This prevents the animal
 from appearing as a square asset tile.
+
+`1.8.3-alpha` adds generated raster sprite sheets and background/tree art.
+Moose, bear, salmon, eagle, and the headless player body now have six-frame
+sprite sheets available in Android resources, with hazards and bosses wired to
+animate from those sheets.
 
 ## What still needs extraction
 

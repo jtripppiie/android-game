@@ -2,34 +2,45 @@ package com.jtripppiie.mooserush;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.BitmapShader;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
+import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.Shader;
 
 final class SpriteRenderer {
+    private static final int RUNNER_FRAMES = 6;
+
     private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final RectF bodyBounds = new RectF();
     private final RectF tempRect = new RectF();
+    private final Rect sourceRect = new Rect();
     private final Matrix photoMatrix = new Matrix();
+    private final Bitmap runnerBodySheet;
     private final float density;
 
     SpriteRenderer(Context context) {
         density = context.getResources().getDisplayMetrics().density;
+        runnerBodySheet = BitmapFactory.decodeResource(context.getResources(), R.drawable.sheet_player_run_headless);
     }
 
     void drawRunner(Canvas canvas, PlayerFrame frame) {
         float bob = (float) Math.sin(frame.spriteClock * Math.PI * 2f) * dp(4.0f);
         float headY = frame.y + bob;
-        drawRunningBody(canvas, frame, headY);
+        if (!drawRunnerSheetBody(canvas, frame, headY, true)) {
+            drawRunningBody(canvas, frame, headY);
+        }
         drawHead(canvas, frame.x, headY, frame.radius, frame.playerPhoto);
     }
 
     void drawStanding(Canvas canvas, PlayerFrame frame) {
-        drawStandingBody(canvas, frame);
+        if (!drawRunnerSheetBody(canvas, frame, frame.y, false)) {
+            drawStandingBody(canvas, frame);
+        }
         drawHead(canvas, frame.x, frame.y, frame.radius, frame.playerPhoto);
     }
 
@@ -39,6 +50,31 @@ final class SpriteRenderer {
         } else {
             drawDefaultPlayerHead(canvas, x, headY, radius);
         }
+    }
+
+    private boolean drawRunnerSheetBody(Canvas canvas, PlayerFrame frame, float headY, boolean animated) {
+        if (runnerBodySheet == null || runnerBodySheet.getWidth() <= 0 || runnerBodySheet.getHeight() <= 0) {
+            return false;
+        }
+
+        int frameWidth = runnerBodySheet.getWidth() / RUNNER_FRAMES;
+        if (frameWidth <= 0) {
+            return false;
+        }
+
+        int frameIndex = animated
+                ? Math.floorMod((int) (frame.spriteClock * 12.0f), RUNNER_FRAMES)
+                : 0;
+        sourceRect.set(frameIndex * frameWidth, 0, (frameIndex + 1) * frameWidth, runnerBodySheet.getHeight());
+
+        float bodyHeight = frame.radius * (animated ? 3.52f : 3.42f);
+        float bodyWidth = bodyHeight * (frameWidth / (float) runnerBodySheet.getHeight());
+        float top = headY + frame.radius * 0.42f;
+        float centerX = frame.x + frame.radius * 0.10f;
+
+        tempRect.set(centerX - bodyWidth * 0.50f, top, centerX + bodyWidth * 0.50f, top + bodyHeight);
+        canvas.drawBitmap(runnerBodySheet, sourceRect, tempRect, null);
+        return true;
     }
 
     private void drawStandingBody(Canvas canvas, PlayerFrame frame) {

@@ -117,22 +117,30 @@ When enabled, gameplay shows:
 
 This is meant to make mobile testing easier without needing logcat open constantly.
 
-## Placeholder assets
+## Runtime art assets
 
-There are two placeholder asset locations:
+The current runtime art lives in two asset groups.
 
-### Android runtime drawables
+### Android raster art
 
-These are Android vector drawables that the app can render immediately:
+These are generated raster PNG assets used by the Android renderer:
 
 ```text
-app/src/main/res/drawable/placeholder_background_midnight_sun.xml
-app/src/main/res/drawable/placeholder_background_dark_winter.xml
-app/src/main/res/drawable/placeholder_hazard_salmon.xml
-app/src/main/res/drawable/placeholder_hazard_moose.xml
-app/src/main/res/drawable/placeholder_hazard_bear.xml
-app/src/main/res/drawable/placeholder_gate_antlers.xml
+app/src/main/res/drawable-nodpi/background_midnight_sun_art.png
+app/src/main/res/drawable-nodpi/background_dark_winter_art.png
+app/src/main/res/drawable-nodpi/sprite_tree_summer.png
+app/src/main/res/drawable-nodpi/sprite_tree_winter.png
+app/src/main/res/drawable-nodpi/sheet_moose_walk.png
+app/src/main/res/drawable-nodpi/sheet_bear_walk.png
+app/src/main/res/drawable-nodpi/sheet_salmon_swim.png
+app/src/main/res/drawable-nodpi/sheet_eagle_fly.png
+app/src/main/res/drawable-nodpi/sheet_player_run_headless.png
+app/src/main/res/drawable-nodpi/sheet_mom_run.png
+app/src/main/res/drawable-nodpi/sheet_dad_run.png
 ```
+
+See `docs/SPRITE_SHEET_ASSET_PIPELINE.md` for the repeatable generation and
+transparent-background conversion process.
 
 ### Region asset pack folder
 

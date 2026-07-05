@@ -1,41 +1,52 @@
 package com.jtripppiie.mooserush;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
 
 final class GameAssets {
     private final Drawable backgroundMidnightSun;
     private final Drawable backgroundDarkWinter;
-    private final Drawable salmonHazard;
-    private final Drawable mooseHazard;
-    private final Drawable bearHazard;
+    private final Drawable treeSummer;
+    private final Drawable treeWinter;
+    private final Bitmap mooseWalkSheet;
+    private final Bitmap bearWalkSheet;
+    private final Bitmap salmonSwimSheet;
+    private final Bitmap eagleFlySheet;
 
     GameAssets(Context context) {
-        backgroundMidnightSun = context.getDrawable(R.drawable.placeholder_background_midnight_sun);
-        backgroundDarkWinter = context.getDrawable(R.drawable.placeholder_background_dark_winter);
-        salmonHazard = context.getDrawable(R.drawable.placeholder_hazard_salmon);
-        mooseHazard = context.getDrawable(R.drawable.placeholder_hazard_moose);
-        bearHazard = context.getDrawable(R.drawable.placeholder_hazard_bear);
+        backgroundMidnightSun = context.getDrawable(R.drawable.background_midnight_sun_art);
+        backgroundDarkWinter = context.getDrawable(R.drawable.background_dark_winter_art);
+        treeSummer = context.getDrawable(R.drawable.sprite_tree_summer);
+        treeWinter = context.getDrawable(R.drawable.sprite_tree_winter);
+        mooseWalkSheet = BitmapFactory.decodeResource(context.getResources(), R.drawable.sheet_moose_walk);
+        bearWalkSheet = BitmapFactory.decodeResource(context.getResources(), R.drawable.sheet_bear_walk);
+        salmonSwimSheet = BitmapFactory.decodeResource(context.getResources(), R.drawable.sheet_salmon_swim);
+        eagleFlySheet = BitmapFactory.decodeResource(context.getResources(), R.drawable.sheet_eagle_fly);
     }
 
     Drawable background(boolean dark, boolean winter) {
         return dark || winter ? backgroundDarkWinter : backgroundMidnightSun;
     }
 
-    Drawable hazardForStage(int stage) {
-        if (stage == 1) {
-            return salmonHazard;
-        }
-        if (stage == 2) {
-            return mooseHazard;
-        }
-        if (stage == 3 || stage == 4) {
-            return bearHazard;
-        }
-        return salmonHazard;
+    Drawable tree(boolean winter) {
+        return winter ? treeWinter : treeSummer;
     }
 
-    Drawable bossForStage(int stage) {
-        return hazardForStage(stage);
+    Bitmap mooseWalkSheet() {
+        return mooseWalkSheet;
+    }
+
+    Bitmap bearWalkSheet() {
+        return bearWalkSheet;
+    }
+
+    Bitmap salmonSwimSheet() {
+        return salmonSwimSheet;
+    }
+
+    Bitmap eagleFlySheet() {
+        return eagleFlySheet;
     }
 }

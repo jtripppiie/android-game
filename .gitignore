@@ -22,3 +22,6 @@ Thumbs.db
 # Build artifacts
 artifacts/
 *.apk
+
+# Local asset conversion workspace
+tmp/

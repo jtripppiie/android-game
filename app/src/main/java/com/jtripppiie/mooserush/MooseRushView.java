@@ -7,6 +7,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
@@ -75,7 +76,7 @@ public class MooseRushView extends View {
             new StageConfig("Midnight Sun Run", "Learn the jump. Clear the hurdles.", SEASON_MIDNIGHT_SUN, "Sunburn Sprite", "SUN", 5, 2, 150, 2.35f, 0),
             new StageConfig("Salmon Rush", "Fish arc in after the first hurdles.", SEASON_SUMMER, "Salmon Boss", "SALMON", 7, 3, 165, 2.15f, 1),
             new StageConfig("Moose Pass", "Moose enemies are real now. Take your time.", SEASON_SUMMER, "Moose Boss", "MOOSE", 8, 4, 178, 2.05f, 2),
-            new StageConfig("Dark Winter", "Low light, careful jumps.", SEASON_DARKNESS, "Darkness Boss", "DARK", 9, 4, 188, 1.95f, 3),
+            new StageConfig("Dark Winter", "Eagles dive through low light.", SEASON_DARKNESS, "Eagle Boss", "EAGLE", 9, 4, 188, 1.95f, 3),
             new StageConfig("Bear Country", "A hard final level, not a blur.", SEASON_WINTER, "Bear Boss", "BEAR", 10, 6, 198, 1.85f, 4)
     };
 
@@ -108,7 +109,7 @@ public class MooseRushView extends View {
     private final RectF jumpPadBounds = new RectF();
     private final RectF firePadBounds = new RectF();
     private final RectF tempRect = new RectF();
-    private final Path moosePath = new Path();
+    private final Rect spriteSourceRect = new Rect();
     private PhotoRequestListener photoRequestListener;
     private Bitmap playerPhoto;
     private Bitmap backdropCache;
@@ -939,8 +940,7 @@ public class MooseRushView extends View {
         if (random.nextFloat() < 0.35f) {
             y = getGroundY() - dp(120) - random.nextFloat() * dp(60);
         }
-        Drawable drawable = assets.hazardForStage(selectedStage);
-        hazards.add(new Hazard(getWidth() + dp(50), y, radius, 0.86f + random.nextFloat() * 0.32f, random.nextFloat() * 4f, stage.hazardLabel, drawable));
+        hazards.add(new Hazard(getWidth() + dp(50), y, radius, 0.86f + random.nextFloat() * 0.32f, random.nextFloat() * 4f, stage.hazardLabel, null));
     }
 
     private boolean hitsGate(Gate gate) {
@@ -1198,13 +1198,21 @@ public class MooseRushView extends View {
             paint.setColor(dark ? Color.rgb(34, 52, 82) : Color.rgb(82, 126, 152));
         }
 
+        Drawable treeAsset = assets.tree(winter);
         paint.setColor(winter ? Color.rgb(232, 242, 246) : Color.rgb(56, 118, 78));
         for (float x = -(sceneryScroll * 0.34f) % dp(150) - dp(40); x < getWidth() + dp(180); x += dp(150)) {
-            canvas.drawRoundRect(x, getGroundY() - dp(38), x + dp(16), getGroundY(), dp(4), dp(4), paint);
-            PathCompat.triangle(canvas, paint, x - dp(18), getGroundY() - dp(34), x + dp(8), getGroundY() - dp(76), x + dp(34), getGroundY() - dp(34));
-            paint.setColor(winter ? Color.rgb(178, 203, 214) : Color.rgb(38, 92, 62));
-            PathCompat.triangle(canvas, paint, x - dp(10), getGroundY() - dp(42), x + dp(8), getGroundY() - dp(70), x + dp(24), getGroundY() - dp(42));
-            paint.setColor(winter ? Color.rgb(232, 242, 246) : Color.rgb(56, 118, 78));
+            if (treeAsset != null) {
+                float treeHeight = dp(winter ? 94 : 98);
+                float treeWidth = treeHeight * 0.67f;
+                float sway = (float) Math.sin(spriteClock * 1.6f + x * 0.03f) * dp(1.4f);
+                drawDrawable(canvas, treeAsset, x - treeWidth * 0.50f + sway, getGroundY() - treeHeight, x + treeWidth * 0.50f + sway, getGroundY());
+            } else {
+                canvas.drawRoundRect(x, getGroundY() - dp(38), x + dp(16), getGroundY(), dp(4), dp(4), paint);
+                PathCompat.triangle(canvas, paint, x - dp(18), getGroundY() - dp(34), x + dp(8), getGroundY() - dp(76), x + dp(34), getGroundY() - dp(34));
+                paint.setColor(winter ? Color.rgb(178, 203, 214) : Color.rgb(38, 92, 62));
+                PathCompat.triangle(canvas, paint, x - dp(10), getGroundY() - dp(42), x + dp(8), getGroundY() - dp(70), x + dp(24), getGroundY() - dp(42));
+                paint.setColor(winter ? Color.rgb(232, 242, 246) : Color.rgb(56, 118, 78));
+            }
         }
     }
 
@@ -1271,9 +1279,9 @@ public class MooseRushView extends View {
     }
 
     private void drawHazard(Canvas canvas, Hazard hazard) {
-        boolean moose = "MOOSE".equals(hazard.label);
-        float xRadius = moose ? hazard.radius * 1.45f : hazard.radius;
-        float yRadius = moose ? hazard.radius * 0.96f : hazard.radius;
+        Bitmap sheet = sheetForHazard(hazard.label);
+        float xRadius = hazard.radius * hazardHorizontalScale(hazard.label);
+        float yRadius = hazard.radius * hazardVerticalScale(hazard.label);
 
         paint.setStyle(Paint.Style.FILL);
         paint.setColor(Color.argb(85, 0, 0, 0));
@@ -1282,8 +1290,8 @@ public class MooseRushView extends View {
         paint.setColor(Color.argb(80, 255, 246, 207));
         canvas.drawOval(hazard.x - xRadius * 1.08f, hazard.y - yRadius * 1.12f, hazard.x + xRadius * 1.08f, hazard.y + yRadius * 1.12f, paint);
 
-        if (moose) {
-            drawMoose(canvas, hazard.x, hazard.y, yRadius);
+        if (sheet != null) {
+            drawAnimatedHazardSheet(canvas, hazard, sheet, yRadius);
         } else if (hazard.drawable != null) {
             drawDrawable(canvas, hazard.drawable, hazard.x - xRadius, hazard.y - yRadius, hazard.x + xRadius, hazard.y + yRadius);
         } else {
@@ -1310,6 +1318,65 @@ public class MooseRushView extends View {
         textPaint.setTextSize(dp(9));
         textPaint.setColor(Color.rgb(255, 246, 207));
         canvas.drawText(hazard.label, hazard.x, top + dp(11), textPaint);
+    }
+
+    private Bitmap sheetForHazard(String label) {
+        if ("MOOSE".equals(label)) {
+            return assets.mooseWalkSheet();
+        }
+        if ("BEAR".equals(label)) {
+            return assets.bearWalkSheet();
+        }
+        if ("SALMON".equals(label)) {
+            return assets.salmonSwimSheet();
+        }
+        if ("EAGLE".equals(label) || "DARK".equals(label)) {
+            return assets.eagleFlySheet();
+        }
+        return null;
+    }
+
+    private float hazardHorizontalScale(String label) {
+        if ("MOOSE".equals(label)) return 1.70f;
+        if ("BEAR".equals(label)) return 1.60f;
+        if ("EAGLE".equals(label) || "DARK".equals(label)) return 1.65f;
+        if ("SALMON".equals(label)) return 1.35f;
+        return 1.0f;
+    }
+
+    private float hazardVerticalScale(String label) {
+        if ("MOOSE".equals(label) || "BEAR".equals(label)) return 1.08f;
+        if ("EAGLE".equals(label) || "DARK".equals(label)) return 1.00f;
+        if ("SALMON".equals(label)) return 0.80f;
+        return 1.0f;
+    }
+
+    private void drawAnimatedHazardSheet(Canvas canvas, Hazard hazard, Bitmap sheet, float yRadius) {
+        String label = hazard.label;
+        float phase = spriteClock + hazard.phase;
+        float rate = "SALMON".equals(label) ? 10.0f : ("EAGLE".equals(label) ? 8.0f : 6.0f);
+        int frame = Math.floorMod((int) (phase * rate), 6);
+        float centerY = hazard.y;
+        float height = yRadius * 2.35f;
+        float rotation = 0f;
+
+        if ("SALMON".equals(label)) {
+            centerY += (float) Math.sin(phase * 7.0f) * dp(3.0f);
+            height = yRadius * 2.0f;
+            rotation = (float) Math.sin(phase * 6.0f) * 9.0f;
+        } else if ("EAGLE".equals(label) || "DARK".equals(label)) {
+            centerY += (float) Math.sin(phase * 4.0f) * dp(7.0f);
+            height = yRadius * 2.55f;
+            rotation = (float) Math.sin(phase * 3.0f) * 3.0f;
+        } else if ("BEAR".equals(label)) {
+            centerY += (float) Math.sin(phase * 8.0f) * dp(1.2f);
+            height = yRadius * 2.45f;
+        } else if ("MOOSE".equals(label)) {
+            centerY += (float) Math.sin(phase * 7.0f) * dp(1.0f);
+            height = yRadius * 2.45f;
+        }
+
+        drawSpriteSheetFrame(canvas, sheet, 6, frame, hazard.x, centerY, height, rotation);
     }
 
     private void drawStar(Canvas canvas, Star star) {
@@ -1343,11 +1410,10 @@ public class MooseRushView extends View {
     }
 
     private void drawBoss(Canvas canvas) {
-        Drawable bossDrawable = assets.bossForStage(selectedStage);
         float radius = bossRadius();
-        boolean mooseBoss = selectedStage == 2;
-        float xRadius = mooseBoss ? radius * 1.72f : radius * 1.30f;
-        float yRadius = mooseBoss ? radius * 1.08f : radius * 1.30f;
+        Bitmap bossSheet = sheetForBoss(selectedStage);
+        float xRadius = radius * bossHorizontalScale(selectedStage);
+        float yRadius = radius * bossVerticalScale(selectedStage);
 
         if (damageFlash > 0f) {
             paint.setStyle(Paint.Style.FILL);
@@ -1361,10 +1427,8 @@ public class MooseRushView extends View {
         paint.setColor(Color.argb(120, 0, 0, 0));
         canvas.drawOval(bossX - xRadius * 0.88f, bossY + yRadius * 0.80f, bossX + xRadius * 0.88f, bossY + yRadius * 1.08f, paint);
 
-        if (mooseBoss) {
-            drawMoose(canvas, bossX, bossY, yRadius * 0.92f);
-        } else if (bossDrawable != null) {
-            drawDrawable(canvas, bossDrawable, bossX - xRadius, bossY - yRadius, bossX + xRadius, bossY + yRadius);
+        if (bossSheet != null) {
+            drawAnimatedBossSheet(canvas, bossSheet, radius);
         } else {
             paint.setStyle(Paint.Style.FILL);
             paint.setColor(Color.rgb(255, 218, 121));
@@ -1374,147 +1438,83 @@ public class MooseRushView extends View {
         drawBossHealthBar(canvas);
     }
 
-    private void drawMoose(Canvas canvas, float x, float y, float size) {
-        float bodyLeft = x - size * 1.42f;
-        float bodyRight = x + size * 0.42f;
-        float bodyTop = y - size * 0.45f;
-        float bodyBottom = y + size * 0.32f;
-        float legTop = y + size * 0.10f;
-        float hoofY = y + size * 0.88f;
-        int outlineColor = Color.rgb(18, 11, 8);
-        int darkBrown = Color.rgb(42, 25, 15);
-        int bodyBrown = Color.rgb(90, 55, 31);
-        int highlightBrown = Color.rgb(122, 77, 43);
-        int antlerColor = Color.rgb(226, 211, 166);
-        int antlerShadow = Color.rgb(122, 101, 67);
-
-        paint.setShader(null);
-        paint.setStyle(Paint.Style.FILL);
-
-        moosePath.reset();
-        moosePath.moveTo(bodyLeft + size * 0.10f, bodyTop + size * 0.25f);
-        moosePath.cubicTo(bodyLeft + size * 0.35f, bodyTop - size * 0.10f, bodyLeft + size * 1.02f, bodyTop - size * 0.16f, bodyRight - size * 0.05f, bodyTop + size * 0.05f);
-        moosePath.cubicTo(bodyRight + size * 0.18f, bodyTop + size * 0.18f, bodyRight + size * 0.20f, bodyBottom - size * 0.04f, bodyRight - size * 0.02f, bodyBottom + size * 0.08f);
-        moosePath.cubicTo(bodyLeft + size * 1.15f, bodyBottom + size * 0.24f, bodyLeft + size * 0.32f, bodyBottom + size * 0.18f, bodyLeft + size * 0.02f, y + size * 0.07f);
-        moosePath.cubicTo(bodyLeft - size * 0.08f, y - size * 0.02f, bodyLeft - size * 0.02f, bodyTop + size * 0.34f, bodyLeft + size * 0.10f, bodyTop + size * 0.25f);
-        moosePath.close();
-
-        paint.setColor(outlineColor);
-        paint.setStyle(Paint.Style.STROKE);
-        paint.setStrokeWidth(size * 0.18f);
-        paint.setStrokeJoin(Paint.Join.ROUND);
-        canvas.drawPath(moosePath, paint);
-
-        paint.setStyle(Paint.Style.FILL);
-        paint.setColor(bodyBrown);
-        canvas.drawPath(moosePath, paint);
-
-        paint.setColor(darkBrown);
-        moosePath.reset();
-        moosePath.moveTo(bodyLeft + size * 0.05f, bodyTop + size * 0.16f);
-        moosePath.cubicTo(bodyLeft + size * 0.28f, bodyTop - size * 0.27f, bodyLeft + size * 0.78f, bodyTop - size * 0.22f, bodyLeft + size * 1.02f, bodyTop + size * 0.06f);
-        moosePath.cubicTo(bodyLeft + size * 0.72f, bodyTop + size * 0.20f, bodyLeft + size * 0.38f, bodyTop + size * 0.20f, bodyLeft + size * 0.05f, bodyTop + size * 0.16f);
-        canvas.drawPath(moosePath, paint);
-
-        paint.setColor(highlightBrown);
-        tempRect.set(bodyLeft + size * 0.25f, bodyTop + size * 0.13f, bodyRight - size * 0.08f, bodyTop + size * 0.34f);
-        canvas.drawOval(tempRect, paint);
-
-        drawMooseLeg(canvas, x - size * 1.05f, legTop, hoofY, size, darkBrown, outlineColor, -0.20f);
-        drawMooseLeg(canvas, x - size * 0.46f, legTop + size * 0.05f, hoofY, size, darkBrown, outlineColor, 0.18f);
-        drawMooseLeg(canvas, x + size * 0.02f, legTop + size * 0.04f, hoofY, size, darkBrown, outlineColor, -0.12f);
-        drawMooseLeg(canvas, x + size * 0.36f, legTop - size * 0.03f, hoofY, size, darkBrown, outlineColor, 0.18f);
-
-        paint.setStyle(Paint.Style.FILL);
-        paint.setColor(outlineColor);
-        tempRect.set(x + size * 0.23f, y - size * 0.48f, x + size * 0.92f, y + size * 0.03f);
-        canvas.drawRoundRect(tempRect, size * 0.18f, size * 0.18f, paint);
-
-        paint.setColor(bodyBrown);
-        tempRect.set(x + size * 0.29f, y - size * 0.43f, x + size * 0.88f, y);
-        canvas.drawRoundRect(tempRect, size * 0.16f, size * 0.16f, paint);
-
-        paint.setColor(bodyBrown);
-        tempRect.set(x + size * 0.72f, y - size * 0.34f, x + size * 1.38f, y + size * 0.04f);
-        canvas.drawRoundRect(tempRect, size * 0.18f, size * 0.18f, paint);
-
-        paint.setColor(outlineColor);
-        canvas.drawOval(x + size * 1.20f, y - size * 0.15f, x + size * 1.46f, y + size * 0.02f, paint);
-        canvas.drawCircle(x + size * 1.12f, y - size * 0.24f, Math.max(dp(1.7f), size * 0.055f), paint);
-
-        moosePath.reset();
-        moosePath.moveTo(x + size * 0.52f, y - size * 0.47f);
-        moosePath.lineTo(x + size * 0.76f, y - size * 0.78f);
-        moosePath.lineTo(x + size * 0.87f, y - size * 0.50f);
-        moosePath.close();
-        canvas.drawPath(moosePath, paint);
-
-        moosePath.reset();
-        moosePath.moveTo(x + size * 0.50f, y - size * 0.02f);
-        moosePath.cubicTo(x + size * 0.74f, y + size * 0.23f, x + size * 0.65f, y + size * 0.54f, x + size * 0.48f, y + size * 0.70f);
-        moosePath.cubicTo(x + size * 0.50f, y + size * 0.43f, x + size * 0.35f, y + size * 0.21f, x + size * 0.28f, y + size * 0.06f);
-        moosePath.close();
-        canvas.drawPath(moosePath, paint);
-
-        paint.setColor(antlerShadow);
-        paint.setStyle(Paint.Style.STROKE);
-        paint.setStrokeCap(Paint.Cap.ROUND);
-        paint.setStrokeWidth(Math.max(dp(3), size * 0.14f));
-        canvas.drawLine(x + size * 0.72f, y - size * 0.54f, x + size * 0.46f, y - size * 0.92f, paint);
-        canvas.drawLine(x + size * 0.74f, y - size * 0.54f, x + size * 1.03f, y - size * 0.92f, paint);
-
-        paint.setStyle(Paint.Style.FILL);
-        paint.setColor(antlerColor);
-        drawPalmAntler(canvas, x + size * 0.47f, y - size * 0.92f, size, -1f);
-        drawPalmAntler(canvas, x + size * 1.03f, y - size * 0.92f, size, 1f);
-
-        paint.setStyle(Paint.Style.STROKE);
-        paint.setStrokeCap(Paint.Cap.ROUND);
-        paint.setStrokeWidth(Math.max(dp(2), size * 0.08f));
-        paint.setColor(antlerColor);
-        canvas.drawLine(x + size * 0.72f, y - size * 0.54f, x + size * 0.47f, y - size * 0.88f, paint);
-        canvas.drawLine(x + size * 0.74f, y - size * 0.54f, x + size * 1.03f, y - size * 0.88f, paint);
-        paint.setStrokeCap(Paint.Cap.BUTT);
-        paint.setStyle(Paint.Style.FILL);
+    private Bitmap sheetForBoss(int stage) {
+        if (stage == 1) {
+            return assets.salmonSwimSheet();
+        }
+        if (stage == 2) {
+            return assets.mooseWalkSheet();
+        }
+        if (stage == 3) {
+            return assets.eagleFlySheet();
+        }
+        if (stage == 4) {
+            return assets.bearWalkSheet();
+        }
+        return null;
     }
 
-    private void drawMooseLeg(Canvas canvas, float legX, float legTop, float hoofY, float size, int legColor, int outlineColor, float angle) {
-        float kneeX = legX + angle * size;
-        float kneeY = legTop + size * 0.36f;
-        float footX = kneeX + angle * size * 0.32f;
-
-        paint.setStyle(Paint.Style.STROKE);
-        paint.setStrokeCap(Paint.Cap.ROUND);
-        paint.setStrokeWidth(size * 0.22f);
-        paint.setColor(outlineColor);
-        canvas.drawLine(legX, legTop, kneeX, kneeY, paint);
-        canvas.drawLine(kneeX, kneeY, footX, hoofY, paint);
-
-        paint.setStrokeWidth(size * 0.14f);
-        paint.setColor(legColor);
-        canvas.drawLine(legX, legTop, kneeX, kneeY, paint);
-        canvas.drawLine(kneeX, kneeY, footX, hoofY, paint);
-
-        paint.setStrokeWidth(size * 0.16f);
-        paint.setColor(outlineColor);
-        canvas.drawLine(footX - size * 0.22f, hoofY, footX + size * 0.28f, hoofY, paint);
-        paint.setStrokeCap(Paint.Cap.BUTT);
-        paint.setStyle(Paint.Style.FILL);
+    private float bossHorizontalScale(int stage) {
+        if (stage == 1) return 1.60f;
+        if (stage == 2) return 1.72f;
+        if (stage == 3) return 1.72f;
+        if (stage == 4) return 1.68f;
+        return 1.30f;
     }
 
-    private void drawPalmAntler(Canvas canvas, float baseX, float baseY, float size, float direction) {
-        moosePath.reset();
-        moosePath.moveTo(baseX, baseY);
-        moosePath.cubicTo(baseX + direction * size * 0.08f, baseY - size * 0.28f, baseX + direction * size * 0.35f, baseY - size * 0.36f, baseX + direction * size * 0.48f, baseY - size * 0.18f);
-        moosePath.lineTo(baseX + direction * size * 0.60f, baseY - size * 0.42f);
-        moosePath.lineTo(baseX + direction * size * 0.74f, baseY - size * 0.12f);
-        moosePath.lineTo(baseX + direction * size * 0.48f, baseY - size * 0.03f);
-        moosePath.lineTo(baseX + direction * size * 0.70f, baseY + size * 0.17f);
-        moosePath.lineTo(baseX + direction * size * 0.34f, baseY + size * 0.12f);
-        moosePath.lineTo(baseX + direction * size * 0.17f, baseY + size * 0.28f);
-        moosePath.lineTo(baseX + direction * size * 0.07f, baseY + size * 0.07f);
-        moosePath.close();
-        canvas.drawPath(moosePath, paint);
+    private float bossVerticalScale(int stage) {
+        if (stage == 1) return 1.02f;
+        if (stage == 2) return 1.08f;
+        if (stage == 3) return 1.10f;
+        if (stage == 4) return 1.12f;
+        return 1.30f;
+    }
+
+    private void drawAnimatedBossSheet(Canvas canvas, Bitmap sheet, float radius) {
+        float phase = spriteClock + bossTimer * 0.25f;
+        float rate = selectedStage == 3 ? 8.0f : selectedStage == 1 ? 10.0f : 5.5f;
+        int frame = Math.floorMod((int) (phase * rate), 6);
+        float centerY = bossY;
+        float height = radius * 3.3f;
+        float rotation = 0f;
+
+        if (selectedStage == 1) {
+            centerY += (float) Math.sin(phase * 6.0f) * dp(5.0f);
+            height = radius * 2.45f;
+            rotation = (float) Math.sin(phase * 4.0f) * 9.0f;
+        } else if (selectedStage == 3) {
+            centerY += (float) Math.sin(phase * 5.0f) * dp(8.0f);
+            height = radius * 3.15f;
+            rotation = (float) Math.sin(phase * 3.0f) * 4.0f;
+        } else if (selectedStage == 4) {
+            height = radius * 3.15f;
+        }
+
+        drawSpriteSheetFrame(canvas, sheet, 6, frame, bossX, centerY, height, rotation);
+    }
+
+    private void drawSpriteSheetFrame(Canvas canvas, Bitmap sheet, int frames, int frameIndex, float centerX, float centerY, float height, float rotationDegrees) {
+        if (sheet == null || frames <= 0 || sheet.getWidth() <= 0 || sheet.getHeight() <= 0) {
+            return;
+        }
+
+        int frameWidth = sheet.getWidth() / frames;
+        if (frameWidth <= 0) {
+            return;
+        }
+
+        int safeFrame = Math.floorMod(frameIndex, frames);
+        spriteSourceRect.set(safeFrame * frameWidth, 0, (safeFrame + 1) * frameWidth, sheet.getHeight());
+
+        float width = height * (frameWidth / (float) sheet.getHeight());
+        tempRect.set(centerX - width * 0.50f, centerY - height * 0.50f, centerX + width * 0.50f, centerY + height * 0.50f);
+
+        int saved = canvas.save();
+        if (Math.abs(rotationDegrees) > 0.01f) {
+            canvas.rotate(rotationDegrees, centerX, centerY);
+        }
+        canvas.drawBitmap(sheet, spriteSourceRect, tempRect, null);
+        canvas.restoreToCount(saved);
     }
 
     private void drawBossHealthBar(Canvas canvas) {
