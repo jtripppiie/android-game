@@ -61,6 +61,7 @@ public class MooseRushView extends View {
     private static final String PREF_TRAIL_TOKENS = "trail_tokens";
     private static final String PREF_UNLOCKED_OUTFITS = "unlocked_outfits";
     private static final String PREF_TOTAL_MISSIONS = "total_missions";
+    private static final String PREF_TRAIL_BADGES = "trail_badges";
     private static final String PREF_DAILY_COMPLETED_DAY = "daily_completed_day";
     private static final String PREF_DAILY_STREAK = "daily_streak";
 
@@ -219,6 +220,9 @@ public class MooseRushView extends View {
     private int dailyCompletedDay = Integer.MIN_VALUE;
     private int dailyStreak = 0;
     private int dailyTokensEarned = 0;
+    private int trailBadgeMask = 0;
+    private int runBadgesEarnedMask = 0;
+    private int runBadgeTokensEarned = 0;
     private int backdropCacheWidth = 0;
     private int backdropCacheHeight = 0;
     private int backdropCacheKey = Integer.MIN_VALUE;
@@ -295,6 +299,7 @@ public class MooseRushView extends View {
         trailTokens = prefs.getInt(PREF_TRAIL_TOKENS, 0);
         unlockedOutfitMask = prefs.getInt(PREF_UNLOCKED_OUTFITS, RunRewardEconomy.BASE_OUTFIT_UNLOCK_MASK);
         totalMissionsCompleted = prefs.getInt(PREF_TOTAL_MISSIONS, 0);
+        trailBadgeMask = prefs.getInt(PREF_TRAIL_BADGES, 0);
         dailyCompletedDay = prefs.getInt(PREF_DAILY_COMPLETED_DAY, Integer.MIN_VALUE);
         dailyStreak = prefs.getInt(PREF_DAILY_STREAK, 0);
         if (!isOutfitUnlocked(selectedOutfit)) {
@@ -669,6 +674,8 @@ public class MooseRushView extends View {
         runTokensEarned = 0;
         livesLostThisRun = 0;
         dailyTokensEarned = 0;
+        runBadgesEarnedMask = 0;
+        runBadgeTokensEarned = 0;
         perfectRun = true;
         runRewardsAwarded = false;
         dailyBonusAwarded = false;
@@ -1018,8 +1025,8 @@ public class MooseRushView extends View {
         bossHealth = STAGES[selectedStage].bossHealth;
         bossMaxHealth = bossHealth;
         bossX = getWidth() + dp(70);
-        bossY = getHeight() * 0.42f;
-        bossVelocityY = dp(120 + selectedStage * 20);
+        bossY = bossLaneCenterY(selectedStage);
+        bossVelocityY = 0f;
         bossWarningTimer = 2.2f;
         showRunCallout("BOSS INCOMING", 2.2f);
         screenShake = Math.max(screenShake, 0.08f);
@@ -1030,22 +1037,16 @@ public class MooseRushView extends View {
         bossTimer += dt;
         StageConfig stage = STAGES[selectedStage];
 
-        float desiredX = getWidth() - dp(78);
-        if (bossX > desiredX) {
-            bossX -= dp(210) * dt;
-        } else {
-            bossX = desiredX + (float) Math.sin(bossTimer * (1.7f + selectedStage * 0.18f)) * dp(16 + selectedStage * 4);
-        }
+        float desiredX = bossAttackX(selectedStage);
+        bossX += (desiredX - bossX) * Math.min(1f, dt * 2.45f);
 
-        if (selectedStage == 2) {
-            bossY = getHeight() * 0.42f + (float) Math.sin(bossTimer * 3.5f) * dp(105);
-        } else if (selectedStage == 4) {
-            bossY += bossVelocityY * dt;
-            if (bossY < dp(105) || bossY > getGroundY() - dp(95)) {
-                bossVelocityY *= -1f;
-            }
+        float laneY = bossLaneCenterY(selectedStage);
+        if (selectedStage == 1) {
+            bossY = laneY + (float) Math.sin(bossTimer * 2.4f) * dp(8);
+        } else if (selectedStage == 3) {
+            bossY = laneY + (float) Math.sin(bossTimer * 1.8f) * dp(24);
         } else {
-            bossY = getHeight() * 0.42f + (float) Math.sin(bossTimer * (2.6f + selectedStage * 0.3f)) * dp(70 + selectedStage * 7);
+            bossY = laneY + (float) Math.sin(bossTimer * 5.0f) * dp(1.2f);
         }
 
         if (bossTimer > 22f) {
@@ -1064,19 +1065,20 @@ public class MooseRushView extends View {
         showRunCallout("STAGE CLEAR", 2.0f);
         worldFlash = Math.max(worldFlash, 0.24f);
         playSound("medal");
-        awardRunTokens(true);
         if (score > bestScore) {
             bestScore = score;
         }
         if (selectedStage < STAGES.length - 1 && unlockedStage < selectedStage + 1) {
             unlockedStage = selectedStage + 1;
         }
+        awardRunTokens(true);
         prefs.edit()
                 .putInt(PREF_BEST_SCORE, bestScore)
                 .putInt(PREF_UNLOCKED_STAGE, unlockedStage)
                 .putInt(PREF_XP, gameState.xp)
                 .putInt(PREF_TRAIL_TOKENS, trailTokens)
                 .putInt(PREF_TOTAL_MISSIONS, totalMissionsCompleted)
+                .putInt(PREF_TRAIL_BADGES, trailBadgeMask)
                 .putInt(PREF_DAILY_COMPLETED_DAY, dailyCompletedDay)
                 .putInt(PREF_DAILY_STREAK, dailyStreak)
                 .apply();
@@ -1115,6 +1117,7 @@ public class MooseRushView extends View {
                     .putInt(PREF_XP, gameState.xp)
                     .putInt(PREF_TRAIL_TOKENS, trailTokens)
                     .putInt(PREF_TOTAL_MISSIONS, totalMissionsCompleted)
+                    .putInt(PREF_TRAIL_BADGES, trailBadgeMask)
                     .putInt(PREF_DAILY_COMPLETED_DAY, dailyCompletedDay)
                     .putInt(PREF_DAILY_STREAK, dailyStreak)
                     .apply();
@@ -1123,6 +1126,7 @@ public class MooseRushView extends View {
                     .putInt(PREF_XP, gameState.xp)
                     .putInt(PREF_TRAIL_TOKENS, trailTokens)
                     .putInt(PREF_TOTAL_MISSIONS, totalMissionsCompleted)
+                    .putInt(PREF_TRAIL_BADGES, trailBadgeMask)
                     .putInt(PREF_DAILY_COMPLETED_DAY, dailyCompletedDay)
                     .putInt(PREF_DAILY_STREAK, dailyStreak)
                     .apply();
@@ -1136,7 +1140,8 @@ public class MooseRushView extends View {
         }
         runRewardsAwarded = true;
         int dailyReward = awardDailyRushIfComplete(stageCleared);
-        runTokensEarned = RunRewardEconomy.tokensForRun(missionsCompleted, gameState.bestCombo, gameState.stars, stageCleared, perfectRun) + dailyReward;
+        int badgeReward = awardTrailBadges(stageCleared);
+        runTokensEarned = RunRewardEconomy.tokensForRun(missionsCompleted, gameState.bestCombo, gameState.stars, stageCleared, perfectRun) + dailyReward + badgeReward;
         trailTokens += runTokensEarned;
         if (runTokensEarned > 0) {
             effects.spawnScorePopup("TOKENS +" + runTokensEarned, getWidth() / 2f, getHeight() * 0.46f, Color.rgb(255, 218, 121));
@@ -1161,6 +1166,36 @@ public class MooseRushView extends View {
         showRunCallout("DAILY RUSH COMPLETE", 1.8f);
         logEvent("Daily Rush complete. Streak " + dailyStreak + ", reward " + reward + ".");
         return reward;
+    }
+
+    private int awardTrailBadges(boolean stageCleared) {
+        runBadgesEarnedMask = TrailBadgeCatalog.newlyEarnedMask(
+                trailBadgeMask,
+                score,
+                selectedStage,
+                unlockedStage,
+                gatesPassed,
+                gameState.stars,
+                gameState.bestCombo,
+                missionsCompleted,
+                stageCleared,
+                perfectRun,
+                dailyRushCompleteToday(),
+                dailyStreak,
+                auroraRushes);
+        int earnedCount = TrailBadgeCatalog.badgeCount(runBadgesEarnedMask);
+        if (earnedCount <= 0) {
+            runBadgeTokensEarned = 0;
+            return 0;
+        }
+        trailBadgeMask |= runBadgesEarnedMask;
+        runBadgeTokensEarned = TrailBadgeCatalog.tokensForNewBadges(earnedCount);
+        effects.spawnSparkBurst(getWidth() / 2f, getHeight() * 0.30f, 20 + earnedCount * 3, Color.rgb(255, 246, 207));
+        effects.spawnScorePopup("BADGE +" + runBadgeTokensEarned, getWidth() / 2f, getHeight() * 0.30f, Color.rgb(255, 246, 207));
+        showRunCallout(earnedCount == 1 ? "PASSPORT BADGE" : "PASSPORT BADGES", 1.7f);
+        playSound("medal");
+        logEvent("Trail Passport earned " + earnedCount + " badge(s): " + firstRunBadgeName() + ".");
+        return runBadgeTokensEarned;
     }
 
     private void resetAfterHit() {
@@ -1509,7 +1544,10 @@ public class MooseRushView extends View {
         canvas.drawText("Best " + bestScore + "   Tokens " + trailTokens + "   Missions " + totalMissionsCompleted, getWidth() / 2f, getHeight() - dp(45), textPaint);
         textPaint.setTextSize(dp(11));
         textPaint.setColor(Color.rgb(220, 235, 239));
-        canvas.drawText("Unlocked stages " + (unlockedStage + 1) + "/" + STAGES.length + "   Outfits " + unlockedOutfitCount() + "/" + OUTFIT_COLORS.length, getWidth() / 2f, getHeight() - dp(25), textPaint);
+        canvas.drawText("Stages " + (unlockedStage + 1) + "/" + STAGES.length
+                + "   Outfits " + unlockedOutfitCount() + "/" + OUTFIT_COLORS.length
+                + "   Badges " + TrailBadgeCatalog.badgeCount(trailBadgeMask) + "/" + TrailBadgeCatalog.BADGE_COUNT,
+                getWidth() / 2f, getHeight() - dp(25), textPaint);
     }
 
     private void drawDailyRushButton(Canvas canvas, RectF bounds) {
@@ -1724,13 +1762,13 @@ public class MooseRushView extends View {
         }
 
         Drawable treeAsset = assets.tree(winter);
-        drawParallaxTreeLayer(canvas, treeAsset, winter, 0.18f, 118, winter ? 74 : 70, 12, -30, 130);
-        drawParallaxTreeLayer(canvas, treeAsset, winter, 0.30f, 94, winter ? 106 : 94, 0, 18, winter ? 220 : 190);
+        drawParallaxTreeLayer(canvas, treeAsset, winter, 0.18f, 118, winter ? 74 : 70, 20, -30, 130);
+        drawParallaxTreeLayer(canvas, treeAsset, winter, 0.30f, 94, winter ? 106 : 94, 10, 18, winter ? 220 : 190);
         if (winter || dark) {
-            drawParallaxTreeLayer(canvas, treeAsset, true, 0.42f, 72, 124, -2, 46, 235);
+            drawParallaxTreeLayer(canvas, treeAsset, true, 0.42f, 72, 124, 8, 46, 235);
             drawSnowDriftMist(canvas);
         } else {
-            drawParallaxTreeLayer(canvas, treeAsset, false, 0.39f, 86, 112, -2, 52, 210);
+            drawParallaxTreeLayer(canvas, treeAsset, false, 0.39f, 86, 112, 8, 52, 210);
         }
     }
 
@@ -1749,19 +1787,21 @@ public class MooseRushView extends View {
             float treeHeight = dp(heightDp) + heightVariance;
             float treeWidth = treeHeight * (winter ? 0.70f : 0.64f);
             float yOffset = Math.floorMod(treeIndex, 2) == 0 ? dp(5) : 0f;
+            float rootSink = dp(winter ? 14 : 10);
+            float treeBottom = baseGround + yOffset + rootSink;
 
             if (treeAsset != null) {
                 drawDrawableAlpha(
                         canvas,
                         treeAsset,
                         x - treeWidth * 0.50f,
-                        baseGround - treeHeight + yOffset,
+                        treeBottom - treeHeight,
                         x + treeWidth * 0.50f,
-                        baseGround + yOffset,
+                        treeBottom,
                         alpha
                 );
             } else {
-                drawFallbackTree(canvas, x, baseGround + yOffset, treeHeight, treeWidth, winter, alpha);
+                drawFallbackTree(canvas, x, treeBottom, treeHeight, treeWidth, winter, alpha);
             }
         }
     }
@@ -2159,14 +2199,16 @@ public class MooseRushView extends View {
         Bitmap bossSheet = sheetForBoss(selectedStage);
         float xRadius = radius * bossHorizontalScale(selectedStage);
         float yRadius = radius * bossVerticalScale(selectedStage);
+        float shadowY = getGroundY() + dp(4);
+        int shadowAlpha = selectedStage == 1 || selectedStage == 3 ? 64 : 132;
 
         paint.setStyle(Paint.Style.FILL);
         if (damageFlash > 0f) {
             paint.setColor(Color.argb(125, 255, 255, 255));
             canvas.drawOval(bossX - xRadius * 0.96f, bossY - yRadius * 0.96f, bossX + xRadius * 0.96f, bossY + yRadius * 0.96f, paint);
         }
-        paint.setColor(Color.argb(120, 0, 0, 0));
-        canvas.drawOval(bossX - xRadius * 0.88f, bossY + yRadius * 0.80f, bossX + xRadius * 0.88f, bossY + yRadius * 1.08f, paint);
+        paint.setColor(Color.argb(shadowAlpha, 0, 0, 0));
+        canvas.drawOval(bossX - xRadius * 0.88f, shadowY - dp(9), bossX + xRadius * 0.88f, shadowY + dp(9), paint);
 
         if (bossSheet != null) {
             drawAnimatedBossSheet(canvas, bossSheet, radius);
@@ -2302,9 +2344,40 @@ public class MooseRushView extends View {
     }
 
     private float bossRadius() {
-        if (selectedStage == 4) return gameplayDp(38);
-        if (selectedStage == 2) return gameplayDp(34);
+        return bossRadiusForStage(selectedStage);
+    }
+
+    private float bossRadiusForStage(int stage) {
+        if (stage == 4) return gameplayDp(38);
+        if (stage == 2) return gameplayDp(34);
         return gameplayDp(30);
+    }
+
+    private float bossAttackX(int stage) {
+        float rightAnchor = getWidth() - dp(stage == 4 ? 94 : 82);
+        float forwardLimit = Math.max(playerX + dp(stage == 4 ? 164 : 142), getWidth() * (stage == 4 ? 0.64f : 0.60f));
+        forwardLimit = Math.min(forwardLimit, rightAnchor - dp(54));
+        float surge = 0.5f + 0.5f * (float) Math.sin(bossTimer * (0.95f + stage * 0.08f));
+        return rightAnchor - (rightAnchor - forwardLimit) * surge;
+    }
+
+    private float bossLaneCenterY(int stage) {
+        if (stage == 1) {
+            return clamp(getGroundY() - dp(92), dp(116), getGroundY() - dp(72));
+        }
+        if (stage == 3) {
+            return clamp(getGroundY() - dp(154), dp(112), getGroundY() - dp(118));
+        }
+        return getGroundY() - bossDrawHeight(stage) * 0.5f + dp(1);
+    }
+
+    private float bossDrawHeight(int stage) {
+        float radius = bossRadiusForStage(stage);
+        if (stage == 1) return radius * 2.45f;
+        if (stage == 3) return radius * 3.15f;
+        if (stage == 4) return radius * 2.95f;
+        if (sheetForBoss(stage) != null) return radius * 3.3f;
+        return radius * 2f;
     }
 
     private void drawCharacter(Canvas canvas, float x, float y, float radius) {
@@ -2737,7 +2810,7 @@ public class MooseRushView extends View {
 
     private void drawGameOverPanel(Canvas canvas) {
         float panelWidth = Math.min(getWidth() - dp(40), dp(348));
-        float panelHeight = dp(300);
+        float panelHeight = dp(322);
         float left = (getWidth() - panelWidth) / 2f;
         float top = (getHeight() - panelHeight) / 2f;
         RectF panel = new RectF(left, top, left + panelWidth, top + panelHeight);
@@ -2760,13 +2833,14 @@ public class MooseRushView extends View {
         canvas.drawText("Missions " + missionsCompleted + "/3 · Combo " + gameState.bestCombo + " · Rank " + runRank(), getWidth() / 2f, top + dp(142), textPaint);
         canvas.drawText("Tokens +" + runTokensEarned + " · Bank " + trailTokens + " · Rush " + auroraRushes, getWidth() / 2f, top + dp(166), textPaint);
         canvas.drawText(dailyResultLine(), getWidth() / 2f, top + dp(188), textPaint);
+        canvas.drawText(badgeSummaryLine(), getWidth() / 2f, top + dp(210), textPaint);
 
         textPaint.setColor(Color.rgb(210, 232, 238));
-        canvas.drawText("Tap anywhere to retry", getWidth() / 2f, top + dp(211), textPaint);
+        canvas.drawText("Tap anywhere to retry", getWidth() / 2f, top + dp(233), textPaint);
 
-        setButton(secondaryButtonBounds, top + dp(250), dp(118), dp(36));
+        setButton(secondaryButtonBounds, top + dp(272), dp(118), dp(36));
         secondaryButtonBounds.offset(-dp(64), 0);
-        setButton(thirdButtonBounds, top + dp(250), dp(118), dp(36));
+        setButton(thirdButtonBounds, top + dp(272), dp(118), dp(36));
         thirdButtonBounds.offset(dp(64), 0);
         drawSmallButton(canvas, secondaryButtonBounds, "MAP");
         drawSmallButton(canvas, thirdButtonBounds, "CUSTOMIZE");
@@ -2774,7 +2848,7 @@ public class MooseRushView extends View {
 
     private void drawStageClearPanel(Canvas canvas) {
         float panelWidth = Math.min(getWidth() - dp(40), dp(348));
-        float panelHeight = dp(304);
+        float panelHeight = dp(326);
         float left = (getWidth() - panelWidth) / 2f;
         float top = (getHeight() - panelHeight) / 2f;
         RectF panel = new RectF(left, top, left + panelWidth, top + panelHeight);
@@ -2798,11 +2872,12 @@ public class MooseRushView extends View {
         canvas.drawText("Rank " + runRank() + " · Missions " + missionsCompleted + "/3 · Stars " + gameState.stars, getWidth() / 2f, top + dp(134), textPaint);
         canvas.drawText("Tokens +" + runTokensEarned + " · Bank " + trailTokens + " · " + (perfectRun ? "Perfect run" : "Lives lost " + livesLostThisRun), getWidth() / 2f, top + dp(160), textPaint);
         canvas.drawText(dailyResultLine(), getWidth() / 2f, top + dp(184), textPaint);
-        canvas.drawText(stageClearLine(), getWidth() / 2f, top + dp(208), textPaint);
+        canvas.drawText(badgeSummaryLine(), getWidth() / 2f, top + dp(207), textPaint);
+        canvas.drawText(stageClearLine(), getWidth() / 2f, top + dp(231), textPaint);
 
-        setButton(secondaryButtonBounds, top + dp(247), dp(118), dp(36));
+        setButton(secondaryButtonBounds, top + dp(270), dp(118), dp(36));
         secondaryButtonBounds.offset(-dp(64), 0);
-        setButton(thirdButtonBounds, top + dp(247), dp(118), dp(36));
+        setButton(thirdButtonBounds, top + dp(270), dp(118), dp(36));
         thirdButtonBounds.offset(dp(64), 0);
         drawSmallButton(canvas, secondaryButtonBounds, "MAP");
         drawSmallButton(canvas, thirdButtonBounds, "NEXT");
@@ -2943,6 +3018,7 @@ public class MooseRushView extends View {
                 .putInt(PREF_TRAIL_TOKENS, trailTokens)
                 .putInt(PREF_UNLOCKED_OUTFITS, unlockedOutfitMask)
                 .putInt(PREF_TOTAL_MISSIONS, totalMissionsCompleted)
+                .putInt(PREF_TRAIL_BADGES, trailBadgeMask)
                 .putInt(PREF_DAILY_COMPLETED_DAY, dailyCompletedDay)
                 .putInt(PREF_DAILY_STREAK, dailyStreak)
                 .apply();
@@ -3050,6 +3126,24 @@ public class MooseRushView extends View {
             return "Daily complete · streak " + dailyStreak;
         }
         return "Daily open · " + STAGES[dailyStageIndex()].name;
+    }
+
+    private String badgeSummaryLine() {
+        int earnedCount = TrailBadgeCatalog.badgeCount(runBadgesEarnedMask);
+        int totalBadges = TrailBadgeCatalog.badgeCount(trailBadgeMask);
+        if (earnedCount > 0) {
+            return "Badge +" + earnedCount + " · " + firstRunBadgeName() + " · +" + runBadgeTokensEarned;
+        }
+        return "Passport " + totalBadges + "/" + TrailBadgeCatalog.BADGE_COUNT + " badges";
+    }
+
+    private String firstRunBadgeName() {
+        for (int i = 0; i < TrailBadgeCatalog.BADGE_COUNT; i++) {
+            if (TrailBadgeCatalog.hasBadge(runBadgesEarnedMask, i)) {
+                return TrailBadgeCatalog.badgeName(i);
+            }
+        }
+        return "Trail Badge";
     }
 
     private String deathLine() {

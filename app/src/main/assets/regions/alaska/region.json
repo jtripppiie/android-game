@@ -36,6 +36,7 @@
       "enter-boss-phase",
       "throw-snowballs",
       "defeat-boss",
+      "earn-trail-badges",
       "unlock-next-stage"
     ],
     "controls": ["left", "right", "jump", "throw"],
@@ -49,7 +50,10 @@
       "dailyRush": true,
       "dailyRewardBase": 24,
       "dailyStreakBonus": 4,
-      "dailyStreakBonusCap": 7
+      "dailyStreakBonusCap": 7,
+      "trailPassport": true,
+      "trailBadgeCount": 10,
+      "trailBadgeTokenReward": 18
     },
     "debug": {
       "logcatTags": ["YouRushGame", "YouRushDebug"],

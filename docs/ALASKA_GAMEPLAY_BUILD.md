@@ -60,12 +60,19 @@ Current scoring values:
 Combo multipliers increase rewards during clean play. Aurora Rush adds a short
 extra score multiplier when the meter fills from gates, stars, near misses,
 dodges, boss hits, shields, and missions. Best score, XP, Trail Tokens, cosmetic
-outfit unlocks, and local level persist in shared preferences.
+outfit unlocks, Trail Passport badges, and local level persist in shared
+preferences.
 
 Daily Rush rotates one unlocked Alaska stage per local day, sets the correct
 season automatically, and pays a once-per-day Trail Token bonus when the player
 clears the daily gate target or finishes the stage. The streak is stored locally
 and increases the daily payout without blocking normal play.
+
+Trail Passport badges are local collectible achievements for skill and
+progression moments: first run progress, gate count, stars, combos, boss clears,
+perfect clears, Daily Rush, full Alaska progression, Aurora Rush, and mission
+completion. New badges award a one-time Trail Token bonus and appear on run
+result panels plus the main menu badge count.
 
 ## Stage progression
 
@@ -196,6 +203,13 @@ feel valuable without adding timers, loot boxes, or pay-to-win power.
 menu, once-per-day Trail Token bonus, visible streak result lines, and
 documented daily rotation/streak math in `RunRewardEconomy`.
 
+`1.9.6-alpha` adds Trail Passport: persistent collectible badges, one-time badge
+token rewards, result-screen badge summaries, main-menu badge progress, and
+reusable badge unlock math in `TrailBadgeCatalog`. It also fixes boss/scenery
+grounding by moving bosses off screen-percentage Y anchors, adding forward boss
+attack lanes, and sinking parallax tree sprites into the ground line so roots do
+not appear to float.
+
 ## Current development priorities
 
 1. Confirm APK build succeeds.
@@ -204,9 +218,10 @@ documented daily rotation/streak math in `RunRewardEconomy`.
 4. Tune gravity, gate spacing, and boss HP.
 5. Improve boss attack patterns.
 6. Tune Daily Rush rewards and streak pacing after phone testing.
-7. Add photo crop and face-position controls.
-8. Add share-card screen after game over.
-9. Only after Alaska is fun, start Florida or Michigan.
+7. Tune Trail Passport badge thresholds and reward amounts after phone testing.
+8. Add photo crop and face-position controls.
+9. Add share-card screen after game over.
+10. Only after Alaska is fun, start Florida or Michigan.
 
 ## Important note
 

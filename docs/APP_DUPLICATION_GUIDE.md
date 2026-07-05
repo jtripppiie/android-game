@@ -25,6 +25,8 @@ Keep these systems:
 - `ArcadeScoring`: combo multipliers and stage-clear bonus math.
 - `RunRewardEconomy`: Trail Token rewards, cosmetic unlock rules, and Daily
   Rush rotation/streak math.
+- `TrailBadgeCatalog`: Trail Passport badge names, unlock rules, masks, and
+  one-time token rewards.
 - `GameAssets`: runtime bitmap/drawable loading.
 - `SpriteRenderer`: player/photo runner composition.
 - `SpriteSheetMath`: runtime frame-edge guards.
@@ -152,7 +154,8 @@ The current replay loop is:
 9. Earn Trail Tokens.
 10. Unlock cosmetic outfit colors.
 11. Return for the rotating Daily Rush challenge and streak bonus.
-12. Retry for a better rank, more tokens, and more stage progress.
+12. Earn Trail Passport badges for skill and stage progression.
+13. Retry for a better rank, more tokens, badges, and more stage progress.
 
 Keep monetization fair:
 
@@ -178,6 +181,7 @@ outfit
 trail_tokens
 unlocked_outfits
 total_missions
+trail_badges
 daily_completed_day
 daily_streak
 ```
@@ -236,12 +240,13 @@ For every meaningful release, update:
 8. Update stage configs in `MooseRushView`.
 9. Tune `RunnerTuning` and `DifficultyCurve` only if the new region needs a different feel.
 10. Keep `RunRewardEconomy` unless the monetization model changes.
-11. Keep Daily Rush local and fair unless the product intentionally adds accounts.
-12. Update docs.
-13. Run tests.
-14. Build APK.
-15. Merge to `main`.
-16. Push `main`.
+11. Keep `TrailBadgeCatalog` unless the region needs different badge goals.
+12. Keep Daily Rush and Trail Passport local and fair unless the product intentionally adds accounts.
+13. Update docs.
+14. Run tests.
+15. Build APK.
+16. Merge to `main`.
+17. Push `main`.
 
 ## Quality Bar
 

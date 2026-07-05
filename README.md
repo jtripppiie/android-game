@@ -2,16 +2,16 @@
 
 A personalized Android arcade game by **TripperDeeLabs**.
 
-**Current status: Alaska 1.9.5 Daily Rush alpha.**
+**Current status: Alaska 1.9.6 Trail Passport alpha.**
 
 This build is beta-ready for APK testing, tuning, and bug fixing. It is not final 1.0 or a larger milestone until it installs and plays well across all Alaska stages on a real phone.
 
 ## Current beta
 
 ```text
-versionCode: 195
-versionName: 1.9.5-alpha
-build badge: ALASKA DAILY v1.9.5
+versionCode: 196
+versionName: 1.9.6-alpha
+build badge: ALASKA PASSPORT v1.9.6
 ```
 
 ## Game flow
@@ -73,6 +73,7 @@ Mobile mapping:
 - Aurora Rush meter and score burst mode
 - Trail Tokens with cosmetic outfit unlocks
 - Daily Rush rotating unlocked-stage challenge with local streak rewards
+- Trail Passport collectible badges with token rewards
 - Progressive difficulty pacing for speed and spawn pressure
 - Hurdle progress bar
 - Collectible star paths
@@ -118,7 +119,7 @@ The debug APK lands in `app/build/outputs/apk/debug/` with the version in the
 filename, for example:
 
 ```text
-you-rush-alaska-1.9.5-alpha-195-debug.apk
+you-rush-alaska-1.9.6-alpha-196-debug.apk
 ```
 
 GitHub Actions also builds a debug APK using:
@@ -148,6 +149,8 @@ unit tests:
   bleed artifacts during walking, swimming, and flying animation.
 - `RunRewardEconomy` — Trail Token payouts, outfit unlocks, and Daily Rush
   rotation/streak math.
+- `TrailBadgeCatalog` — local Trail Passport badge unlock rules and badge
+  token rewards.
 
 Run them with `./gradlew testDebugUnitTest`.
 

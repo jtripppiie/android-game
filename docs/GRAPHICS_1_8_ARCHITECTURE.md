@@ -154,9 +154,9 @@ Now:
 The active beta package is:
 
 ```text
-versionCode: 195
-versionName: 1.9.5-alpha
-badge: ALASKA DAILY v1.9.5
+versionCode: 196
+versionName: 1.9.6-alpha
+badge: ALASKA PASSPORT v1.9.6
 ```
 
 This branch is an architecture alpha. It is intended for testing the new
@@ -235,6 +235,22 @@ as a runner under the uploaded/default head.
   result-screen status lines.
 - Moves daily rotation, gate target, reward, and streak math into
   `RunRewardEconomy` so future region copies can reuse it.
+
+`1.9.6-alpha` is the Trail Passport pass:
+
+- Adds persistent collectible badges for skill, progression, Daily Rush, Aurora
+  Rush, missions, and stage clears.
+- Awards one-time Trail Token bonuses for newly earned badges.
+- Shows badge progress on the menu and badge results on run summaries.
+- Moves badge names, masks, thresholds, and rewards into `TrailBadgeCatalog`
+  so future regions can reuse or retheme the system.
+- Re-anchors bosses to explicit gameplay lanes instead of screen-percentage Y
+  positions, with grounded moose/bear-style bosses and constrained flight lanes
+  for eagle/salmon bosses.
+- Gives bosses a visible forward/back attack lane instead of parking at the
+  right edge.
+- Sinks parallax tree sprites into the ground layer so transparent sprite
+  padding cannot make trees look like they float.
 
 ## What still needs extraction
 

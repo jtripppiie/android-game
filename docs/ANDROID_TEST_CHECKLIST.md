@@ -5,16 +5,16 @@ Use this after GitHub Actions produces the debug APK artifact.
 Current packaged beta:
 
 ```text
-versionCode: 195
-versionName: 1.9.5-alpha
-build badge: ALASKA DAILY v1.9.5
+versionCode: 196
+versionName: 1.9.6-alpha
+build badge: ALASKA PASSPORT v1.9.6
 ```
 
 ## Install test
 
 1. Download `you-rush-alaska-debug-apk` from the latest successful workflow run.
 2. Extract the ZIP if GitHub downloaded it as a ZIP.
-3. Install `you-rush-alaska-1.9.5-alpha-195-debug.apk` on an Android phone.
+3. Install `you-rush-alaska-1.9.6-alpha-196-debug.apk` on an Android phone.
 4. Allow installation from the browser/files app if Android prompts you.
 5. Open **You Rush**.
 6. Confirm the debug/version badge is visible and matches the packaged beta.
@@ -34,6 +34,7 @@ Confirm these screens work:
 - Back buttons return to menu.
 - Play starts the selected stage.
 - Daily Rush starts the rotating daily stage.
+- Main menu shows Trail Passport badge progress.
 
 ## Gameplay test
 
@@ -70,11 +71,13 @@ Confirm score changes:
 - Aurora Rush meter fills from skilled play and triggers a readable score-burst mode.
 - Trail Tokens are awarded on game over or stage clear and persist after restarting the app.
 - Daily Rush awards its bonus once per local day, shows the streak on result screens, and persists after restarting the app.
+- Trail Passport badges unlock from skill/progression moments and add token rewards only once.
 - Hitting a boss with snowballs increases score.
 - Defeating a boss gives a larger stage-clear bonus with combo and star rewards.
 - Best score persists after restarting the app.
 - XP and level persist after restarting the app.
 - Cosmetic outfit unlocks spend Trail Tokens only and never change gameplay power.
+- Trail Passport badge count and badge token rewards persist after restarting the app.
 
 ## Stage test
 
@@ -110,7 +113,10 @@ Check small and large screens:
 - Customize shows locked outfit prices, unlocked outfits, and current token count.
 - Generated background plates carry the mountains; old vector-style mountain layers should not appear.
 - Winter/dark stages show denser snow-covered tree layers without jumpy resets.
+- Trees should visually connect to the ground and not float above the lane.
 - Polar bear and wolf sprites animate cleanly without magenta background artifacts.
+- Moose/polar/default bosses should be grounded; eagle/salmon bosses may fly or swim but should have grounded shadows and constrained lanes.
+- Bosses should visibly advance toward the player and retreat instead of parking at the far right.
 - Eagle wings flap at a natural pace instead of strobing.
 - Bear and polar bear movement stays planted instead of jumping vertically.
 - Animal sprites do not have decorative halo/circle glows around them.

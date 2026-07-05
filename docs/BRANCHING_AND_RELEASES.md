@@ -18,21 +18,21 @@ replay-economy          example future feature branch
 Android versions live in `app/build.gradle`:
 
 ```gradle
-versionCode 195
-versionName "1.9.5-alpha"
+versionCode 196
+versionName "1.9.6-alpha"
 ```
 
 The visible in-app test badge also lives in `app/build.gradle`:
 
 ```gradle
-buildConfigField "String", "BUILD_BADGE", '"ALASKA DAILY v1.9.5"'
+buildConfigField "String", "BUILD_BADGE", '"ALASKA PASSPORT v1.9.6"'
 ```
 
 ## Why They Differed
 
 The branch named `graphics-1.8.0` began as the graphics architecture branch.
 Work continued there after the Android package advanced to `1.8.6-alpha`,
-`1.8.7-alpha`, `1.9.4-alpha`, and `1.9.5-alpha`.
+`1.8.7-alpha`, `1.9.4-alpha`, `1.9.5-alpha`, and `1.9.6-alpha`.
 
 That was not a runtime bug. It was branch naming drift.
 

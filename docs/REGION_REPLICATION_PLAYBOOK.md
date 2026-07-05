@@ -36,6 +36,7 @@ app/src/main/java/com/jtripppiie/mooserush/RunnerTuning.java
 app/src/main/java/com/jtripppiie/mooserush/DifficultyCurve.java
 app/src/main/java/com/jtripppiie/mooserush/ArcadeScoring.java
 app/src/main/java/com/jtripppiie/mooserush/RunRewardEconomy.java
+app/src/main/java/com/jtripppiie/mooserush/TrailBadgeCatalog.java
 app/src/main/java/com/jtripppiie/mooserush/GameAssets.java
 app/src/main/java/com/jtripppiie/mooserush/SpriteRenderer.java
 app/src/main/java/com/jtripppiie/mooserush/SpriteSheetMath.java
@@ -53,6 +54,7 @@ Engine responsibility by class:
 | `DifficultyCurve` | Provides capped progressive difficulty so runs ramp up without sudden unfair spikes. |
 | `ArcadeScoring` | Keeps score multipliers and stage-clear bonuses consistent. |
 | `RunRewardEconomy` | Keeps Trail Token payouts, outfit unlock rules, Daily Rush rotation, daily reward, and streak math. |
+| `TrailBadgeCatalog` | Keeps Trail Passport badge names, masks, thresholds, and one-time token rewards. |
 | `GameAssets` | Loads generated raster resources and exposes them to the renderer. |
 | `SpriteRenderer` | Composes the uploaded face with the headless runner body and trims player frames. |
 | `SpriteSheetMath` | Guards frame source rectangles against atlas bleed artifacts. |
@@ -122,6 +124,7 @@ Water/ground hazard:
 Final boss:
 Cosmetic outfit theme:
 Daily Rush reward name:
+Trail Passport badge theme:
 ```
 
 Design targets:
@@ -342,6 +345,10 @@ Rules:
 - Use raster background plates for mountains, skyline, water, or distant land.
 - Use foreground prop sprites for trees, signs, rocks, grass, snowbanks, etc.
 - Keep the ground lane stable.
+- Anchor trees and props to the gameplay ground line, not arbitrary screen
+  percentages.
+- Sink transparent-bottom sprites slightly into the ground layer so roots,
+  trunks, rocks, or signs do not appear to float.
 - Avoid scenery that snaps or jumps when it loops.
 - Avoid highly detailed props directly behind hazards.
 - Keep contrast high around the player and obstacles.
@@ -360,6 +367,32 @@ HUD and overlays
 
 If a foreground prop jitters, check whether it is tied to `groundScroll` instead
 of a longer scenery/parallax scroll value.
+
+## Boss Grounding And Attack Lanes
+
+Bosses should use explicit gameplay lanes:
+
+- Ground bosses should compute their center from the ground line and drawn
+  sprite height.
+- Flying or swimming bosses can use an air lane, but the lane should be clamped
+  between the HUD and the ground.
+- Shadows should be drawn on the ground lane, not under an arbitrary floating
+  center point.
+- Boss X movement should visibly advance toward the player and retreat. A boss
+  that parks at the far-right edge feels unfinished.
+
+Avoid this pattern for boss placement:
+
+```java
+bossY = getHeight() * 0.42f;
+```
+
+Prefer this pattern:
+
+```java
+bossY = bossLaneCenterY(stage);
+bossX += (bossAttackX(stage) - bossX) * smoothing;
+```
 
 ## Region Metadata JSON
 
@@ -402,7 +435,8 @@ For a new region:
 3. Update every stage entry.
 4. Update runtime background and hazard sheet names.
 5. Keep the `retention` section if Daily Rush exists.
-6. Keep debug tags unless code tags are intentionally renamed.
+6. Keep the Trail Passport retention values if badge collection exists.
+7. Keep debug tags unless code tags are intentionally renamed.
 
 ## Daily Rush Replication
 
@@ -450,6 +484,57 @@ When copying to a new region:
 4. Update docs and QA checklist with the daily challenge name if it changes.
 5. Add tests if reward math changes.
 
+## Trail Passport Replication
+
+Trail Passport is the local badge collection layer. It gives kids and families
+clear goals beyond a single score chase while staying fair and cosmetic.
+
+Current behavior:
+
+- Tracks earned badges in a single integer bit mask.
+- Awards badges only at run resolution so feedback is clean.
+- Pays a one-time Trail Token reward for each new badge.
+- Shows badge progress on the main menu.
+- Shows newly earned badge summaries on game-over and stage-clear panels.
+- Keeps badge rules in a testable catalog class.
+
+Current preference key:
+
+```text
+trail_badges
+```
+
+Reusable rules live in:
+
+```text
+app/src/main/java/com/jtripppiie/mooserush/TrailBadgeCatalog.java
+```
+
+Current Alaska badges:
+
+| Badge | Unlock idea |
+|---|---|
+| First Trail | Make any run progress. |
+| Gate Skipper | Pass at least five gates. |
+| Star Scout | Collect at least three stars. |
+| Combo Spark | Reach a six-combo run. |
+| Boss Buster | Clear a stage. |
+| Perfect Parka | Clear a stage without losing lives. |
+| Daily Dasher | Complete Daily Rush. |
+| Alaska Passport | Unlock or clear the final stage. |
+| Aurora Chaser | Trigger Aurora Rush. |
+| Mission Maker | Complete all three run missions. |
+
+When copying to a new region:
+
+1. Rename badge names to match the region tone.
+2. Keep early badges easy so the first session has a win.
+3. Keep at least one badge for stage clears, one for collection, one for combo,
+   one for daily play, and one for completing the region.
+4. Keep token rewards one-time only.
+5. Add tests when changing thresholds or badge count.
+6. Update region JSON with `trailPassport`, badge count, and reward amount.
+
 ## Reward And Monetization Rules
 
 The current replay economy is intentionally kid-friendly and fair:
@@ -457,6 +542,8 @@ The current replay economy is intentionally kid-friendly and fair:
 - Trail Tokens are earned through play.
 - Outfit unlocks are cosmetic.
 - Daily Rush rewards are once per day but do not block play.
+- Trail Passport badges are earned by skill/progression and pay one-time token
+  bonuses.
 - Aurora Rush is earned through skill events inside the run.
 - No paid random loot.
 - No hidden odds.
@@ -498,11 +585,11 @@ application id, imports, and any build/CI scripts together.
 Before making a package build, update:
 
 ```gradle
-versionCode 195
-versionName "1.9.5-alpha"
+versionCode 196
+versionName "1.9.6-alpha"
 
 buildConfigField "String", "BUILD_CHANNEL", '"ALASKA BETA"'
-buildConfigField "String", "BUILD_BADGE", '"ALASKA DAILY v1.9.5"'
+buildConfigField "String", "BUILD_BADGE", '"ALASKA PASSPORT v1.9.6"'
 ```
 
 For a new region, use a badge like:
@@ -536,6 +623,7 @@ Run this on a real phone before calling the region ready:
 - Splash screen appears.
 - Main menu appears.
 - Daily Rush button fits and starts a valid unlocked stage.
+- Trail Passport badge count is visible on the main menu.
 - Map opens.
 - Customize opens.
 - Debug and mute buttons work.
@@ -583,6 +671,8 @@ Run this on a real phone before calling the region ready:
 - Outfit unlocks spend Trail Tokens.
 - Daily Rush pays once per local day.
 - Daily streak appears on result screens.
+- Trail Passport badges unlock only once and show on result screens.
+- Badge token rewards are included in the run token summary.
 
 ### Persistence
 
@@ -593,6 +683,7 @@ Run this on a real phone before calling the region ready:
 - XP and level persist.
 - Trail Tokens persist.
 - Outfit unlocks persist.
+- Trail Passport badge progress persists.
 - Daily completion and streak persist.
 - Mute persists.
 
@@ -613,6 +704,7 @@ GameMathTest
 LevelCurveTest
 RunnerTuningTest
 RunRewardEconomyTest
+TrailBadgeCatalogTest
 SpriteSheetMathTest
 SpriteRendererTest
 ```
@@ -621,6 +713,7 @@ Add or update tests when changing:
 
 - Daily reward amounts.
 - Daily streak rules.
+- Badge names, thresholds, or reward amounts.
 - Outfit unlock costs.
 - Spawn fairness floors.
 - Jump physics constants.
