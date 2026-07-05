@@ -125,7 +125,7 @@ GitHub Actions also builds a debug APK using:
 .github/workflows/android-debug-apk.yml
 ```
 
-The workflow runs on manual dispatch, `jtripp`, and the active
+The workflow runs on manual dispatch, `main`, `jtripp`, and the historical
 `graphics-1.8.0` graphics branch. APK files are ignored by git; GitHub stores
 the package as a workflow artifact instead of committing it to the repository.
 
@@ -146,6 +146,14 @@ unit tests:
   bleed artifacts during walking, swimming, and flying animation.
 
 Run them with `./gradlew testDebugUnitTest`.
+
+## Documentation Map
+
+- `docs/APP_DUPLICATION_GUIDE.md` explains how to clone this app structure for a new region or new branded runner.
+- `docs/BRANCHING_AND_RELEASES.md` explains why Git branch names and Android app versions are separate, and how `main` should be used.
+- `docs/ALASKA_GAMEPLAY_BUILD.md` documents the current gameplay loop, stages, scoring, assets, and debug hooks.
+- `docs/SPRITE_SHEET_ASSET_PIPELINE.md` preserves the repeatable art-generation prompts and sprite-sheet rules.
+- `docs/ANDROID_TEST_CHECKLIST.md` is the phone QA checklist for each APK.
 
 ## App icon
 
