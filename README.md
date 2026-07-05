@@ -2,16 +2,16 @@
 
 A personalized Android arcade game by **TripperDeeLabs**.
 
-**Current status: Alaska 1.5.0 beta.**
+**Current status: Alaska 1.7.5 beta.**
 
 This build is beta-ready for APK testing, tuning, and bug fixing. It is not final 1.0 or a larger milestone until it installs and plays well across all Alaska stages on a real phone.
 
 ## Current beta
 
 ```text
-versionCode: 150
-versionName: 1.5.0-beta
-build badge: ALASKA BETA v1.5.0
+versionCode: 175
+versionName: 1.7.5-beta
+build badge: ALASKA BETA v1.7.5
 ```
 
 ## Game flow
@@ -108,7 +108,7 @@ The debug APK lands in `app/build/outputs/apk/debug/` with the version in the
 filename, for example:
 
 ```text
-you-rush-alaska-1.5.0-beta-150-debug.apk
+you-rush-alaska-1.7.5-beta-175-debug.apk
 ```
 
 GitHub Actions also builds a debug APK using:

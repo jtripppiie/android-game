@@ -21,8 +21,8 @@ public class RunnerTuningTest {
     public void gateHeightStaysInJumpableBand() {
         float density = 3f;
         float height = RunnerTuning.gateHeight(density, 4, 20, 1f);
-        assertTrue(height <= 100f * density);
-        assertTrue(height >= 32f * density);
+        assertTrue(height <= 72f * density);
+        assertTrue(height >= 24f * density);
     }
 
     @Test

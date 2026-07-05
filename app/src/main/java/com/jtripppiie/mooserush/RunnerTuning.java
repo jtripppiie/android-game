@@ -3,10 +3,10 @@ package com.jtripppiie.mooserush;
 final class RunnerTuning {
     static final float COYOTE_SECONDS = 0.08f;
     static final float JUMP_BUFFER_SECONDS = 0.10f;
-    static final float GROUND_JUMP_VELOCITY_DP = 585f;
-    static final float DOUBLE_JUMP_VELOCITY_DP = 520f;
-    static final float GRAVITY_DP = 1680f;
-    static final float DARKNESS_GRAVITY_DP = 1760f;
+    static final float GROUND_JUMP_VELOCITY_DP = 620f;
+    static final float DOUBLE_JUMP_VELOCITY_DP = 540f;
+    static final float GRAVITY_DP = 1550f;
+    static final float DARKNESS_GRAVITY_DP = 1625f;
     static final float MIN_GATE_COOLDOWN_SECONDS = 1.45f;
     static final float MIN_HAZARD_COOLDOWN_SECONDS = 1.95f;
 
@@ -26,8 +26,8 @@ final class RunnerTuning {
     }
 
     static float gateHeight(float density, int selectedStage, int gatesPassed, float random01) {
-        float base = 32f * density;
-        float range = (42f + Math.min(18f, gatesPassed * 0.8f) + selectedStage * 2f) * density;
+        float base = 24f * density;
+        float range = (28f + Math.min(10f, gatesPassed * 0.4f) + selectedStage * 1f) * density;
         return base + random01 * range;
     }
 }

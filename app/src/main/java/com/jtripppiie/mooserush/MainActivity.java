@@ -6,8 +6,10 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.ImageDecoder;
+import android.graphics.PointF;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
+import android.media.FaceDetector;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -22,6 +24,7 @@ import android.view.WindowInsetsController;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.IOException;
 
@@ -29,6 +32,9 @@ import java.io.IOException;
 public class MainActivity extends Activity {
     private static final String TAG = "YouRushDebug";
     private static final int REQUEST_PLAYER_PHOTO = 1001;
+    private static final int MAX_FACE_COUNT = 3;
+    private static final float MIN_FACE_CONFIDENCE = 0.38f;
+    private static final float MIN_EYE_DISTANCE_RATIO = 0.035f;
     private static final String PREFS_NAME = "moose_rush";
     private static final String PREF_PLAYER_PHOTO_URI = "player_photo_uri";
 
@@ -48,7 +54,17 @@ public class MainActivity extends Activity {
 
         prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         gameView = new MooseRushView(this);
-        gameView.setPhotoRequestListener(this::openPhotoPicker);
+        gameView.setPhotoRequestListener(new MooseRushView.PhotoRequestListener() {
+            @Override
+            public void onPhotoRequested() {
+                openPhotoPicker();
+            }
+
+            @Override
+            public void onPhotoResetRequested() {
+                resetPlayerPhoto();
+            }
+        });
         setContentView(createGameRoot());
         loadSavedPlayerPhoto();
         enableImmersiveMode();
@@ -95,10 +111,17 @@ public class MainActivity extends Activity {
 
         Bitmap selectedPhoto = decodeBitmap(selectedImageUri);
         if (selectedPhoto != null) {
-            prefs.edit().putString(PREF_PLAYER_PHOTO_URI, selectedImageUri.toString()).apply();
-            gameView.setPlayerPhoto(selectedPhoto);
-            Log.d(TAG, "onActivityResult: player photo loaded " + selectedPhoto.getWidth() + "x" + selectedPhoto.getHeight());
+            Bitmap facePhoto = extractUsableFaceBitmap(selectedPhoto);
+            if (facePhoto != null) {
+                prefs.edit().putString(PREF_PLAYER_PHOTO_URI, selectedImageUri.toString()).apply();
+                gameView.setPlayerPhoto(facePhoto);
+                Log.d(TAG, "onActivityResult: player face photo loaded " + facePhoto.getWidth() + "x" + facePhoto.getHeight());
+            } else {
+                rejectPlayerPhoto("Choose a clear face photo.");
+                Log.w(TAG, "onActivityResult: rejected selected image because no usable face was detected");
+            }
         } else {
+            rejectPlayerPhoto("That photo could not be used.");
             Log.w(TAG, "onActivityResult: failed to decode selected photo");
         }
         enableImmersiveMode();
@@ -149,6 +172,14 @@ public class MainActivity extends Activity {
         launchPhotoPicker(intent);
     }
 
+    private void resetPlayerPhoto() {
+        prefs.edit().remove(PREF_PLAYER_PHOTO_URI).apply();
+        if (gameView != null) {
+            gameView.clearPlayerPhoto();
+        }
+        Log.d(TAG, "resetPlayerPhoto: cleared saved player photo");
+    }
+
     @SuppressWarnings("deprecation")
     private void launchPhotoPicker(Intent intent) {
         startActivityForResult(intent, REQUEST_PLAYER_PHOTO);
@@ -163,13 +194,103 @@ public class MainActivity extends Activity {
 
         Log.d(TAG, "loadSavedPlayerPhoto: attempting saved photo restore");
         Bitmap savedPhoto = decodeBitmap(Uri.parse(savedUri));
-        if (savedPhoto != null) {
-            gameView.setPlayerPhoto(savedPhoto);
-            Log.d(TAG, "loadSavedPlayerPhoto: restored saved photo " + savedPhoto.getWidth() + "x" + savedPhoto.getHeight());
+        Bitmap facePhoto = savedPhoto == null ? null : extractUsableFaceBitmap(savedPhoto);
+        if (facePhoto != null) {
+            gameView.setPlayerPhoto(facePhoto);
+            Log.d(TAG, "loadSavedPlayerPhoto: restored saved face photo " + facePhoto.getWidth() + "x" + facePhoto.getHeight());
         } else {
             prefs.edit().remove(PREF_PLAYER_PHOTO_URI).apply();
+            gameView.clearPlayerPhoto();
             Log.w(TAG, "loadSavedPlayerPhoto: saved photo failed, clearing saved URI");
         }
+    }
+
+    private void rejectPlayerPhoto(String message) {
+        prefs.edit().remove(PREF_PLAYER_PHOTO_URI).apply();
+        if (gameView != null) {
+            gameView.clearPlayerPhoto();
+        }
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+    }
+
+    private Bitmap extractUsableFaceBitmap(Bitmap bitmap) {
+        Bitmap faceBitmap = createFaceDetectorBitmap(bitmap);
+        if (faceBitmap == null) {
+            return null;
+        }
+
+        FaceDetector detector = new FaceDetector(faceBitmap.getWidth(), faceBitmap.getHeight(), MAX_FACE_COUNT);
+        FaceDetector.Face[] faces = new FaceDetector.Face[MAX_FACE_COUNT];
+        int faceCount = detector.findFaces(faceBitmap, faces);
+        float minEyeDistance = faceBitmap.getWidth() * MIN_EYE_DISTANCE_RATIO;
+        PointF midpoint = new PointF();
+        FaceDetector.Face bestFace = null;
+        PointF bestMidpoint = new PointF();
+        float bestScore = 0f;
+
+        for (int i = 0; i < faceCount; i++) {
+            FaceDetector.Face face = faces[i];
+            if (face == null) {
+                continue;
+            }
+            face.getMidPoint(midpoint);
+            boolean centeredEnough = midpoint.x > faceBitmap.getWidth() * 0.08f
+                    && midpoint.x < faceBitmap.getWidth() * 0.92f
+                    && midpoint.y > faceBitmap.getHeight() * 0.08f
+                    && midpoint.y < faceBitmap.getHeight() * 0.92f;
+            if (face.confidence() >= MIN_FACE_CONFIDENCE
+                    && face.eyesDistance() >= minEyeDistance
+                    && centeredEnough) {
+                float score = face.confidence() * face.eyesDistance();
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestFace = face;
+                    bestMidpoint.set(midpoint);
+                }
+            }
+        }
+
+        if (bestFace == null) {
+            Log.d(TAG, "extractUsableFaceBitmap: no usable face found in " + faceBitmap.getWidth() + "x" + faceBitmap.getHeight());
+            return null;
+        }
+
+        float eyeDistance = bestFace.eyesDistance();
+        int cropSize = Math.round(eyeDistance * 4.8f);
+        cropSize = Math.max(cropSize, Math.round(Math.min(bitmap.getWidth(), bitmap.getHeight()) * 0.28f));
+        cropSize = Math.min(cropSize, Math.min(bitmap.getWidth(), bitmap.getHeight()));
+        int centerX = Math.round(bestMidpoint.x);
+        int centerY = Math.round(bestMidpoint.y + eyeDistance * 0.62f);
+        int left = clampInt(centerX - cropSize / 2, 0, bitmap.getWidth() - cropSize);
+        int top = clampInt(centerY - cropSize / 2, 0, bitmap.getHeight() - cropSize);
+        Bitmap cropped = Bitmap.createBitmap(bitmap, left, top, cropSize, cropSize);
+        Bitmap facePhoto = scaleBitmapDown(cropped, 256);
+        Log.d(TAG, "extractUsableFaceBitmap: accepted face crop " + facePhoto.getWidth() + "x" + facePhoto.getHeight());
+        return facePhoto;
+    }
+
+    private Bitmap createFaceDetectorBitmap(Bitmap bitmap) {
+        int width = bitmap.getWidth();
+        int height = bitmap.getHeight();
+        if (width % 2 != 0) {
+            width -= 1;
+        }
+        if (width < 2 || height < 2) {
+            return null;
+        }
+
+        Bitmap source = bitmap;
+        if (width != bitmap.getWidth()) {
+            source = Bitmap.createBitmap(bitmap, 0, 0, width, height);
+        }
+        if (source.getConfig() == Bitmap.Config.RGB_565) {
+            return source;
+        }
+        return source.copy(Bitmap.Config.RGB_565, false);
+    }
+
+    private int clampInt(int value, int min, int max) {
+        return Math.max(min, Math.min(max, value));
     }
 
     private Bitmap decodeBitmap(Uri imageUri) {
@@ -177,7 +298,7 @@ public class MainActivity extends Activity {
             Bitmap bitmap;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 ImageDecoder.Source source = ImageDecoder.createSource(getContentResolver(), imageUri);
-                bitmap = ImageDecoder.decodeBitmap(source);
+                bitmap = ImageDecoder.decodeBitmap(source, (decoder, info, src) -> decoder.setAllocator(ImageDecoder.ALLOCATOR_SOFTWARE));
             } else {
                 bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), imageUri);
             }
