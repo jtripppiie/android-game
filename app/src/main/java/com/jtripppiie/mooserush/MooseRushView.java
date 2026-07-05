@@ -108,6 +108,7 @@ public class MooseRushView extends View {
     private final RectF jumpPadBounds = new RectF();
     private final RectF firePadBounds = new RectF();
     private final RectF tempRect = new RectF();
+    private final Path moosePath = new Path();
     private PhotoRequestListener photoRequestListener;
     private Bitmap playerPhoto;
     private Bitmap backdropCache;
@@ -1281,7 +1282,9 @@ public class MooseRushView extends View {
         paint.setColor(Color.argb(80, 255, 246, 207));
         canvas.drawOval(hazard.x - xRadius * 1.08f, hazard.y - yRadius * 1.12f, hazard.x + xRadius * 1.08f, hazard.y + yRadius * 1.12f, paint);
 
-        if (hazard.drawable != null) {
+        if (moose) {
+            drawMoose(canvas, hazard.x, hazard.y, yRadius);
+        } else if (hazard.drawable != null) {
             drawDrawable(canvas, hazard.drawable, hazard.x - xRadius, hazard.y - yRadius, hazard.x + xRadius, hazard.y + yRadius);
         } else {
             paint.setColor(Color.rgb(255, 218, 121));
@@ -1358,7 +1361,9 @@ public class MooseRushView extends View {
         paint.setColor(Color.argb(120, 0, 0, 0));
         canvas.drawOval(bossX - xRadius * 0.88f, bossY + yRadius * 0.80f, bossX + xRadius * 0.88f, bossY + yRadius * 1.08f, paint);
 
-        if (bossDrawable != null) {
+        if (mooseBoss) {
+            drawMoose(canvas, bossX, bossY, yRadius * 0.92f);
+        } else if (bossDrawable != null) {
             drawDrawable(canvas, bossDrawable, bossX - xRadius, bossY - yRadius, bossX + xRadius, bossY + yRadius);
         } else {
             paint.setStyle(Paint.Style.FILL);
@@ -1367,6 +1372,149 @@ public class MooseRushView extends View {
         }
 
         drawBossHealthBar(canvas);
+    }
+
+    private void drawMoose(Canvas canvas, float x, float y, float size) {
+        float bodyLeft = x - size * 1.42f;
+        float bodyRight = x + size * 0.42f;
+        float bodyTop = y - size * 0.45f;
+        float bodyBottom = y + size * 0.32f;
+        float legTop = y + size * 0.10f;
+        float hoofY = y + size * 0.88f;
+        int outlineColor = Color.rgb(18, 11, 8);
+        int darkBrown = Color.rgb(42, 25, 15);
+        int bodyBrown = Color.rgb(90, 55, 31);
+        int highlightBrown = Color.rgb(122, 77, 43);
+        int antlerColor = Color.rgb(226, 211, 166);
+        int antlerShadow = Color.rgb(122, 101, 67);
+
+        paint.setShader(null);
+        paint.setStyle(Paint.Style.FILL);
+
+        moosePath.reset();
+        moosePath.moveTo(bodyLeft + size * 0.10f, bodyTop + size * 0.25f);
+        moosePath.cubicTo(bodyLeft + size * 0.35f, bodyTop - size * 0.10f, bodyLeft + size * 1.02f, bodyTop - size * 0.16f, bodyRight - size * 0.05f, bodyTop + size * 0.05f);
+        moosePath.cubicTo(bodyRight + size * 0.18f, bodyTop + size * 0.18f, bodyRight + size * 0.20f, bodyBottom - size * 0.04f, bodyRight - size * 0.02f, bodyBottom + size * 0.08f);
+        moosePath.cubicTo(bodyLeft + size * 1.15f, bodyBottom + size * 0.24f, bodyLeft + size * 0.32f, bodyBottom + size * 0.18f, bodyLeft + size * 0.02f, y + size * 0.07f);
+        moosePath.cubicTo(bodyLeft - size * 0.08f, y - size * 0.02f, bodyLeft - size * 0.02f, bodyTop + size * 0.34f, bodyLeft + size * 0.10f, bodyTop + size * 0.25f);
+        moosePath.close();
+
+        paint.setColor(outlineColor);
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setStrokeWidth(size * 0.18f);
+        paint.setStrokeJoin(Paint.Join.ROUND);
+        canvas.drawPath(moosePath, paint);
+
+        paint.setStyle(Paint.Style.FILL);
+        paint.setColor(bodyBrown);
+        canvas.drawPath(moosePath, paint);
+
+        paint.setColor(darkBrown);
+        moosePath.reset();
+        moosePath.moveTo(bodyLeft + size * 0.05f, bodyTop + size * 0.16f);
+        moosePath.cubicTo(bodyLeft + size * 0.28f, bodyTop - size * 0.27f, bodyLeft + size * 0.78f, bodyTop - size * 0.22f, bodyLeft + size * 1.02f, bodyTop + size * 0.06f);
+        moosePath.cubicTo(bodyLeft + size * 0.72f, bodyTop + size * 0.20f, bodyLeft + size * 0.38f, bodyTop + size * 0.20f, bodyLeft + size * 0.05f, bodyTop + size * 0.16f);
+        canvas.drawPath(moosePath, paint);
+
+        paint.setColor(highlightBrown);
+        tempRect.set(bodyLeft + size * 0.25f, bodyTop + size * 0.13f, bodyRight - size * 0.08f, bodyTop + size * 0.34f);
+        canvas.drawOval(tempRect, paint);
+
+        drawMooseLeg(canvas, x - size * 1.05f, legTop, hoofY, size, darkBrown, outlineColor, -0.20f);
+        drawMooseLeg(canvas, x - size * 0.46f, legTop + size * 0.05f, hoofY, size, darkBrown, outlineColor, 0.18f);
+        drawMooseLeg(canvas, x + size * 0.02f, legTop + size * 0.04f, hoofY, size, darkBrown, outlineColor, -0.12f);
+        drawMooseLeg(canvas, x + size * 0.36f, legTop - size * 0.03f, hoofY, size, darkBrown, outlineColor, 0.18f);
+
+        paint.setStyle(Paint.Style.FILL);
+        paint.setColor(outlineColor);
+        tempRect.set(x + size * 0.23f, y - size * 0.48f, x + size * 0.92f, y + size * 0.03f);
+        canvas.drawRoundRect(tempRect, size * 0.18f, size * 0.18f, paint);
+
+        paint.setColor(bodyBrown);
+        tempRect.set(x + size * 0.29f, y - size * 0.43f, x + size * 0.88f, y);
+        canvas.drawRoundRect(tempRect, size * 0.16f, size * 0.16f, paint);
+
+        paint.setColor(bodyBrown);
+        tempRect.set(x + size * 0.72f, y - size * 0.34f, x + size * 1.38f, y + size * 0.04f);
+        canvas.drawRoundRect(tempRect, size * 0.18f, size * 0.18f, paint);
+
+        paint.setColor(outlineColor);
+        canvas.drawOval(x + size * 1.20f, y - size * 0.15f, x + size * 1.46f, y + size * 0.02f, paint);
+        canvas.drawCircle(x + size * 1.12f, y - size * 0.24f, Math.max(dp(1.7f), size * 0.055f), paint);
+
+        moosePath.reset();
+        moosePath.moveTo(x + size * 0.52f, y - size * 0.47f);
+        moosePath.lineTo(x + size * 0.76f, y - size * 0.78f);
+        moosePath.lineTo(x + size * 0.87f, y - size * 0.50f);
+        moosePath.close();
+        canvas.drawPath(moosePath, paint);
+
+        moosePath.reset();
+        moosePath.moveTo(x + size * 0.50f, y - size * 0.02f);
+        moosePath.cubicTo(x + size * 0.74f, y + size * 0.23f, x + size * 0.65f, y + size * 0.54f, x + size * 0.48f, y + size * 0.70f);
+        moosePath.cubicTo(x + size * 0.50f, y + size * 0.43f, x + size * 0.35f, y + size * 0.21f, x + size * 0.28f, y + size * 0.06f);
+        moosePath.close();
+        canvas.drawPath(moosePath, paint);
+
+        paint.setColor(antlerShadow);
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setStrokeCap(Paint.Cap.ROUND);
+        paint.setStrokeWidth(Math.max(dp(3), size * 0.14f));
+        canvas.drawLine(x + size * 0.72f, y - size * 0.54f, x + size * 0.46f, y - size * 0.92f, paint);
+        canvas.drawLine(x + size * 0.74f, y - size * 0.54f, x + size * 1.03f, y - size * 0.92f, paint);
+
+        paint.setStyle(Paint.Style.FILL);
+        paint.setColor(antlerColor);
+        drawPalmAntler(canvas, x + size * 0.47f, y - size * 0.92f, size, -1f);
+        drawPalmAntler(canvas, x + size * 1.03f, y - size * 0.92f, size, 1f);
+
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setStrokeCap(Paint.Cap.ROUND);
+        paint.setStrokeWidth(Math.max(dp(2), size * 0.08f));
+        paint.setColor(antlerColor);
+        canvas.drawLine(x + size * 0.72f, y - size * 0.54f, x + size * 0.47f, y - size * 0.88f, paint);
+        canvas.drawLine(x + size * 0.74f, y - size * 0.54f, x + size * 1.03f, y - size * 0.88f, paint);
+        paint.setStrokeCap(Paint.Cap.BUTT);
+        paint.setStyle(Paint.Style.FILL);
+    }
+
+    private void drawMooseLeg(Canvas canvas, float legX, float legTop, float hoofY, float size, int legColor, int outlineColor, float angle) {
+        float kneeX = legX + angle * size;
+        float kneeY = legTop + size * 0.36f;
+        float footX = kneeX + angle * size * 0.32f;
+
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setStrokeCap(Paint.Cap.ROUND);
+        paint.setStrokeWidth(size * 0.22f);
+        paint.setColor(outlineColor);
+        canvas.drawLine(legX, legTop, kneeX, kneeY, paint);
+        canvas.drawLine(kneeX, kneeY, footX, hoofY, paint);
+
+        paint.setStrokeWidth(size * 0.14f);
+        paint.setColor(legColor);
+        canvas.drawLine(legX, legTop, kneeX, kneeY, paint);
+        canvas.drawLine(kneeX, kneeY, footX, hoofY, paint);
+
+        paint.setStrokeWidth(size * 0.16f);
+        paint.setColor(outlineColor);
+        canvas.drawLine(footX - size * 0.22f, hoofY, footX + size * 0.28f, hoofY, paint);
+        paint.setStrokeCap(Paint.Cap.BUTT);
+        paint.setStyle(Paint.Style.FILL);
+    }
+
+    private void drawPalmAntler(Canvas canvas, float baseX, float baseY, float size, float direction) {
+        moosePath.reset();
+        moosePath.moveTo(baseX, baseY);
+        moosePath.cubicTo(baseX + direction * size * 0.08f, baseY - size * 0.28f, baseX + direction * size * 0.35f, baseY - size * 0.36f, baseX + direction * size * 0.48f, baseY - size * 0.18f);
+        moosePath.lineTo(baseX + direction * size * 0.60f, baseY - size * 0.42f);
+        moosePath.lineTo(baseX + direction * size * 0.74f, baseY - size * 0.12f);
+        moosePath.lineTo(baseX + direction * size * 0.48f, baseY - size * 0.03f);
+        moosePath.lineTo(baseX + direction * size * 0.70f, baseY + size * 0.17f);
+        moosePath.lineTo(baseX + direction * size * 0.34f, baseY + size * 0.12f);
+        moosePath.lineTo(baseX + direction * size * 0.17f, baseY + size * 0.28f);
+        moosePath.lineTo(baseX + direction * size * 0.07f, baseY + size * 0.07f);
+        moosePath.close();
+        canvas.drawPath(moosePath, paint);
     }
 
     private void drawBossHealthBar(Canvas canvas) {
