@@ -154,9 +154,9 @@ Now:
 The active beta package is:
 
 ```text
-versionCode: 194
-versionName: 1.9.4-alpha
-badge: ALASKA RUSH v1.9.4
+versionCode: 195
+versionName: 1.9.5-alpha
+badge: ALASKA DAILY v1.9.5
 ```
 
 This branch is an architecture alpha. It is intended for testing the new
@@ -226,6 +226,15 @@ as a runner under the uploaded/default head.
   unlocks.
 - Shows long-term progress on the main menu and run result panels.
 - Keeps monetization hooks cosmetic and progress-based rather than pay-to-win.
+
+`1.9.5-alpha` is the Daily Rush retention pass:
+
+- Adds a main-menu daily challenge button that chooses the rotating unlocked
+  daily stage and season automatically.
+- Adds once-per-day Daily Rush token rewards, local streak persistence, and
+  result-screen status lines.
+- Moves daily rotation, gate target, reward, and streak math into
+  `RunRewardEconomy` so future region copies can reuse it.
 
 ## What still needs extraction
 

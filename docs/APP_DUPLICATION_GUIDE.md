@@ -5,6 +5,14 @@ separate personalized arcade app.
 
 The goal is to copy the structure without copying confusion.
 
+For the full step-by-step replication manual, including stage planning sheets,
+asset naming, sprite rules, Daily Rush transfer, QA, release, and handoff
+templates, use:
+
+```text
+docs/REGION_REPLICATION_PLAYBOOK.md
+```
+
 ## What To Keep
 
 Keep these systems:
@@ -15,7 +23,8 @@ Keep these systems:
 - `RunnerTuning`: platformer feel constants and spawn fairness floors.
 - `DifficultyCurve`: capped progressive difficulty.
 - `ArcadeScoring`: combo multipliers and stage-clear bonus math.
-- `RunRewardEconomy`: Trail Token rewards and cosmetic unlock rules.
+- `RunRewardEconomy`: Trail Token rewards, cosmetic unlock rules, and Daily
+  Rush rotation/streak math.
 - `GameAssets`: runtime bitmap/drawable loading.
 - `SpriteRenderer`: player/photo runner composition.
 - `SpriteSheetMath`: runtime frame-edge guards.
@@ -142,7 +151,8 @@ The current replay loop is:
 8. Defeat boss or survive as long as possible.
 9. Earn Trail Tokens.
 10. Unlock cosmetic outfit colors.
-11. Retry for a better rank, more tokens, and more stage progress.
+11. Return for the rotating Daily Rush challenge and streak bonus.
+12. Retry for a better rank, more tokens, and more stage progress.
 
 Keep monetization fair:
 
@@ -168,6 +178,8 @@ outfit
 trail_tokens
 unlocked_outfits
 total_missions
+daily_completed_day
+daily_streak
 ```
 
 When adding a new persistent value:
@@ -207,6 +219,7 @@ For every meaningful release, update:
 - `docs/VERSIONING.md`
 - `docs/ANDROID_TEST_CHECKLIST.md`
 - `docs/ALASKA_GAMEPLAY_BUILD.md`
+- `docs/REGION_REPLICATION_PLAYBOOK.md`
 - `docs/SPRITE_SHEET_ASSET_PIPELINE.md` when assets change
 - `app/src/main/assets/regions/alaska/region.json` when stage metadata changes
 - `.github/workflows/android-debug-apk.yml` when release branches change
@@ -223,11 +236,12 @@ For every meaningful release, update:
 8. Update stage configs in `MooseRushView`.
 9. Tune `RunnerTuning` and `DifficultyCurve` only if the new region needs a different feel.
 10. Keep `RunRewardEconomy` unless the monetization model changes.
-11. Update docs.
-12. Run tests.
-13. Build APK.
-14. Merge to `main`.
-15. Push `main`.
+11. Keep Daily Rush local and fair unless the product intentionally adds accounts.
+12. Update docs.
+13. Run tests.
+14. Build APK.
+15. Merge to `main`.
+16. Push `main`.
 
 ## Quality Bar
 

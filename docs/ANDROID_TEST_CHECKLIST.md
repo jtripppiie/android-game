@@ -5,16 +5,16 @@ Use this after GitHub Actions produces the debug APK artifact.
 Current packaged beta:
 
 ```text
-versionCode: 194
-versionName: 1.9.4-alpha
-build badge: ALASKA RUSH v1.9.4
+versionCode: 195
+versionName: 1.9.5-alpha
+build badge: ALASKA DAILY v1.9.5
 ```
 
 ## Install test
 
 1. Download `you-rush-alaska-debug-apk` from the latest successful workflow run.
 2. Extract the ZIP if GitHub downloaded it as a ZIP.
-3. Install `you-rush-alaska-1.9.4-alpha-194-debug.apk` on an Android phone.
+3. Install `you-rush-alaska-1.9.5-alpha-195-debug.apk` on an Android phone.
 4. Allow installation from the browser/files app if Android prompts you.
 5. Open **You Rush**.
 6. Confirm the debug/version badge is visible and matches the packaged beta.
@@ -33,6 +33,7 @@ Confirm these screens work:
 - Outfit color selection persists after closing and reopening the app.
 - Back buttons return to menu.
 - Play starts the selected stage.
+- Daily Rush starts the rotating daily stage.
 
 ## Gameplay test
 
@@ -68,6 +69,7 @@ Confirm score changes:
 - Shield pickups appear, activate an obvious aura, and absorb one hit.
 - Aurora Rush meter fills from skilled play and triggers a readable score-burst mode.
 - Trail Tokens are awarded on game over or stage clear and persist after restarting the app.
+- Daily Rush awards its bonus once per local day, shows the streak on result screens, and persists after restarting the app.
 - Hitting a boss with snowballs increases score.
 - Defeating a boss gives a larger stage-clear bonus with combo and star rewards.
 - Best score persists after restarting the app.

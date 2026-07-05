@@ -30,6 +30,7 @@
   "gameplayTemplate": {
     "loop": [
       "select-stage",
+      "daily-rush",
       "clear-gates",
       "dodge-hazards",
       "enter-boss-phase",
@@ -43,6 +44,12 @@
       "hazardDodge": 4,
       "bossHit": 25,
       "bossDefeatBase": 100
+    },
+    "retention": {
+      "dailyRush": true,
+      "dailyRewardBase": 24,
+      "dailyStreakBonus": 4,
+      "dailyStreakBonusCap": 7
     },
     "debug": {
       "logcatTags": ["YouRushGame", "YouRushDebug"],

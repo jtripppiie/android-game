@@ -2,28 +2,29 @@
 
 A personalized Android arcade game by **TripperDeeLabs**.
 
-**Current status: Alaska 1.9.4 replay-value alpha.**
+**Current status: Alaska 1.9.5 Daily Rush alpha.**
 
 This build is beta-ready for APK testing, tuning, and bug fixing. It is not final 1.0 or a larger milestone until it installs and plays well across all Alaska stages on a real phone.
 
 ## Current beta
 
 ```text
-versionCode: 194
-versionName: 1.9.4-alpha
-build badge: ALASKA RUSH v1.9.4
+versionCode: 195
+versionName: 1.9.5-alpha
+build badge: ALASKA DAILY v1.9.5
 ```
 
 ## Game flow
 
 1. Splash screen
 2. Main menu
-3. Alaska map
-4. Customization / photo personalization
-5. Main arcade run with a single unified HUD
-6. Boss phase
-7. Stage clear or retry
-8. Next stage unlock / score chase
+3. Daily Rush or Alaska map
+4. Selected-stage start
+5. Customization / photo personalization
+6. Main arcade run with a single unified HUD
+7. Boss phase
+8. Stage clear or retry
+9. Next stage unlock / score chase
 
 ## Controls
 
@@ -71,6 +72,7 @@ Mobile mapping:
 - Run missions and shield powerup pickups
 - Aurora Rush meter and score burst mode
 - Trail Tokens with cosmetic outfit unlocks
+- Daily Rush rotating unlocked-stage challenge with local streak rewards
 - Progressive difficulty pacing for speed and spawn pressure
 - Hurdle progress bar
 - Collectible star paths
@@ -116,7 +118,7 @@ The debug APK lands in `app/build/outputs/apk/debug/` with the version in the
 filename, for example:
 
 ```text
-you-rush-alaska-1.9.4-alpha-194-debug.apk
+you-rush-alaska-1.9.5-alpha-195-debug.apk
 ```
 
 GitHub Actions also builds a debug APK using:
@@ -144,12 +146,15 @@ unit tests:
 - `RunnerTuning` — coyote time, jump buffer, and spawn-spacing fairness floors.
 - `SpriteRenderer` / sprite trim tests — frame-edge guards that prevent atlas
   bleed artifacts during walking, swimming, and flying animation.
+- `RunRewardEconomy` — Trail Token payouts, outfit unlocks, and Daily Rush
+  rotation/streak math.
 
 Run them with `./gradlew testDebugUnitTest`.
 
 ## Documentation Map
 
 - `docs/APP_DUPLICATION_GUIDE.md` explains how to clone this app structure for a new region or new branded runner.
+- `docs/REGION_REPLICATION_PLAYBOOK.md` is the detailed step-by-step manual for replicating the game for other regions.
 - `docs/BRANCHING_AND_RELEASES.md` explains why Git branch names and Android app versions are separate, and how `main` should be used.
 - `docs/ALASKA_GAMEPLAY_BUILD.md` documents the current gameplay loop, stages, scoring, assets, and debug hooks.
 - `docs/SPRITE_SHEET_ASSET_PIPELINE.md` preserves the repeatable art-generation prompts and sprite-sheet rules.
@@ -171,4 +176,4 @@ full-bleed vector fallback in `res/mipmap-anydpi/` for API 23–25.
 5. Verify movement, jump, double jump, fire, lives, checkpoint respawn, unified HUD, combo, XP, all bosses, and mute toggle.
 6. Tune movement, spacing, scoring, spawn rates, stage difficulty, and HUD overlap.
 7. Confirm no crash in a 15-minute phone test.
-8. Keep 1.3.x focused on stability, testability, balancing, audio assets, and cleaner game-state integration.
+8. Keep 1.9.x focused on stability, retention tuning, audio assets, and cleaner game-state integration.

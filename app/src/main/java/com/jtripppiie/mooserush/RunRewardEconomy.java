@@ -2,6 +2,7 @@ package com.jtripppiie.mooserush;
 
 final class RunRewardEconomy {
     static final int BASE_OUTFIT_UNLOCK_MASK = 0b0000_1111;
+    static final int DAILY_BASE_REWARD = 24;
 
     private RunRewardEconomy() {
     }
@@ -34,5 +35,34 @@ final class RunRewardEconomy {
             return false;
         }
         return !isOutfitUnlocked(unlockMask, outfitIndex) && trailTokens >= outfitCosts[outfitIndex];
+    }
+
+    static int dailyStageIndex(int dayKey, int stageCount) {
+        if (stageCount <= 0) {
+            return 0;
+        }
+        return Math.floorMod(dayKey * 3 + 1, stageCount);
+    }
+
+    static int dailyGateGoal(int dayKey, int stageGoalGates) {
+        if (stageGoalGates <= 3) {
+            return Math.max(0, stageGoalGates);
+        }
+        int pressure = Math.floorMod(dayKey, 3);
+        return Math.max(3, Math.min(stageGoalGates, stageGoalGates - 1 + pressure));
+    }
+
+    static int dailyReward(int streakBeforeClaim) {
+        return DAILY_BASE_REWARD + Math.min(7, Math.max(0, streakBeforeClaim)) * 4;
+    }
+
+    static int nextDailyStreak(int lastCompletedDay, int todayKey, int currentStreak) {
+        if (lastCompletedDay == todayKey) {
+            return Math.max(1, currentStreak);
+        }
+        if (lastCompletedDay == todayKey - 1) {
+            return Math.max(1, currentStreak + 1);
+        }
+        return 1;
     }
 }

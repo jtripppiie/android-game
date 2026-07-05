@@ -14,7 +14,7 @@ Core idea:
 
 1. Splash screen
 2. Main menu
-3. Alaska map
+3. Daily Rush or Alaska map
 4. Optional customization
 5. Stage run
 6. Boss phase
@@ -61,6 +61,11 @@ Combo multipliers increase rewards during clean play. Aurora Rush adds a short
 extra score multiplier when the meter fills from gates, stars, near misses,
 dodges, boss hits, shields, and missions. Best score, XP, Trail Tokens, cosmetic
 outfit unlocks, and local level persist in shared preferences.
+
+Daily Rush rotates one unlocked Alaska stage per local day, sets the correct
+season automatically, and pays a once-per-day Trail Token bonus when the player
+clears the daily gate target or finishes the stage. The streak is stored locally
+and increases the daily payout without blocking normal play.
 
 ## Stage progression
 
@@ -187,6 +192,10 @@ persistent Trail Tokens, total mission tracking, richer run summaries, and
 cosmetic-only outfit unlocks. These systems are designed to make repeat play
 feel valuable without adding timers, loot boxes, or pay-to-win power.
 
+`1.9.5-alpha` adds Daily Rush: a rotating local daily challenge on the main
+menu, once-per-day Trail Token bonus, visible streak result lines, and
+documented daily rotation/streak math in `RunRewardEconomy`.
+
 ## Current development priorities
 
 1. Confirm APK build succeeds.
@@ -194,9 +203,10 @@ feel valuable without adding timers, loot boxes, or pay-to-win power.
 3. Test touch targets for LEFT / RIGHT / JUMP / FIRE.
 4. Tune gravity, gate spacing, and boss HP.
 5. Improve boss attack patterns.
-6. Add photo crop and face-position controls.
-7. Add share-card screen after game over.
-8. Only after Alaska is fun, start Florida or Michigan.
+6. Tune Daily Rush rewards and streak pacing after phone testing.
+7. Add photo crop and face-position controls.
+8. Add share-card screen after game over.
+9. Only after Alaska is fun, start Florida or Michigan.
 
 ## Important note
 

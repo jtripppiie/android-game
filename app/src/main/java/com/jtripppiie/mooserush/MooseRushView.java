@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
@@ -60,6 +61,8 @@ public class MooseRushView extends View {
     private static final String PREF_TRAIL_TOKENS = "trail_tokens";
     private static final String PREF_UNLOCKED_OUTFITS = "unlocked_outfits";
     private static final String PREF_TOTAL_MISSIONS = "total_missions";
+    private static final String PREF_DAILY_COMPLETED_DAY = "daily_completed_day";
+    private static final String PREF_DAILY_STREAK = "daily_streak";
 
     private static final int[] OUTFIT_COLORS = {
             Color.rgb(52, 134, 196),
@@ -181,6 +184,7 @@ public class MooseRushView extends View {
     private final RectF outfitButtonBounds = new RectF();
     private final RectF debugButtonBounds = new RectF();
     private final RectF muteButtonBounds = new RectF();
+    private final RectF dailyButtonBounds = new RectF();
     private final RectF leftPadBounds = new RectF();
     private final RectF rightPadBounds = new RectF();
     private final RectF jumpPadBounds = new RectF();
@@ -212,6 +216,9 @@ public class MooseRushView extends View {
     private int unlockedOutfitMask = RunRewardEconomy.BASE_OUTFIT_UNLOCK_MASK;
     private int livesLostThisRun = 0;
     private int auroraRushes = 0;
+    private int dailyCompletedDay = Integer.MIN_VALUE;
+    private int dailyStreak = 0;
+    private int dailyTokensEarned = 0;
     private int backdropCacheWidth = 0;
     private int backdropCacheHeight = 0;
     private int backdropCacheKey = Integer.MIN_VALUE;
@@ -232,6 +239,7 @@ public class MooseRushView extends View {
     private boolean missionComboComplete = false;
     private boolean perfectRun = true;
     private boolean runRewardsAwarded = false;
+    private boolean dailyBonusAwarded = false;
     private int jumpsUsed = 0;
 
     private long lastFrameNanos = 0L;
@@ -287,6 +295,8 @@ public class MooseRushView extends View {
         trailTokens = prefs.getInt(PREF_TRAIL_TOKENS, 0);
         unlockedOutfitMask = prefs.getInt(PREF_UNLOCKED_OUTFITS, RunRewardEconomy.BASE_OUTFIT_UNLOCK_MASK);
         totalMissionsCompleted = prefs.getInt(PREF_TOTAL_MISSIONS, 0);
+        dailyCompletedDay = prefs.getInt(PREF_DAILY_COMPLETED_DAY, Integer.MIN_VALUE);
+        dailyStreak = prefs.getInt(PREF_DAILY_STREAK, 0);
         if (!isOutfitUnlocked(selectedOutfit)) {
             selectedOutfit = firstUnlockedOutfit();
         }
@@ -464,6 +474,8 @@ public class MooseRushView extends View {
             } else if (thirdButtonBounds.contains(x, y)) {
                 state = STATE_MAP;
                 logEvent("Opened Alaska map.");
+            } else if (dailyButtonBounds.contains(x, y)) {
+                startDailyRush();
             } else if (debugButtonBounds.contains(x, y)) {
                 debugOverlay = !debugOverlay;
                 prefs.edit().putBoolean(PREF_DEBUG_OVERLAY, debugOverlay).apply();
@@ -656,8 +668,10 @@ public class MooseRushView extends View {
         auroraRushes = 0;
         runTokensEarned = 0;
         livesLostThisRun = 0;
+        dailyTokensEarned = 0;
         perfectRun = true;
         runRewardsAwarded = false;
+        dailyBonusAwarded = false;
         runCallout = "";
         state = STATE_READY;
         readyTimer = 0f;
@@ -1063,6 +1077,8 @@ public class MooseRushView extends View {
                 .putInt(PREF_XP, gameState.xp)
                 .putInt(PREF_TRAIL_TOKENS, trailTokens)
                 .putInt(PREF_TOTAL_MISSIONS, totalMissionsCompleted)
+                .putInt(PREF_DAILY_COMPLETED_DAY, dailyCompletedDay)
+                .putInt(PREF_DAILY_STREAK, dailyStreak)
                 .apply();
         state = STATE_STAGE_CLEAR;
         stageClearTimer = 0f;
@@ -1099,12 +1115,16 @@ public class MooseRushView extends View {
                     .putInt(PREF_XP, gameState.xp)
                     .putInt(PREF_TRAIL_TOKENS, trailTokens)
                     .putInt(PREF_TOTAL_MISSIONS, totalMissionsCompleted)
+                    .putInt(PREF_DAILY_COMPLETED_DAY, dailyCompletedDay)
+                    .putInt(PREF_DAILY_STREAK, dailyStreak)
                     .apply();
         } else {
             prefs.edit()
                     .putInt(PREF_XP, gameState.xp)
                     .putInt(PREF_TRAIL_TOKENS, trailTokens)
                     .putInt(PREF_TOTAL_MISSIONS, totalMissionsCompleted)
+                    .putInt(PREF_DAILY_COMPLETED_DAY, dailyCompletedDay)
+                    .putInt(PREF_DAILY_STREAK, dailyStreak)
                     .apply();
         }
         logEvent("Game over: " + reason + " Score " + score + ".");
@@ -1115,12 +1135,32 @@ public class MooseRushView extends View {
             return;
         }
         runRewardsAwarded = true;
-        runTokensEarned = RunRewardEconomy.tokensForRun(missionsCompleted, gameState.bestCombo, gameState.stars, stageCleared, perfectRun);
+        int dailyReward = awardDailyRushIfComplete(stageCleared);
+        runTokensEarned = RunRewardEconomy.tokensForRun(missionsCompleted, gameState.bestCombo, gameState.stars, stageCleared, perfectRun) + dailyReward;
         trailTokens += runTokensEarned;
         if (runTokensEarned > 0) {
             effects.spawnScorePopup("TOKENS +" + runTokensEarned, getWidth() / 2f, getHeight() * 0.46f, Color.rgb(255, 218, 121));
             logEvent("Trail Tokens +" + runTokensEarned + ". Bank " + trailTokens + ".");
         }
+    }
+
+    private int awardDailyRushIfComplete(boolean stageCleared) {
+        int today = currentDailyDayKey();
+        if (dailyBonusAwarded || dailyCompletedDay == today || selectedStage != dailyStageIndex()) {
+            return 0;
+        }
+        if (!stageCleared && gatesPassed < dailyGateGoal()) {
+            return 0;
+        }
+        int reward = RunRewardEconomy.dailyReward(dailyStreak);
+        dailyStreak = RunRewardEconomy.nextDailyStreak(dailyCompletedDay, today, dailyStreak);
+        dailyCompletedDay = today;
+        dailyBonusAwarded = true;
+        dailyTokensEarned = reward;
+        effects.spawnSparkBurst(getWidth() / 2f, getHeight() * 0.42f, 22, Color.rgb(77, 219, 184));
+        showRunCallout("DAILY RUSH COMPLETE", 1.8f);
+        logEvent("Daily Rush complete. Streak " + dailyStreak + ", reward " + reward + ".");
+        return reward;
     }
 
     private void resetAfterHit() {
@@ -1452,9 +1492,11 @@ public class MooseRushView extends View {
         setButton(primaryButtonBounds, x, y, dp(230), dp(44));
         setButton(secondaryButtonBounds, x, y + dp(54), dp(230), dp(44));
         setButton(thirdButtonBounds, x, y + dp(108), dp(230), dp(44));
+        setButton(dailyButtonBounds, x, y - dp(58), dp(230), dp(42));
         setButton(debugButtonBounds, x - dp(58), y + dp(160), dp(104), dp(36));
         setButton(muteButtonBounds, x + dp(58), y + dp(160), dp(104), dp(36));
 
+        drawDailyRushButton(canvas, dailyButtonBounds);
         drawButton(canvas, primaryButtonBounds, "PLAY " + STAGES[selectedStage].name);
         drawButton(canvas, secondaryButtonBounds, playerPhoto == null ? "CREATE YOUR SPRITE" : "EDIT YOUR SPRITE");
         drawButton(canvas, thirdButtonBounds, "ALASKA MAP");
@@ -1468,6 +1510,28 @@ public class MooseRushView extends View {
         textPaint.setTextSize(dp(11));
         textPaint.setColor(Color.rgb(220, 235, 239));
         canvas.drawText("Unlocked stages " + (unlockedStage + 1) + "/" + STAGES.length + "   Outfits " + unlockedOutfitCount() + "/" + OUTFIT_COLORS.length, getWidth() / 2f, getHeight() - dp(25), textPaint);
+    }
+
+    private void drawDailyRushButton(Canvas canvas, RectF bounds) {
+        boolean complete = dailyRushCompleteToday();
+        paint.setStyle(Paint.Style.FILL);
+        paint.setColor(complete ? Color.argb(218, 18, 52, 48) : Color.argb(230, 77, 219, 184));
+        canvas.drawRoundRect(bounds, dp(13), dp(13), paint);
+        paint.setColor(Color.argb(50, 255, 255, 255));
+        canvas.drawRoundRect(bounds.left + dp(3), bounds.top + dp(3), bounds.right - dp(3), bounds.top + bounds.height() * 0.46f, dp(10), dp(10), paint);
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setStrokeWidth(dp(1.5f));
+        paint.setColor(Color.argb(220, 255, 246, 207));
+        canvas.drawRoundRect(bounds, dp(13), dp(13), paint);
+        paint.setStyle(Paint.Style.FILL);
+
+        textPaint.setTextAlign(Paint.Align.CENTER);
+        textPaint.setTextSize(dp(9));
+        textPaint.setColor(complete ? Color.rgb(210, 232, 238) : Color.rgb(8, 18, 30));
+        canvas.drawText("DAILY RUSH", bounds.centerX(), bounds.top + dp(15), textPaint);
+        textPaint.setTextSize(dp(10.5f));
+        textPaint.setColor(complete ? Color.WHITE : Color.rgb(8, 18, 30));
+        canvas.drawText(dailyRushLine(), bounds.centerX(), bounds.top + dp(31), textPaint);
     }
 
     private void drawMapScreen(Canvas canvas) {
@@ -2673,7 +2737,7 @@ public class MooseRushView extends View {
 
     private void drawGameOverPanel(Canvas canvas) {
         float panelWidth = Math.min(getWidth() - dp(40), dp(348));
-        float panelHeight = dp(278);
+        float panelHeight = dp(300);
         float left = (getWidth() - panelWidth) / 2f;
         float top = (getHeight() - panelHeight) / 2f;
         RectF panel = new RectF(left, top, left + panelWidth, top + panelHeight);
@@ -2695,13 +2759,14 @@ public class MooseRushView extends View {
         canvas.drawText("Score " + score + " · Hurdles " + gatesPassed + " · Attempt " + stageAttempts, getWidth() / 2f, top + dp(118), textPaint);
         canvas.drawText("Missions " + missionsCompleted + "/3 · Combo " + gameState.bestCombo + " · Rank " + runRank(), getWidth() / 2f, top + dp(142), textPaint);
         canvas.drawText("Tokens +" + runTokensEarned + " · Bank " + trailTokens + " · Rush " + auroraRushes, getWidth() / 2f, top + dp(166), textPaint);
+        canvas.drawText(dailyResultLine(), getWidth() / 2f, top + dp(188), textPaint);
 
         textPaint.setColor(Color.rgb(210, 232, 238));
-        canvas.drawText("Tap anywhere to retry", getWidth() / 2f, top + dp(190), textPaint);
+        canvas.drawText("Tap anywhere to retry", getWidth() / 2f, top + dp(211), textPaint);
 
-        setButton(secondaryButtonBounds, top + dp(227), dp(118), dp(36));
+        setButton(secondaryButtonBounds, top + dp(250), dp(118), dp(36));
         secondaryButtonBounds.offset(-dp(64), 0);
-        setButton(thirdButtonBounds, top + dp(227), dp(118), dp(36));
+        setButton(thirdButtonBounds, top + dp(250), dp(118), dp(36));
         thirdButtonBounds.offset(dp(64), 0);
         drawSmallButton(canvas, secondaryButtonBounds, "MAP");
         drawSmallButton(canvas, thirdButtonBounds, "CUSTOMIZE");
@@ -2709,7 +2774,7 @@ public class MooseRushView extends View {
 
     private void drawStageClearPanel(Canvas canvas) {
         float panelWidth = Math.min(getWidth() - dp(40), dp(348));
-        float panelHeight = dp(286);
+        float panelHeight = dp(304);
         float left = (getWidth() - panelWidth) / 2f;
         float top = (getHeight() - panelHeight) / 2f;
         RectF panel = new RectF(left, top, left + panelWidth, top + panelHeight);
@@ -2732,11 +2797,12 @@ public class MooseRushView extends View {
         textPaint.setTextSize(dp(13));
         canvas.drawText("Rank " + runRank() + " · Missions " + missionsCompleted + "/3 · Stars " + gameState.stars, getWidth() / 2f, top + dp(134), textPaint);
         canvas.drawText("Tokens +" + runTokensEarned + " · Bank " + trailTokens + " · " + (perfectRun ? "Perfect run" : "Lives lost " + livesLostThisRun), getWidth() / 2f, top + dp(160), textPaint);
-        canvas.drawText(stageClearLine(), getWidth() / 2f, top + dp(184), textPaint);
+        canvas.drawText(dailyResultLine(), getWidth() / 2f, top + dp(184), textPaint);
+        canvas.drawText(stageClearLine(), getWidth() / 2f, top + dp(208), textPaint);
 
-        setButton(secondaryButtonBounds, top + dp(225), dp(118), dp(36));
+        setButton(secondaryButtonBounds, top + dp(247), dp(118), dp(36));
         secondaryButtonBounds.offset(-dp(64), 0);
-        setButton(thirdButtonBounds, top + dp(225), dp(118), dp(36));
+        setButton(thirdButtonBounds, top + dp(247), dp(118), dp(36));
         thirdButtonBounds.offset(dp(64), 0);
         drawSmallButton(canvas, secondaryButtonBounds, "MAP");
         drawSmallButton(canvas, thirdButtonBounds, "NEXT");
@@ -2860,6 +2926,15 @@ public class MooseRushView extends View {
         }
     }
 
+    private void startDailyRush() {
+        selectedStage = dailyStageIndex();
+        selectedSeason = STAGES[selectedStage].season;
+        backdropCacheKey = Integer.MIN_VALUE;
+        saveChoices();
+        logEvent("Daily Rush selected: " + STAGES[selectedStage].name + ".");
+        startGame();
+    }
+
     private void saveChoices() {
         prefs.edit()
                 .putInt(PREF_SELECTED_STAGE, selectedStage)
@@ -2868,6 +2943,8 @@ public class MooseRushView extends View {
                 .putInt(PREF_TRAIL_TOKENS, trailTokens)
                 .putInt(PREF_UNLOCKED_OUTFITS, unlockedOutfitMask)
                 .putInt(PREF_TOTAL_MISSIONS, totalMissionsCompleted)
+                .putInt(PREF_DAILY_COMPLETED_DAY, dailyCompletedDay)
+                .putInt(PREF_DAILY_STREAK, dailyStreak)
                 .apply();
     }
 
@@ -2933,6 +3010,46 @@ public class MooseRushView extends View {
         }
         int missing = Math.max(0, OUTFIT_TOKEN_COSTS[selectedOutfit] - trailTokens);
         return OUTFIT_NAMES[selectedOutfit] + " locked, need " + missing;
+    }
+
+    private int currentDailyDayKey() {
+        long now = System.currentTimeMillis();
+        Calendar calendar = Calendar.getInstance();
+        int offset = calendar.getTimeZone().getOffset(now);
+        return (int) ((now + offset) / 86_400_000L);
+    }
+
+    private int dailyStageIndex() {
+        int playableStageCount = clampInt(unlockedStage + 1, 1, STAGES.length);
+        return RunRewardEconomy.dailyStageIndex(currentDailyDayKey(), playableStageCount);
+    }
+
+    private int dailyGateGoal() {
+        StageConfig stage = STAGES[dailyStageIndex()];
+        return RunRewardEconomy.dailyGateGoal(currentDailyDayKey(), stage.goalGates);
+    }
+
+    private boolean dailyRushCompleteToday() {
+        return dailyCompletedDay == currentDailyDayKey();
+    }
+
+    private String dailyRushLine() {
+        StageConfig stage = STAGES[dailyStageIndex()];
+        if (dailyRushCompleteToday()) {
+            return "Complete · streak " + Math.max(1, dailyStreak);
+        }
+        int reward = RunRewardEconomy.dailyReward(dailyStreak);
+        return stage.name + " · " + dailyGateGoal() + " gates · +" + reward;
+    }
+
+    private String dailyResultLine() {
+        if (dailyTokensEarned > 0) {
+            return "Daily +" + dailyTokensEarned + " · streak " + dailyStreak;
+        }
+        if (dailyRushCompleteToday()) {
+            return "Daily complete · streak " + dailyStreak;
+        }
+        return "Daily open · " + STAGES[dailyStageIndex()].name;
     }
 
     private String deathLine() {
