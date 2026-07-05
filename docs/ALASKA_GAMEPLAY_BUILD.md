@@ -57,8 +57,10 @@ Current scoring values:
 - Hit a boss with a snowball: **+25**
 - Defeat a boss: **+100 + stage bonus**
 
-Combo multipliers increase rewards during clean play. Best score, XP, and local
-level persist in shared preferences.
+Combo multipliers increase rewards during clean play. Aurora Rush adds a short
+extra score multiplier when the meter fills from gates, stars, near misses,
+dodges, boss hits, shields, and missions. Best score, XP, Trail Tokens, cosmetic
+outfit unlocks, and local level persist in shared preferences.
 
 ## Stage progression
 
@@ -179,6 +181,11 @@ bear/polar bear motion is anchored to the ground lane, decorative animal halos
 are removed, runner and wildlife source trims are stricter, the ground and jump
 ceiling allow more double-jump headroom without clipping the runner, and runs
 now include missions plus shield pickups that absorb one hit.
+
+`1.9.4-alpha` adds the premium-ready replay loop: Aurora Rush score bursts,
+persistent Trail Tokens, total mission tracking, richer run summaries, and
+cosmetic-only outfit unlocks. These systems are designed to make repeat play
+feel valuable without adding timers, loot boxes, or pay-to-win power.
 
 ## Current development priorities
 

@@ -17,9 +17,9 @@ into real raster game art:
 ## Current Package
 
 ```text
-versionCode: 187
-versionName: 1.8.7-alpha
-badge: ALASKA QUEST v1.8.7
+versionCode: 194
+versionName: 1.9.4-alpha
+badge: ALASKA RUSH v1.9.4
 ```
 
 ## Generated Assets

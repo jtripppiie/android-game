@@ -5,16 +5,16 @@ Use this after GitHub Actions produces the debug APK artifact.
 Current packaged beta:
 
 ```text
-versionCode: 187
-versionName: 1.8.7-alpha
-build badge: ALASKA QUEST v1.8.7
+versionCode: 194
+versionName: 1.9.4-alpha
+build badge: ALASKA RUSH v1.9.4
 ```
 
 ## Install test
 
 1. Download `you-rush-alaska-debug-apk` from the latest successful workflow run.
 2. Extract the ZIP if GitHub downloaded it as a ZIP.
-3. Install `you-rush-alaska-1.8.7-alpha-187-debug.apk` on an Android phone.
+3. Install `you-rush-alaska-1.9.4-alpha-194-debug.apk` on an Android phone.
 4. Allow installation from the browser/files app if Android prompts you.
 5. Open **You Rush**.
 6. Confirm the debug/version badge is visible and matches the packaged beta.
@@ -66,10 +66,13 @@ Confirm score changes:
 - Tight dodges can trigger a near-miss score popup without feeling unfair.
 - Run missions appear before/during runs and report progress on result screens.
 - Shield pickups appear, activate an obvious aura, and absorb one hit.
+- Aurora Rush meter fills from skilled play and triggers a readable score-burst mode.
+- Trail Tokens are awarded on game over or stage clear and persist after restarting the app.
 - Hitting a boss with snowballs increases score.
 - Defeating a boss gives a larger stage-clear bonus with combo and star rewards.
 - Best score persists after restarting the app.
 - XP and level persist after restarting the app.
+- Cosmetic outfit unlocks spend Trail Tokens only and never change gameplay power.
 
 ## Stage test
 
@@ -102,6 +105,7 @@ Check small and large screens:
 - Boss health bar never overlaps the top HUD.
 - Game-over and stage-clear content fits on small phones.
 - Button labels and touch targets remain usable in portrait orientation.
+- Customize shows locked outfit prices, unlocked outfits, and current token count.
 - Generated background plates carry the mountains; old vector-style mountain layers should not appear.
 - Winter/dark stages show denser snow-covered tree layers without jumpy resets.
 - Polar bear and wolf sprites animate cleanly without magenta background artifacts.

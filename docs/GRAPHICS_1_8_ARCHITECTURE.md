@@ -154,9 +154,9 @@ Now:
 The active beta package is:
 
 ```text
-versionCode: 187
-versionName: 1.8.7-alpha
-badge: ALASKA QUEST v1.8.7
+versionCode: 194
+versionName: 1.9.4-alpha
+badge: ALASKA RUSH v1.9.4
 ```
 
 This branch is an architecture alpha. It is intended for testing the new
@@ -217,6 +217,15 @@ as a runner under the uploaded/default head.
 - Adds run missions and shield pickups for a clearer one-more-run loop.
 - Nudges the progressive difficulty curve upward while preserving fair minimum
   spawn spacing.
+
+`1.9.4-alpha` is the replay-value pass:
+
+- Adds an Aurora Rush meter that fills through skill events and creates a short
+  score-burst mode with stronger world feedback.
+- Adds persistent Trail Tokens, run reward summaries, and cosmetic-only outfit
+  unlocks.
+- Shows long-term progress on the main menu and run result panels.
+- Keeps monetization hooks cosmetic and progress-based rather than pay-to-win.
 
 ## What still needs extraction
 

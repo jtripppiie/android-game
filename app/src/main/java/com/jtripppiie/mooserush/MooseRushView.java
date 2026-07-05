@@ -57,12 +57,32 @@ public class MooseRushView extends View {
     private static final String PREF_MUTED = "muted";
     private static final String PREF_XP = "xp";
     private static final String PREF_OUTFIT = "outfit";
+    private static final String PREF_TRAIL_TOKENS = "trail_tokens";
+    private static final String PREF_UNLOCKED_OUTFITS = "unlocked_outfits";
+    private static final String PREF_TOTAL_MISSIONS = "total_missions";
 
     private static final int[] OUTFIT_COLORS = {
             Color.rgb(52, 134, 196),
             Color.rgb(228, 81, 87),
             Color.rgb(65, 155, 104),
-            Color.rgb(156, 105, 202)
+            Color.rgb(156, 105, 202),
+            Color.rgb(255, 177, 70),
+            Color.rgb(132, 213, 232),
+            Color.rgb(255, 98, 84),
+            Color.rgb(255, 246, 207)
+    };
+    private static final String[] OUTFIT_NAMES = {
+            "BLUE TRAIL",
+            "FIRE PARKA",
+            "FOREST RUN",
+            "PURPLE SKY",
+            "GOLD RUSH",
+            "AURORA ICE",
+            "SALMON FLASH",
+            "MIDNIGHT GLOW"
+    };
+    private static final int[] OUTFIT_TOKEN_COSTS = {
+            0, 0, 0, 0, 35, 55, 75, 100
     };
 
     private static final String[] SEASONS = {
@@ -84,6 +104,8 @@ public class MooseRushView extends View {
     private static final float PLAYER_HEAD_DRAW_OFFSET = 2.18f;
     private static final float PLAYFIELD_BOTTOM_MARGIN_DP = 62f;
     private static final float JUMP_CEILING_TOP_MARGIN_DP = 40f;
+    private static final float AURORA_METER_MAX = 100f;
+    private static final float AURORA_RUSH_SECONDS = 6.5f;
     private static final int[][] MOOSE_FRAME_TRIMS = {
             {14, 226, 362, 527},
             {0, 224, 362, 528},
@@ -184,6 +206,12 @@ public class MooseRushView extends View {
     private int missionStarGoal = 0;
     private int missionComboGoal = 0;
     private int missionsCompleted = 0;
+    private int totalMissionsCompleted = 0;
+    private int trailTokens = 0;
+    private int runTokensEarned = 0;
+    private int unlockedOutfitMask = RunRewardEconomy.BASE_OUTFIT_UNLOCK_MASK;
+    private int livesLostThisRun = 0;
+    private int auroraRushes = 0;
     private int backdropCacheWidth = 0;
     private int backdropCacheHeight = 0;
     private int backdropCacheKey = Integer.MIN_VALUE;
@@ -202,6 +230,8 @@ public class MooseRushView extends View {
     private boolean missionHurdlesComplete = false;
     private boolean missionStarsComplete = false;
     private boolean missionComboComplete = false;
+    private boolean perfectRun = true;
+    private boolean runRewardsAwarded = false;
     private int jumpsUsed = 0;
 
     private long lastFrameNanos = 0L;
@@ -223,6 +253,8 @@ public class MooseRushView extends View {
     private float bossWarningTimer = 0f;
     private float coyoteTimer = 0f;
     private float jumpBufferTimer = 0f;
+    private float auroraMeter = 0f;
+    private float auroraRushTimer = 0f;
     private float playerX;
     private float playerY;
     private float playerVelocityY;
@@ -252,6 +284,12 @@ public class MooseRushView extends View {
         selectedSeason = clampInt(prefs.getInt(PREF_SELECTED_SEASON, STAGES[selectedStage].season), 0, SEASONS.length - 1);
         unlockedStage = clampInt(prefs.getInt(PREF_UNLOCKED_STAGE, 0), 0, STAGES.length - 1);
         selectedOutfit = clampInt(prefs.getInt(PREF_OUTFIT, 0), 0, OUTFIT_COLORS.length - 1);
+        trailTokens = prefs.getInt(PREF_TRAIL_TOKENS, 0);
+        unlockedOutfitMask = prefs.getInt(PREF_UNLOCKED_OUTFITS, RunRewardEconomy.BASE_OUTFIT_UNLOCK_MASK);
+        totalMissionsCompleted = prefs.getInt(PREF_TOTAL_MISSIONS, 0);
+        if (!isOutfitUnlocked(selectedOutfit)) {
+            selectedOutfit = firstUnlockedOutfit();
+        }
         debugOverlay = prefs.getBoolean(PREF_DEBUG_OVERLAY, false);
         gameState.muted = prefs.getBoolean(PREF_MUTED, false);
         gameState.xp = prefs.getInt(PREF_XP, 0);
@@ -478,9 +516,7 @@ public class MooseRushView extends View {
                 backdropCacheKey = Integer.MIN_VALUE;
                 logEvent("Season set to " + SEASONS[selectedSeason] + ".");
             } else if (outfitButtonBounds.contains(x, y)) {
-                selectedOutfit = (selectedOutfit + 1) % OUTFIT_COLORS.length;
-                saveChoices();
-                logEvent("Outfit color changed.");
+                handleOutfitTap();
             }
             return true;
         }
@@ -591,6 +627,7 @@ public class MooseRushView extends View {
         powerUps.clear();
         shots.clear();
         effects.clearAll();
+        selectedOutfit = effectiveOutfitIndex();
         score = 0;
         runStageScore = 0;
         gatesPassed = 0;
@@ -614,6 +651,13 @@ public class MooseRushView extends View {
         stageClearTimer = 0f;
         runCalloutTimer = 0f;
         bossWarningTimer = 0f;
+        auroraMeter = 0f;
+        auroraRushTimer = 0f;
+        auroraRushes = 0;
+        runTokensEarned = 0;
+        livesLostThisRun = 0;
+        perfectRun = true;
+        runRewardsAwarded = false;
         runCallout = "";
         state = STATE_READY;
         readyTimer = 0f;
@@ -696,6 +740,7 @@ public class MooseRushView extends View {
         updateVisualEffects(dt);
         shotCooldown = Math.max(0f, shotCooldown - dt);
         damageFlash = Math.max(0f, damageFlash - dt);
+        updateAuroraRush(dt);
         jumpBufferTimer = Math.max(0f, jumpBufferTimer - dt);
         coyoteTimer = grounded ? RunnerTuning.COYOTE_SECONDS : Math.max(0f, coyoteTimer - dt);
         tryConsumeJumpBuffer();
@@ -794,6 +839,7 @@ public class MooseRushView extends View {
                 int awarded = addScore(10, "Hurdle cleared");
                 effects.spawnScorePopup("+" + awarded, gate.x + gate.width / 2f, getGroundY() - gate.height - dp(20), Color.rgb(255, 218, 121));
                 effects.spawnSparkBurst(gate.x + gate.width / 2f, getGroundY() - gate.height, 8, Color.rgb(255, 218, 121));
+                addAuroraMeter(8f, "Hurdle rhythm");
                 showComboCallout();
                 logEvent("Hurdle " + gatesPassed + "/" + STAGES[selectedStage].goalGates + " cleared.");
             }
@@ -830,6 +876,7 @@ public class MooseRushView extends View {
                 gameState.addCombo();
                 int awarded = addScore(4, hazard.label + " dodged");
                 effects.spawnScorePopup("DODGE +" + awarded, hazard.x, hazard.y - hazard.radius, Color.rgb(210, 232, 238));
+                addAuroraMeter(6f, "Hazard dodge");
                 showComboCallout();
             }
             if (hazard.x + hazard.radius < -dp(36)) {
@@ -882,6 +929,7 @@ public class MooseRushView extends View {
             int awarded = addScore(6, "Near miss");
             effects.spawnScorePopup("NEAR +" + awarded, playerX + dp(20), playerY - playerRadius * 1.6f, Color.rgb(132, 213, 232));
             effects.spawnSparkBurst(playerX, playerY, 7, Color.rgb(132, 213, 232));
+            addAuroraMeter(16f, "Near miss");
             showComboCallout();
         }
     }
@@ -935,6 +983,7 @@ public class MooseRushView extends View {
                 int awarded = addScore(25, "Boss hit");
                 effects.spawnScorePopup("HIT +" + awarded, bossX, bossY - bossRadius(), Color.rgb(255, 246, 207));
                 effects.spawnSparkBurst(bossX, bossY, 14, Color.rgb(255, 98, 84));
+                addAuroraMeter(8f, "Boss hit");
                 playSound("hit");
                 logEvent(STAGES[selectedStage].bossName + " hit. HP " + Math.max(0, bossHealth) + "/" + bossMaxHealth + ".");
                 if (bossHealth <= 0) {
@@ -949,6 +998,7 @@ public class MooseRushView extends View {
         gates.clear();
         hazards.clear();
         stars.clear();
+        powerUps.clear();
         bossActive = true;
         bossTimer = 0f;
         bossHealth = STAGES[selectedStage].bossHealth;
@@ -1000,6 +1050,7 @@ public class MooseRushView extends View {
         showRunCallout("STAGE CLEAR", 2.0f);
         worldFlash = Math.max(worldFlash, 0.24f);
         playSound("medal");
+        awardRunTokens(true);
         if (score > bestScore) {
             bestScore = score;
         }
@@ -1010,6 +1061,8 @@ public class MooseRushView extends View {
                 .putInt(PREF_BEST_SCORE, bestScore)
                 .putInt(PREF_UNLOCKED_STAGE, unlockedStage)
                 .putInt(PREF_XP, gameState.xp)
+                .putInt(PREF_TRAIL_TOKENS, trailTokens)
+                .putInt(PREF_TOTAL_MISSIONS, totalMissionsCompleted)
                 .apply();
         state = STATE_STAGE_CLEAR;
         stageClearTimer = 0f;
@@ -1018,6 +1071,7 @@ public class MooseRushView extends View {
 
     private void endGame(String reason) {
         gameState.breakCombo();
+        perfectRun = false;
         if (gameState.shieldActive) {
             gameState.shieldActive = false;
             resetAfterHit();
@@ -1027,19 +1081,46 @@ public class MooseRushView extends View {
         }
         if (gameState.lives > 1) {
             gameState.lives--;
+            livesLostThisRun++;
             resetAfterHit();
             playSound("hurt");
             logEvent("Life lost: " + reason + " Lives " + gameState.lives + ".");
             return;
         }
+        livesLostThisRun++;
+        awardRunTokens(false);
         state = STATE_GAME_OVER;
         screenShake = Math.max(screenShake, 0.18f);
         worldFlash = Math.max(worldFlash, 0.18f);
         if (score > bestScore) {
             bestScore = score;
-            prefs.edit().putInt(PREF_BEST_SCORE, bestScore).putInt(PREF_XP, gameState.xp).apply();
+            prefs.edit()
+                    .putInt(PREF_BEST_SCORE, bestScore)
+                    .putInt(PREF_XP, gameState.xp)
+                    .putInt(PREF_TRAIL_TOKENS, trailTokens)
+                    .putInt(PREF_TOTAL_MISSIONS, totalMissionsCompleted)
+                    .apply();
+        } else {
+            prefs.edit()
+                    .putInt(PREF_XP, gameState.xp)
+                    .putInt(PREF_TRAIL_TOKENS, trailTokens)
+                    .putInt(PREF_TOTAL_MISSIONS, totalMissionsCompleted)
+                    .apply();
         }
         logEvent("Game over: " + reason + " Score " + score + ".");
+    }
+
+    private void awardRunTokens(boolean stageCleared) {
+        if (runRewardsAwarded) {
+            return;
+        }
+        runRewardsAwarded = true;
+        runTokensEarned = RunRewardEconomy.tokensForRun(missionsCompleted, gameState.bestCombo, gameState.stars, stageCleared, perfectRun);
+        trailTokens += runTokensEarned;
+        if (runTokensEarned > 0) {
+            effects.spawnScorePopup("TOKENS +" + runTokensEarned, getWidth() / 2f, getHeight() * 0.46f, Color.rgb(255, 218, 121));
+            logEvent("Trail Tokens +" + runTokensEarned + ". Bank " + trailTokens + ".");
+        }
     }
 
     private void resetAfterHit() {
@@ -1065,7 +1146,7 @@ public class MooseRushView extends View {
     }
 
     private int addScore(int amount, String reason) {
-        int multiplier = scoreMultiplierForCombo(gameState.combo);
+        int multiplier = activeScoreMultiplier();
         int awarded = amount * multiplier;
         score += awarded;
         runStageScore += awarded;
@@ -1077,10 +1158,18 @@ public class MooseRushView extends View {
         return awarded;
     }
 
-    private void showComboCallout() {
+    private int activeScoreMultiplier() {
         int multiplier = scoreMultiplierForCombo(gameState.combo);
+        if (auroraRushTimer > 0f) {
+            multiplier = Math.min(5, multiplier + 1);
+        }
+        return multiplier;
+    }
+
+    private void showComboCallout() {
+        int multiplier = activeScoreMultiplier();
         if (gameState.combo >= 3 || multiplier > 1) {
-            showRunCallout("COMBO " + gameState.combo + "  SCORE x" + multiplier, 1.15f);
+            showRunCallout((auroraRushTimer > 0f ? "AURORA " : "") + "COMBO " + gameState.combo + "  SCORE x" + multiplier, 1.15f);
         }
         checkMissionProgress();
     }
@@ -1088,6 +1177,39 @@ public class MooseRushView extends View {
     private void showRunCallout(String label, float seconds) {
         runCallout = label;
         runCalloutTimer = Math.max(runCalloutTimer, seconds);
+    }
+
+    private void updateAuroraRush(float dt) {
+        if (auroraRushTimer <= 0f) {
+            return;
+        }
+        auroraRushTimer = Math.max(0f, auroraRushTimer - dt);
+        if (auroraRushTimer <= 0f) {
+            auroraMeter = 0f;
+            showRunCallout("AURORA BANKED", 0.95f);
+        }
+    }
+
+    private void addAuroraMeter(float amount, String reason) {
+        if (state != STATE_RUNNING || auroraRushTimer > 0f) {
+            return;
+        }
+        auroraMeter = Math.min(AURORA_METER_MAX, auroraMeter + amount);
+        if (auroraMeter >= AURORA_METER_MAX) {
+            activateAuroraRush(reason);
+        }
+    }
+
+    private void activateAuroraRush(String reason) {
+        auroraMeter = AURORA_METER_MAX;
+        auroraRushTimer = AURORA_RUSH_SECONDS;
+        auroraRushes++;
+        worldFlash = Math.max(worldFlash, 0.18f);
+        screenShake = Math.max(screenShake, 0.08f);
+        effects.spawnSparkBurst(playerX, playerY - playerRadius * 1.2f, 24, Color.rgb(132, 213, 232));
+        showRunCallout("AURORA RUSH", 1.8f);
+        playSound("medal");
+        logEvent("Aurora Rush triggered by " + reason + ".");
     }
 
     private void checkMissionProgress() {
@@ -1111,6 +1233,9 @@ public class MooseRushView extends View {
         int awarded = addScore(35 + selectedStage * 5, "Mission " + label);
         effects.spawnScorePopup(label + " +" + awarded, getWidth() / 2f, getHeight() * 0.34f, Color.rgb(132, 213, 232));
         effects.spawnSparkBurst(getWidth() / 2f, getHeight() * 0.34f, 18, Color.rgb(132, 213, 232));
+        totalMissionsCompleted++;
+        prefs.edit().putInt(PREF_TOTAL_MISSIONS, totalMissionsCompleted).apply();
+        addAuroraMeter(22f, "Mission complete");
         showRunCallout("MISSION COMPLETE", 1.45f);
         playSound("medal");
         logEvent("Mission complete: " + label + ".");
@@ -1157,6 +1282,7 @@ public class MooseRushView extends View {
                 int awarded = addScore(15, "Star collected");
                 effects.spawnScorePopup("STAR +" + awarded, star.x, star.y - dp(12), Color.rgb(255, 218, 121));
                 effects.spawnSparkBurst(star.x, star.y, 12, Color.rgb(255, 218, 121));
+                addAuroraMeter(18f, "Star collected");
                 showComboCallout();
                 playSound("medal");
                 continue;
@@ -1192,6 +1318,7 @@ public class MooseRushView extends View {
             int awarded = addScore(20, "Shield pickup");
             effects.spawnScorePopup("SHIELD +" + awarded, powerUp.x, powerUp.y - dp(12), Color.rgb(132, 213, 232));
             effects.spawnSparkBurst(powerUp.x, powerUp.y, 16, Color.rgb(132, 213, 232));
+            addAuroraMeter(12f, "Shield pickup");
             showRunCallout("AURORA SHIELD", 1.35f);
             playSound("medal");
             checkMissionProgress();
@@ -1337,7 +1464,10 @@ public class MooseRushView extends View {
         textPaint.setTextAlign(Paint.Align.CENTER);
         textPaint.setTextSize(dp(13));
         textPaint.setColor(Color.WHITE);
-        canvas.drawText("Best " + bestScore + "   Unlocked " + (unlockedStage + 1) + "/" + STAGES.length, getWidth() / 2f, getHeight() - dp(30), textPaint);
+        canvas.drawText("Best " + bestScore + "   Tokens " + trailTokens + "   Missions " + totalMissionsCompleted, getWidth() / 2f, getHeight() - dp(45), textPaint);
+        textPaint.setTextSize(dp(11));
+        textPaint.setColor(Color.rgb(220, 235, 239));
+        canvas.drawText("Unlocked stages " + (unlockedStage + 1) + "/" + STAGES.length + "   Outfits " + unlockedOutfitCount() + "/" + OUTFIT_COLORS.length, getWidth() / 2f, getHeight() - dp(25), textPaint);
     }
 
     private void drawMapScreen(Canvas canvas) {
@@ -1407,7 +1537,7 @@ public class MooseRushView extends View {
         drawButton(canvas, photoButtonBounds, playerPhoto == null ? "SELECT PLAYER PHOTO" : "CHANGE PLAYER PHOTO");
         drawButton(canvas, resetPhotoButtonBounds, "RESET TO DEFAULT SPRITE");
         drawButton(canvas, seasonButtonBounds, "SEASON: " + SEASONS[selectedSeason]);
-        drawButton(canvas, outfitButtonBounds, "OUTFIT COLOR");
+        drawButton(canvas, outfitButtonBounds, outfitButtonLabel());
         drawOutfitSwatch(canvas, outfitButtonBounds);
 
         textPaint.setTextSize(dp(14));
@@ -1415,7 +1545,7 @@ public class MooseRushView extends View {
         canvas.drawText(playerPhoto == null ? "Default runner is active." : "Photo sprite ready for this run.", x, y + buttonGap * 3f + dp(42), textPaint);
         textPaint.setTextSize(dp(12));
         textPaint.setColor(Color.rgb(220, 235, 239));
-        canvas.drawText("Stage: " + STAGES[selectedStage].name + "   Controls: LEFT / RIGHT / JUMP / FIRE", x, y + buttonGap * 3f + dp(62), textPaint);
+        canvas.drawText("Tokens " + trailTokens + "   Outfit " + outfitStatusLabel(), x, y + buttonGap * 3f + dp(62), textPaint);
     }
 
     private void drawWorld(Canvas canvas) {
@@ -1450,6 +1580,7 @@ public class MooseRushView extends View {
         }
 
         drawPlayerLaneGuide(canvas);
+        drawAuroraRushTrail(canvas);
         effects.drawParticles(canvas);
         drawShieldAura(canvas);
         drawCharacter(canvas, playerX, playerY - playerRadius * PLAYER_HEAD_DRAW_OFFSET, playerRadius);
@@ -1681,6 +1812,25 @@ public class MooseRushView extends View {
                 canvas.drawRoundRect(left, y, left + width, y + dp(3), dp(2), dp(2), paint);
             }
         }
+    }
+
+    private void drawAuroraRushTrail(Canvas canvas) {
+        if (auroraRushTimer <= 0f) {
+            return;
+        }
+        float pct = Math.min(1f, auroraRushTimer / AURORA_RUSH_SECONDS);
+        float ground = getGroundY();
+        paint.setStyle(Paint.Style.FILL);
+        paint.setColor(Color.argb(Math.round(74 + 90 * pct), 77, 219, 184));
+        for (int i = 0; i < 5; i++) {
+            float y = ground - dp(44 + i * 18);
+            float offset = (sceneryScroll * (0.45f + i * 0.08f)) % dp(230);
+            for (float x = -offset - dp(40); x < getWidth() + dp(260); x += dp(230)) {
+                canvas.drawRoundRect(x, y, x + dp(98 + i * 12), y + dp(4), dp(3), dp(3), paint);
+            }
+        }
+        paint.setColor(Color.argb(Math.round(56 + 66 * pct), 255, 218, 121));
+        canvas.drawOval(playerX - playerRadius * 2.0f, ground - dp(15), playerX + playerRadius * 2.0f, ground + dp(12), paint);
     }
 
     private void drawHazard(Canvas canvas, Hazard hazard) {
@@ -2169,12 +2319,12 @@ public class MooseRushView extends View {
         float barLeft = dp(10);
         float barTop = dp(10);
         float barRight = getWidth() - dp(10);
-        float barBottom = dp(64);
+        float barBottom = dp(68);
         float progress = STAGES[selectedStage].goalGates <= 0 ? 0f : Math.min(1f, gatesPassed / (float) STAGES[selectedStage].goalGates);
         if (bossActive) {
             progress = bossMaxHealth <= 0 ? 0f : 1f - Math.max(0f, bossHealth / (float) bossMaxHealth);
         }
-        int multiplier = scoreMultiplierForCombo(gameState.combo);
+        int multiplier = activeScoreMultiplier();
         paint.setStyle(Paint.Style.FILL);
         paint.setColor(Color.argb(172, 10, 18, 29));
         canvas.drawRoundRect(barLeft, barTop, barRight, barBottom, dp(10), dp(10), paint);
@@ -2214,8 +2364,9 @@ public class MooseRushView extends View {
                 : "HURDLES " + gatesPassed + "/" + STAGES[selectedStage].goalGates;
         canvas.drawText(objective, getWidth() / 2f, dp(44), textPaint);
         textPaint.setColor(Color.WHITE);
-        String comboLabel = "COMBO " + gameState.combo + "   SCORE x" + multiplier;
+        String comboLabel = (auroraRushTimer > 0f ? "AURORA " : "") + "COMBO " + gameState.combo + "   SCORE x" + multiplier;
         canvas.drawText(comboLabel, getWidth() / 2f, dp(58), textPaint);
+        drawAuroraMeter(canvas, progressLeft, progressRight, dp(61), dp(65));
 
         textPaint.setTextAlign(Paint.Align.RIGHT);
         textPaint.setTextSize(dp(10));
@@ -2223,7 +2374,7 @@ public class MooseRushView extends View {
         canvas.drawText(STAGES[selectedStage].name, getWidth() - dp(20), dp(25), textPaint);
         textPaint.setTextSize(dp(11));
         textPaint.setColor(Color.WHITE);
-        canvas.drawText("BEST " + bestScore + "   LV " + gameState.level + (gameState.muted ? "  MUTE" : ""), getWidth() - dp(20), dp(47), textPaint);
+        canvas.drawText("BEST " + bestScore + "   LV " + gameState.level + "   T " + trailTokens + (gameState.muted ? "  MUTE" : ""), getWidth() - dp(20), dp(47), textPaint);
 
         drawHudIcons(canvas);
         drawActionOverlay(canvas);
@@ -2234,6 +2385,22 @@ public class MooseRushView extends View {
         }
 
         textPaint.setTextAlign(Paint.Align.CENTER);
+    }
+
+    private void drawAuroraMeter(Canvas canvas, float left, float right, float top, float bottom) {
+        float pct = auroraRushTimer > 0f
+                ? Math.min(1f, auroraRushTimer / AURORA_RUSH_SECONDS)
+                : Math.min(1f, auroraMeter / AURORA_METER_MAX);
+        paint.setStyle(Paint.Style.FILL);
+        paint.setColor(Color.argb(145, 4, 12, 20));
+        canvas.drawRoundRect(left, top, right, bottom, dp(3), dp(3), paint);
+        paint.setColor(auroraRushTimer > 0f ? Color.rgb(77, 219, 184) : Color.rgb(132, 213, 232));
+        canvas.drawRoundRect(left, top, left + (right - left) * pct, bottom, dp(3), dp(3), paint);
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setStrokeWidth(dp(1));
+        paint.setColor(Color.argb(170, 255, 246, 207));
+        canvas.drawRoundRect(left, top, right, bottom, dp(3), dp(3), paint);
+        paint.setStyle(Paint.Style.FILL);
     }
 
     private void drawHudIcons(Canvas canvas) {
@@ -2506,7 +2673,7 @@ public class MooseRushView extends View {
 
     private void drawGameOverPanel(Canvas canvas) {
         float panelWidth = Math.min(getWidth() - dp(40), dp(348));
-        float panelHeight = dp(258);
+        float panelHeight = dp(278);
         float left = (getWidth() - panelWidth) / 2f;
         float top = (getHeight() - panelHeight) / 2f;
         RectF panel = new RectF(left, top, left + panelWidth, top + panelHeight);
@@ -2527,13 +2694,14 @@ public class MooseRushView extends View {
         textPaint.setColor(Color.rgb(255, 218, 121));
         canvas.drawText("Score " + score + " · Hurdles " + gatesPassed + " · Attempt " + stageAttempts, getWidth() / 2f, top + dp(118), textPaint);
         canvas.drawText("Missions " + missionsCompleted + "/3 · Combo " + gameState.bestCombo + " · Rank " + runRank(), getWidth() / 2f, top + dp(142), textPaint);
+        canvas.drawText("Tokens +" + runTokensEarned + " · Bank " + trailTokens + " · Rush " + auroraRushes, getWidth() / 2f, top + dp(166), textPaint);
 
         textPaint.setColor(Color.rgb(210, 232, 238));
-        canvas.drawText("Tap anywhere to retry", getWidth() / 2f, top + dp(169), textPaint);
+        canvas.drawText("Tap anywhere to retry", getWidth() / 2f, top + dp(190), textPaint);
 
-        setButton(secondaryButtonBounds, top + dp(207), dp(118), dp(36));
+        setButton(secondaryButtonBounds, top + dp(227), dp(118), dp(36));
         secondaryButtonBounds.offset(-dp(64), 0);
-        setButton(thirdButtonBounds, top + dp(207), dp(118), dp(36));
+        setButton(thirdButtonBounds, top + dp(227), dp(118), dp(36));
         thirdButtonBounds.offset(dp(64), 0);
         drawSmallButton(canvas, secondaryButtonBounds, "MAP");
         drawSmallButton(canvas, thirdButtonBounds, "CUSTOMIZE");
@@ -2541,7 +2709,7 @@ public class MooseRushView extends View {
 
     private void drawStageClearPanel(Canvas canvas) {
         float panelWidth = Math.min(getWidth() - dp(40), dp(348));
-        float panelHeight = dp(266);
+        float panelHeight = dp(286);
         float left = (getWidth() - panelWidth) / 2f;
         float top = (getHeight() - panelHeight) / 2f;
         RectF panel = new RectF(left, top, left + panelWidth, top + panelHeight);
@@ -2563,11 +2731,12 @@ public class MooseRushView extends View {
         textPaint.setColor(Color.rgb(210, 232, 238));
         textPaint.setTextSize(dp(13));
         canvas.drawText("Rank " + runRank() + " · Missions " + missionsCompleted + "/3 · Stars " + gameState.stars, getWidth() / 2f, top + dp(134), textPaint);
-        canvas.drawText(stageClearLine(), getWidth() / 2f, top + dp(160), textPaint);
+        canvas.drawText("Tokens +" + runTokensEarned + " · Bank " + trailTokens + " · " + (perfectRun ? "Perfect run" : "Lives lost " + livesLostThisRun), getWidth() / 2f, top + dp(160), textPaint);
+        canvas.drawText(stageClearLine(), getWidth() / 2f, top + dp(184), textPaint);
 
-        setButton(secondaryButtonBounds, top + dp(205), dp(118), dp(36));
+        setButton(secondaryButtonBounds, top + dp(225), dp(118), dp(36));
         secondaryButtonBounds.offset(-dp(64), 0);
-        setButton(thirdButtonBounds, top + dp(205), dp(118), dp(36));
+        setButton(thirdButtonBounds, top + dp(225), dp(118), dp(36));
         thirdButtonBounds.offset(dp(64), 0);
         drawSmallButton(canvas, secondaryButtonBounds, "MAP");
         drawSmallButton(canvas, thirdButtonBounds, "NEXT");
@@ -2611,11 +2780,22 @@ public class MooseRushView extends View {
         paint.setStyle(Paint.Style.FILL);
         paint.setColor(OUTFIT_COLORS[selectedOutfit]);
         canvas.drawRoundRect(left, top, left + size, top + size, dp(5), dp(5), paint);
+        if (!isOutfitUnlocked(selectedOutfit)) {
+            paint.setColor(Color.argb(150, 0, 0, 0));
+            canvas.drawRoundRect(left, top, left + size, top + size, dp(5), dp(5), paint);
+        }
         paint.setStyle(Paint.Style.STROKE);
         paint.setStrokeWidth(dp(2));
         paint.setColor(Color.rgb(24, 30, 38));
         canvas.drawRoundRect(left, top, left + size, top + size, dp(5), dp(5), paint);
         paint.setStyle(Paint.Style.FILL);
+
+        if (!isOutfitUnlocked(selectedOutfit)) {
+            textPaint.setTextAlign(Paint.Align.CENTER);
+            textPaint.setTextSize(dp(9));
+            textPaint.setColor(Color.WHITE);
+            canvas.drawText("LOCK", left + size / 2f, top + size * 0.64f, textPaint);
+        }
     }
 
     private void drawSmallButton(Canvas canvas, RectF bounds, String label) {
@@ -2684,8 +2864,75 @@ public class MooseRushView extends View {
         prefs.edit()
                 .putInt(PREF_SELECTED_STAGE, selectedStage)
                 .putInt(PREF_SELECTED_SEASON, selectedSeason)
-                .putInt(PREF_OUTFIT, selectedOutfit)
+                .putInt(PREF_OUTFIT, effectiveOutfitIndex())
+                .putInt(PREF_TRAIL_TOKENS, trailTokens)
+                .putInt(PREF_UNLOCKED_OUTFITS, unlockedOutfitMask)
+                .putInt(PREF_TOTAL_MISSIONS, totalMissionsCompleted)
                 .apply();
+    }
+
+    private void handleOutfitTap() {
+        if (!isOutfitUnlocked(selectedOutfit)) {
+            int cost = OUTFIT_TOKEN_COSTS[selectedOutfit];
+            if (RunRewardEconomy.canUnlockOutfit(trailTokens, unlockedOutfitMask, selectedOutfit, OUTFIT_TOKEN_COSTS)) {
+                trailTokens -= cost;
+                unlockedOutfitMask = RunRewardEconomy.unlockOutfit(unlockedOutfitMask, selectedOutfit);
+                saveChoices();
+                effects.spawnSparkBurst(getWidth() * 0.68f, getHeight() * 0.44f, 18, OUTFIT_COLORS[selectedOutfit]);
+                showRunCallout("OUTFIT UNLOCKED", 1.2f);
+                playSound("medal");
+                logEvent("Unlocked outfit: " + OUTFIT_NAMES[selectedOutfit] + ".");
+                return;
+            }
+            logEvent("Need " + Math.max(0, cost - trailTokens) + " more Trail Tokens for " + OUTFIT_NAMES[selectedOutfit] + ".");
+        }
+        selectedOutfit = (selectedOutfit + 1) % OUTFIT_COLORS.length;
+        saveChoices();
+        logEvent("Outfit preview: " + OUTFIT_NAMES[selectedOutfit] + ".");
+    }
+
+    private boolean isOutfitUnlocked(int index) {
+        return RunRewardEconomy.isOutfitUnlocked(unlockedOutfitMask, index);
+    }
+
+    private int effectiveOutfitIndex() {
+        return isOutfitUnlocked(selectedOutfit) ? selectedOutfit : firstUnlockedOutfit();
+    }
+
+    private int firstUnlockedOutfit() {
+        for (int i = 0; i < OUTFIT_COLORS.length; i++) {
+            if (isOutfitUnlocked(i)) {
+                return i;
+            }
+        }
+        unlockedOutfitMask = RunRewardEconomy.BASE_OUTFIT_UNLOCK_MASK;
+        return 0;
+    }
+
+    private int unlockedOutfitCount() {
+        int count = 0;
+        for (int i = 0; i < OUTFIT_COLORS.length; i++) {
+            if (isOutfitUnlocked(i)) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    private String outfitButtonLabel() {
+        String name = OUTFIT_NAMES[selectedOutfit];
+        if (isOutfitUnlocked(selectedOutfit)) {
+            return "OUTFIT: " + name;
+        }
+        return "UNLOCK " + OUTFIT_TOKEN_COSTS[selectedOutfit] + " TOKENS";
+    }
+
+    private String outfitStatusLabel() {
+        if (isOutfitUnlocked(selectedOutfit)) {
+            return OUTFIT_NAMES[selectedOutfit] + " unlocked";
+        }
+        int missing = Math.max(0, OUTFIT_TOKEN_COSTS[selectedOutfit] - trailTokens);
+        return OUTFIT_NAMES[selectedOutfit] + " locked, need " + missing;
     }
 
     private String deathLine() {

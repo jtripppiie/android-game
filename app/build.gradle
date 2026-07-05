@@ -14,11 +14,11 @@ android {
         applicationId "com.jtripppiie.mooserush"
         minSdk 23
         targetSdk 35
-        versionCode 187
-        versionName "1.8.7-alpha"
+        versionCode 194
+        versionName "1.9.4-alpha"
 
         buildConfigField "String", "BUILD_CHANNEL", '"ALASKA BETA"'
-        buildConfigField "String", "BUILD_BADGE", '"ALASKA QUEST v1.8.7"'
+        buildConfigField "String", "BUILD_BADGE", '"ALASKA RUSH v1.9.4"'
         buildConfigField "boolean", "SHOW_VERSION_BADGE", "true"
     }
 
