@@ -46,8 +46,8 @@ effects should not remain tangled into the main view.
 - `MooseRushView.java`: reduced direct graphics ownership by delegating player
   drawing, drawable lookup, particle updates, and popup drawing to dedicated
   classes.
-- `app/build.gradle`: bumped the debug package to `1.8.4-alpha` /
-  `versionCode 184` and updated the visible build badge.
+- `app/build.gradle`: bumped the debug package to `1.8.5-alpha` /
+  `versionCode 185` and updated the visible build badge.
 - `README.md`, `docs/VERSIONING.md`, and `docs/ANDROID_TEST_CHECKLIST.md`:
   updated package names, badge text, and test instructions for the current
   1.8.x graphics alpha.
@@ -150,9 +150,9 @@ Now:
 The active beta package is:
 
 ```text
-versionCode: 184
-versionName: 1.8.4-alpha
-badge: ALASKA ART v1.8.4
+versionCode: 185
+versionName: 1.8.5-alpha
+badge: ALASKA ART v1.8.5
 ```
 
 This branch is an architecture alpha. It is intended for testing the new

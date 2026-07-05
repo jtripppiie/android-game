@@ -144,13 +144,15 @@ transparent-background conversion process.
 
 ### Region asset pack folder
 
-These are visible region-pack placeholders and planning assets:
+This folder now stores Alaska region metadata only:
 
 ```text
 app/src/main/assets/regions/alaska/
 ```
 
-The runtime currently uses the Android vector drawables. The asset-pack folder is the future-facing structure for real art and region metadata.
+The old SVG placeholder files were removed in `1.8.5-alpha`. The runtime uses
+generated raster drawables and sprite sheets from `app/src/main/res/drawable-nodpi/`,
+while `region.json` names those runtime resources for future region tooling.
 
 ## Current development priorities
 

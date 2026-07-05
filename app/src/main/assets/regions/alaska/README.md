@@ -2,18 +2,14 @@
 
 This folder is the first real regional asset pack for You Rush.
 
-The current game still draws most visuals with Android Canvas code, but this folder gives the project a visible asset structure for Alaska so real art can replace the placeholders later.
+The Android runtime now uses generated raster assets from `app/src/main/res/drawable-nodpi/`.
+This folder keeps Alaska region metadata only.
 
-## Intended asset categories
+## Runtime asset registry
 
-- `background_midnight_sun.svg`
-- `background_dark_winter.svg`
-- `hazard_salmon.svg`
-- `hazard_moose.svg`
-- `hazard_bear.svg`
-- `gate_antlers.svg`
 - `region.json`
 
 ## Rule
 
-Alaska is the template. Future region folders should copy this same structure.
+Do not keep unused SVG placeholders here. Future region folders should name the
+real runtime resources they use in their own `region.json`.

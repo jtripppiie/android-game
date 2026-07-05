@@ -3,7 +3,26 @@
   "name": "Alaska",
   "style": "retro-funny",
   "studio": "TripperDeeLabs",
-  "status": "template-region",
+  "status": "runtime-metadata",
+  "runtimeAssets": {
+    "backgrounds": [
+      "background_midnight_sun_art",
+      "background_dark_winter_art"
+    ],
+    "foreground": [
+      "sprite_tree_summer",
+      "sprite_tree_winter"
+    ],
+    "spriteSheets": [
+      "sheet_moose_walk",
+      "sheet_bear_walk",
+      "sheet_salmon_swim",
+      "sheet_eagle_fly",
+      "sheet_player_run_headless",
+      "sheet_mom_run",
+      "sheet_dad_run"
+    ]
+  },
   "gameplayTemplate": {
     "loop": [
       "select-stage",
@@ -35,7 +54,8 @@
       "boss": "Sunburn Sprite",
       "goalGates": 6,
       "bossHealth": 2,
-      "placeholders": ["background_midnight_sun.svg", "gate_antlers.svg"]
+      "runtimeBackground": "background_midnight_sun_art",
+      "runtimeGate": "canvas_antler_gate"
     },
     {
       "id": "salmon_rush",
@@ -45,7 +65,8 @@
       "boss": "Salmon Boss",
       "goalGates": 8,
       "bossHealth": 3,
-      "placeholders": ["hazard_salmon.svg", "background_midnight_sun.svg"]
+      "runtimeBackground": "background_midnight_sun_art",
+      "runtimeHazardSheet": "sheet_salmon_swim"
     },
     {
       "id": "moose_pass",
@@ -55,7 +76,9 @@
       "boss": "Moose Boss",
       "goalGates": 10,
       "bossHealth": 4,
-      "placeholders": ["hazard_moose.svg", "gate_antlers.svg"]
+      "runtimeBackground": "background_midnight_sun_art",
+      "runtimeGate": "canvas_antler_gate",
+      "runtimeHazardSheet": "sheet_moose_walk"
     },
     {
       "id": "dark_winter",
@@ -65,7 +88,8 @@
       "boss": "Darkness Boss",
       "goalGates": 12,
       "bossHealth": 4,
-      "placeholders": ["background_dark_winter.svg", "hazard_bear.svg"]
+      "runtimeBackground": "background_dark_winter_art",
+      "runtimeHazardSheet": "sheet_eagle_fly"
     },
     {
       "id": "bear_country",
@@ -75,7 +99,8 @@
       "boss": "Bear Boss",
       "goalGates": 14,
       "bossHealth": 6,
-      "placeholders": ["hazard_bear.svg", "background_dark_winter.svg"]
+      "runtimeBackground": "background_dark_winter_art",
+      "runtimeHazardSheet": "sheet_bear_walk"
     }
   ],
   "deathLines": [

@@ -5,16 +5,16 @@ Use this after GitHub Actions produces the debug APK artifact.
 Current packaged beta:
 
 ```text
-versionCode: 184
-versionName: 1.8.4-alpha
-build badge: ALASKA ART v1.8.4
+versionCode: 185
+versionName: 1.8.5-alpha
+build badge: ALASKA ART v1.8.5
 ```
 
 ## Install test
 
 1. Download `you-rush-alaska-debug-apk` from the latest successful workflow run.
 2. Extract the ZIP if GitHub downloaded it as a ZIP.
-3. Install `you-rush-alaska-1.8.4-alpha-184-debug.apk` on an Android phone.
+3. Install `you-rush-alaska-1.8.5-alpha-185-debug.apk` on an Android phone.
 4. Allow installation from the browser/files app if Android prompts you.
 5. Open **You Rush**.
 6. Confirm the debug/version badge is visible and matches the packaged beta.
@@ -109,7 +109,7 @@ On the main menu:
 ## Current known rough edges
 
 - Boss attack patterns are placeholder-simple.
-- Hazards are placeholder assets and labels.
+- Some encounter labels and boss behavior are still simple; runtime hazards now use generated raster/sprite-sheet art.
 - Photo placement is automatic; crop/position controls are not built yet.
 - Map unlock logic exists, but the map still displays every Alaska stage for easy inspection.
 - Difficulty is not balanced yet.

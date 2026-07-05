@@ -17,9 +17,9 @@ into real raster game art:
 ## Current Package
 
 ```text
-versionCode: 184
-versionName: 1.8.4-alpha
-badge: ALASKA ART v1.8.4
+versionCode: 185
+versionName: 1.8.5-alpha
+badge: ALASKA ART v1.8.5
 ```
 
 ## Generated Assets
@@ -333,6 +333,10 @@ runner body.
   body bounds before scaling.
 - The body renders from a larger visible target height so the runner no longer
   appears tiny next to the uploaded/default head.
+
+`1.8.5-alpha` removes the old SVG placeholder files from the Alaska region
+asset folder. `region.json` now records runtime drawable/sprite-sheet resource
+names instead of placeholder filenames.
 
 ## Not Yet Wired
 
