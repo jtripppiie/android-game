@@ -1,6 +1,7 @@
 package com.jtripppiie.mooserush;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
@@ -26,5 +27,17 @@ public class SpriteRendererTest {
         assertEquals(26.2f, standingHeight, 0.0001f);
         assertTrue(runningHeight > radius * 2.6f);
         assertTrue(runningHeight < radius * 3.0f);
+    }
+
+    @Test
+    public void runnerSheetTrimAddsGuardPixelAtFrameEdges() {
+        int[] source = SpriteRenderer.trimmedRunnerSourceValues(
+                1,
+                328,
+                798,
+                new int[]{0, 207, 328, 638}
+        );
+
+        assertArrayEquals(new int[]{329, 207, 655, 638}, source);
     }
 }

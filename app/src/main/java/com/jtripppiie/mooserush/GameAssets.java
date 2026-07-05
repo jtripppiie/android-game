@@ -12,6 +12,10 @@ final class GameAssets {
     private final Drawable treeWinter;
     private final Bitmap mooseWalkSheet;
     private final Bitmap bearWalkSheet;
+    private final Bitmap polarBearWalkSheet;
+    private final Bitmap wolfRunSheet;
+    private final Bitmap bearRoarSprite;
+    private final Bitmap polarBearRoarSprite;
     private final Bitmap salmonSwimSheet;
     private final Bitmap eagleFlySheet;
 
@@ -22,6 +26,10 @@ final class GameAssets {
         treeWinter = context.getDrawable(R.drawable.sprite_tree_winter);
         mooseWalkSheet = BitmapFactory.decodeResource(context.getResources(), R.drawable.sheet_moose_walk);
         bearWalkSheet = BitmapFactory.decodeResource(context.getResources(), R.drawable.sheet_bear_walk);
+        polarBearWalkSheet = BitmapFactory.decodeResource(context.getResources(), R.drawable.sheet_polar_bear_walk);
+        wolfRunSheet = BitmapFactory.decodeResource(context.getResources(), R.drawable.sheet_wolf_run);
+        bearRoarSprite = BitmapFactory.decodeResource(context.getResources(), R.drawable.sprite_bear_roar);
+        polarBearRoarSprite = BitmapFactory.decodeResource(context.getResources(), R.drawable.sprite_polar_bear_roar);
         salmonSwimSheet = BitmapFactory.decodeResource(context.getResources(), R.drawable.sheet_salmon_swim);
         eagleFlySheet = BitmapFactory.decodeResource(context.getResources(), R.drawable.sheet_eagle_fly);
     }
@@ -40,6 +48,22 @@ final class GameAssets {
 
     Bitmap bearWalkSheet() {
         return bearWalkSheet;
+    }
+
+    Bitmap polarBearWalkSheet() {
+        return polarBearWalkSheet;
+    }
+
+    Bitmap wolfRunSheet() {
+        return wolfRunSheet;
+    }
+
+    Bitmap bearRoarSprite() {
+        return bearRoarSprite;
+    }
+
+    Bitmap polarBearRoarSprite() {
+        return polarBearRoarSprite;
     }
 
     Bitmap salmonSwimSheet() {

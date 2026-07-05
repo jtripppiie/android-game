@@ -16,6 +16,10 @@
     "spriteSheets": [
       "sheet_moose_walk",
       "sheet_bear_walk",
+      "sheet_polar_bear_walk",
+      "sheet_wolf_run",
+      "sprite_bear_roar",
+      "sprite_polar_bear_roar",
       "sheet_salmon_swim",
       "sheet_eagle_fly",
       "sheet_player_run_headless",
@@ -85,22 +89,25 @@
       "name": "Dark Winter",
       "season": "darkness",
       "hazard": "DARK",
-      "boss": "Darkness Boss",
+      "boss": "Eagle Boss",
       "goalGates": 12,
       "bossHealth": 4,
       "runtimeBackground": "background_dark_winter_art",
-      "runtimeHazardSheet": "sheet_eagle_fly"
+      "runtimeHazardSheet": "sheet_eagle_fly",
+      "runtimeVariantSheets": ["sheet_wolf_run"]
     },
     {
       "id": "bear_country",
       "name": "Bear Country",
       "season": "winter",
       "hazard": "BEAR",
-      "boss": "Bear Boss",
+      "boss": "Polar Bear Boss",
       "goalGates": 14,
       "bossHealth": 6,
       "runtimeBackground": "background_dark_winter_art",
-      "runtimeHazardSheet": "sheet_bear_walk"
+      "runtimeHazardSheet": "sheet_bear_walk",
+      "runtimeVariantSheets": ["sheet_polar_bear_walk", "sheet_wolf_run"],
+      "runtimeBossSheet": "sheet_polar_bear_walk"
     }
   ],
   "deathLines": [

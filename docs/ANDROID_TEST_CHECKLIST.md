@@ -5,16 +5,16 @@ Use this after GitHub Actions produces the debug APK artifact.
 Current packaged beta:
 
 ```text
-versionCode: 185
-versionName: 1.8.5-alpha
-build badge: ALASKA ART v1.8.5
+versionCode: 186
+versionName: 1.8.6-alpha
+build badge: ALASKA ART v1.8.6
 ```
 
 ## Install test
 
 1. Download `you-rush-alaska-debug-apk` from the latest successful workflow run.
 2. Extract the ZIP if GitHub downloaded it as a ZIP.
-3. Install `you-rush-alaska-1.8.5-alpha-185-debug.apk` on an Android phone.
+3. Install `you-rush-alaska-1.8.6-alpha-186-debug.apk` on an Android phone.
 4. Allow installation from the browser/files app if Android prompts you.
 5. Open **You Rush**.
 6. Confirm the debug/version badge is visible and matches the packaged beta.
@@ -62,9 +62,10 @@ Confirm score changes:
 - Clearing antler hurdles increases score.
 - Collecting stars increases score and the HUD star count.
 - Dodging hazards gives small score bumps.
-- Combo streaks build from successful play and reset on mistakes.
+- Combo streaks build from successful play, unlock score multipliers, and reset on mistakes.
+- Tight dodges can trigger a near-miss score popup without feeling unfair.
 - Hitting a boss with snowballs increases score.
-- Defeating a boss gives a larger score bonus.
+- Defeating a boss gives a larger stage-clear bonus with combo and star rewards.
 - Best score persists after restarting the app.
 - XP and level persist after restarting the app.
 
@@ -85,17 +86,23 @@ Stage feel targets:
 - Stage 2 gets the player to the boss quickly.
 - Stage 3 asks for better timing.
 - Stage 4 feels darker and harder, but fair.
-- Stage 5 feels like the big Alaska challenge.
+- Stage 5 feels like the big Alaska challenge with bear, polar bear, and wolf variety.
+- Brown bears and polar bears occasionally stand on hind legs and roar as a readable warning.
 
 ## Layout and readability test
 
 Check small and large screens:
 
 - Top HUD elements do not overlap.
-- Hurdle progress, lives, combo, XP level, score, and best score remain readable.
+- Hurdle/boss progress, lives, combo multiplier, XP level, score, run score, and best score remain readable.
+- Boss incoming and combo callout overlays appear without covering the player.
+- The ready screen shows goal, boss, and bonus briefing chips.
 - Boss health bar never overlaps the top HUD.
 - Game-over and stage-clear content fits on small phones.
 - Button labels and touch targets remain usable in portrait orientation.
+- Generated background plates carry the mountains; old vector-style mountain layers should not appear.
+- Winter/dark stages show denser snow-covered tree layers without jumpy resets.
+- Polar bear and wolf sprites animate cleanly without magenta background artifacts.
 
 ## Debug test
 
@@ -109,7 +116,7 @@ On the main menu:
 ## Current known rough edges
 
 - Boss attack patterns are placeholder-simple.
-- Some encounter labels and boss behavior are still simple; runtime hazards now use generated raster/sprite-sheet art.
+- Some encounter labels and boss behavior are still simple; runtime hazards now use generated raster/sprite-sheet art with frame trim guards.
 - Photo placement is automatic; crop/position controls are not built yet.
 - Map unlock logic exists, but the map still displays every Alaska stage for easy inspection.
 - Difficulty is not balanced yet.

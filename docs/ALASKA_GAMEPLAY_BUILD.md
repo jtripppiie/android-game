@@ -132,11 +132,15 @@ app/src/main/res/drawable-nodpi/sprite_tree_summer.png
 app/src/main/res/drawable-nodpi/sprite_tree_winter.png
 app/src/main/res/drawable-nodpi/sheet_moose_walk.png
 app/src/main/res/drawable-nodpi/sheet_bear_walk.png
+app/src/main/res/drawable-nodpi/sheet_polar_bear_walk.png
+app/src/main/res/drawable-nodpi/sheet_wolf_run.png
 app/src/main/res/drawable-nodpi/sheet_salmon_swim.png
 app/src/main/res/drawable-nodpi/sheet_eagle_fly.png
 app/src/main/res/drawable-nodpi/sheet_player_run_headless.png
 app/src/main/res/drawable-nodpi/sheet_mom_run.png
 app/src/main/res/drawable-nodpi/sheet_dad_run.png
+app/src/main/res/drawable-nodpi/sprite_bear_roar.png
+app/src/main/res/drawable-nodpi/sprite_polar_bear_roar.png
 ```
 
 See `docs/SPRITE_SHEET_ASSET_PIPELINE.md` for the repeatable generation and
@@ -153,6 +157,15 @@ app/src/main/assets/regions/alaska/
 The old SVG placeholder files were removed in `1.8.5-alpha`. The runtime uses
 generated raster drawables and sprite sheets from `app/src/main/res/drawable-nodpi/`,
 while `region.json` names those runtime resources for future region tooling.
+
+`1.8.6-alpha` removes the remaining vector-style triangle mountain overlay
+from the runtime scene. The generated background plates now own mountain art,
+while the foreground uses stable parallax tree-sprite bands with extra
+snow-covered trees in winter/dark stages. Wildlife and player sprite sheets
+also use guarded per-frame source rects to prevent adjacent-frame artifacts
+during animation. Winter mode adds polar bear and wolf enemies, plus dedicated
+brown bear and polar bear roar sprites that appear when bears stand on hind
+legs as a warning moment.
 
 ## Current development priorities
 

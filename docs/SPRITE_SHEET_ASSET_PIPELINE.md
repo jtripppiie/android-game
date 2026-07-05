@@ -17,9 +17,9 @@ into real raster game art:
 ## Current Package
 
 ```text
-versionCode: 185
-versionName: 1.8.5-alpha
-badge: ALASKA ART v1.8.5
+versionCode: 186
+versionName: 1.8.6-alpha
+badge: ALASKA ART v1.8.6
 ```
 
 ## Generated Assets
@@ -35,11 +35,15 @@ Sprite sheets:
 ```text
 sheet_moose_walk.png
 sheet_bear_walk.png
+sheet_polar_bear_walk.png
+sheet_wolf_run.png
 sheet_salmon_swim.png
 sheet_eagle_fly.png
 sheet_player_run_headless.png
 sheet_mom_run.png
 sheet_dad_run.png
+sprite_bear_roar.png
+sprite_polar_bear_roar.png
 ```
 
 Environment art:
@@ -120,6 +124,42 @@ Composition/framing: one horizontal row of exactly 6 evenly sized frames, consis
 Lighting/mood: soft game-art lighting, no cast shadow.
 Color palette: dark brown and warm brown fur, black claws and nose, no magenta in the bear.
 Constraints: no text, no labels, no frame numbers, no watermark, no border, no visible grid lines. Background must be one uniform #ff00ff with no gradients, no shadows, no floor, no texture, no lighting variation. Keep crisp edges for chroma-key removal.
+```
+
+### Polar Bear Walk Sheet
+
+```text
+Use case: stylized-concept
+Asset type: mobile 2D runner game sprite sheet
+Primary request: Create a polished 6-frame polar bear walking sprite sheet for a winter mode enemy in an Alaska mobile runner game.
+Scene/backdrop: perfectly flat solid #ff00ff chroma-key background only, including all gutters between frames.
+Subject: same full-body polar bear in every frame, side profile facing left, visually distinct from a brown bear, powerful shoulders, long white body, black nose, small rounded ears, heavy paws with dark claws, subtle blue-gray winter shading. Six sequential walking frames: contact, down, passing, up, opposite contact, opposite passing.
+Style/medium: high-quality 2D game art, hand-painted cartoon realism, crisp silhouette, professional mobile game sprite sheet, matching the existing moose/bear/salmon/eagle runner-game world.
+Composition/framing: one horizontal row of exactly 6 evenly sized frames, consistent scale and baseline, full body visible in every frame, generous padding, no cropping.
+Constraints: no text, no labels, no frame numbers, no watermark, no border, no visible grid lines. Background must be one uniform #ff00ff with no gradients, no shadows, no floor, no texture, no lighting variation.
+```
+
+### Wolf Run Sheet
+
+```text
+Use case: stylized-concept
+Asset type: mobile 2D runner game sprite sheet
+Primary request: Create a polished 6-frame gray wolf running/walking sprite sheet for a winter mode enemy in an Alaska mobile runner game.
+Scene/backdrop: perfectly flat solid #ff00ff chroma-key background only, including all gutters between frames.
+Subject: same full-body gray wolf in every frame, side profile facing left, lean athletic body, pointed ears, long muzzle, bushy tail, visible paws, alert winter predator silhouette. Six sequential locomotion frames: contact, down, passing, up, opposite contact, opposite passing.
+Style/medium: high-quality 2D game art, hand-painted cartoon realism, crisp silhouette, professional mobile game sprite sheet, matching the existing Alaska runner-game world.
+Composition/framing: one horizontal row of exactly 6 evenly sized frames, consistent scale and baseline, full body visible in every frame, generous padding, no cropping.
+Constraints: no text, no labels, no frame numbers, no watermark, no border, no visible grid lines. Background must be one uniform #ff00ff with no gradients, no shadows, no floor, no texture, no lighting variation.
+```
+
+### Bear Roar Sprites
+
+```text
+Create a polished single-frame brown bear standing upright on its hind legs and roaring for an Alaska winter runner game. Use a perfectly flat solid #ff00ff chroma-key background only. The bear should be full-body, side profile facing left, mouth open roaring, raised forepaws, heavy shoulder hump, rounded ears, long snout, thick paws with visible claws.
+```
+
+```text
+Create a polished single-frame polar bear standing upright on its hind legs and roaring for an Alaska winter runner game. Use a perfectly flat solid #ff00ff chroma-key background only. The bear should be full-body, side profile facing left, mouth open roaring, raised forepaws, powerful shoulders, long white body, small rounded ears, black nose, heavy paws with dark claws.
 ```
 
 ### Salmon Swim Sheet
@@ -300,19 +340,24 @@ sheet_moose_walk.png
 
 - Moose hazard
 - Bear hazard
+- Polar bear hazard and boss
+- Wolf winter hazard
 - Salmon hazard
 - Eagle hazard
 - Salmon Boss
 - Moose Boss
 - Eagle Boss
-- Bear Boss
+- Polar Bear Boss
+- Brown bear / polar bear roar warning poses
 
 Motion behavior:
 
 - Moose and bear use walking frames.
+- Polar bear uses walking frames and a dedicated upright roar sprite in winter mode.
+- Wolf uses faster locomotion frames as a lower-profile winter threat.
 - Salmon uses swimming frames plus a small sine-wave wiggle and rotation.
 - Eagle uses flapping frames plus a small bob and rotation.
-- Trees use transparent raster sprites and subtle sway.
+- Trees use transparent raster sprites in multiple stable parallax bands.
 
 ### SpriteRenderer
 
@@ -337,6 +382,13 @@ runner body.
 `1.8.5-alpha` removes the old SVG placeholder files from the Alaska region
 asset folder. `region.json` now records runtime drawable/sprite-sheet resource
 names instead of placeholder filenames.
+
+`1.8.6-alpha` adds runtime source-rect guard pixels for wildlife and player
+sprite sheets so adjacent atlas frames do not bleed into each other during
+animation. It also removes the vector-style triangle mountain overlay from the
+runtime scene and uses denser generated tree-sprite layers, including extra
+snow-covered tree bands in winter/dark stages. The same pass adds polar bear,
+wolf, and roaring bear assets for winter-mode variety.
 
 ## Not Yet Wired
 

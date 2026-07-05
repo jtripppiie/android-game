@@ -2,16 +2,16 @@
 
 A personalized Android arcade game by **TripperDeeLabs**.
 
-**Current status: Alaska 1.8.5 asset cleanup alpha.**
+**Current status: Alaska 1.8.6 launch-polish alpha.**
 
 This build is beta-ready for APK testing, tuning, and bug fixing. It is not final 1.0 or a larger milestone until it installs and plays well across all Alaska stages on a real phone.
 
 ## Current beta
 
 ```text
-versionCode: 185
-versionName: 1.8.5-alpha
-build badge: ALASKA ART v1.8.5
+versionCode: 186
+versionName: 1.8.6-alpha
+build badge: ALASKA ART v1.8.6
 ```
 
 ## Game flow
@@ -65,9 +65,14 @@ Mobile mapping:
 - Local saved progress
 - Five Alaska stages
 - Unified run HUD
+- Launch-style boss and combo callout overlays
+- Combo-based score multipliers and stage-clear bonus scoring
+- Near-miss rewards for tight dodges
+- Progressive difficulty pacing for speed and spawn pressure
 - Hurdle progress bar
 - Collectible star paths
-- Parallax Alaska scenery
+- Parallax Alaska scenery with generated background plates and snow-tree layers
+- Winter-mode polar bear, wolf, and roaring bear moments
 - Three lives per run
 - Checkpoint respawn after passed hurdles
 - Snowball interactions
@@ -108,7 +113,7 @@ The debug APK lands in `app/build/outputs/apk/debug/` with the version in the
 filename, for example:
 
 ```text
-you-rush-alaska-1.8.5-alpha-185-debug.apk
+you-rush-alaska-1.8.6-alpha-186-debug.apk
 ```
 
 GitHub Actions also builds a debug APK using:
@@ -116,6 +121,10 @@ GitHub Actions also builds a debug APK using:
 ```text
 .github/workflows/android-debug-apk.yml
 ```
+
+The workflow runs on manual dispatch, `jtripp`, and the active
+`graphics-1.8.0` graphics branch. APK files are ignored by git; GitHub stores
+the package as a workflow artifact instead of committing it to the repository.
 
 Artifacts:
 
@@ -130,6 +139,8 @@ unit tests:
 - `GameMath` — clamp and circle/rect collision helpers used by the game loop.
 - `LevelCurve` — XP thresholds and level/progress math used by the level HUD.
 - `RunnerTuning` — coyote time, jump buffer, and spawn-spacing fairness floors.
+- `SpriteRenderer` / sprite trim tests — frame-edge guards that prevent atlas
+  bleed artifacts during walking, swimming, and flying animation.
 
 Run them with `./gradlew testDebugUnitTest`.
 

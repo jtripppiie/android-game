@@ -43,11 +43,15 @@ effects should not remain tangled into the main view.
   frames, default heads, uploaded face heads, limbs, boots, outfit color,
   runner sheet trimming, and readable runner animation cadence.
 - `VisualEffects.java`: new effects manager for particles and score popups.
+- `ArcadeScoring.java`: pure scoring helper for combo multipliers and
+  stage-clear bonuses.
+- `SpriteSheetMath.java`: pure sprite-sheet source-rect helper for frame-edge
+  guard pixels.
 - `MooseRushView.java`: reduced direct graphics ownership by delegating player
   drawing, drawable lookup, particle updates, and popup drawing to dedicated
   classes.
-- `app/build.gradle`: bumped the debug package to `1.8.5-alpha` /
-  `versionCode 185` and updated the visible build badge.
+- `app/build.gradle`: bumped the debug package to `1.8.6-alpha` /
+  `versionCode 186` and updated the visible build badge.
 - `README.md`, `docs/VERSIONING.md`, and `docs/ANDROID_TEST_CHECKLIST.md`:
   updated package names, badge text, and test instructions for the current
   1.8.x graphics alpha.
@@ -150,9 +154,9 @@ Now:
 The active beta package is:
 
 ```text
-versionCode: 185
-versionName: 1.8.5-alpha
-badge: ALASKA ART v1.8.5
+versionCode: 186
+versionName: 1.8.6-alpha
+badge: ALASKA ART v1.8.6
 ```
 
 This branch is an architecture alpha. It is intended for testing the new
@@ -170,6 +174,36 @@ from appearing as a square asset tile.
 Moose, bear, salmon, eagle, and the headless player body now have six-frame
 sprite sheets available in Android resources, with hazards and bosses wired to
 animate from those sheets.
+
+`1.8.4-alpha` fixes runtime runner scale and cadence so the headless body reads
+as a runner under the uploaded/default head.
+
+`1.8.5-alpha` removes the obsolete Alaska SVG placeholders from
+`app/src/main/assets/regions/alaska/`.
+
+`1.8.6-alpha` is the launch-polish pass:
+
+- Adds per-frame guard-pixel source rects for wildlife and player sprite sheets
+  to prevent adjacent-frame bleed during animation.
+- Adds polar bear and wolf sprite sheets for winter-mode variety, plus
+  single-frame brown bear and polar bear roar sprites used when bears rear up.
+- Removes the vector-looking triangle mountain overlay; the generated
+  background plates now own mountain art.
+- Adds multiple stable parallax spruce layers, with extra snow-covered trees
+  and snow drift mist for winter/dark stages.
+- Enlarges and repositions the player, adds a lane guide, and removes tree sway
+  that could read as scenery jitter.
+- Upgrades the run HUD with score, run score, objective progress, stars, lives,
+  combo, multiplier, level, boss warning, and combo callouts.
+- Adds combo-based score multipliers, star/combo rewards, and stage-clear bonus
+  scoring.
+- Adds near-miss scoring and capped progressive difficulty pressure inspired by
+  endless-runner pacing: more speed and tighter spawns as the run advances,
+  without sudden early spikes.
+- Expands ready/game-over/stage-clear screens into briefing and run-report
+  panels.
+- Makes the debug APK workflow run on `graphics-1.8.0` so pushed builds publish
+  APK artifacts for this active graphics branch.
 
 ## What still needs extraction
 
