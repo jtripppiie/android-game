@@ -2,16 +2,16 @@
 
 A personalized Android arcade game by **TripperDeeLabs**.
 
-**Current status: Alaska 1.8.0 architecture alpha.**
+**Current status: Alaska 1.8.1 graphics readability alpha.**
 
 This build is beta-ready for APK testing, tuning, and bug fixing. It is not final 1.0 or a larger milestone until it installs and plays well across all Alaska stages on a real phone.
 
 ## Current beta
 
 ```text
-versionCode: 180
-versionName: 1.8.0-alpha
-build badge: ALASKA ARCH v1.8.0
+versionCode: 181
+versionName: 1.8.1-alpha
+build badge: ALASKA ARCH v1.8.1
 ```
 
 ## Game flow
@@ -108,7 +108,7 @@ The debug APK lands in `app/build/outputs/apk/debug/` with the version in the
 filename, for example:
 
 ```text
-you-rush-alaska-1.8.0-alpha-180-debug.apk
+you-rush-alaska-1.8.1-alpha-181-debug.apk
 ```
 
 GitHub Actions also builds a debug APK using:
