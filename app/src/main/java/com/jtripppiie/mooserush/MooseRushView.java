@@ -1230,60 +1230,71 @@ public class MooseRushView extends View {
 
     private void drawGate(Canvas canvas, Gate gate) {
         float top = getGroundY() - gate.height;
+        float ground = getGroundY();
+        float postWidth = Math.max(dp(7), gate.width * 0.18f);
+        float railHeight = Math.max(dp(8), gate.height * 0.16f);
+        float railTop = top + dp(5);
+        float railBottom = railTop + railHeight;
+        float leftPost = gate.x + dp(3);
+        float rightPost = gate.x + gate.width - postWidth - dp(3);
 
         paint.setStyle(Paint.Style.FILL);
         paint.setColor(Color.argb(120, 0, 0, 0));
-        canvas.drawOval(gate.x - dp(7), getGroundY() - dp(5), gate.x + gate.width + dp(7), getGroundY() + dp(7), paint);
+        canvas.drawOval(gate.x - dp(10), ground - dp(5), gate.x + gate.width + dp(10), ground + dp(7), paint);
 
-        paint.setColor(Color.rgb(58, 38, 27));
-        canvas.drawRoundRect(gate.x - dp(3), top - dp(2), gate.x + gate.width + dp(3), getGroundY(), dp(9), dp(9), paint);
+        paint.setColor(Color.rgb(52, 35, 24));
+        canvas.drawRoundRect(leftPost - dp(2), railTop, leftPost + postWidth + dp(2), ground, dp(5), dp(5), paint);
+        canvas.drawRoundRect(rightPost - dp(2), railTop, rightPost + postWidth + dp(2), ground, dp(5), dp(5), paint);
+        canvas.drawRoundRect(gate.x - dp(2), railTop - dp(2), gate.x + gate.width + dp(2), railBottom + dp(2), dp(7), dp(7), paint);
 
-        paint.setColor(Color.rgb(129, 77, 42));
-        canvas.drawRoundRect(gate.x, top, gate.x + gate.width, getGroundY(), dp(8), dp(8), paint);
+        paint.setColor(Color.rgb(134, 78, 38));
+        canvas.drawRoundRect(leftPost, railTop + dp(2), leftPost + postWidth, ground, dp(4), dp(4), paint);
+        canvas.drawRoundRect(rightPost, railTop + dp(2), rightPost + postWidth, ground, dp(4), dp(4), paint);
+        canvas.drawRoundRect(gate.x, railTop, gate.x + gate.width, railBottom, dp(6), dp(6), paint);
 
-        paint.setColor(Color.rgb(244, 205, 118));
-        canvas.drawRoundRect(gate.x + dp(5), top + dp(6), gate.x + gate.width - dp(5), top + dp(16), dp(4), dp(4), paint);
+        paint.setColor(Color.rgb(226, 169, 83));
+        canvas.drawRoundRect(gate.x + dp(4), railTop + dp(2), gate.x + gate.width - dp(4), railTop + railHeight * 0.46f, dp(4), dp(4), paint);
+
+        paint.setColor(Color.rgb(44, 30, 22));
+        canvas.drawRoundRect(gate.x + dp(6), ground - dp(7), gate.x + postWidth + dp(8), ground, dp(3), dp(3), paint);
+        canvas.drawRoundRect(gate.x + gate.width - postWidth - dp(8), ground - dp(7), gate.x + gate.width - dp(6), ground, dp(3), dp(3), paint);
 
         paint.setStyle(Paint.Style.STROKE);
-        paint.setStrokeWidth(dp(4));
+        paint.setStrokeWidth(dp(3));
         paint.setStrokeCap(Paint.Cap.ROUND);
-        paint.setColor(Color.rgb(238, 223, 184));
-        canvas.drawLine(gate.x + dp(7), top + dp(2), gate.x - dp(16), top - dp(22), paint);
-        canvas.drawLine(gate.x + gate.width - dp(7), top + dp(2), gate.x + gate.width + dp(16), top - dp(22), paint);
-        paint.setStrokeWidth(dp(2));
-        canvas.drawLine(gate.x - dp(7), top - dp(12), gate.x - dp(20), top - dp(10), paint);
-        canvas.drawLine(gate.x + gate.width + dp(7), top - dp(12), gate.x + gate.width + dp(20), top - dp(10), paint);
+        paint.setColor(Color.rgb(233, 218, 181));
+        canvas.drawLine(gate.x + dp(8), railBottom + dp(8), gate.x + gate.width - dp(8), ground - dp(13), paint);
+        canvas.drawLine(gate.x + gate.width - dp(8), railBottom + dp(8), gate.x + dp(8), ground - dp(13), paint);
         paint.setStrokeCap(Paint.Cap.BUTT);
         paint.setStyle(Paint.Style.FILL);
-
-        textPaint.setTextAlign(Paint.Align.CENTER);
-        textPaint.setTextSize(dp(9));
-        textPaint.setColor(Color.rgb(255, 246, 207));
-        canvas.drawText("JUMP", gate.x + gate.width / 2f, top - dp(9), textPaint);
     }
 
     private void drawHazard(Canvas canvas, Hazard hazard) {
+        boolean moose = "MOOSE".equals(hazard.label);
+        float xRadius = moose ? hazard.radius * 1.45f : hazard.radius;
+        float yRadius = moose ? hazard.radius * 0.96f : hazard.radius;
+
         paint.setStyle(Paint.Style.FILL);
         paint.setColor(Color.argb(85, 0, 0, 0));
-        canvas.drawOval(hazard.x - hazard.radius * 0.72f, hazard.y + hazard.radius * 0.66f, hazard.x + hazard.radius * 0.72f, hazard.y + hazard.radius * 0.88f, paint);
+        canvas.drawOval(hazard.x - xRadius * 0.72f, hazard.y + yRadius * 0.66f, hazard.x + xRadius * 0.72f, hazard.y + yRadius * 0.88f, paint);
 
         paint.setColor(Color.argb(80, 255, 246, 207));
-        canvas.drawCircle(hazard.x, hazard.y, hazard.radius * 1.18f, paint);
+        canvas.drawOval(hazard.x - xRadius * 1.08f, hazard.y - yRadius * 1.12f, hazard.x + xRadius * 1.08f, hazard.y + yRadius * 1.12f, paint);
 
         if (hazard.drawable != null) {
-            drawDrawable(canvas, hazard.drawable, hazard.x - hazard.radius, hazard.y - hazard.radius, hazard.x + hazard.radius, hazard.y + hazard.radius);
+            drawDrawable(canvas, hazard.drawable, hazard.x - xRadius, hazard.y - yRadius, hazard.x + xRadius, hazard.y + yRadius);
         } else {
             paint.setColor(Color.rgb(255, 218, 121));
             canvas.drawCircle(hazard.x, hazard.y, hazard.radius, paint);
         }
-        drawHazardBadge(canvas, hazard);
+        drawHazardBadge(canvas, hazard, yRadius);
     }
 
-    private void drawHazardBadge(Canvas canvas, Hazard hazard) {
+    private void drawHazardBadge(Canvas canvas, Hazard hazard, float yRadius) {
         float badgeWidth = Math.max(dp(32), hazard.label.length() * dp(7));
         float badgeHeight = dp(15);
         float left = hazard.x - badgeWidth / 2f;
-        float top = hazard.y + hazard.radius + dp(5);
+        float top = hazard.y + yRadius + dp(5);
         paint.setStyle(Paint.Style.FILL);
         paint.setColor(Color.argb(185, 18, 25, 34));
         canvas.drawRoundRect(left, top, left + badgeWidth, top + badgeHeight, dp(6), dp(6), paint);
@@ -1331,21 +1342,24 @@ public class MooseRushView extends View {
     private void drawBoss(Canvas canvas) {
         Drawable bossDrawable = assets.bossForStage(selectedStage);
         float radius = bossRadius();
+        boolean mooseBoss = selectedStage == 2;
+        float xRadius = mooseBoss ? radius * 1.72f : radius * 1.30f;
+        float yRadius = mooseBoss ? radius * 1.08f : radius * 1.30f;
 
         if (damageFlash > 0f) {
             paint.setStyle(Paint.Style.FILL);
             paint.setColor(Color.argb(150, 255, 255, 255));
-            canvas.drawCircle(bossX, bossY, radius * 1.55f, paint);
+            canvas.drawOval(bossX - xRadius * 1.12f, bossY - yRadius * 1.12f, bossX + xRadius * 1.12f, bossY + yRadius * 1.12f, paint);
         }
 
         paint.setStyle(Paint.Style.FILL);
         paint.setColor(Color.argb(90, 255, 218, 121));
-        canvas.drawCircle(bossX, bossY, radius * 1.56f, paint);
+        canvas.drawOval(bossX - xRadius * 1.12f, bossY - yRadius * 1.12f, bossX + xRadius * 1.12f, bossY + yRadius * 1.12f, paint);
         paint.setColor(Color.argb(120, 0, 0, 0));
-        canvas.drawOval(bossX - radius * 1.18f, bossY + radius * 1.04f, bossX + radius * 1.18f, bossY + radius * 1.34f, paint);
+        canvas.drawOval(bossX - xRadius * 0.88f, bossY + yRadius * 0.80f, bossX + xRadius * 0.88f, bossY + yRadius * 1.08f, paint);
 
         if (bossDrawable != null) {
-            drawDrawable(canvas, bossDrawable, bossX - radius * 1.30f, bossY - radius * 1.30f, bossX + radius * 1.30f, bossY + radius * 1.30f);
+            drawDrawable(canvas, bossDrawable, bossX - xRadius, bossY - yRadius, bossX + xRadius, bossY + yRadius);
         } else {
             paint.setStyle(Paint.Style.FILL);
             paint.setColor(Color.rgb(255, 218, 121));
