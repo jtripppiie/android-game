@@ -3,14 +3,11 @@ package com.jtripppiie.mooserush;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
-import android.graphics.BitmapShader;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.RectF;
-import android.graphics.Shader;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.media.AudioAttributes;
@@ -89,11 +86,12 @@ public class MooseRushView extends View {
     private final List<Hazard> hazards = new ArrayList<>();
     private final List<Star> stars = new ArrayList<>();
     private final List<Shot> shots = new ArrayList<>();
-    private final List<Particle> particles = new ArrayList<>();
-    private final List<ScorePopup> scorePopups = new ArrayList<>();
     private final List<String> debugEvents = new ArrayList<>();
     private final SharedPreferences prefs;
     private final GameState gameState = new GameState();
+    private final GameAssets assets;
+    private final SpriteRenderer spriteRenderer;
+    private final VisualEffects effects;
 
     private final RectF primaryButtonBounds = new RectF();
     private final RectF secondaryButtonBounds = new RectF();
@@ -110,15 +108,6 @@ public class MooseRushView extends View {
     private final RectF jumpPadBounds = new RectF();
     private final RectF firePadBounds = new RectF();
     private final RectF tempRect = new RectF();
-    private final RectF bodyBounds = new RectF();
-    private final Matrix photoMatrix = new Matrix();
-
-    private final Drawable backgroundMidnightSun;
-    private final Drawable backgroundDarkWinter;
-    private final Drawable salmonAsset;
-    private final Drawable mooseAsset;
-    private final Drawable bearAsset;
-
     private PhotoRequestListener photoRequestListener;
     private Bitmap playerPhoto;
     private Bitmap backdropCache;
@@ -188,6 +177,9 @@ public class MooseRushView extends View {
         setFocusable(true);
 
         prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        assets = new GameAssets(context);
+        spriteRenderer = new SpriteRenderer(context);
+        effects = new VisualEffects(context);
         bestScore = prefs.getInt(PREF_BEST_SCORE, 0);
         selectedStage = clampInt(prefs.getInt(PREF_SELECTED_STAGE, 0), 0, STAGES.length - 1);
         selectedSeason = clampInt(prefs.getInt(PREF_SELECTED_SEASON, STAGES[selectedStage].season), 0, SEASONS.length - 1);
@@ -197,12 +189,6 @@ public class MooseRushView extends View {
         gameState.muted = prefs.getBoolean(PREF_MUTED, false);
         gameState.xp = prefs.getInt(PREF_XP, 0);
         gameState.updateLevel();
-
-        backgroundMidnightSun = context.getDrawable(R.drawable.placeholder_background_midnight_sun);
-        backgroundDarkWinter = context.getDrawable(R.drawable.placeholder_background_dark_winter);
-        salmonAsset = context.getDrawable(R.drawable.placeholder_hazard_salmon);
-        mooseAsset = context.getDrawable(R.drawable.placeholder_hazard_moose);
-        bearAsset = context.getDrawable(R.drawable.placeholder_hazard_bear);
 
         textPaint.setColor(Color.WHITE);
         textPaint.setTypeface(Typeface.DEFAULT_BOLD);
@@ -534,8 +520,7 @@ public class MooseRushView extends View {
         hazards.clear();
         stars.clear();
         shots.clear();
-        particles.clear();
-        scorePopups.clear();
+        effects.clearAll();
         score = 0;
         runStageScore = 0;
         gatesPassed = 0;
@@ -586,14 +571,14 @@ public class MooseRushView extends View {
             coyoteTimer = 0f;
             jumpsUsed = 1;
             jumpBufferTimer = 0f;
-            spawnDustBurst(playerX, getGroundY(), 7, Color.argb(180, 235, 245, 248));
+            effects.spawnDustBurst(playerX, getGroundY(), 7, Color.argb(180, 235, 245, 248));
             screenShake = Math.max(screenShake, 0.04f);
             playSound("jump");
         } else if (jumpsUsed < 2) {
             playerVelocityY = -dp(RunnerTuning.DOUBLE_JUMP_VELOCITY_DP);
             jumpsUsed++;
             jumpBufferTimer = 0f;
-            spawnSparkBurst(playerX, playerY + playerRadius * 0.2f, 6, Color.rgb(255, 218, 121));
+            effects.spawnSparkBurst(playerX, playerY + playerRadius * 0.2f, 6, Color.rgb(255, 218, 121));
             playSound("double-jump");
         }
     }
@@ -603,7 +588,7 @@ public class MooseRushView extends View {
             return;
         }
         shots.add(new Shot(playerX + playerRadius * 0.9f, playerY + playerRadius * 0.05f, dp(460), gameplayDp(5.5f)));
-        spawnSparkBurst(playerX + playerRadius * 1.05f, playerY, 5, Color.WHITE);
+        effects.spawnSparkBurst(playerX + playerRadius * 1.05f, playerY, 5, Color.WHITE);
         shotCooldown = 0.32f;
         playSound("throw");
         logEvent("Snowball fired.");
@@ -649,7 +634,7 @@ public class MooseRushView extends View {
             jumpsUsed = 0;
             coyoteTimer = RunnerTuning.COYOTE_SECONDS;
             if (!wasGrounded) {
-                spawnDustBurst(playerX, getGroundY(), 9, Color.argb(185, 235, 245, 248));
+                effects.spawnDustBurst(playerX, getGroundY(), 9, Color.argb(185, 235, 245, 248));
                 screenShake = Math.max(screenShake, 0.035f);
             }
             tryConsumeJumpBuffer();
@@ -715,8 +700,8 @@ public class MooseRushView extends View {
                 gatesPassed++;
                 gameState.gatesPassed = gatesPassed;
                 addScore(10, "Hurdle cleared");
-                spawnScorePopup("+10", gate.x + gate.width / 2f, getGroundY() - gate.height - dp(20), Color.rgb(255, 218, 121));
-                spawnSparkBurst(gate.x + gate.width / 2f, getGroundY() - gate.height, 8, Color.rgb(255, 218, 121));
+                effects.spawnScorePopup("+10", gate.x + gate.width / 2f, getGroundY() - gate.height - dp(20), Color.rgb(255, 218, 121));
+                effects.spawnSparkBurst(gate.x + gate.width / 2f, getGroundY() - gate.height, 8, Color.rgb(255, 218, 121));
                 logEvent("Hurdle " + gatesPassed + "/" + STAGES[selectedStage].goalGates + " cleared.");
             }
 
@@ -759,7 +744,7 @@ public class MooseRushView extends View {
             shot.x += shot.speed * dt;
             shot.wobble += dt * 9f;
             if (random.nextFloat() < 0.45f) {
-                spawnParticle(shot.x - shot.radius * 0.8f, shot.y, -dp(45), (random.nextFloat() - 0.5f) * dp(26), shot.radius * 0.45f, Color.argb(150, 230, 248, 255), 0.22f);
+                effects.spawnParticle(shot.x - shot.radius * 0.8f, shot.y, -dp(45), (random.nextFloat() - 0.5f) * dp(26), shot.radius * 0.45f, Color.argb(150, 230, 248, 255), 0.22f);
             }
             if (shot.x > getWidth() + dp(24)) {
                 iterator.remove();
@@ -772,8 +757,8 @@ public class MooseRushView extends View {
                 damageFlash = 0.16f;
                 screenShake = Math.max(screenShake, 0.12f);
                 worldFlash = Math.max(worldFlash, 0.10f);
-                spawnScorePopup("+25", bossX, bossY - bossRadius(), Color.rgb(255, 246, 207));
-                spawnSparkBurst(bossX, bossY, 14, Color.rgb(255, 98, 84));
+                effects.spawnScorePopup("+25", bossX, bossY - bossRadius(), Color.rgb(255, 246, 207));
+                effects.spawnSparkBurst(bossX, bossY, 14, Color.rgb(255, 98, 84));
                 addScore(25, "Boss hit");
                 playSound("hit");
                 logEvent(STAGES[selectedStage].bossName + " hit. HP " + Math.max(0, bossHealth) + "/" + bossMaxHealth + ".");
@@ -831,8 +816,8 @@ public class MooseRushView extends View {
         bossActive = false;
         bossDefeated = true;
         addScore(100 + selectedStage * 40, "Boss defeated");
-        spawnScorePopup("+" + (100 + selectedStage * 40), getWidth() / 2f, getHeight() * 0.38f, Color.rgb(255, 218, 121));
-        spawnSparkBurst(getWidth() / 2f, getHeight() * 0.38f, 26, Color.rgb(255, 218, 121));
+        effects.spawnScorePopup("+" + (100 + selectedStage * 40), getWidth() / 2f, getHeight() * 0.38f, Color.rgb(255, 218, 121));
+        effects.spawnSparkBurst(getWidth() / 2f, getHeight() * 0.38f, 26, Color.rgb(255, 218, 121));
         worldFlash = Math.max(worldFlash, 0.24f);
         playSound("medal");
         if (score > bestScore) {
@@ -882,7 +867,7 @@ public class MooseRushView extends View {
         hazards.clear();
         stars.clear();
         shots.clear();
-        particles.clear();
+        effects.clearParticles();
         playerX = getWidth() * 0.24f;
         playerY = getGroundY() - playerRadius;
         playerVelocityY = 0f;
@@ -895,7 +880,7 @@ public class MooseRushView extends View {
         damageFlash = 0.18f;
         screenShake = Math.max(screenShake, 0.16f);
         worldFlash = Math.max(worldFlash, 0.16f);
-        spawnDustBurst(playerX, getGroundY(), 14, Color.argb(190, 255, 255, 255));
+        effects.spawnDustBurst(playerX, getGroundY(), 14, Color.argb(190, 255, 255, 255));
     }
 
     private void addScore(int amount, String reason) {
@@ -926,8 +911,8 @@ public class MooseRushView extends View {
             if (circleHitsCircle(playerX, playerY, playerRadius * 0.95f, star.x, star.y, star.radius * 1.35f)) {
                 iterator.remove();
                 gameState.stars++;
-                spawnScorePopup("+15", star.x, star.y - dp(12), Color.rgb(255, 218, 121));
-                spawnSparkBurst(star.x, star.y, 12, Color.rgb(255, 218, 121));
+                effects.spawnScorePopup("+15", star.x, star.y - dp(12), Color.rgb(255, 218, 121));
+                effects.spawnSparkBurst(star.x, star.y, 12, Color.rgb(255, 218, 121));
                 addScore(15, "Star collected");
                 playSound("medal");
                 continue;
@@ -941,72 +926,7 @@ public class MooseRushView extends View {
     private void updateVisualEffects(float dt) {
         screenShake = Math.max(0f, screenShake - dt);
         worldFlash = Math.max(0f, worldFlash - dt);
-
-        Iterator<Particle> particleIterator = particles.iterator();
-        while (particleIterator.hasNext()) {
-            Particle particle = particleIterator.next();
-            particle.age += dt;
-            particle.x += particle.vx * dt;
-            particle.y += particle.vy * dt;
-            particle.vy += dp(280) * dt;
-            if (particle.age >= particle.life) {
-                particleIterator.remove();
-            }
-        }
-
-        Iterator<ScorePopup> popupIterator = scorePopups.iterator();
-        while (popupIterator.hasNext()) {
-            ScorePopup popup = popupIterator.next();
-            popup.age += dt;
-            popup.y += popup.vy * dt;
-            if (popup.age >= popup.life) {
-                popupIterator.remove();
-            }
-        }
-    }
-
-    private void spawnScorePopup(String label, float x, float y, int color) {
-        scorePopups.add(new ScorePopup(label, x, y, -dp(36), color, 0.78f));
-        while (scorePopups.size() > 8) {
-            scorePopups.remove(0);
-        }
-    }
-
-    private void spawnSparkBurst(float x, float y, int count, int color) {
-        for (int i = 0; i < count; i++) {
-            float angle = random.nextFloat() * (float) Math.PI * 2f;
-            float speed = dp(42 + random.nextFloat() * 92);
-            spawnParticle(
-                    x,
-                    y,
-                    (float) Math.cos(angle) * speed,
-                    (float) Math.sin(angle) * speed - dp(30),
-                    dp(1.8f + random.nextFloat() * 2.4f),
-                    color,
-                    0.32f + random.nextFloat() * 0.24f
-            );
-        }
-    }
-
-    private void spawnDustBurst(float x, float y, int count, int color) {
-        for (int i = 0; i < count; i++) {
-            spawnParticle(
-                    x + (random.nextFloat() - 0.5f) * dp(28),
-                    y - dp(5 + random.nextFloat() * 5),
-                    (random.nextFloat() - 0.5f) * dp(84),
-                    -dp(18 + random.nextFloat() * 46),
-                    dp(3.0f + random.nextFloat() * 4.2f),
-                    color,
-                    0.34f + random.nextFloat() * 0.24f
-            );
-        }
-    }
-
-    private void spawnParticle(float x, float y, float vx, float vy, float radius, int color, float life) {
-        particles.add(new Particle(x, y, vx, vy, radius, color, life));
-        while (particles.size() > 70) {
-            particles.remove(0);
-        }
+        effects.update(dt);
     }
 
     private void spawnHazard() {
@@ -1018,7 +938,7 @@ public class MooseRushView extends View {
         if (random.nextFloat() < 0.35f) {
             y = getGroundY() - dp(120) - random.nextFloat() * dp(60);
         }
-        Drawable drawable = hazardDrawableForStage(selectedStage);
+        Drawable drawable = assets.hazardForStage(selectedStage);
         hazards.add(new Hazard(getWidth() + dp(50), y, radius, 0.86f + random.nextFloat() * 0.32f, random.nextFloat() * 4f, stage.hazardLabel, drawable));
     }
 
@@ -1191,9 +1111,9 @@ public class MooseRushView extends View {
             drawBoss(canvas);
         }
 
-        drawParticles(canvas);
+        effects.drawParticles(canvas);
         drawCharacter(canvas, playerX, playerY - playerRadius * 2.26f, playerRadius);
-        drawScorePopups(canvas);
+        effects.drawScorePopups(canvas);
         drawWorldFlash(canvas);
         canvas.restoreToCount(saved);
     }
@@ -1235,7 +1155,7 @@ public class MooseRushView extends View {
     }
 
     private void drawStaticBackdrop(Canvas canvas, boolean dark, boolean winter) {
-        Drawable background = dark || winter ? backgroundDarkWinter : backgroundMidnightSun;
+        Drawable background = assets.background(dark, winter);
         if (background != null) {
             drawDrawable(canvas, background, 0, 0, getWidth(), getHeight());
         } else {
@@ -1398,29 +1318,6 @@ public class MooseRushView extends View {
         canvas.drawCircle(shot.x - shot.radius * 0.3f, shot.y - shot.radius * 0.25f, shot.radius * 0.35f, paint);
     }
 
-    private void drawParticles(Canvas canvas) {
-        paint.setStyle(Paint.Style.FILL);
-        for (Particle particle : particles) {
-            float remaining = 1f - particle.age / particle.life;
-            int alpha = Math.max(0, Math.min(255, Math.round(Color.alpha(particle.color) * remaining)));
-            paint.setColor(Color.argb(alpha, Color.red(particle.color), Color.green(particle.color), Color.blue(particle.color)));
-            canvas.drawCircle(particle.x, particle.y, particle.radius * (0.65f + remaining * 0.55f), paint);
-        }
-    }
-
-    private void drawScorePopups(Canvas canvas) {
-        textPaint.setTextAlign(Paint.Align.CENTER);
-        textPaint.setTextSize(dp(14));
-        for (ScorePopup popup : scorePopups) {
-            float remaining = 1f - popup.age / popup.life;
-            int alpha = Math.max(0, Math.min(255, Math.round(255 * remaining)));
-            textPaint.setColor(Color.argb(alpha, 12, 18, 28));
-            canvas.drawText(popup.label, popup.x + dp(1), popup.y + dp(1), textPaint);
-            textPaint.setColor(Color.argb(alpha, Color.red(popup.color), Color.green(popup.color), Color.blue(popup.color)));
-            canvas.drawText(popup.label, popup.x, popup.y, textPaint);
-        }
-    }
-
     private void drawWorldFlash(Canvas canvas) {
         if (worldFlash <= 0f) {
             return;
@@ -1432,7 +1329,7 @@ public class MooseRushView extends View {
     }
 
     private void drawBoss(Canvas canvas) {
-        Drawable bossDrawable = bossDrawableForStage();
+        Drawable bossDrawable = assets.bossForStage(selectedStage);
         float radius = bossRadius();
 
         if (damageFlash > 0f) {
@@ -1477,22 +1374,6 @@ public class MooseRushView extends View {
         canvas.drawText(STAGES[selectedStage].bossName + " HP " + bossHealth + "/" + bossMaxHealth, getWidth() / 2f, top - dp(6), textPaint);
     }
 
-    private Drawable hazardDrawableForStage(int stage) {
-        if (stage == 1) return salmonAsset;
-        if (stage == 2) return mooseAsset;
-        if (stage == 4) return bearAsset;
-        if (stage == 3) return bearAsset;
-        return salmonAsset;
-    }
-
-    private Drawable bossDrawableForStage() {
-        if (selectedStage == 1) return salmonAsset;
-        if (selectedStage == 2) return mooseAsset;
-        if (selectedStage == 4) return bearAsset;
-        if (selectedStage == 3) return bearAsset;
-        return salmonAsset;
-    }
-
     private float bossRadius() {
         if (selectedStage == 4) return gameplayDp(38);
         if (selectedStage == 2) return gameplayDp(34);
@@ -1500,271 +1381,16 @@ public class MooseRushView extends View {
     }
 
     private void drawCharacter(Canvas canvas, float x, float y, float radius) {
-        float bob = (float) Math.sin(spriteClock * Math.PI * 2f) * dp(4.0f);
-        float cycle = (float) Math.sin(spriteClock * Math.PI * 2f);
-        float headY = y + bob;
-
-        drawWalkingSpriteBody(canvas, x, headY, radius, cycle);
-
-        if (playerPhoto != null) {
-            drawPlayerPhoto(canvas, x, headY, radius);
-        } else {
-            drawDefaultPlayerHead(canvas, x, headY, radius);
-        }
+        spriteRenderer.drawRunner(canvas, playerFrame(x, y, radius));
     }
 
     private void drawCharacterPreview(Canvas canvas, float x, float y, float radius) {
-        drawStandingCharacter(canvas, x, y, radius);
+        spriteRenderer.drawStanding(canvas, playerFrame(x, y, radius));
     }
 
-    private void drawStandingCharacter(Canvas canvas, float x, float headY, float radius) {
-        drawStandingSpriteBody(canvas, x, headY, radius);
-
-        if (playerPhoto != null) {
-            drawPlayerPhoto(canvas, x, headY, radius);
-        } else {
-            drawDefaultPlayerHead(canvas, x, headY, radius);
-        }
-    }
-
-    private void drawStandingSpriteBody(Canvas canvas, float x, float headY, float radius) {
-        float shoulderY = headY + radius * 1.02f;
-        float hipY = headY + radius * 2.14f;
-        float footY = headY + radius * 3.22f;
+    private SpriteRenderer.PlayerFrame playerFrame(float x, float y, float radius) {
         int outfitColor = playerPhoto == null ? Color.rgb(255, 218, 121) : OUTFIT_COLORS[selectedOutfit];
-        int pantsColor = playerPhoto == null ? Color.rgb(52, 134, 196) : darkerOutfitColor();
-        int outlineColor = Color.rgb(31, 34, 38);
-        int bootColor = Color.rgb(42, 31, 30);
-        int gloveColor = Color.rgb(255, 177, 70);
-
-        paint.setShader(null);
-
-        drawBentLimb(canvas, x - radius * 0.28f, hipY, x - radius * 0.36f, hipY + radius * 0.56f, x - radius * 0.52f, footY, radius * 0.27f + radius * 0.15f, outlineColor);
-        drawBentLimb(canvas, x + radius * 0.28f, hipY, x + radius * 0.36f, hipY + radius * 0.56f, x + radius * 0.52f, footY, radius * 0.27f + radius * 0.15f, outlineColor);
-        drawBentLimb(canvas, x - radius * 0.28f, hipY, x - radius * 0.36f, hipY + radius * 0.56f, x - radius * 0.52f, footY, radius * 0.27f, pantsColor);
-        drawBentLimb(canvas, x + radius * 0.28f, hipY, x + radius * 0.36f, hipY + radius * 0.56f, x + radius * 0.52f, footY, radius * 0.27f, pantsColor);
-        drawRunnerFoot(canvas, x - radius * 0.52f, footY, -1f, radius, outlineColor, bootColor);
-        drawRunnerFoot(canvas, x + radius * 0.52f, footY, 1f, radius, outlineColor, bootColor);
-
-        drawBentLimb(canvas, x - radius * 0.58f, shoulderY + radius * 0.16f, x - radius * 0.86f, shoulderY + radius * 0.74f, x - radius * 0.58f, hipY - radius * 0.08f, radius * 0.21f + radius * 0.14f, outlineColor);
-        drawBentLimb(canvas, x + radius * 0.58f, shoulderY + radius * 0.16f, x + radius * 0.86f, shoulderY + radius * 0.74f, x + radius * 0.58f, hipY - radius * 0.08f, radius * 0.21f + radius * 0.14f, outlineColor);
-        drawBentLimb(canvas, x - radius * 0.58f, shoulderY + radius * 0.16f, x - radius * 0.86f, shoulderY + radius * 0.74f, x - radius * 0.58f, hipY - radius * 0.08f, radius * 0.21f, gloveColor);
-        drawBentLimb(canvas, x + radius * 0.58f, shoulderY + radius * 0.16f, x + radius * 0.86f, shoulderY + radius * 0.74f, x + radius * 0.58f, hipY - radius * 0.08f, radius * 0.21f, gloveColor);
-
-        paint.setStyle(Paint.Style.FILL);
-        paint.setColor(outlineColor);
-        bodyBounds.set(x - radius * 0.70f, shoulderY - radius * 0.18f, x + radius * 0.70f, hipY + radius * 0.16f);
-        canvas.drawRoundRect(bodyBounds, dp(9), dp(9), paint);
-
-        paint.setColor(outfitColor);
-        bodyBounds.set(x - radius * 0.58f, shoulderY - radius * 0.08f, x + radius * 0.58f, hipY + radius * 0.08f);
-        canvas.drawRoundRect(bodyBounds, dp(8), dp(8), paint);
-
-        paint.setColor(Color.rgb(226, 64, 72));
-        tempRect.set(x - radius * 0.48f, shoulderY - radius * 0.16f, x + radius * 0.48f, shoulderY + radius * 0.15f);
-        canvas.drawRoundRect(tempRect, dp(7), dp(7), paint);
-
-        paint.setColor(Color.argb(185, 255, 246, 207));
-        canvas.drawRoundRect(x - radius * 0.36f, shoulderY + radius * 0.32f, x + radius * 0.36f, shoulderY + radius * 0.48f, dp(4), dp(4), paint);
-    }
-
-    private void drawWalkingSpriteBody(Canvas canvas, float x, float headY, float radius, float cycle) {
-        float bodyTop = headY + radius * 0.80f;
-        float shoulderY = bodyTop + radius * 0.32f;
-        float hipY = bodyTop + radius * 1.32f;
-        float shoulderX = x - radius * 0.08f;
-        float hipX = x + radius * 0.12f;
-        float footY = headY + radius * 3.18f;
-        float phase = spriteClock * (float) Math.PI * 2f;
-        float stride = grounded ? (float) Math.sin(phase) : 0.28f;
-        float riseA = grounded ? Math.max(0f, -(float) Math.cos(phase)) : 0.60f;
-        float riseB = grounded ? Math.max(0f, (float) Math.cos(phase)) : 0.38f;
-        float outline = radius * 0.15f;
-        int outfitColor = playerPhoto == null ? Color.rgb(255, 218, 121) : OUTFIT_COLORS[selectedOutfit];
-        int pantsColor = playerPhoto == null ? Color.rgb(52, 134, 196) : darkerOutfitColor();
-        int farPantsColor = Color.rgb(
-                Math.max(0, Math.round(Color.red(pantsColor) * 0.72f)),
-                Math.max(0, Math.round(Color.green(pantsColor) * 0.72f)),
-                Math.max(0, Math.round(Color.blue(pantsColor) * 0.72f))
-        );
-        int trimColor = Color.rgb(255, 246, 207);
-        int outlineColor = Color.rgb(31, 34, 38);
-        int bootColor = Color.rgb(42, 31, 30);
-        int gloveColor = Color.rgb(255, 177, 70);
-        int farGloveColor = Color.rgb(198, 116, 48);
-
-        float nearHipX = hipX + radius * 0.10f;
-        float farHipX = hipX - radius * 0.10f;
-        float farKneeX;
-        float farKneeY;
-        float farFootX;
-        float farFootY;
-        float nearKneeX;
-        float nearKneeY;
-        float nearFootX;
-        float nearFootY;
-
-        if (grounded) {
-            float bend = (float) Math.cos(phase) * radius * 0.10f;
-            nearFootX = nearHipX + stride * radius * 0.72f;
-            nearFootY = footY - riseA * radius * 0.22f;
-            nearKneeX = nearHipX + stride * radius * 0.34f + bend;
-            nearKneeY = hipY + radius * 0.60f - riseA * radius * 0.10f;
-
-            farFootX = farHipX - stride * radius * 0.64f;
-            farFootY = footY - riseB * radius * 0.20f;
-            farKneeX = farHipX - stride * radius * 0.30f - bend;
-            farKneeY = hipY + radius * 0.62f - riseB * radius * 0.08f;
-        } else {
-            nearKneeX = nearHipX + radius * 0.38f;
-            nearKneeY = hipY + radius * 0.46f;
-            nearFootX = nearHipX + radius * 0.16f;
-            nearFootY = hipY + radius * 1.05f;
-
-            farKneeX = farHipX - radius * 0.40f;
-            farKneeY = hipY + radius * 0.56f;
-            farFootX = farHipX - radius * 0.05f;
-            farFootY = hipY + radius * 1.12f;
-        }
-
-        float nearArmSwing = -stride * 0.54f;
-        float farArmSwing = -nearArmSwing;
-        float nearShoulderX = shoulderX + radius * 0.42f;
-        float farShoulderX = shoulderX - radius * 0.36f;
-        float nearElbowX = nearShoulderX + nearArmSwing * radius * 0.52f;
-        float nearElbowY = shoulderY + radius * 0.46f;
-        float nearHandX = nearElbowX + nearArmSwing * radius * 0.42f;
-        float nearHandY = nearElbowY + radius * 0.42f;
-        float farElbowX = farShoulderX + farArmSwing * radius * 0.46f;
-        float farElbowY = shoulderY + radius * 0.52f;
-        float farHandX = farElbowX + farArmSwing * radius * 0.34f;
-        float farHandY = farElbowY + radius * 0.40f;
-
-        paint.setShader(null);
-        drawBentLimb(canvas, farHipX, hipY, farKneeX, farKneeY, farFootX, farFootY, radius * 0.24f + outline, outlineColor);
-        drawBentLimb(canvas, farHipX, hipY, farKneeX, farKneeY, farFootX, farFootY, radius * 0.24f, farPantsColor);
-        drawRunnerFoot(canvas, farFootX, farFootY, -stride, radius, outlineColor, bootColor);
-
-        drawBentLimb(canvas, farShoulderX, shoulderY, farElbowX, farElbowY, farHandX, farHandY, radius * 0.19f + outline, outlineColor);
-        drawBentLimb(canvas, farShoulderX, shoulderY, farElbowX, farElbowY, farHandX, farHandY, radius * 0.19f, farGloveColor);
-
-        paint.setStyle(Paint.Style.STROKE);
-        paint.setStrokeCap(Paint.Cap.ROUND);
-        paint.setStrokeWidth(radius * 0.38f + outline);
-        paint.setColor(outlineColor);
-        canvas.drawLine(shoulderX, shoulderY, hipX, hipY, paint);
-
-        paint.setStrokeWidth(radius * 0.38f);
-        paint.setColor(outfitColor);
-        canvas.drawLine(shoulderX, shoulderY, hipX, hipY, paint);
-
-        paint.setStrokeWidth(radius * 0.2f);
-        paint.setColor(trimColor);
-        canvas.drawLine(shoulderX - radius * 0.10f, shoulderY + radius * 0.30f, shoulderX + radius * 0.54f, shoulderY + radius * 0.43f, paint);
-
-        drawBentLimb(canvas, nearHipX, hipY, nearKneeX, nearKneeY, nearFootX, nearFootY, radius * 0.27f + outline, outlineColor);
-        drawBentLimb(canvas, nearHipX, hipY, nearKneeX, nearKneeY, nearFootX, nearFootY, radius * 0.27f, pantsColor);
-        drawRunnerFoot(canvas, nearFootX, nearFootY, stride, radius, outlineColor, bootColor);
-
-        drawBentLimb(canvas, nearShoulderX, shoulderY, nearElbowX, nearElbowY, nearHandX, nearHandY, radius * 0.21f + outline, outlineColor);
-        drawBentLimb(canvas, nearShoulderX, shoulderY, nearElbowX, nearElbowY, nearHandX, nearHandY, radius * 0.21f, gloveColor);
-
-        paint.setStyle(Paint.Style.FILL);
-        paint.setColor(outlineColor);
-        bodyBounds.set(x - radius * 0.58f, bodyTop - radius * 0.34f, x + radius * 0.56f, bodyTop + radius * 0.12f);
-        canvas.drawRoundRect(bodyBounds, dp(8), dp(8), paint);
-
-        paint.setColor(Color.rgb(226, 64, 72));
-        tempRect.set(x - radius * 0.5f, bodyTop - radius * 0.27f, x + radius * 0.5f, bodyTop + radius * 0.03f);
-        canvas.drawRoundRect(tempRect, dp(7), dp(7), paint);
-
-        paint.setColor(Color.argb(190, 255, 246, 207));
-        canvas.drawCircle(x + radius * 0.64f, bodyTop - radius * 0.08f, radius * 0.13f, paint);
-
-        paint.setStrokeCap(Paint.Cap.BUTT);
-        paint.setStyle(Paint.Style.FILL);
-    }
-
-    private void drawBentLimb(Canvas canvas, float ax, float ay, float bx, float by, float cx, float cy, float strokeWidth, int color) {
-        paint.setStyle(Paint.Style.STROKE);
-        paint.setStrokeCap(Paint.Cap.ROUND);
-        paint.setStrokeWidth(strokeWidth);
-        paint.setColor(color);
-        canvas.drawLine(ax, ay, bx, by, paint);
-        canvas.drawLine(bx, by, cx, cy, paint);
-        paint.setStyle(Paint.Style.FILL);
-    }
-
-    private void drawRunnerFoot(Canvas canvas, float x, float y, float stride, float radius, int outlineColor, int bootColor) {
-        float direction = stride >= 0f ? 1f : -1f;
-        float toeX = x + direction * radius * 0.38f;
-        float heelX = x - direction * radius * 0.18f;
-        paint.setStyle(Paint.Style.STROKE);
-        paint.setStrokeCap(Paint.Cap.ROUND);
-        paint.setStrokeWidth(radius * 0.24f);
-        paint.setColor(outlineColor);
-        canvas.drawLine(heelX, y, toeX, y + radius * 0.03f, paint);
-        paint.setStrokeWidth(radius * 0.16f);
-        paint.setColor(bootColor);
-        canvas.drawLine(heelX, y, toeX, y + radius * 0.03f, paint);
-        paint.setStyle(Paint.Style.FILL);
-    }
-
-    private void drawDefaultPlayerHead(Canvas canvas, float x, float headY, float radius) {
-        paint.setShader(null);
-        paint.setStyle(Paint.Style.FILL);
-        paint.setColor(Color.rgb(31, 34, 38));
-        canvas.drawRoundRect(x - radius * 1.06f, headY - radius * 1.06f, x + radius * 1.06f, headY + radius * 1.06f, dp(10), dp(10), paint);
-
-        paint.setColor(Color.rgb(255, 192, 81));
-        canvas.drawRoundRect(x - radius, headY - radius, x + radius, headY + radius, dp(8), dp(8), paint);
-
-        paint.setColor(Color.argb(230, 87, 54, 38));
-        canvas.drawRoundRect(x - radius * 0.95f, headY - radius * 0.98f, x + radius * 0.95f, headY - radius * 0.42f, dp(8), dp(8), paint);
-
-        paint.setColor(Color.rgb(43, 32, 31));
-        canvas.drawCircle(x - radius * 0.35f, headY - radius * 0.12f, dp(3), paint);
-        canvas.drawCircle(x + radius * 0.35f, headY - radius * 0.12f, dp(3), paint);
-        canvas.drawRoundRect(x - radius * 0.35f, headY + radius * 0.25f, x + radius * 0.35f, headY + radius * 0.38f, dp(5), dp(5), paint);
-    }
-
-    private void drawPlayerPhoto(Canvas canvas, float x, float headY, float radius) {
-        float faceRadius = radius * 0.92f;
-        float diameter = faceRadius * 2f;
-        BitmapShader shader = new BitmapShader(playerPhoto, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP);
-        float scale = Math.max(diameter / playerPhoto.getWidth(), diameter / playerPhoto.getHeight());
-        float dx = x - playerPhoto.getWidth() * scale / 2f;
-        float dy = headY - playerPhoto.getHeight() * scale / 2f;
-        photoMatrix.reset();
-        photoMatrix.setScale(scale, scale);
-        photoMatrix.postTranslate(dx, dy);
-        shader.setLocalMatrix(photoMatrix);
-
-        paint.setStyle(Paint.Style.FILL);
-        paint.setShader(null);
-        paint.setColor(Color.rgb(31, 34, 38));
-        canvas.drawCircle(x, headY, radius * 1.11f, paint);
-
-        paint.setColor(Color.rgb(226, 64, 72));
-        tempRect.set(x - radius * 1.03f, headY - radius * 1.06f, x + radius * 1.03f, headY - radius * 0.43f);
-        canvas.drawRoundRect(tempRect, dp(9), dp(9), paint);
-
-        paint.setColor(Color.rgb(255, 218, 121));
-        canvas.drawCircle(x + radius * 0.72f, headY - radius * 0.50f, radius * 0.18f, paint);
-
-        paint.setShader(shader);
-        tempRect.set(x - faceRadius, headY - faceRadius, x + faceRadius, headY + faceRadius);
-        canvas.drawOval(tempRect, paint);
-        paint.setShader(null);
-
-        paint.setStyle(Paint.Style.STROKE);
-        paint.setStrokeWidth(dp(2.4f));
-        paint.setColor(Color.rgb(255, 246, 207));
-        canvas.drawOval(tempRect, paint);
-        paint.setStyle(Paint.Style.FILL);
-
-        paint.setColor(Color.argb(78, 255, 255, 255));
-        canvas.drawCircle(x - radius * 0.28f, headY - radius * 0.32f, radius * 0.22f, paint);
+        return new SpriteRenderer.PlayerFrame(x, y, radius, spriteClock, grounded, playerVelocityY, playerPhoto, outfitColor);
     }
 
     private void drawReadyScreen(Canvas canvas) {
@@ -2289,15 +1915,6 @@ public class MooseRushView extends View {
         return dp(value * 0.82f);
     }
 
-    private int darkerOutfitColor() {
-        int color = OUTFIT_COLORS[selectedOutfit];
-        return Color.rgb(
-                Math.max(0, Math.round(Color.red(color) * 0.52f)),
-                Math.max(0, Math.round(Color.green(color) * 0.52f)),
-                Math.max(0, Math.round(Color.blue(color) * 0.52f))
-        );
-    }
-
     private static class StageConfig {
         final String name;
         final String line;
@@ -2383,46 +2000,6 @@ public class MooseRushView extends View {
             this.x = x;
             this.y = y;
             this.radius = radius;
-        }
-    }
-
-    private static class Particle {
-        float x;
-        float y;
-        final float vx;
-        float vy;
-        final float radius;
-        final int color;
-        final float life;
-        float age = 0f;
-
-        Particle(float x, float y, float vx, float vy, float radius, int color, float life) {
-            this.x = x;
-            this.y = y;
-            this.vx = vx;
-            this.vy = vy;
-            this.radius = radius;
-            this.color = color;
-            this.life = life;
-        }
-    }
-
-    private static class ScorePopup {
-        final String label;
-        final float x;
-        float y;
-        final float vy;
-        final int color;
-        final float life;
-        float age = 0f;
-
-        ScorePopup(String label, float x, float y, float vy, int color, float life) {
-            this.label = label;
-            this.x = x;
-            this.y = y;
-            this.vy = vy;
-            this.color = color;
-            this.life = life;
         }
     }
 
