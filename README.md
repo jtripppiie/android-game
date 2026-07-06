@@ -2,16 +2,16 @@
 
 A personalized Android arcade game by **TripperDeeLabs**.
 
-**Current status: Alaska 1.9.6 Trail Passport alpha.**
+**Current status: Alaska 2.1.0 Expedition beta.**
 
 This build is beta-ready for APK testing, tuning, and bug fixing. It is not final 1.0 or a larger milestone until it installs and plays well across all Alaska stages on a real phone.
 
 ## Current beta
 
 ```text
-versionCode: 196
-versionName: 1.9.6-alpha
-build badge: ALASKA PASSPORT v1.9.6
+versionCode: 210
+versionName: 2.1.0-beta
+build badge: ALASKA PASSPORT v2.1 BETA
 ```
 
 ## Game flow
@@ -74,6 +74,11 @@ Mobile mapping:
 - Trail Tokens with cosmetic outfit unlocks
 - Daily Rush rotating unlocked-stage challenge with local streak rewards
 - Trail Passport collectible badges with token rewards
+- Expedition Logs for higher-grade clears
+- Trail Map and Rescue Kit pickups
+- Hazard forecast warnings
+- Boss phase-two escalation callouts
+- Expedition grading, route milestones, trail camp restocks, and beta run summaries
 - Progressive difficulty pacing for speed and spawn pressure
 - Hurdle progress bar
 - Collectible star paths
@@ -119,7 +124,7 @@ The debug APK lands in `app/build/outputs/apk/debug/` with the version in the
 filename, for example:
 
 ```text
-you-rush-alaska-1.9.6-alpha-196-debug.apk
+you-rush-alaska-2.1.0-beta-210-debug.apk
 ```
 
 GitHub Actions also builds a debug APK using:

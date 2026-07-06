@@ -5,16 +5,16 @@ Use this after GitHub Actions produces the debug APK artifact.
 Current packaged beta:
 
 ```text
-versionCode: 196
-versionName: 1.9.6-alpha
-build badge: ALASKA PASSPORT v1.9.6
+versionCode: 210
+versionName: 2.1.0-beta
+build badge: ALASKA PASSPORT v2.1 BETA
 ```
 
 ## Install test
 
 1. Download `you-rush-alaska-debug-apk` from the latest successful workflow run.
 2. Extract the ZIP if GitHub downloaded it as a ZIP.
-3. Install `you-rush-alaska-1.9.6-alpha-196-debug.apk` on an Android phone.
+3. Install `you-rush-alaska-2.1.0-beta-210-debug.apk` on an Android phone.
 4. Allow installation from the browser/files app if Android prompts you.
 5. Open **You Rush**.
 6. Confirm the debug/version badge is visible and matches the packaged beta.
