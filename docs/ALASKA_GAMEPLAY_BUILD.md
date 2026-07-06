@@ -25,13 +25,13 @@ Core idea:
 
 The current Alaska map has five stages:
 
-| Stage | Season style | Main hazard | Boss | Goal before boss |
-|---|---|---|---|---|
-| Midnight Sun Run | Midnight Sun | SUN | Sunburn Sprite | 5 gates |
-| Salmon Rush | Summer | SALMON | Salmon Boss | 7 gates |
-| Moose Pass | Summer | MOOSE | Moose Boss | 8 gates |
-| Dark Winter | Darkness | EAGLE | Eagle Boss | 9 gates |
-| Bear Country | Winter | BEAR / POLAR / WOLF | Polar Bear Boss | 10 gates |
+| Stage | Season style | Main obstacle | Main hazard | Boss | Goal before boss |
+|---|---|---|---|---|---|
+| Midnight Sun Run | Midnight Sun | Driftwood rails | SUN | Sunburn Sprite | 5 jumps |
+| Salmon Rush | Summer | Fish racks | SALMON | Salmon Boss | 7 jumps |
+| Moose Pass | Summer | Antler barricades | MOOSE | Moose Boss | 8 jumps |
+| Dark Winter | Darkness | Ice markers | EAGLE | Eagle Boss | 9 jumps |
+| Bear Country | Winter | Snowbanks | BEAR / POLAR / WOLF | Polar Bear Boss | 10 jumps |
 
 ## Controls
 
@@ -48,7 +48,7 @@ A normal screen tap during gameplay still works as a quick bounce, but the virtu
 
 Current scoring values:
 
-- Clear a gate: **+10**
+- Clear a stage obstacle: **+10**
 - Collect a star: **+15**
 - Dodge a hazard: **+4**
 - Near miss: **+6**
@@ -58,25 +58,27 @@ Current scoring values:
 - Defeat a boss: **+100 + stage bonus**
 
 Combo multipliers increase rewards during clean play. Aurora Rush adds a short
-extra score multiplier when the meter fills from gates, stars, near misses,
+extra score multiplier when the meter fills from obstacle jumps, stars, near misses,
 dodges, boss hits, shields, and missions. Best score, XP, Trail Tokens, cosmetic
 outfit unlocks, Trail Passport badges, and local level persist in shared
 preferences.
 
 Daily Rush rotates one unlocked Alaska stage per local day, sets the correct
 season automatically, and pays a once-per-day Trail Token bonus when the player
-clears the daily gate target or finishes the stage. The streak is stored locally
+clears the daily jump target or finishes the stage. The streak is stored locally
 and increases the daily payout without blocking normal play.
 
 Trail Passport badges are local collectible achievements for skill and
-progression moments: first run progress, gate count, stars, combos, boss clears,
+progression moments: first run progress, obstacle count, stars, combos, boss clears,
 perfect clears, Daily Rush, full Alaska progression, Aurora Rush, and mission
 completion. New badges award a one-time Trail Token bonus and appear on run
 result panels plus the main menu badge count.
 
 ## Stage progression
 
-Each stage has a gate goal. Once the player clears the required number of gates, normal gate/hazard spawning stops and the boss phase begins.
+Each stage has a named obstacle goal. Once the player clears the required number
+of obstacle jumps, normal obstacle/hazard spawning stops and the boss phase
+begins.
 
 When the boss is defeated:
 
@@ -85,12 +87,13 @@ When the boss is defeated:
 - Best score is saved if beaten.
 - The player can go to the map or start the next stage.
 
-The map still shows every stage so the Alaska template can be inspected during development.
+The map shows every stage, but locked stages cannot be started until the prior
+stage is cleared.
 
 ## Boss design
 
-Bosses currently use generated raster sprite sheets and simple movement
-patterns.
+Bosses use generated raster sprite sheets, visible attack tells, timed attack
+patterns, recovery weak windows, and an escape countdown.
 
 The player defeats a boss by pressing **FIRE** and landing snowball hits.
 
@@ -102,7 +105,8 @@ Current boss health:
 - Eagle Boss: 4
 - Polar Bear Boss: 6
 
-The boss phase has a fail timer. If the player does not defeat the boss quickly enough, the boss wins.
+The boss phase has a visible fail timer. If the player does not defeat the boss
+quickly enough, the boss wins.
 
 ## Debugging and logging
 

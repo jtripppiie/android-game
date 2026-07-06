@@ -2,16 +2,16 @@
 
 A personalized Android arcade game by **TripperDeeLabs**.
 
-**Current status: Alaska 2.4.0 progression polish beta.**
+**Current status: Alaska 2.5.0 visual contract beta.**
 
 This build is beta-ready for APK testing, tuning, and bug fixing. It is not final 1.0 or a larger milestone until it installs and plays well across all Alaska stages on a real phone.
 
 ## Current beta
 
 ```text
-versionCode: 240
-versionName: 2.4.0-beta
-build badge: ALASKA PASSPORT v2.4 BETA
+versionCode: 250
+versionName: 2.5.0-beta
+build badge: ALASKA PASSPORT v2.5 BETA
 ```
 
 ## Game flow
@@ -36,10 +36,12 @@ build badge: ALASKA PASSPORT v2.4 BETA
 ## Gameplay style
 
 You Rush is a side-scrolling platform runner (Mario-style), not a flap-to-fly
-game. Your character runs along the ground under gravity. Antler hurdles rise
-from the ground and hazards fly in from the right — jump (or double jump) to
-clear them. The ground is safe to land on; only hitting a hurdle, a hazard, or
-the boss ends the run.
+game. Your character runs along the ground under gravity. Stage-specific trail
+obstacles rise from the ground — driftwood rails, fish racks, antler
+barricades, ice markers, and snowbanks — while wildlife hazards enter from the
+right. Jump obstacles, avoid or stun wildlife, and defeat bosses with snowballs.
+The ground is safe to land on; only hitting an obstacle, a hazard, or the boss
+ends the run.
 
 
 ## Contra code
@@ -85,7 +87,7 @@ Mobile mapping:
 - Parallax Alaska scenery with generated background plates and snow-tree layers
 - Winter-mode polar bear, wolf, and roaring bear moments
 - Three lives per run
-- Checkpoint respawn after passed hurdles
+- Checkpoint respawn after passed obstacles
 - Snowball interactions
 - Combo counter
 - Persistent XP and local levels
@@ -97,6 +99,7 @@ Mobile mapping:
 - Stronger sprite edge guards for animal sheets and roar sprites
 - Result panels with next-goal guidance after wins and losses
 - Real map progression locks, respawn grace, boss escape timer, and clearer combat rules
+- Stage-specific obstacle identities and calmer creature animation pacing
 - Build-log artifact workflow
 - Safer launcher vector paths
 - Hardened app manifest
@@ -129,7 +132,7 @@ The debug APK lands in `app/build/outputs/apk/debug/` with the version in the
 filename, for example:
 
 ```text
-you-rush-alaska-2.4.0-beta-240-debug.apk
+you-rush-alaska-2.5.0-beta-250-debug.apk
 ```
 
 GitHub Actions also builds a debug APK using:
@@ -175,6 +178,7 @@ Run them with `./gradlew testDebugUnitTest`.
 - `docs/RELEASE_2_2_BETA_LAUNCH_READINESS.md` documents the 2.2.0-beta release-owner hardening pass.
 - `docs/RELEASE_2_3_BETA_GAMEPLAY_POLISH.md` documents the next-five gameplay polish pass.
 - `docs/RELEASE_2_4_BETA_PROGRESSION_POLISH.md` documents the progression and fairness polish pass.
+- `docs/RELEASE_2_5_BETA_VISUAL_CONTRACT.md` documents the obstacle-identity and animation-readability pass.
 
 ## App icon
 
@@ -192,4 +196,4 @@ full-bleed vector fallback in `res/mipmap-anydpi/` for API 23–25.
 5. Verify movement, jump, double jump, fire, lives, checkpoint respawn, unified HUD, combo, XP, all bosses, and mute toggle.
 6. Tune movement, spacing, scoring, spawn rates, stage difficulty, and HUD overlap.
 7. Confirm no crash in a 15-minute phone test.
-8. Keep 2.4.x focused on progression feel, boss readability, phone QA, and crash-free beta testing.
+8. Keep 2.5.x focused on visual/gameplay clarity, phone QA, and crash-free beta testing.

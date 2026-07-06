@@ -5,16 +5,16 @@ Use this after GitHub Actions produces the debug APK artifact.
 Current packaged beta:
 
 ```text
-versionCode: 240
-versionName: 2.4.0-beta
-build badge: ALASKA PASSPORT v2.4 BETA
+versionCode: 250
+versionName: 2.5.0-beta
+build badge: ALASKA PASSPORT v2.5 BETA
 ```
 
 ## Install test
 
 1. Download `you-rush-alaska-debug-apk` from the latest successful workflow run.
 2. Extract the ZIP if GitHub downloaded it as a ZIP.
-3. Install `you-rush-alaska-2.4.0-beta-240-debug.apk` on an Android phone.
+3. Install `you-rush-alaska-2.5.0-beta-250-debug.apk` on an Android phone.
 4. Allow installation from the browser/files app if Android prompts you.
 5. Open **You Rush**.
 6. Confirm the debug/version badge is visible and matches the packaged beta.
@@ -55,7 +55,7 @@ Test these controls:
 Confirm the beta loop behaves consistently:
 
 - The run starts with three lives.
-- Passing hurdles advances the progress HUD and checkpoint.
+- Passing named obstacles advances the progress HUD and checkpoint.
 - Crashing with no shield spends one life.
 - Respawn resumes safely when lives remain.
 - Respawn grace shows a visible aura and prevents immediate repeat damage.
@@ -65,7 +65,7 @@ Confirm the beta loop behaves consistently:
 
 Confirm score changes:
 
-- Clearing antler hurdles increases score.
+- Clearing named stage obstacles increases score.
 - Collecting stars increases score and the HUD star count.
 - Dodging hazards gives small score bumps.
 - Combo streaks build from successful play, unlock score multipliers, and reset on mistakes.
@@ -89,7 +89,7 @@ Confirm score changes:
 For each Alaska stage:
 
 1. Start the stage from the Alaska Map.
-2. Clear the required number of hurdles.
+2. Clear the required number of named obstacles.
 3. Confirm the boss phase starts.
 4. Hit the boss until its HP reaches zero.
 5. Confirm the Stage Clear screen appears.
@@ -112,6 +112,7 @@ Check small and large screens:
 - Hurdle/boss progress, lives, combo multiplier, XP level, score, run score, and best score remain readable.
 - Boss incoming and combo callout overlays appear without covering the player.
 - The ready screen shows goal, boss, and bonus briefing chips.
+- The ready screen names the current obstacle type instead of generic hurdles.
 - Boss health bar never overlaps the top HUD.
 - Boss tells show a clear readable action hint before the attack lands.
 - Boss lunge movement feels like a wind-up, attack, and recovery instead of a random jump.
@@ -125,6 +126,9 @@ Check small and large screens:
 - Trees should visually connect to the ground and not float above the lane.
 - Polar bear and wolf sprites animate cleanly without magenta background artifacts.
 - Roaring bear sprites do not show edge artifacts from the original image border.
+- Eagle wing animation reads as deliberate flapping, not strobing.
+- Salmon animation reads as swimming, not jittering.
+- Stage obstacles have distinct identities: driftwood rails, fish racks, antler barricades, ice markers, and snowbanks.
 - Moose/polar/default bosses should be grounded; eagle/salmon bosses may fly or swim but should have grounded shadows and constrained lanes.
 - Bosses should visibly advance toward the player and retreat instead of parking at the far right.
 - Eagle wings flap at a natural pace instead of strobing.

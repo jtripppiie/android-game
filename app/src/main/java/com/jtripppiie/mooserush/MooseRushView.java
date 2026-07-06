@@ -98,11 +98,11 @@ public class MooseRushView extends View {
     };
 
     private static final StageConfig[] STAGES = {
-            new StageConfig("Midnight Sun Run", "Learn the jump. Clear the hurdles.", SEASON_MIDNIGHT_SUN, "Sunburn Sprite", "SUN", 5, 2, 150, 2.35f, 0),
-            new StageConfig("Salmon Rush", "Fish arc in after the first hurdles.", SEASON_SUMMER, "Salmon Boss", "SALMON", 7, 3, 165, 2.15f, 1),
-            new StageConfig("Moose Pass", "Moose enemies are real now. Take your time.", SEASON_SUMMER, "Moose Boss", "MOOSE", 8, 4, 178, 2.05f, 2),
-            new StageConfig("Dark Winter", "Eagles dive through low light.", SEASON_DARKNESS, "Eagle Boss", "EAGLE", 9, 4, 188, 1.95f, 3),
-            new StageConfig("Bear Country", "Polar bears and wolves join the final sprint.", SEASON_WINTER, "Polar Bear Boss", "BEAR", 10, 6, 198, 1.85f, 4)
+            new StageConfig("Midnight Sun Run", "Jump driftwood trail rails before the sun boss.", SEASON_MIDNIGHT_SUN, "Sunburn Sprite", "SUN", "DRIFTWOOD RAILS", 5, 2, 150, 2.35f, 0),
+            new StageConfig("Salmon Rush", "Clear fish-camp racks while salmon arc in.", SEASON_SUMMER, "Salmon Boss", "SALMON", "FISH RACKS", 7, 3, 165, 2.15f, 1),
+            new StageConfig("Moose Pass", "Vault antler barricades and dodge real moose.", SEASON_SUMMER, "Moose Boss", "MOOSE", "ANTLER BARRICADES", 8, 4, 178, 2.05f, 2),
+            new StageConfig("Dark Winter", "Leap ice trail markers through low light.", SEASON_DARKNESS, "Eagle Boss", "EAGLE", "ICE MARKERS", 9, 4, 188, 1.95f, 3),
+            new StageConfig("Bear Country", "Survive snowbank barricades and winter wildlife.", SEASON_WINTER, "Polar Bear Boss", "BEAR", "SNOWBANKS", 10, 6, 198, 1.85f, 4)
     };
     private static final int SPRITE_SHEET_FRAMES = 6;
     private static final float PLAYER_START_X_FRACTION = 0.265f;
@@ -772,7 +772,7 @@ public class MooseRushView extends View {
         coyoteTimer = RunnerTuning.COYOTE_SECONDS;
         jumpBufferTimer = 0f;
         stageAttempts++;
-        logEvent("Start stage: " + stage.name + ". Goal " + stage.goalGates + " hurdles, boss HP " + stage.bossHealth + ".");
+        logEvent("Start stage: " + stage.name + ". Goal " + stage.goalGates + " " + stage.obstacleName + ", boss HP " + stage.bossHealth + ".");
     }
 
     private void setupRunMissions(StageConfig stage) {
@@ -978,7 +978,7 @@ public class MooseRushView extends View {
                 effects.spawnSparkBurst(gate.x + gate.width / 2f, getGroundY() - gate.height, 8, Color.rgb(255, 218, 121));
                 addAuroraMeter(8f, "Hurdle rhythm");
                 showComboCallout();
-                logEvent("Hurdle " + gatesPassed + "/" + STAGES[selectedStage].goalGates + " cleared.");
+                logEvent(STAGES[selectedStage].obstacleName + " " + gatesPassed + "/" + STAGES[selectedStage].goalGates + " cleared.");
             }
 
             if (gate.x + gate.width < -dp(24)) {
@@ -1714,7 +1714,7 @@ public class MooseRushView extends View {
         StageConfig stage = STAGES[selectedStage];
         if (!missionHurdlesComplete && gatesPassed >= stage.goalGates) {
             missionHurdlesComplete = true;
-            completeMission("HURDLE HERO");
+            completeMission("TRAIL VAULTER");
         }
         if (!missionStarsComplete && gameState.stars >= missionStarGoal) {
             missionStarsComplete = true;
@@ -2530,31 +2530,117 @@ public class MooseRushView extends View {
         paint.setColor(Color.argb(120, 0, 0, 0));
         canvas.drawOval(gate.x - dp(10), ground - dp(5), gate.x + gate.width + dp(10), ground + dp(7), paint);
 
-        paint.setColor(Color.rgb(52, 35, 24));
+        int darkColor = gateDarkColor();
+        int midColor = gateMidColor();
+        int lightColor = gateLightColor();
+
+        paint.setColor(darkColor);
         canvas.drawRoundRect(leftPost - dp(2), railTop, leftPost + postWidth + dp(2), ground, dp(5), dp(5), paint);
         canvas.drawRoundRect(rightPost - dp(2), railTop, rightPost + postWidth + dp(2), ground, dp(5), dp(5), paint);
         canvas.drawRoundRect(gate.x - dp(2), railTop - dp(2), gate.x + gate.width + dp(2), railBottom + dp(2), dp(7), dp(7), paint);
 
-        paint.setColor(Color.rgb(134, 78, 38));
+        paint.setColor(midColor);
         canvas.drawRoundRect(leftPost, railTop + dp(2), leftPost + postWidth, ground, dp(4), dp(4), paint);
         canvas.drawRoundRect(rightPost, railTop + dp(2), rightPost + postWidth, ground, dp(4), dp(4), paint);
         canvas.drawRoundRect(gate.x, railTop, gate.x + gate.width, railBottom, dp(6), dp(6), paint);
 
-        paint.setColor(Color.rgb(226, 169, 83));
+        paint.setColor(lightColor);
         canvas.drawRoundRect(gate.x + dp(4), railTop + dp(2), gate.x + gate.width - dp(4), railTop + railHeight * 0.46f, dp(4), dp(4), paint);
 
-        paint.setColor(Color.rgb(44, 30, 22));
+        paint.setColor(darkColor);
         canvas.drawRoundRect(gate.x + dp(6), ground - dp(7), gate.x + postWidth + dp(8), ground, dp(3), dp(3), paint);
         canvas.drawRoundRect(gate.x + gate.width - postWidth - dp(8), ground - dp(7), gate.x + gate.width - dp(6), ground, dp(3), dp(3), paint);
 
+        drawStageObstacleDetails(canvas, gate, top, railBottom, ground);
+
+        drawObstacleNameplate(canvas, gate, top);
+        paint.setStrokeCap(Paint.Cap.BUTT);
+        paint.setStyle(Paint.Style.FILL);
+    }
+
+    private int gateDarkColor() {
+        if (selectedStage == 3 || selectedStage == 4) return Color.rgb(74, 96, 110);
+        if (selectedStage == 1) return Color.rgb(64, 45, 32);
+        return Color.rgb(52, 35, 24);
+    }
+
+    private int gateMidColor() {
+        if (selectedStage == 4) return Color.rgb(210, 225, 232);
+        if (selectedStage == 3) return Color.rgb(132, 174, 194);
+        if (selectedStage == 1) return Color.rgb(164, 96, 48);
+        return Color.rgb(134, 78, 38);
+    }
+
+    private int gateLightColor() {
+        if (selectedStage == 4) return Color.rgb(248, 252, 253);
+        if (selectedStage == 3) return Color.rgb(210, 232, 238);
+        if (selectedStage == 1) return Color.rgb(226, 169, 83);
+        return Color.rgb(226, 169, 83);
+    }
+
+    private void drawStageObstacleDetails(Canvas canvas, Gate gate, float top, float railBottom, float ground) {
         paint.setStyle(Paint.Style.STROKE);
-        paint.setStrokeWidth(dp(3));
         paint.setStrokeCap(Paint.Cap.ROUND);
+        if (selectedStage == 1) {
+            paint.setStrokeWidth(dp(2.4f));
+            paint.setColor(Color.rgb(233, 218, 181));
+            for (float x = gate.x + dp(8); x < gate.x + gate.width - dp(4); x += dp(11)) {
+                canvas.drawLine(x, railBottom + dp(5), x + dp(7), ground - dp(12), paint);
+            }
+            paint.setStyle(Paint.Style.FILL);
+            paint.setColor(Color.rgb(255, 98, 84));
+            canvas.drawOval(gate.x + gate.width * 0.42f, top + dp(6), gate.x + gate.width * 0.68f, top + dp(18), paint);
+            return;
+        }
+        if (selectedStage == 2) {
+            paint.setStrokeWidth(dp(3));
+            paint.setColor(Color.rgb(233, 218, 181));
+            canvas.drawLine(gate.x + dp(8), railBottom + dp(8), gate.x + gate.width - dp(8), ground - dp(13), paint);
+            canvas.drawLine(gate.x + gate.width - dp(8), railBottom + dp(8), gate.x + dp(8), ground - dp(13), paint);
+            paint.setStrokeWidth(dp(2.2f));
+            canvas.drawLine(gate.x + gate.width * 0.18f, railBottom + dp(2), gate.x + gate.width * 0.02f, top + dp(4), paint);
+            canvas.drawLine(gate.x + gate.width * 0.82f, railBottom + dp(2), gate.x + gate.width * 0.98f, top + dp(4), paint);
+            return;
+        }
+        if (selectedStage == 3) {
+            paint.setStrokeWidth(dp(2));
+            paint.setColor(Color.rgb(248, 252, 253));
+            for (float x = gate.x + dp(8); x < gate.x + gate.width - dp(8); x += dp(12)) {
+                canvas.drawLine(x, top + dp(8), x + dp(8), ground - dp(10), paint);
+            }
+            return;
+        }
+        if (selectedStage == 4) {
+            paint.setStyle(Paint.Style.FILL);
+            paint.setColor(Color.rgb(248, 252, 253));
+            canvas.drawOval(gate.x - dp(2), ground - gate.height * 0.33f, gate.x + gate.width + dp(2), ground + dp(2), paint);
+            paint.setColor(Color.rgb(190, 207, 216));
+            canvas.drawOval(gate.x + gate.width * 0.16f, ground - gate.height * 0.45f, gate.x + gate.width * 0.62f, ground - gate.height * 0.16f, paint);
+            return;
+        }
+        paint.setStrokeWidth(dp(3));
         paint.setColor(Color.rgb(233, 218, 181));
         canvas.drawLine(gate.x + dp(8), railBottom + dp(8), gate.x + gate.width - dp(8), ground - dp(13), paint);
         canvas.drawLine(gate.x + gate.width - dp(8), railBottom + dp(8), gate.x + dp(8), ground - dp(13), paint);
-        paint.setStrokeCap(Paint.Cap.BUTT);
+    }
+
+    private void drawObstacleNameplate(Canvas canvas, Gate gate, float top) {
+        String label = STAGES[selectedStage].obstacleName;
+        float width = Math.min(dp(128), Math.max(dp(54), label.length() * dp(5.8f)));
+        float left = gate.x + gate.width / 2f - width / 2f;
+        float plateTop = Math.max(dp(82), top - dp(22));
         paint.setStyle(Paint.Style.FILL);
+        paint.setColor(Color.argb(180, 8, 18, 30));
+        canvas.drawRoundRect(left, plateTop, left + width, plateTop + dp(17), dp(6), dp(6), paint);
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setStrokeWidth(dp(1));
+        paint.setColor(Color.argb(180, 255, 218, 121));
+        canvas.drawRoundRect(left, plateTop, left + width, plateTop + dp(17), dp(6), dp(6), paint);
+        paint.setStyle(Paint.Style.FILL);
+        textPaint.setTextAlign(Paint.Align.CENTER);
+        textPaint.setTextSize(dp(label.length() > 14 ? 7.2f : 8.2f));
+        textPaint.setColor(Color.rgb(255, 246, 207));
+        canvas.drawText(label, gate.x + gate.width / 2f, plateTop + dp(12), textPaint);
     }
 
     private void drawPlayerLaneGuide(Canvas canvas) {
@@ -2857,11 +2943,11 @@ public class MooseRushView extends View {
     }
 
     private float hazardAnimationRate(String label) {
-        if ("EAGLE".equals(label) || "DARK".equals(label)) return 3.05f;
-        if ("BEAR".equals(label) || "POLAR".equals(label)) return 2.85f;
-        if ("MOOSE".equals(label)) return 3.10f;
-        if ("WOLF".equals(label)) return 4.80f;
-        if ("SALMON".equals(label)) return 4.25f;
+        if ("EAGLE".equals(label) || "DARK".equals(label)) return 1.75f;
+        if ("BEAR".equals(label) || "POLAR".equals(label)) return 2.35f;
+        if ("MOOSE".equals(label)) return 2.55f;
+        if ("WOLF".equals(label)) return 3.65f;
+        if ("SALMON".equals(label)) return 2.70f;
         return 3.0f;
     }
 
@@ -3156,7 +3242,7 @@ public class MooseRushView extends View {
 
     private void drawAnimatedBossSheet(Canvas canvas, Bitmap sheet, float radius) {
         float phase = bossTimer + selectedStage * 0.37f;
-        float rate = selectedStage == 3 ? 3.05f : selectedStage == 1 ? 4.25f : selectedStage == 4 ? 3.55f : 2.85f;
+        float rate = selectedStage == 3 ? 1.85f : selectedStage == 1 ? 2.70f : selectedStage == 4 ? 2.45f : 2.35f;
         if (bossState == BOSS_STATE_TELL) {
             rate *= 0.45f;
         } else if (bossState == BOSS_STATE_ATTACK) {
@@ -3356,7 +3442,7 @@ public class MooseRushView extends View {
         textPaint.setTextAlign(Paint.Align.CENTER);
         textPaint.setColor(Color.rgb(255, 218, 121));
         textPaint.setTextSize(dp(13));
-        canvas.drawText("2.0 BETA EXPEDITION · LEVEL " + (selectedStage + 1), getWidth() / 2f, top + dp(28), textPaint);
+        canvas.drawText(BuildConfig.BUILD_BADGE + " · LEVEL " + (selectedStage + 1), getWidth() / 2f, top + dp(28), textPaint);
 
         textPaint.setColor(Color.WHITE);
         textPaint.setTextSize(dp(28));
@@ -3368,7 +3454,7 @@ public class MooseRushView extends View {
 
         float chipTop = top + dp(112);
         float chipWidth = (panelWidth - dp(52)) / 3f;
-        drawBriefingChip(canvas, left + dp(16), chipTop, chipWidth, "GOAL", stage.goalGates + " HURDLES");
+        drawBriefingChip(canvas, left + dp(16), chipTop, chipWidth, "JUMP", stage.obstacleName);
         drawBriefingChip(canvas, left + dp(26) + chipWidth, chipTop, chipWidth, "BOSS", stage.bossName);
         drawBriefingChip(canvas, left + dp(36) + chipWidth * 2f, chipTop, chipWidth, "MISSION", missionBriefLine());
 
@@ -3445,7 +3531,7 @@ public class MooseRushView extends View {
         textPaint.setColor(Color.rgb(255, 218, 121));
         String objective = bossActive
                 ? "FIRE BOSS " + Math.max(0, bossHealth) + "/" + bossMaxHealth + "  " + bossPatternLabel()
-                : "HURDLES " + gatesPassed + "/" + STAGES[selectedStage].goalGates;
+                : "JUMP " + STAGES[selectedStage].obstacleName + " " + gatesPassed + "/" + STAGES[selectedStage].goalGates;
         canvas.drawText(objective, getWidth() / 2f, dp(44), textPaint);
         textPaint.setColor(Color.WHITE);
         String comboLabel = (auroraRushTimer > 0f ? "AURORA " : "") + "COMBO " + gameState.combo + "   SCORE x" + multiplier;
@@ -3823,7 +3909,7 @@ public class MooseRushView extends View {
 
         textPaint.setTextSize(dp(13));
         textPaint.setColor(Color.rgb(255, 218, 121));
-        canvas.drawText("Score " + score + (runNewBest ? " · NEW BEST" : "") + " · Hurdles " + gatesPassed, getWidth() / 2f, top + dp(118), textPaint);
+        canvas.drawText("Score " + score + (runNewBest ? " · NEW BEST" : "") + " · Jumps " + gatesPassed, getWidth() / 2f, top + dp(118), textPaint);
         canvas.drawText("Missions " + missionsCompleted + "/3 · Combo " + gameState.bestCombo + " · Rank " + runRank(), getWidth() / 2f, top + dp(142), textPaint);
         canvas.drawText("Tokens +" + runTokensEarned + " · Bank " + trailTokens + " · Logs " + expeditionLogs, getWidth() / 2f, top + dp(166), textPaint);
         canvas.drawText(dailyResultLine(), getWidth() / 2f, top + dp(188), textPaint);
@@ -4114,7 +4200,7 @@ public class MooseRushView extends View {
             return "Complete · streak " + Math.max(1, dailyStreak);
         }
         int reward = RunRewardEconomy.dailyReward(dailyStreak);
-        return stage.name + " · " + dailyGateGoal() + " gates · +" + reward;
+        return stage.name + " · " + dailyGateGoal() + " jumps · +" + reward;
     }
 
     private String dailyResultLine() {
@@ -4176,7 +4262,7 @@ public class MooseRushView extends View {
             return "Next: S rank, perfect clear, passport badges.";
         }
         if (gatesPassed < STAGES[selectedStage].goalGates) {
-            return "Next: reach " + STAGES[selectedStage].goalGates + " hurdles for the boss.";
+            return "Next: clear " + STAGES[selectedStage].goalGates + " " + STAGES[selectedStage].obstacleName + ".";
         }
         return "Next: fire during RECOVER for weak-window double damage.";
     }
@@ -4186,7 +4272,7 @@ public class MooseRushView extends View {
     }
 
     private String missionProgressLine() {
-        return "MISSIONS " + missionsCompleted + "/3  GATES " + Math.min(gatesPassed, STAGES[selectedStage].goalGates) + "/" + STAGES[selectedStage].goalGates
+        return "MISSIONS " + missionsCompleted + "/3  JUMPS " + Math.min(gatesPassed, STAGES[selectedStage].goalGates) + "/" + STAGES[selectedStage].goalGates
                 + "  STARS " + gameState.stars + "/" + missionStarGoal
                 + "  COMBO " + gameState.bestCombo + "/" + missionComboGoal;
     }
@@ -4330,18 +4416,20 @@ public class MooseRushView extends View {
         final int season;
         final String bossName;
         final String hazardLabel;
+        final String obstacleName;
         final int goalGates;
         final int bossHealth;
         final int baseSpeed;
         final float spawnSeconds;
         final int bossType;
 
-        StageConfig(String name, String line, int season, String bossName, String hazardLabel, int goalGates, int bossHealth, int baseSpeed, float spawnSeconds, int bossType) {
+        StageConfig(String name, String line, int season, String bossName, String hazardLabel, String obstacleName, int goalGates, int bossHealth, int baseSpeed, float spawnSeconds, int bossType) {
             this.name = name;
             this.line = line;
             this.season = season;
             this.bossName = bossName;
             this.hazardLabel = hazardLabel;
+            this.obstacleName = obstacleName;
             this.goalGates = goalGates;
             this.bossHealth = bossHealth;
             this.baseSpeed = baseSpeed;
