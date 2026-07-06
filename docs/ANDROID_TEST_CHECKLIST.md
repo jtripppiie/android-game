@@ -5,16 +5,16 @@ Use this after GitHub Actions produces the debug APK artifact.
 Current packaged beta:
 
 ```text
-versionCode: 250
-versionName: 2.5.0-beta
-build badge: ALASKA PASSPORT v2.5 BETA
+versionCode: 260
+versionName: 2.6.0-beta
+build badge: ALASKA PASSPORT v2.6 BETA
 ```
 
 ## Install test
 
 1. Download `you-rush-alaska-debug-apk` from the latest successful workflow run.
 2. Extract the ZIP if GitHub downloaded it as a ZIP.
-3. Install `you-rush-alaska-2.5.0-beta-250-debug.apk` on an Android phone.
+3. Install `you-rush-alaska-2.6.0-beta-260-debug.apk` on an Android phone.
 4. Allow installation from the browser/files app if Android prompts you.
 5. Open **You Rush**.
 6. Confirm the debug/version badge is visible and matches the packaged beta.
@@ -28,6 +28,7 @@ Confirm these screens work:
 - Main menu appears after splash or tap.
 - Alaska Map opens.
 - Locked map stages do not start early and show an unlock message.
+- Alaska Map bottom route intel updates for the selected stage.
 - Customize opens.
 - Photo picker opens from Customize.
 - A picked player photo appears in-game.
@@ -48,6 +49,8 @@ Test these controls:
 - JUMP bounces the character upward.
 - A second JUMP works once while airborne.
 - FIRE launches a snowball.
+- PAUSE opens a frozen run overlay with Resume, Map, and Sprite options.
+- Resume returns to the same run without stuck movement or forced jump/fire input.
 - Normal screen tap also requests a jump.
 
 ## Survival system test
@@ -56,6 +59,7 @@ Confirm the beta loop behaves consistently:
 
 - The run starts with three lives.
 - Passing named obstacles advances the progress HUD and checkpoint.
+- The live objective uses short stage labels and stays readable on common phone widths.
 - Crashing with no shield spends one life.
 - Respawn resumes safely when lives remain.
 - Respawn grace shows a visible aura and prevents immediate repeat damage.

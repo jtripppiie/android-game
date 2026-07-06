@@ -43,6 +43,7 @@ public class MooseRushView extends View {
     private static final int STATE_GAME_OVER = 5;
     private static final int STATE_STAGE_CLEAR = 6;
     private static final int STATE_READY = 7;
+    private static final int STATE_PAUSED = 8;
 
     private static final int SEASON_SUMMER = 0;
     private static final int SEASON_WINTER = 1;
@@ -207,6 +208,7 @@ public class MooseRushView extends View {
     private final RectF rightPadBounds = new RectF();
     private final RectF jumpPadBounds = new RectF();
     private final RectF firePadBounds = new RectF();
+    private final RectF pauseButtonBounds = new RectF();
     private final RectF tempRect = new RectF();
     private final Rect spriteSourceRect = new Rect();
     private PhotoRequestListener photoRequestListener;
@@ -450,6 +452,11 @@ public class MooseRushView extends View {
             drawWorld(canvas);
             drawHud(canvas);
             drawReadyScreen(canvas);
+        } else if (state == STATE_PAUSED) {
+            drawWorld(canvas);
+            drawHud(canvas);
+            drawVirtualControls(canvas);
+            drawPausePanel(canvas);
         } else {
             drawWorld(canvas);
             drawHud(canvas);
@@ -627,14 +634,47 @@ public class MooseRushView extends View {
             state = STATE_RUNNING;
             readyTimer = 0f;
             lastFrameNanos = 0L;
+            showRunCallout("JUMP " + STAGES[selectedStage].obstacleName, 1.2f);
             logEvent("Run started after ready screen.");
             return true;
         }
 
         if (state == STATE_RUNNING) {
+            if (pauseButtonBounds.contains(x, y)) {
+                state = STATE_PAUSED;
+                leftPressed = false;
+                rightPressed = false;
+                jumpPressed = false;
+                firePressed = false;
+                logEvent("Run paused.");
+                return true;
+            }
             if (!isControlTouch(x, y)) {
                 requestJump();
             }
+            return true;
+        }
+
+        if (state == STATE_PAUSED) {
+            if (primaryButtonBounds.contains(x, y)) {
+                state = STATE_RUNNING;
+                lastFrameNanos = 0L;
+                logEvent("Run resumed.");
+                return true;
+            }
+            if (secondaryButtonBounds.contains(x, y)) {
+                state = STATE_MAP;
+                logEvent("Paused run -> map.");
+                return true;
+            }
+            if (thirdButtonBounds.contains(x, y)) {
+                state = STATE_CUSTOMIZE;
+                logEvent("Paused run -> customize.");
+                return true;
+            }
+            state = STATE_RUNNING;
+            lastFrameNanos = 0L;
+            logEvent("Run resumed by tap.");
             return true;
         }
 
@@ -2240,10 +2280,12 @@ public class MooseRushView extends View {
             canvas.drawText(mapNotice, getWidth() / 2f, top + dp(20), textPaint);
         }
 
+        StageConfig selected = STAGES[selectedStage];
         textPaint.setTextAlign(Paint.Align.CENTER);
-        textPaint.setTextSize(dp(11));
+        textPaint.setTextSize(isLandscape() ? dp(9.5f) : dp(11));
         textPaint.setColor(Color.rgb(220, 235, 239));
-        canvas.drawText("Clear stages to unlock the full Alaska route.", getWidth() / 2f, getHeight() - dp(24), textPaint);
+        canvas.drawText("Selected: jump " + selected.obstacleName + " · stun " + selected.hazardLabel
+                + " · boss " + selected.bossName, getWidth() / 2f, getHeight() - dp(24), textPaint);
     }
 
     private void drawCustomizeScreen(Canvas canvas) {
@@ -3460,7 +3502,7 @@ public class MooseRushView extends View {
 
         textPaint.setTextSize(dp(10));
         textPaint.setColor(Color.rgb(210, 232, 238));
-        canvas.drawText("Avoid wildlife. FIRE stuns animals.", getWidth() / 2f, top + dp(162), textPaint);
+        canvas.drawText(stageRuleLine(stage), getWidth() / 2f, top + dp(162), textPaint);
         canvas.drawText("Bosses take snowball hits; RECOVER is the weak window.", getWidth() / 2f, top + dp(176), textPaint);
 
         textPaint.setTextSize(dp(11));
@@ -3531,7 +3573,7 @@ public class MooseRushView extends View {
         textPaint.setColor(Color.rgb(255, 218, 121));
         String objective = bossActive
                 ? "FIRE BOSS " + Math.max(0, bossHealth) + "/" + bossMaxHealth + "  " + bossPatternLabel()
-                : "JUMP " + STAGES[selectedStage].obstacleName + " " + gatesPassed + "/" + STAGES[selectedStage].goalGates;
+                : "JUMP " + obstacleHudName(selectedStage) + " " + gatesPassed + "/" + STAGES[selectedStage].goalGates;
         canvas.drawText(objective, getWidth() / 2f, dp(44), textPaint);
         textPaint.setColor(Color.WHITE);
         String comboLabel = (auroraRushTimer > 0f ? "AURORA " : "") + "COMBO " + gameState.combo + "   SCORE x" + multiplier;
@@ -3547,6 +3589,7 @@ public class MooseRushView extends View {
         canvas.drawText("BEST " + bestScore + "   LV " + gameState.level + "   T " + trailTokens + (gameState.muted ? "  MUTE" : ""), getWidth() - dp(20), dp(47), textPaint);
 
         drawHudIcons(canvas);
+        drawPauseButton(canvas);
         drawActionOverlay(canvas);
         drawJourneyTracker(canvas);
         drawMissionTracker(canvas);
@@ -3624,6 +3667,27 @@ public class MooseRushView extends View {
             canvas.drawCircle(focusX, focusY, dp(3.3f), paint);
             paint.setStyle(Paint.Style.FILL);
         }
+    }
+
+    private void drawPauseButton(Canvas canvas) {
+        if (state != STATE_RUNNING && state != STATE_PAUSED) {
+            pauseButtonBounds.setEmpty();
+            return;
+        }
+        pauseButtonBounds.set(getWidth() - dp(78), dp(76), getWidth() - dp(18), dp(106));
+        paint.setStyle(Paint.Style.FILL);
+        paint.setColor(state == STATE_PAUSED ? Color.argb(238, 255, 218, 121) : Color.argb(204, 16, 25, 37));
+        canvas.drawRoundRect(pauseButtonBounds, dp(10), dp(10), paint);
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setStrokeWidth(dp(1.4f));
+        paint.setColor(Color.argb(230, 255, 255, 255));
+        canvas.drawRoundRect(pauseButtonBounds, dp(10), dp(10), paint);
+        paint.setStyle(Paint.Style.FILL);
+
+        textPaint.setTextAlign(Paint.Align.CENTER);
+        textPaint.setTextSize(dp(9.5f));
+        textPaint.setColor(state == STATE_PAUSED ? Color.rgb(24, 30, 38) : Color.WHITE);
+        canvas.drawText(state == STATE_PAUSED ? "RESUME" : "PAUSE", pauseButtonBounds.centerX(), pauseButtonBounds.centerY() + dp(4), textPaint);
     }
 
     private void drawJourneyTracker(Canvas canvas) {
@@ -3886,6 +3950,45 @@ public class MooseRushView extends View {
         textPaint.setTextSize(label.length() > 2 ? dp(10) : dp(20));
         textPaint.setColor(active ? Color.rgb(24, 30, 38) : Color.WHITE);
         canvas.drawText(label, bounds.centerX(), bounds.centerY() + dp(5), textPaint);
+    }
+
+    private void drawPausePanel(Canvas canvas) {
+        float panelWidth = Math.min(getWidth() - dp(44), dp(340));
+        float panelHeight = dp(216);
+        float left = (getWidth() - panelWidth) / 2f;
+        float top = (getHeight() - panelHeight) / 2f;
+        RectF panel = new RectF(left, top, left + panelWidth, top + panelHeight);
+
+        paint.setStyle(Paint.Style.FILL);
+        paint.setColor(Color.argb(234, 10, 18, 29));
+        canvas.drawRoundRect(panel, dp(18), dp(18), paint);
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setStrokeWidth(dp(2));
+        paint.setColor(Color.rgb(255, 218, 121));
+        canvas.drawRoundRect(panel, dp(18), dp(18), paint);
+        paint.setStyle(Paint.Style.FILL);
+
+        textPaint.setTextAlign(Paint.Align.CENTER);
+        textPaint.setColor(Color.rgb(255, 218, 121));
+        textPaint.setTextSize(dp(25));
+        canvas.drawText("TRAIL PAUSED", getWidth() / 2f, top + dp(45), textPaint);
+
+        textPaint.setColor(Color.WHITE);
+        textPaint.setTextSize(dp(12));
+        canvas.drawText("Goal: " + STAGES[selectedStage].name, getWidth() / 2f, top + dp(76), textPaint);
+        textPaint.setColor(Color.rgb(210, 232, 238));
+        canvas.drawText("Jump " + STAGES[selectedStage].obstacleName + " · FIRE stuns " + STAGES[selectedStage].hazardLabel, getWidth() / 2f, top + dp(98), textPaint);
+        canvas.drawText("Boss weak window: RECOVER", getWidth() / 2f, top + dp(118), textPaint);
+
+        setButton(primaryButtonBounds, top + dp(151), dp(214), dp(38));
+        drawButton(canvas, primaryButtonBounds, "RESUME");
+
+        setButton(secondaryButtonBounds, top + dp(190), dp(104), dp(32));
+        secondaryButtonBounds.offset(-dp(58), 0);
+        setButton(thirdButtonBounds, top + dp(190), dp(104), dp(32));
+        thirdButtonBounds.offset(dp(58), 0);
+        drawSmallButton(canvas, secondaryButtonBounds, "MAP");
+        drawSmallButton(canvas, thirdButtonBounds, "SPRITE");
     }
 
     private void drawGameOverPanel(Canvas canvas) {
@@ -4271,6 +4374,19 @@ public class MooseRushView extends View {
         return missionStarGoal + " STARS";
     }
 
+    private String stageRuleLine(StageConfig stage) {
+        return "Jump " + stage.obstacleName + ". FIRE stuns " + stage.hazardLabel + ".";
+    }
+
+    private String obstacleHudName(int stageIndex) {
+        if (stageIndex == 0) return "RAILS";
+        if (stageIndex == 1) return "RACKS";
+        if (stageIndex == 2) return "ANTLERS";
+        if (stageIndex == 3) return "ICE";
+        if (stageIndex == 4) return "SNOWBANKS";
+        return STAGES[stageIndex].obstacleName;
+    }
+
     private String missionProgressLine() {
         return "MISSIONS " + missionsCompleted + "/3  JUMPS " + Math.min(gatesPassed, STAGES[selectedStage].goalGates) + "/" + STAGES[selectedStage].goalGates
                 + "  STARS " + gameState.stars + "/" + missionStarGoal
@@ -4360,6 +4476,7 @@ public class MooseRushView extends View {
         if (state == STATE_RUNNING) return "running";
         if (state == STATE_STAGE_CLEAR) return "stage_clear";
         if (state == STATE_READY) return "ready";
+        if (state == STATE_PAUSED) return "paused";
         return "game_over";
     }
 

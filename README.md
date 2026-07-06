@@ -2,16 +2,16 @@
 
 A personalized Android arcade game by **TripperDeeLabs**.
 
-**Current status: Alaska 2.5.0 visual contract beta.**
+**Current status: Alaska 2.6.0 control and route-intel beta.**
 
 This build is beta-ready for APK testing, tuning, and bug fixing. It is not final 1.0 or a larger milestone until it installs and plays well across all Alaska stages on a real phone.
 
 ## Current beta
 
 ```text
-versionCode: 250
-versionName: 2.5.0-beta
-build badge: ALASKA PASSPORT v2.5 BETA
+versionCode: 260
+versionName: 2.6.0-beta
+build badge: ALASKA PASSPORT v2.6 BETA
 ```
 
 ## Game flow
@@ -32,6 +32,7 @@ build badge: ALASKA PASSPORT v2.5 BETA
 - **RIGHT**: move right
 - **JUMP**: jump from the ground; tap again in the air for a double jump
 - **FIRE**: launch a snowball
+- **PAUSE**: freeze the current run, resume, return to map, or edit sprite
 
 ## Gameplay style
 
@@ -78,6 +79,10 @@ Mobile mapping:
 - Trail Passport collectible badges with token rewards
 - Expedition Logs for higher-grade clears
 - Trail Map and Rescue Kit pickups
+- Real in-run pause/resume overlay with map and sprite exits
+- Map route intel that calls out each selected stage's obstacles, hazard, and boss
+- Stage-specific tactical briefing and launch callout
+- Short live-HUD objective labels for better top-bar readability on phones
 - Hazard forecast warnings
 - Boss phase-two escalation callouts
 - Expedition grading, route milestones, trail camp restocks, and beta run summaries
@@ -132,7 +137,7 @@ The debug APK lands in `app/build/outputs/apk/debug/` with the version in the
 filename, for example:
 
 ```text
-you-rush-alaska-2.5.0-beta-250-debug.apk
+you-rush-alaska-2.6.0-beta-260-debug.apk
 ```
 
 GitHub Actions also builds a debug APK using:
