@@ -16,7 +16,7 @@ public class SpriteSheetTrimTest {
                 new int[]{0, 223, 362, 527}
         );
 
-        assertArrayEquals(new int[]{729, 224, 1081, 526}, source);
+        assertArrayEquals(new int[]{732, 225, 1078, 525}, source);
     }
 
     @Test
@@ -28,7 +28,7 @@ public class SpriteSheetTrimTest {
                 new int[]{22, 296, 361, 436}
         );
 
-        assertArrayEquals(new int[]{23, 297, 360, 435}, source);
+        assertArrayEquals(new int[]{24, 298, 359, 434}, source);
     }
 
     @Test

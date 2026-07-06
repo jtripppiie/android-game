@@ -121,6 +121,7 @@ public class MooseRushView extends View {
     private static final int BOSS_PATTERN_SUMMON = 2;
     private static final int ATTACK_ICE = 0;
     private static final int ATTACK_SHOCKWAVE = 1;
+    private static final int ROAR_SPRITE_SOURCE_INSET_PX = 18;
     private static final int WEATHER_CLEAR = 0;
     private static final int WEATHER_AURORA = 1;
     private static final int WEATHER_RAIN = 2;
@@ -1266,35 +1267,38 @@ public class MooseRushView extends View {
             return bossRestX(selectedStage);
         }
         if (bossState == BOSS_STATE_ATTACK && bossPattern == BOSS_PATTERN_LUNGE) {
-            float pressure = selectedStage == 4 ? dp(106) : dp(128);
-            return Math.min(bossRestX(selectedStage), Math.max(playerX + pressure, getWidth() * 0.48f));
+            return bossAttackX(selectedStage);
         }
         if (bossState == BOSS_STATE_TELL) {
-            return bossRestX(selectedStage) + (float) Math.sin(bossStateTimer * 18f) * dp(selectedStage == 4 ? 3f : 2f);
+            float windup = bossPattern == BOSS_PATTERN_LUNGE ? dp(selectedStage == 4 ? 16 : 10) : 0f;
+            return bossRestX(selectedStage) + windup + (float) Math.sin(bossStateTimer * 18f) * dp(selectedStage == 4 ? 3f : 2f);
         }
         return bossRestX(selectedStage);
     }
 
     private float bossTrackingRate() {
         if (bossState == BOSS_STATE_ATTACK && bossPattern == BOSS_PATTERN_LUNGE) {
-            return selectedStage == 4 ? 8.5f : 6.5f;
+            return selectedStage == 4 ? 7.2f : 6.2f;
         }
         if (bossState == BOSS_STATE_ENTER) {
             return 2.7f;
         }
-        return 3.4f;
+        return bossState == BOSS_STATE_RECOVER ? 4.2f : 3.4f;
     }
 
     private float bossTellDuration() {
-        return selectedStage == 4 ? 0.82f : 0.72f;
+        return selectedStage == 4 ? 0.98f : 0.78f;
     }
 
     private float bossAttackDuration() {
-        return bossPattern == BOSS_PATTERN_LUNGE ? 0.62f : 0.42f;
+        if (bossPattern == BOSS_PATTERN_LUNGE) {
+            return selectedStage == 4 ? 0.74f : 0.64f;
+        }
+        return selectedStage == 4 ? 0.50f : 0.44f;
     }
 
     private float bossRecoverDuration() {
-        return selectedStage == 4 ? 0.72f : 0.62f;
+        return selectedStage == 4 ? 0.92f : 0.72f;
     }
 
     private void spawnBossSnowWave() {
@@ -2050,23 +2054,41 @@ public class MooseRushView extends View {
         textPaint.setTextAlign(Paint.Align.CENTER);
         textPaint.setColor(Color.rgb(255, 218, 121));
         textPaint.setTextSize(dp(11));
-        canvas.drawText("TRIPPERDEE LABS · " + BuildConfig.BUILD_BADGE, getWidth() / 2f, getHeight() * 0.34f, textPaint);
+        canvas.drawText("TRIPPERDEE LABS", getWidth() / 2f, getHeight() * 0.29f, textPaint);
+        textPaint.setTextSize(dp(10));
+        textPaint.setColor(Color.rgb(210, 232, 238));
+        canvas.drawText(BuildConfig.BUILD_BADGE, getWidth() / 2f, getHeight() * 0.34f, textPaint);
 
         textPaint.setColor(Color.WHITE);
-        textPaint.setTextSize(dp(42));
-        canvas.drawText("YOU  RUSH", getWidth() / 2f, getHeight() * 0.47f, textPaint);
+        float titleSize = Math.min(dp(46), Math.max(dp(34), getWidth() / 8.0f));
+        textPaint.setTextSize(titleSize);
+        float wordGap = Math.max(dp(28), titleSize * 0.82f);
+        float youWidth = textPaint.measureText("YOU");
+        float rushWidth = textPaint.measureText("RUSH");
+        float totalWidth = youWidth + rushWidth + wordGap;
+        float startX = getWidth() / 2f - totalWidth / 2f;
+        float baseline = getHeight() * 0.48f;
+        textPaint.setTextAlign(Paint.Align.LEFT);
+        paint.setStyle(Paint.Style.FILL);
+        paint.setColor(Color.argb(135, 0, 0, 0));
+        canvas.drawRoundRect(startX - dp(12), baseline - titleSize * 0.86f, startX + totalWidth + dp(12), baseline + dp(10), dp(12), dp(12), paint);
+        textPaint.setColor(Color.WHITE);
+        canvas.drawText("YOU", startX, baseline, textPaint);
+        textPaint.setColor(Color.rgb(255, 218, 121));
+        canvas.drawText("RUSH", startX + youWidth + wordGap, baseline, textPaint);
+        textPaint.setTextAlign(Paint.Align.CENTER);
 
         textPaint.setTextSize(dp(15));
         textPaint.setColor(Color.rgb(210, 232, 238));
-        canvas.drawText("Alaska platform runner", getWidth() / 2f, getHeight() * 0.59f, textPaint);
+        canvas.drawText("Alaska platform runner", getWidth() / 2f, getHeight() * 0.61f, textPaint);
 
         textPaint.setTextSize(dp(14));
         textPaint.setColor(Color.rgb(255, 218, 121));
-        canvas.drawText("For the best playing experience, rotate your phone.", getWidth() / 2f, getHeight() * 0.71f, textPaint);
+        canvas.drawText("For the best playing experience, rotate your phone.", getWidth() / 2f, getHeight() * 0.73f, textPaint);
 
         textPaint.setTextSize(dp(11));
         textPaint.setColor(Color.WHITE);
-        canvas.drawText("Tap to continue", getWidth() / 2f, getHeight() * 0.83f, textPaint);
+        canvas.drawText("Tap to continue", getWidth() / 2f, getHeight() * 0.85f, textPaint);
     }
 
     private void drawMenuScreen(Canvas canvas) {
@@ -2706,12 +2728,14 @@ public class MooseRushView extends View {
         if (sprite == null || sprite.getWidth() <= 0 || sprite.getHeight() <= 0) {
             return;
         }
+        int inset = Math.min(ROAR_SPRITE_SOURCE_INSET_PX, Math.min(sprite.getWidth(), sprite.getHeight()) / 8);
+        spriteSourceRect.set(inset, inset, sprite.getWidth() - inset, sprite.getHeight() - inset);
         float height = yRadius * ("POLAR".equals(hazard.label) ? 3.75f : 3.58f);
-        float width = height * (sprite.getWidth() / (float) sprite.getHeight());
+        float width = height * (spriteSourceRect.width() / (float) spriteSourceRect.height());
         float bottom = getGroundY() + dp(1);
         float shake = (float) Math.sin(hazardVisualPhase(hazard) * 13.0f) * dp(0.7f);
         tempRect.set(hazard.x - width * 0.50f + shake, bottom - height, hazard.x + width * 0.50f + shake, bottom);
-        canvas.drawBitmap(sprite, null, tempRect, spriteBitmapPaint);
+        canvas.drawBitmap(sprite, spriteSourceRect, tempRect, spriteBitmapPaint);
     }
 
     private float hazardHorizontalScale(String label) {
@@ -2966,22 +2990,64 @@ public class MooseRushView extends View {
         }
         float pct = Math.min(1f, bossStateTimer / Math.max(0.01f, bossTellDuration()));
         float alphaPulse = 0.45f + 0.55f * (float) Math.sin(bossStateTimer * 24f);
-        paint.setStyle(Paint.Style.STROKE);
-        paint.setStrokeWidth(dp(2.4f));
-        paint.setColor(Color.argb(Math.round((95 + 120 * pct) * alphaPulse), 255, 98, 84));
+        paint.setStyle(Paint.Style.FILL);
+        paint.setColor(Color.argb(Math.round(34 + 48 * pct), 255, 98, 84));
         if (bossPattern == BOSS_PATTERN_LUNGE) {
             float left = playerX + dp(36);
             float right = Math.min(getWidth() - dp(36), bossX - radius * 0.35f);
             float top = getGroundY() - dp(56);
             float bottom = getGroundY() - dp(8);
             canvas.drawRoundRect(left, top, right, bottom, dp(12), dp(12), paint);
+            paint.setStyle(Paint.Style.STROKE);
+            paint.setStrokeWidth(dp(2.8f));
+            paint.setColor(Color.argb(Math.round((115 + 120 * pct) * alphaPulse), 255, 98, 84));
+            canvas.drawRoundRect(left, top, right, bottom, dp(12), dp(12), paint);
         } else if (bossPattern == BOSS_PATTERN_SNOW_WAVE) {
+            paint.setStyle(Paint.Style.FILL);
+            paint.setColor(Color.argb(Math.round(46 + 58 * pct), 132, 213, 232));
+            canvas.drawCircle(bossX - radius * 0.9f, getGroundY() - dp(24), dp(18 + pct * 10), paint);
+            canvas.drawCircle(bossX - radius * 1.05f, getGroundY() - dp(78), dp(15 + pct * 8), paint);
+            paint.setStyle(Paint.Style.STROKE);
+            paint.setStrokeWidth(dp(2.6f));
+            paint.setColor(Color.argb(Math.round((120 + 110 * pct) * alphaPulse), 248, 252, 253));
             canvas.drawCircle(bossX - radius * 0.9f, getGroundY() - dp(24), dp(18 + pct * 10), paint);
             canvas.drawCircle(bossX - radius * 1.05f, getGroundY() - dp(78), dp(15 + pct * 8), paint);
         } else {
+            paint.setStyle(Paint.Style.FILL);
+            paint.setColor(Color.argb(Math.round(38 + 52 * pct), 255, 218, 121));
+            canvas.drawCircle(bossX, bossY - radius * 0.6f, radius * (0.82f + pct * 0.26f), paint);
+            paint.setStyle(Paint.Style.STROKE);
+            paint.setStrokeWidth(dp(2.4f));
+            paint.setColor(Color.argb(Math.round((120 + 110 * pct) * alphaPulse), 255, 246, 207));
             canvas.drawCircle(bossX, bossY - radius * 0.6f, radius * (0.82f + pct * 0.26f), paint);
         }
         paint.setStyle(Paint.Style.FILL);
+
+        float bannerWidth = Math.min(getWidth() - dp(82), dp(290));
+        float bannerHeight = dp(24);
+        float bannerLeft = (getWidth() - bannerWidth) / 2f;
+        float bannerTop = dp(114);
+        paint.setColor(Color.argb(Math.round(185 + 45 * pct), 8, 18, 30));
+        canvas.drawRoundRect(bannerLeft, bannerTop, bannerLeft + bannerWidth, bannerTop + bannerHeight, dp(8), dp(8), paint);
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setStrokeWidth(dp(1));
+        paint.setColor(Color.argb(Math.round(185 + 55 * pct), 255, 218, 121));
+        canvas.drawRoundRect(bannerLeft, bannerTop, bannerLeft + bannerWidth, bannerTop + bannerHeight, dp(8), dp(8), paint);
+        paint.setStyle(Paint.Style.FILL);
+        textPaint.setTextAlign(Paint.Align.CENTER);
+        textPaint.setTextSize(dp(10.5f));
+        textPaint.setColor(Color.rgb(255, 246, 207));
+        canvas.drawText(bossTellInstruction(), getWidth() / 2f, bannerTop + dp(16), textPaint);
+    }
+
+    private String bossTellInstruction() {
+        if (bossPattern == BOSS_PATTERN_LUNGE) {
+            return "RED ZONE: BACK UP";
+        }
+        if (bossPattern == BOSS_PATTERN_SNOW_WAVE) {
+            return "ICE ARC: JUMP";
+        }
+        return "SUMMON: STUN WILDLIFE";
     }
 
     private Bitmap sheetForBoss(int stage) {
@@ -3689,13 +3755,14 @@ public class MooseRushView extends View {
         canvas.drawText(dailyResultLine(), getWidth() / 2f, top + dp(188), textPaint);
         canvas.drawText(expeditionLine(false), getWidth() / 2f, top + dp(210), textPaint);
         canvas.drawText(badgeSummaryLine(), getWidth() / 2f, top + dp(232), textPaint);
+        canvas.drawText(nextGoalLine(false), getWidth() / 2f, top + dp(254), textPaint);
 
         textPaint.setColor(Color.rgb(210, 232, 238));
-        canvas.drawText("Tap anywhere to retry", getWidth() / 2f, top + dp(255), textPaint);
+        canvas.drawText("Tap anywhere to retry", getWidth() / 2f, top + dp(277), textPaint);
 
-        setButton(secondaryButtonBounds, top + dp(294), dp(118), dp(36));
+        setButton(secondaryButtonBounds, top + dp(316), dp(118), dp(36));
         secondaryButtonBounds.offset(-dp(64), 0);
-        setButton(thirdButtonBounds, top + dp(294), dp(118), dp(36));
+        setButton(thirdButtonBounds, top + dp(316), dp(118), dp(36));
         thirdButtonBounds.offset(dp(64), 0);
         drawSmallButton(canvas, secondaryButtonBounds, "MAP");
         drawSmallButton(canvas, thirdButtonBounds, "CUSTOMIZE");
@@ -3730,10 +3797,11 @@ public class MooseRushView extends View {
         canvas.drawText(expeditionLine(true), getWidth() / 2f, top + dp(207), textPaint);
         canvas.drawText(badgeSummaryLine(), getWidth() / 2f, top + dp(230), textPaint);
         canvas.drawText(stageClearLine(), getWidth() / 2f, top + dp(254), textPaint);
+        canvas.drawText(nextGoalLine(true), getWidth() / 2f, top + dp(276), textPaint);
 
-        setButton(secondaryButtonBounds, top + dp(292), dp(118), dp(36));
+        setButton(secondaryButtonBounds, top + dp(318), dp(118), dp(36));
         secondaryButtonBounds.offset(-dp(64), 0);
-        setButton(thirdButtonBounds, top + dp(292), dp(118), dp(36));
+        setButton(thirdButtonBounds, top + dp(318), dp(118), dp(36));
         thirdButtonBounds.offset(dp(64), 0);
         drawSmallButton(canvas, secondaryButtonBounds, "MAP");
         drawSmallButton(canvas, thirdButtonBounds, "NEXT");
@@ -4024,6 +4092,19 @@ public class MooseRushView extends View {
             return "Bear Country cleared. That is suspiciously impressive.";
         }
         return "Next Alaska stage unlocked.";
+    }
+
+    private String nextGoalLine(boolean stageCleared) {
+        if (stageCleared && selectedStage < STAGES.length - 1) {
+            return "Next: " + STAGES[selectedStage + 1].name + " · " + STAGES[selectedStage + 1].bossName;
+        }
+        if (stageCleared) {
+            return "Next: S rank, perfect clear, passport badges.";
+        }
+        if (gatesPassed < STAGES[selectedStage].goalGates) {
+            return "Next: reach " + STAGES[selectedStage].goalGates + " hurdles for the boss.";
+        }
+        return "Next: fire during RECOVER for weak-window double damage.";
     }
 
     private String missionBriefLine() {
