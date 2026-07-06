@@ -110,6 +110,7 @@ public class MooseRushView extends View {
     private static final float JUMP_CEILING_TOP_MARGIN_DP = 40f;
     private static final float AURORA_METER_MAX = 100f;
     private static final float AURORA_RUSH_SECONDS = 6.5f;
+    private static final float AURORA_FOCUS_SECONDS = 5.0f;
     private static final int BOSS_STATE_ENTER = 0;
     private static final int BOSS_STATE_TELL = 1;
     private static final int BOSS_STATE_ATTACK = 2;
@@ -225,6 +226,7 @@ public class MooseRushView extends View {
     private int trailTokens = 0;
     private int runTokensEarned = 0;
     private int runCacheTokens = 0;
+    private int routeMilestoneIndex = 0;
     private int unlockedOutfitMask = RunRewardEconomy.BASE_OUTFIT_UNLOCK_MASK;
     private int livesLostThisRun = 0;
     private int auroraRushes = 0;
@@ -255,6 +257,7 @@ public class MooseRushView extends View {
     private boolean perfectRun = true;
     private boolean runRewardsAwarded = false;
     private boolean dailyBonusAwarded = false;
+    private boolean campReached = false;
     private int jumpsUsed = 0;
 
     private long lastFrameNanos = 0L;
@@ -283,6 +286,8 @@ public class MooseRushView extends View {
     private float jumpBufferTimer = 0f;
     private float auroraMeter = 0f;
     private float auroraRushTimer = 0f;
+    private float auroraFocusTimer = 0f;
+    private float routeMilestoneTimer = 0f;
     private float playerX;
     private float playerY;
     private float playerVelocityY;
@@ -696,9 +701,11 @@ public class MooseRushView extends View {
         bossWarningTimer = 0f;
         auroraMeter = 0f;
         auroraRushTimer = 0f;
+        auroraFocusTimer = 0f;
         auroraRushes = 0;
         runTokensEarned = 0;
         runCacheTokens = 0;
+        routeMilestoneIndex = 0;
         livesLostThisRun = 0;
         dailyTokensEarned = 0;
         runBadgesEarnedMask = 0;
@@ -706,7 +713,9 @@ public class MooseRushView extends View {
         perfectRun = true;
         runRewardsAwarded = false;
         dailyBonusAwarded = false;
+        campReached = false;
         runCallout = "";
+        routeMilestoneTimer = 0f;
         state = STATE_READY;
         readyTimer = 0f;
         playerX = playerStartX();
@@ -766,7 +775,7 @@ public class MooseRushView extends View {
         }
         shots.add(new Shot(playerX + playerRadius * 0.9f, playerY + playerRadius * 0.05f, dp(460), gameplayDp(5.5f)));
         effects.spawnSparkBurst(playerX + playerRadius * 1.05f, playerY, 5, Color.WHITE);
-        shotCooldown = 0.32f;
+        shotCooldown = auroraFocusTimer > 0f ? 0.22f : 0.32f;
         playSound("throw");
         logEvent("Snowball fired.");
     }
@@ -779,7 +788,11 @@ public class MooseRushView extends View {
         StageConfig stage = STAGES[selectedStage];
         float tension = DifficultyCurve.tension(selectedStage, gatesPassed, stage.goalGates);
         float gateSpeed = dp(RunnerTuning.scrollSpeedDp(stage.baseSpeed, gatesPassed)) * DifficultyCurve.speedMultiplier(tension);
+        gateSpeed *= worldSpeedMultiplier();
         float gravity = selectedSeason == SEASON_DARKNESS ? dp(RunnerTuning.DARKNESS_GRAVITY_DP) : dp(RunnerTuning.GRAVITY_DP);
+        if (auroraFocusTimer > 0f) {
+            gravity *= 0.88f;
+        }
         float horizontalSpeed = dp(210);
         boolean wasGrounded = grounded;
 
@@ -789,6 +802,7 @@ public class MooseRushView extends View {
         shotCooldown = Math.max(0f, shotCooldown - dt);
         damageFlash = Math.max(0f, damageFlash - dt);
         updateAuroraRush(dt);
+        updateAuroraFocus(dt);
         jumpBufferTimer = Math.max(0f, jumpBufferTimer - dt);
         coyoteTimer = grounded ? RunnerTuning.COYOTE_SECONDS : Math.max(0f, coyoteTimer - dt);
         tryConsumeJumpBuffer();
@@ -833,6 +847,8 @@ public class MooseRushView extends View {
         updateStars(dt, gateSpeed);
         updatePowerUps(dt, gateSpeed);
         updateBossAttacks(dt);
+        updateRouteMilestones();
+        updateCampCheckpoint();
 
         if (!bossDefeated && !bossActive && gatesPassed >= stage.goalGates) {
             startBossPhase();
@@ -867,6 +883,14 @@ public class MooseRushView extends View {
         }
 
         for (Hazard hazard : hazards) {
+            if ("THIN ICE".equals(hazard.label)) {
+                tempRect.set(hazard.x - hazard.radius * 1.35f, getGroundY() - dp(18), hazard.x + hazard.radius * 1.35f, getGroundY() + dp(4));
+                if (circleHitsRect(playerX, playerY, playerRadius * 0.62f, tempRect)) {
+                    endGame("Thin ice cracked.");
+                    return;
+                }
+                continue;
+            }
             float hazardHitRadius = hazard.radius * (hazard.roaring ? 0.92f : 0.74f);
             float hazardHitY = hazard.roaring ? hazard.y - hazard.radius * 0.55f : hazard.y;
             if (circleHitsCircle(playerX, playerY, playerRadius * 0.82f, hazard.x, hazardHitY, hazardHitRadius)) {
@@ -1044,15 +1068,16 @@ public class MooseRushView extends View {
 
             if (bossActive && circleHitsCircle(shot.x, shot.y, shot.radius, bossX, bossY, bossRadius())) {
                 iterator.remove();
-                bossHealth--;
+                int damage = bossWeakWindowActive() ? 2 : 1;
+                bossHealth -= damage;
                 bossStunTimer = Math.max(bossStunTimer, selectedStage == 4 ? 0.20f : 0.12f);
                 damageFlash = 0.16f;
                 screenShake = Math.max(screenShake, 0.12f);
                 worldFlash = Math.max(worldFlash, 0.10f);
                 int awarded = addScore(25, "Boss hit");
-                effects.spawnScorePopup("HIT +" + awarded, bossX, bossY - bossRadius(), Color.rgb(255, 246, 207));
-                effects.spawnSparkBurst(bossX, bossY, 14, Color.rgb(255, 98, 84));
-                addAuroraMeter(8f, "Boss hit");
+                effects.spawnScorePopup((damage > 1 ? "WEAK x2 +" : "HIT +") + awarded, bossX, bossY - bossRadius(), damage > 1 ? Color.rgb(255, 218, 121) : Color.rgb(255, 246, 207));
+                effects.spawnSparkBurst(bossX, bossY, damage > 1 ? 22 : 14, damage > 1 ? Color.rgb(255, 218, 121) : Color.rgb(255, 98, 84));
+                addAuroraMeter(damage > 1 ? 14f : 8f, "Boss hit");
                 playSound("hit");
                 logEvent(STAGES[selectedStage].bossName + " hit. HP " + Math.max(0, bossHealth) + "/" + bossMaxHealth + ".");
                 if (bossHealth <= 0) {
@@ -1263,8 +1288,9 @@ public class MooseRushView extends View {
         while (iterator.hasNext()) {
             BossAttack attack = iterator.next();
             attack.age += dt;
-            attack.x += attack.vx * dt;
-            attack.y += attack.vy * dt;
+            float speedScale = worldSpeedMultiplier();
+            attack.x += attack.vx * dt * speedScale;
+            attack.y += attack.vy * dt * speedScale;
             if (attack.type == ATTACK_ICE) {
                 attack.vy += dp(42) * dt;
                 attack.spin += dt * 8f;
@@ -1492,6 +1518,30 @@ public class MooseRushView extends View {
         }
     }
 
+    private void updateAuroraFocus(float dt) {
+        if (auroraFocusTimer <= 0f) {
+            return;
+        }
+        auroraFocusTimer = Math.max(0f, auroraFocusTimer - dt);
+        if (auroraFocusTimer <= 0f) {
+            showRunCallout("FOCUS FADED", 0.80f);
+        }
+    }
+
+    private float worldSpeedMultiplier() {
+        return auroraFocusTimer > 0f ? 0.78f : 1f;
+    }
+
+    private void activateAuroraFocus(float x, float y) {
+        auroraFocusTimer = AURORA_FOCUS_SECONDS;
+        shotCooldown = Math.min(shotCooldown, 0.08f);
+        effects.spawnSparkBurst(x, y, 20, Color.rgb(77, 219, 184));
+        effects.spawnScorePopup("FOCUS", x, y - dp(16), Color.rgb(77, 219, 184));
+        showRunCallout("AURORA FOCUS", 1.25f);
+        playSound("medal");
+        logEvent("Aurora Focus collected.");
+    }
+
     private void addAuroraMeter(float amount, String reason) {
         if (state != STATE_RUNNING || auroraRushTimer > 0f) {
             return;
@@ -1528,6 +1578,65 @@ public class MooseRushView extends View {
             missionComboComplete = true;
             completeMission("COMBO KID");
         }
+    }
+
+    private void updateRouteMilestones() {
+        StageConfig stage = STAGES[selectedStage];
+        int nextGate = routeGateForIndex(routeMilestoneIndex, stage.goalGates);
+        if (nextGate <= 0 || gatesPassed < nextGate || bossActive) {
+            return;
+        }
+        String label = routeMilestoneLabel(selectedStage, routeMilestoneIndex);
+        routeMilestoneIndex++;
+        routeMilestoneTimer = 2.4f;
+        gameState.addCombo();
+        int awarded = addScore(14 + selectedStage * 3, "Route milestone");
+        effects.spawnScorePopup(label + " +" + awarded, getWidth() / 2f, getHeight() * 0.27f, Color.rgb(255, 218, 121));
+        effects.spawnSparkBurst(getWidth() / 2f, getHeight() * 0.28f, 16, Color.rgb(255, 218, 121));
+        addAuroraMeter(10f, "Route milestone");
+        showRunCallout(label, 1.45f);
+        logEvent("Route milestone reached: " + label + ".");
+    }
+
+    private int routeGateForIndex(int index, int goalGates) {
+        if (index == 0) return Math.max(1, Math.round(goalGates * 0.25f));
+        if (index == 1) return Math.max(2, Math.round(goalGates * 0.50f));
+        if (index == 2) return Math.max(3, Math.round(goalGates * 0.75f));
+        return -1;
+    }
+
+    private String routeMilestoneLabel(int stage, int index) {
+        String[][] labels = {
+                {"SUN RIDGE", "TUNDRA CAMP", "GOLDEN PASS"},
+                {"RIVER FORK", "FISH CAMP", "SPAWNING FALLS"},
+                {"BIRCH CUT", "MOOSE MEADOW", "ANTLER PASS"},
+                {"LOW LIGHT", "AURORA CAMP", "OWL RIDGE"},
+                {"ICE FLATS", "DEN CAMP", "WHITEOUT PASS"}
+        };
+        return labels[clampInt(stage, 0, labels.length - 1)][clampInt(index, 0, 2)];
+    }
+
+    private void updateCampCheckpoint() {
+        StageConfig stage = STAGES[selectedStage];
+        int campGate = Math.max(2, Math.round(stage.goalGates * 0.50f));
+        if (campReached || bossActive || gatesPassed < campGate) {
+            return;
+        }
+        campReached = true;
+        if (gameState.lives < 3) {
+            gameState.lives++;
+            effects.spawnScorePopup("+LIFE", playerX, playerY - playerRadius * 2.2f, Color.rgb(255, 98, 84));
+        } else if (!gameState.shieldActive) {
+            gameState.shieldActive = true;
+            effects.spawnScorePopup("CAMP SHIELD", playerX, playerY - playerRadius * 2.2f, Color.rgb(132, 213, 232));
+        } else {
+            int awarded = addScore(20, "Camp supplies");
+            effects.spawnScorePopup("SUPPLIES +" + awarded, playerX, playerY - playerRadius * 2.2f, Color.rgb(255, 218, 121));
+        }
+        effects.spawnSparkBurst(playerX, getGroundY() - dp(24), 22, Color.rgb(255, 177, 70));
+        showRunCallout("TRAIL CAMP RESTOCK", 1.55f);
+        playSound("medal");
+        logEvent("Trail camp reached.");
     }
 
     private void completeMission(String label) {
@@ -1567,6 +1676,10 @@ public class MooseRushView extends View {
             float cacheY = getGroundY() - hurdleHeight - gameplayDp(24 + random.nextFloat() * 26);
             powerUps.add(new PowerUp(getWidth() + gateWidth + gameplayDp(126), Math.max(dp(88), cacheY), gameplayDp(9.5f), "CACHE"));
         }
+        if (gatesPassed >= 3 && auroraFocusTimer <= 0f && random.nextFloat() < focusSpawnChance()) {
+            float focusY = getGroundY() - hurdleHeight - gameplayDp(72 + random.nextFloat() * 18);
+            powerUps.add(new PowerUp(getWidth() + gateWidth + gameplayDp(166), Math.max(dp(86), focusY), gameplayDp(10.5f), "FOCUS"));
+        }
     }
 
     private float powerUpSpawnChance() {
@@ -1579,6 +1692,12 @@ public class MooseRushView extends View {
         if (selectedStage >= 4) return 0.24f;
         if (selectedStage >= 2) return 0.18f;
         return 0.12f;
+    }
+
+    private float focusSpawnChance() {
+        if (selectedStage >= 4) return 0.16f;
+        if (selectedStage >= 2) return 0.13f;
+        return 0.10f;
     }
 
     private void updateStars(float dt, float speed) {
@@ -1646,6 +1765,13 @@ public class MooseRushView extends View {
             showRunCallout("TRAIL CACHE +" + awarded, 1.10f);
             playSound("medal");
             checkMissionProgress();
+        } else if ("FOCUS".equals(powerUp.type)) {
+            gameState.addCombo();
+            int awarded = addScore(16, "Aurora Focus");
+            effects.spawnScorePopup("FOCUS +" + awarded, powerUp.x, powerUp.y - dp(12), Color.rgb(77, 219, 184));
+            addAuroraMeter(18f, "Aurora Focus");
+            activateAuroraFocus(powerUp.x, powerUp.y);
+            checkMissionProgress();
         }
     }
 
@@ -1654,6 +1780,7 @@ public class MooseRushView extends View {
         worldFlash = Math.max(0f, worldFlash - dt);
         runCalloutTimer = Math.max(0f, runCalloutTimer - dt);
         bossWarningTimer = Math.max(0f, bossWarningTimer - dt);
+        routeMilestoneTimer = Math.max(0f, routeMilestoneTimer - dt);
         effects.update(dt);
     }
 
@@ -1675,6 +1802,9 @@ public class MooseRushView extends View {
             return "EAGLE";
         }
         if (selectedStage == 4) {
+            if (gatesPassed >= 4 && roll < 0.16f) {
+                return "THIN ICE";
+            }
             if (gatesPassed >= 7 && roll < 0.20f) {
                 return "AVALANCHE";
             }
@@ -1700,6 +1830,7 @@ public class MooseRushView extends View {
         if ("EAGLE".equals(label) || "DARK".equals(label)) return 18f;
         if ("SALMON".equals(label)) return 17f;
         if ("AVALANCHE".equals(label)) return 22f;
+        if ("THIN ICE".equals(label)) return 20f;
         return 15 + Math.min(8, selectedStage * 2);
     }
 
@@ -1712,6 +1843,7 @@ public class MooseRushView extends View {
         if ("EAGLE".equals(label) || "DARK".equals(label)) return 1.02f + variance;
         if ("SALMON".equals(label)) return 0.96f + variance;
         if ("AVALANCHE".equals(label)) return 1.18f + variance;
+        if ("THIN ICE".equals(label)) return 0.98f + variance;
         return 0.86f + random.nextFloat() * 0.32f;
     }
 
@@ -1725,6 +1857,9 @@ public class MooseRushView extends View {
         }
         if ("AVALANCHE".equals(label)) {
             return getGroundY() - radius - dp(2);
+        }
+        if ("THIN ICE".equals(label)) {
+            return getGroundY() - radius * 0.54f;
         }
         if ("SUN".equals(label) && random.nextFloat() < 0.30f) {
             return getGroundY() - dp(110) - random.nextFloat() * dp(48);
@@ -1749,24 +1884,24 @@ public class MooseRushView extends View {
 
         textPaint.setTextAlign(Paint.Align.CENTER);
         textPaint.setColor(Color.rgb(255, 218, 121));
-        textPaint.setTextSize(dp(20));
-        canvas.drawText("TRIPPERDEELABS", getWidth() / 2f, getHeight() * 0.40f, textPaint);
+        textPaint.setTextSize(dp(16));
+        canvas.drawText("TRIPPERDEE LABS", getWidth() / 2f, getHeight() * 0.34f, textPaint);
 
         textPaint.setColor(Color.WHITE);
-        textPaint.setTextSize(dp(43));
-        canvas.drawText("YOU RUSH", getWidth() / 2f, getHeight() * 0.49f, textPaint);
+        textPaint.setTextSize(dp(42));
+        canvas.drawText("YOU  RUSH", getWidth() / 2f, getHeight() * 0.47f, textPaint);
 
         textPaint.setTextSize(dp(15));
         textPaint.setColor(Color.rgb(210, 232, 238));
-        canvas.drawText("Alaska platform runner", getWidth() / 2f, getHeight() * 0.57f, textPaint);
+        canvas.drawText("Alaska platform runner", getWidth() / 2f, getHeight() * 0.59f, textPaint);
 
         textPaint.setTextSize(dp(14));
         textPaint.setColor(Color.rgb(255, 218, 121));
-        canvas.drawText("For the best playing experience, rotate your phone.", getWidth() / 2f, getHeight() * 0.68f, textPaint);
+        canvas.drawText("For the best playing experience, rotate your phone.", getWidth() / 2f, getHeight() * 0.71f, textPaint);
 
         textPaint.setTextSize(dp(11));
         textPaint.setColor(Color.WHITE);
-        canvas.drawText("Tap to continue", getWidth() / 2f, getHeight() * 0.78f, textPaint);
+        canvas.drawText("Tap to continue", getWidth() / 2f, getHeight() * 0.83f, textPaint);
     }
 
     private void drawMenuScreen(Canvas canvas) {
@@ -1943,6 +2078,7 @@ public class MooseRushView extends View {
 
         drawPlayerLaneGuide(canvas);
         drawAuroraRushTrail(canvas);
+        drawAuroraFocusTrail(canvas);
         effects.drawParticles(canvas);
         drawShieldAura(canvas);
         drawCharacter(canvas, playerX, playerY - playerRadius * PLAYER_HEAD_DRAW_OFFSET, playerRadius);
@@ -2197,6 +2333,23 @@ public class MooseRushView extends View {
         canvas.drawOval(playerX - playerRadius * 2.0f, ground - dp(15), playerX + playerRadius * 2.0f, ground + dp(12), paint);
     }
 
+    private void drawAuroraFocusTrail(Canvas canvas) {
+        if (auroraFocusTimer <= 0f) {
+            return;
+        }
+        float pct = Math.min(1f, auroraFocusTimer / AURORA_FOCUS_SECONDS);
+        float ground = getGroundY();
+        float pulse = 0.5f + 0.5f * (float) Math.sin(spriteClock * 9f);
+        paint.setStyle(Paint.Style.FILL);
+        paint.setColor(Color.argb(Math.round(48 + 70 * pct), 77, 219, 184));
+        canvas.drawOval(playerX - playerRadius * (1.8f + pulse * 0.25f), ground - dp(18), playerX + playerRadius * (1.8f + pulse * 0.25f), ground + dp(12), paint);
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setStrokeWidth(dp(1.8f));
+        paint.setColor(Color.argb(Math.round(140 + 80 * pct), 255, 246, 207));
+        canvas.drawCircle(playerX, playerY - playerRadius * 0.35f, playerRadius * (1.35f + pulse * 0.12f), paint);
+        paint.setStyle(Paint.Style.FILL);
+    }
+
     private void drawHazard(Canvas canvas, Hazard hazard) {
         Bitmap sheet = sheetForHazard(hazard.label);
         float xRadius = hazard.radius * hazardHorizontalScale(hazard.label);
@@ -2217,6 +2370,8 @@ public class MooseRushView extends View {
             drawDrawable(canvas, hazard.drawable, hazard.x - xRadius, hazard.y - yRadius, hazard.x + xRadius, hazard.y + yRadius);
         } else if ("AVALANCHE".equals(hazard.label)) {
             drawAvalancheHazard(canvas, hazard, xRadius, yRadius);
+        } else if ("THIN ICE".equals(hazard.label)) {
+            drawThinIceHazard(canvas, hazard, xRadius, yRadius);
         } else {
             paint.setColor(Color.rgb(255, 218, 121));
             canvas.drawCircle(hazard.x, hazard.y, hazard.radius, paint);
@@ -2237,6 +2392,26 @@ public class MooseRushView extends View {
         paint.setStrokeWidth(dp(2));
         paint.setColor(Color.argb(190, 132, 213, 232));
         canvas.drawCircle(hazard.x + roll, hazard.y, hazard.radius * 1.05f, paint);
+        paint.setStyle(Paint.Style.FILL);
+    }
+
+    private void drawThinIceHazard(Canvas canvas, Hazard hazard, float xRadius, float yRadius) {
+        float ground = getGroundY();
+        float phase = hazardVisualPhase(hazard);
+        paint.setStyle(Paint.Style.FILL);
+        paint.setColor(Color.argb(142, 132, 213, 232));
+        canvas.drawOval(hazard.x - xRadius * 1.12f, ground - dp(16), hazard.x + xRadius * 1.12f, ground + dp(5), paint);
+        paint.setColor(Color.argb(185, 248, 252, 253));
+        canvas.drawOval(hazard.x - xRadius * 0.92f, ground - dp(12), hazard.x + xRadius * 0.92f, ground + dp(2), paint);
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setStrokeCap(Paint.Cap.ROUND);
+        paint.setStrokeWidth(dp(2.1f));
+        paint.setColor(Color.rgb(20, 86, 108));
+        float crack = (float) Math.sin(phase * 4.4f) * dp(2);
+        canvas.drawLine(hazard.x - xRadius * 0.72f, ground - dp(7), hazard.x - xRadius * 0.20f, ground - dp(2) + crack, paint);
+        canvas.drawLine(hazard.x - xRadius * 0.20f, ground - dp(2) + crack, hazard.x + xRadius * 0.20f, ground - dp(9), paint);
+        canvas.drawLine(hazard.x + xRadius * 0.20f, ground - dp(9), hazard.x + xRadius * 0.66f, ground - dp(4) - crack, paint);
+        paint.setStrokeCap(Paint.Cap.BUTT);
         paint.setStyle(Paint.Style.FILL);
     }
 
@@ -2275,6 +2450,9 @@ public class MooseRushView extends View {
                 float top = hazard.y + yRadius * (0.20f + i * 0.04f);
                 canvas.drawOval(left, top, left + xRadius * 0.56f, top + yRadius * 0.30f, paint);
             }
+        } else if ("THIN ICE".equals(hazard.label)) {
+            paint.setColor(Color.argb(92, 77, 219, 184));
+            canvas.drawOval(hazard.x - xRadius * 1.25f, getGroundY() - dp(19), hazard.x + xRadius * 1.25f, getGroundY() + dp(7), paint);
         }
     }
 
@@ -2349,6 +2527,7 @@ public class MooseRushView extends View {
         if ("EAGLE".equals(label) || "DARK".equals(label)) return 1.65f;
         if ("SALMON".equals(label)) return 1.35f;
         if ("AVALANCHE".equals(label)) return 1.38f;
+        if ("THIN ICE".equals(label)) return 1.85f;
         return 1.0f;
     }
 
@@ -2359,6 +2538,7 @@ public class MooseRushView extends View {
         if ("EAGLE".equals(label) || "DARK".equals(label)) return 1.00f;
         if ("SALMON".equals(label)) return 0.80f;
         if ("AVALANCHE".equals(label)) return 1.00f;
+        if ("THIN ICE".equals(label)) return 0.42f;
         return 1.0f;
     }
 
@@ -2433,7 +2613,8 @@ public class MooseRushView extends View {
 
         paint.setStyle(Paint.Style.FILL);
         boolean cache = "CACHE".equals(powerUp.type);
-        paint.setColor(cache ? Color.argb(82, 255, 218, 121) : Color.argb(80, 132, 213, 232));
+        boolean focus = "FOCUS".equals(powerUp.type);
+        paint.setColor(cache ? Color.argb(82, 255, 218, 121) : focus ? Color.argb(90, 77, 219, 184) : Color.argb(80, 132, 213, 232));
         canvas.drawCircle(x, y, r * 2.0f, paint);
         if (cache) {
             paint.setColor(Color.rgb(134, 78, 38));
@@ -2442,6 +2623,17 @@ public class MooseRushView extends View {
             canvas.drawRoundRect(x - r * 0.86f, y - r * 0.48f, x + r * 0.86f, y - r * 0.18f, r * 0.18f, r * 0.18f, paint);
             paint.setColor(Color.rgb(255, 246, 207));
             PathCompat.star(canvas, paint, x, y + r * 0.23f, r * 0.34f);
+        } else if (focus) {
+            paint.setStyle(Paint.Style.STROKE);
+            paint.setStrokeWidth(dp(2));
+            paint.setColor(Color.rgb(77, 219, 184));
+            canvas.drawCircle(x, y, r * 1.18f, paint);
+            canvas.drawCircle(x, y, r * 0.62f, paint);
+            paint.setStyle(Paint.Style.FILL);
+            paint.setColor(Color.rgb(255, 246, 207));
+            PathCompat.triangle(canvas, paint, x - r * 0.22f, y + r * 0.72f, x + r * 0.95f, y - r * 0.08f, x - r * 0.12f, y - r * 0.80f);
+            paint.setColor(Color.rgb(77, 219, 184));
+            canvas.drawCircle(x + r * 0.30f, y - r * 0.10f, r * 0.24f, paint);
         } else {
             paint.setColor(Color.rgb(132, 213, 232));
             canvas.drawCircle(x, y, r * 1.15f, paint);
@@ -2528,6 +2720,14 @@ public class MooseRushView extends View {
         if (damageFlash > 0f) {
             paint.setColor(Color.argb(125, 255, 255, 255));
             canvas.drawOval(bossX - xRadius * 0.96f, bossY - yRadius * 0.96f, bossX + xRadius * 0.96f, bossY + yRadius * 0.96f, paint);
+        }
+        if (bossWeakWindowActive()) {
+            float pulse = 0.5f + 0.5f * (float) Math.sin(bossTimer * 18f);
+            paint.setStyle(Paint.Style.STROKE);
+            paint.setStrokeWidth(dp(2.4f));
+            paint.setColor(Color.argb(150 + Math.round(70 * pulse), 255, 218, 121));
+            canvas.drawOval(bossX - xRadius * 1.02f, bossY - yRadius * 1.02f, bossX + xRadius * 1.02f, bossY + yRadius * 1.02f, paint);
+            paint.setStyle(Paint.Style.FILL);
         }
         paint.setColor(Color.argb(shadowAlpha, 0, 0, 0));
         canvas.drawOval(bossX - xRadius * 0.88f, shadowY - dp(9), bossX + xRadius * 0.88f, shadowY + dp(9), paint);
@@ -2743,6 +2943,10 @@ public class MooseRushView extends View {
         return radius * (selectedStage == 4 ? 0.72f : 0.66f);
     }
 
+    private boolean bossWeakWindowActive() {
+        return bossActive && bossState == BOSS_STATE_RECOVER && bossStateTimer < bossRecoverDuration() * 0.72f;
+    }
+
     private float bossLaneCenterY(int stage) {
         if (stage == 1) {
             return clamp(getGroundY() - dp(92), dp(116), getGroundY() - dp(72));
@@ -2901,6 +3105,7 @@ public class MooseRushView extends View {
 
         drawHudIcons(canvas);
         drawActionOverlay(canvas);
+        drawJourneyTracker(canvas);
         drawMissionTracker(canvas);
 
         if (debugOverlay) {
@@ -2962,6 +3167,51 @@ public class MooseRushView extends View {
             paint.setColor(Color.WHITE);
             PathCompat.star(canvas, paint, shieldX, shieldY, dp(3.2f));
         }
+
+        if (auroraFocusTimer > 0f) {
+            float focusX = getWidth() - dp(72);
+            float focusY = dp(22);
+            paint.setColor(Color.rgb(77, 219, 184));
+            canvas.drawCircle(focusX, focusY, dp(7), paint);
+            paint.setColor(Color.rgb(8, 18, 30));
+            canvas.drawCircle(focusX, focusY, dp(4.6f), paint);
+            paint.setStyle(Paint.Style.STROKE);
+            paint.setStrokeWidth(dp(1.4f));
+            paint.setColor(Color.WHITE);
+            canvas.drawCircle(focusX, focusY, dp(3.3f), paint);
+            paint.setStyle(Paint.Style.FILL);
+        }
+    }
+
+    private void drawJourneyTracker(Canvas canvas) {
+        if (state == STATE_SPLASH || state == STATE_MENU || state == STATE_MAP || state == STATE_CUSTOMIZE) {
+            return;
+        }
+        if (bossWarningTimer > 0f || runCalloutTimer > 0f) {
+            return;
+        }
+        float width = Math.min(getWidth() - dp(92), dp(360));
+        float height = dp(20);
+        float left = (getWidth() - width) / 2f;
+        float top = bossActive ? dp(84) : dp(94);
+        float progress = STAGES[selectedStage].goalGates <= 0 ? 0f : Math.min(1f, gatesPassed / (float) STAGES[selectedStage].goalGates);
+        paint.setStyle(Paint.Style.FILL);
+        paint.setColor(Color.argb(122, 8, 18, 30));
+        canvas.drawRoundRect(left, top, left + width, top + height, dp(7), dp(7), paint);
+        paint.setColor(Color.argb(120, 77, 219, 184));
+        canvas.drawRoundRect(left, top, left + width * progress, top + height, dp(7), dp(7), paint);
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setStrokeWidth(dp(1));
+        paint.setColor(Color.argb(165, 255, 246, 207));
+        canvas.drawRoundRect(left, top, left + width, top + height, dp(7), dp(7), paint);
+        paint.setStyle(Paint.Style.FILL);
+
+        textPaint.setTextAlign(Paint.Align.CENTER);
+        textPaint.setTextSize(dp(8.5f));
+        textPaint.setColor(Color.WHITE);
+        String leg = bossActive ? "BOSS TERRITORY" : routeMilestoneLabel(selectedStage, clampInt(routeMilestoneIndex, 0, 2));
+        String focus = auroraFocusTimer > 0f ? "  FOCUS " + Math.round(auroraFocusTimer) : "";
+        canvas.drawText(leg + (campReached ? "  CAMP RESTOCKED" : "") + focus, getWidth() / 2f, top + dp(13.5f), textPaint);
     }
 
     private void drawMissionTracker(Canvas canvas) {
@@ -3580,7 +3830,7 @@ public class MooseRushView extends View {
             return "SUMMON";
         }
         if (bossState == BOSS_STATE_RECOVER) {
-            return "RECOVER";
+            return bossWeakWindowActive() ? "WEAK x2" : "RECOVER";
         }
         return "ENTER";
     }
