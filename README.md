@@ -2,16 +2,16 @@
 
 A personalized Android arcade game by **TripperDeeLabs**.
 
-**Current status: Alaska 2.3.0 gameplay polish beta.**
+**Current status: Alaska 2.4.0 progression polish beta.**
 
 This build is beta-ready for APK testing, tuning, and bug fixing. It is not final 1.0 or a larger milestone until it installs and plays well across all Alaska stages on a real phone.
 
 ## Current beta
 
 ```text
-versionCode: 230
-versionName: 2.3.0-beta
-build badge: ALASKA PASSPORT v2.3 BETA
+versionCode: 240
+versionName: 2.4.0-beta
+build badge: ALASKA PASSPORT v2.4 BETA
 ```
 
 ## Game flow
@@ -96,6 +96,7 @@ Mobile mapping:
 - Splash screen title spacing and boss-fight readability polish
 - Stronger sprite edge guards for animal sheets and roar sprites
 - Result panels with next-goal guidance after wins and losses
+- Real map progression locks, respawn grace, boss escape timer, and clearer combat rules
 - Build-log artifact workflow
 - Safer launcher vector paths
 - Hardened app manifest
@@ -128,7 +129,7 @@ The debug APK lands in `app/build/outputs/apk/debug/` with the version in the
 filename, for example:
 
 ```text
-you-rush-alaska-2.3.0-beta-230-debug.apk
+you-rush-alaska-2.4.0-beta-240-debug.apk
 ```
 
 GitHub Actions also builds a debug APK using:
@@ -173,6 +174,7 @@ Run them with `./gradlew testDebugUnitTest`.
 - `docs/ANDROID_TEST_CHECKLIST.md` is the phone QA checklist for each APK.
 - `docs/RELEASE_2_2_BETA_LAUNCH_READINESS.md` documents the 2.2.0-beta release-owner hardening pass.
 - `docs/RELEASE_2_3_BETA_GAMEPLAY_POLISH.md` documents the next-five gameplay polish pass.
+- `docs/RELEASE_2_4_BETA_PROGRESSION_POLISH.md` documents the progression and fairness polish pass.
 
 ## App icon
 
@@ -190,4 +192,4 @@ full-bleed vector fallback in `res/mipmap-anydpi/` for API 23–25.
 5. Verify movement, jump, double jump, fire, lives, checkpoint respawn, unified HUD, combo, XP, all bosses, and mute toggle.
 6. Tune movement, spacing, scoring, spawn rates, stage difficulty, and HUD overlap.
 7. Confirm no crash in a 15-minute phone test.
-8. Keep 2.3.x focused on gameplay readability, boss tuning, sprite polish, phone QA, and crash-free beta testing.
+8. Keep 2.4.x focused on progression feel, boss readability, phone QA, and crash-free beta testing.

@@ -5,16 +5,16 @@ Use this after GitHub Actions produces the debug APK artifact.
 Current packaged beta:
 
 ```text
-versionCode: 230
-versionName: 2.3.0-beta
-build badge: ALASKA PASSPORT v2.3 BETA
+versionCode: 240
+versionName: 2.4.0-beta
+build badge: ALASKA PASSPORT v2.4 BETA
 ```
 
 ## Install test
 
 1. Download `you-rush-alaska-debug-apk` from the latest successful workflow run.
 2. Extract the ZIP if GitHub downloaded it as a ZIP.
-3. Install `you-rush-alaska-2.3.0-beta-230-debug.apk` on an Android phone.
+3. Install `you-rush-alaska-2.4.0-beta-240-debug.apk` on an Android phone.
 4. Allow installation from the browser/files app if Android prompts you.
 5. Open **You Rush**.
 6. Confirm the debug/version badge is visible and matches the packaged beta.
@@ -27,6 +27,7 @@ Confirm these screens work:
 - Splash title words have comfortable spacing and do not collide on common phone widths.
 - Main menu appears after splash or tap.
 - Alaska Map opens.
+- Locked map stages do not start early and show an unlock message.
 - Customize opens.
 - Photo picker opens from Customize.
 - A picked player photo appears in-game.
@@ -57,6 +58,7 @@ Confirm the beta loop behaves consistently:
 - Passing hurdles advances the progress HUD and checkpoint.
 - Crashing with no shield spends one life.
 - Respawn resumes safely when lives remain.
+- Respawn grace shows a visible aura and prevents immediate repeat damage.
 - Losing the last life opens game over.
 
 ## Scoring test
@@ -113,7 +115,9 @@ Check small and large screens:
 - Boss health bar never overlaps the top HUD.
 - Boss tells show a clear readable action hint before the attack lands.
 - Boss lunge movement feels like a wind-up, attack, and recovery instead of a random jump.
+- Boss health includes an escape countdown during the boss fight.
 - Game-over and stage-clear content fits on small phones.
+- New best-score runs are called out on the result screen.
 - Button labels and touch targets remain usable in portrait orientation.
 - Customize shows locked outfit prices, unlocked outfits, and current token count.
 - Generated background plates carry the mountains; old vector-style mountain layers should not appear.
