@@ -14,11 +14,11 @@ android {
         applicationId "com.jtripppiie.mooserush"
         minSdk 23
         targetSdk 35
-        versionCode 210
-        versionName "2.1.0-beta"
+        versionCode 220
+        versionName "2.2.0-beta"
 
         buildConfigField "String", "BUILD_CHANNEL", '"ALASKA BETA"'
-        buildConfigField "String", "BUILD_BADGE", '"ALASKA PASSPORT v2.1 BETA"'
+        buildConfigField "String", "BUILD_BADGE", '"ALASKA PASSPORT v2.2 BETA"'
         buildConfigField "boolean", "SHOW_VERSION_BADGE", "true"
     }
 

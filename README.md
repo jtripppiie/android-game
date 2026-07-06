@@ -2,16 +2,16 @@
 
 A personalized Android arcade game by **TripperDeeLabs**.
 
-**Current status: Alaska 2.1.0 Expedition beta.**
+**Current status: Alaska 2.2.0 launch-readiness beta.**
 
 This build is beta-ready for APK testing, tuning, and bug fixing. It is not final 1.0 or a larger milestone until it installs and plays well across all Alaska stages on a real phone.
 
 ## Current beta
 
 ```text
-versionCode: 210
-versionName: 2.1.0-beta
-build badge: ALASKA PASSPORT v2.1 BETA
+versionCode: 220
+versionName: 2.2.0-beta
+build badge: ALASKA PASSPORT v2.2 BETA
 ```
 
 ## Game flow
@@ -92,6 +92,7 @@ Mobile mapping:
 - SoundPool generated SFX with persisted mute toggle
 - Debug overlay (off by default; toggle from the menu)
 - Version badge
+- Sampled photo decoding to reduce memory risk from large gallery images
 - Build-log artifact workflow
 - Safer launcher vector paths
 - Hardened app manifest
@@ -124,7 +125,7 @@ The debug APK lands in `app/build/outputs/apk/debug/` with the version in the
 filename, for example:
 
 ```text
-you-rush-alaska-2.1.0-beta-210-debug.apk
+you-rush-alaska-2.2.0-beta-220-debug.apk
 ```
 
 GitHub Actions also builds a debug APK using:
@@ -167,6 +168,7 @@ Run them with `./gradlew testDebugUnitTest`.
 - `docs/ALASKA_GAMEPLAY_BUILD.md` documents the current gameplay loop, stages, scoring, assets, and debug hooks.
 - `docs/SPRITE_SHEET_ASSET_PIPELINE.md` preserves the repeatable art-generation prompts and sprite-sheet rules.
 - `docs/ANDROID_TEST_CHECKLIST.md` is the phone QA checklist for each APK.
+- `docs/RELEASE_2_2_BETA_LAUNCH_READINESS.md` documents the 2.2.0-beta release-owner hardening pass.
 
 ## App icon
 
@@ -184,4 +186,4 @@ full-bleed vector fallback in `res/mipmap-anydpi/` for API 23–25.
 5. Verify movement, jump, double jump, fire, lives, checkpoint respawn, unified HUD, combo, XP, all bosses, and mute toggle.
 6. Tune movement, spacing, scoring, spawn rates, stage difficulty, and HUD overlap.
 7. Confirm no crash in a 15-minute phone test.
-8. Keep 1.9.x focused on stability, retention tuning, audio assets, and cleaner game-state integration.
+8. Keep 2.2.x focused on launch hardening, phone QA, release signing, store assets, and crash-free beta testing.

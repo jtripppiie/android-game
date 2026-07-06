@@ -28,7 +28,17 @@ The app stores simple local preferences, including:
 - Unlocked stage
 - Debug overlay setting
 - Selected image reference
+- Local XP, levels, Trail Tokens, Trail Passport badges, Daily Rush streak, and Expedition Logs
+
+## Permissions and network
+
+The current app declares no network permission.
+
+The photo picker uses Android's system document picker. The selected image is
+decoded locally, sampled down for memory safety, and never uploaded by the app.
 
 ## Public release note
 
-Before a public app-store launch, replace this note with a final privacy policy hosted at a stable public URL.
+Before a public app-store launch, publish this policy at a stable public URL and
+use that URL in the store listing. The app behavior described here is the
+intended launch behavior for the local-first beta.

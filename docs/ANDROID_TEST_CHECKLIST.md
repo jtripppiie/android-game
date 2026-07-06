@@ -5,16 +5,16 @@ Use this after GitHub Actions produces the debug APK artifact.
 Current packaged beta:
 
 ```text
-versionCode: 210
-versionName: 2.1.0-beta
-build badge: ALASKA PASSPORT v2.1 BETA
+versionCode: 220
+versionName: 2.2.0-beta
+build badge: ALASKA PASSPORT v2.2 BETA
 ```
 
 ## Install test
 
 1. Download `you-rush-alaska-debug-apk` from the latest successful workflow run.
 2. Extract the ZIP if GitHub downloaded it as a ZIP.
-3. Install `you-rush-alaska-2.1.0-beta-210-debug.apk` on an Android phone.
+3. Install `you-rush-alaska-2.2.0-beta-220-debug.apk` on an Android phone.
 4. Allow installation from the browser/files app if Android prompts you.
 5. Open **You Rush**.
 6. Confirm the debug/version badge is visible and matches the packaged beta.
@@ -29,6 +29,7 @@ Confirm these screens work:
 - Customize opens.
 - Photo picker opens from Customize.
 - A picked player photo appears in-game.
+- Large modern phone photos do not crash import; unusable photos show a friendly rejection.
 - The selected player photo restores after closing and reopening the app.
 - Outfit color selection persists after closing and reopening the app.
 - Back buttons return to menu.
@@ -78,6 +79,7 @@ Confirm score changes:
 - XP and level persist after restarting the app.
 - Cosmetic outfit unlocks spend Trail Tokens only and never change gameplay power.
 - Trail Passport badge count and badge token rewards persist after restarting the app.
+- Expedition Logs persist after restarting the app.
 
 ## Stage test
 
@@ -139,6 +141,7 @@ On the main menu:
 - Map unlock logic exists, but the map still displays every Alaska stage for easy inspection.
 - Difficulty is not balanced yet.
 - Generated tone SFX are functional placeholders; richer audio assets are still needed.
+- This checklist still requires a real phone pass before public submission.
 
 ## First tuning targets
 

@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.ImageDecoder;
 import android.graphics.PointF;
@@ -27,6 +28,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.IOException;
+import java.io.InputStream;
 
 @SuppressWarnings("deprecation")
 public class MainActivity extends Activity {
@@ -298,16 +300,60 @@ public class MainActivity extends Activity {
             Bitmap bitmap;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 ImageDecoder.Source source = ImageDecoder.createSource(getContentResolver(), imageUri);
-                bitmap = ImageDecoder.decodeBitmap(source, (decoder, info, src) -> decoder.setAllocator(ImageDecoder.ALLOCATOR_SOFTWARE));
+                bitmap = ImageDecoder.decodeBitmap(source, (decoder, info, src) -> {
+                    decoder.setAllocator(ImageDecoder.ALLOCATOR_SOFTWARE);
+                    int sourceWidth = info.getSize().getWidth();
+                    int sourceHeight = info.getSize().getHeight();
+                    int longestSide = Math.max(sourceWidth, sourceHeight);
+                    if (longestSide > 1024) {
+                        float scale = 1024f / longestSide;
+                        decoder.setTargetSize(Math.max(1, Math.round(sourceWidth * scale)), Math.max(1, Math.round(sourceHeight * scale)));
+                    }
+                });
             } else {
-                bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), imageUri);
+                bitmap = decodeSampledBitmap(imageUri, 1024);
+            }
+            if (bitmap == null) {
+                Log.w(TAG, "decodeBitmap: decoder returned no bitmap");
+                return null;
             }
             Log.d(TAG, "decodeBitmap: original image " + bitmap.getWidth() + "x" + bitmap.getHeight());
             return scaleBitmapDown(bitmap, 512);
-        } catch (IOException | SecurityException exception) {
+        } catch (IOException | SecurityException | OutOfMemoryError exception) {
             Log.w(TAG, "decodeBitmap: failed to decode image", exception);
             return null;
         }
+    }
+
+    private Bitmap decodeSampledBitmap(Uri imageUri, int maxSize) throws IOException {
+        BitmapFactory.Options bounds = new BitmapFactory.Options();
+        bounds.inJustDecodeBounds = true;
+        try (InputStream input = getContentResolver().openInputStream(imageUri)) {
+            BitmapFactory.decodeStream(input, null, bounds);
+        }
+        if (bounds.outWidth <= 0 || bounds.outHeight <= 0) {
+            return MediaStore.Images.Media.getBitmap(getContentResolver(), imageUri);
+        }
+
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inSampleSize = sampleSizeFor(bounds.outWidth, bounds.outHeight, maxSize);
+        options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+        try (InputStream input = getContentResolver().openInputStream(imageUri)) {
+            Bitmap bitmap = BitmapFactory.decodeStream(input, null, options);
+            if (bitmap == null) {
+                return MediaStore.Images.Media.getBitmap(getContentResolver(), imageUri);
+            }
+            return bitmap;
+        }
+    }
+
+    private int sampleSizeFor(int width, int height, int maxSize) {
+        int sampleSize = 1;
+        int longestSide = Math.max(width, height);
+        while (longestSide / (sampleSize * 2) >= maxSize) {
+            sampleSize *= 2;
+        }
+        return sampleSize;
     }
 
     private Bitmap scaleBitmapDown(Bitmap bitmap, int maxSize) {
