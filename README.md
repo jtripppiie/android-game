@@ -2,16 +2,16 @@
 
 A personalized Android arcade game by **TripperDeeLabs**.
 
-**Current status: Alaska 2.7.3 adaptive splash-title beta.**
+**Current status: Alaska 2.8.0 movement-and-obstacle beta.**
 
 This build is beta-ready for APK testing, tuning, and bug fixing. It is not final 1.0 or a larger milestone until it installs and plays well across all Alaska stages on a real phone.
 
 ## Current beta
 
 ```text
-versionCode: 273
-versionName: 2.7.3-beta
-build badge: ALASKA PASSPORT v2.7.3 BETA
+versionCode: 280
+versionName: 2.8.0-beta
+build badge: ALASKA PASSPORT v2.8 BETA
 ```
 
 ## Game flow
@@ -38,7 +38,7 @@ build badge: ALASKA PASSPORT v2.7.3 BETA
 
 You Rush is a side-scrolling platform runner (Mario-style), not a flap-to-fly
 game. Your character runs along the ground under gravity. Stage-specific trail
-obstacles rise from the ground — driftwood rails, fish racks, antler
+obstacles rise from the ground — driftwood rails, slick river logs, antler
 barricades, ice markers, and snowbanks — while wildlife hazards enter from the
 right. Jump obstacles, avoid or stun wildlife, and defeat bosses with snowballs.
 The ground is safe to land on; only hitting an obstacle, a hazard, or the boss
@@ -106,6 +106,7 @@ Mobile mapping:
 - Sampled photo decoding to reduce memory risk from large gallery images
 - Splash screen title spacing and boss-fight readability polish
 - Stronger sprite edge guards for animal sheets and roar sprites
+- Snappier jump arc and trail-credible Salmon Rush river-log obstacles
 - Result panels with next-goal guidance after wins and losses
 - Real map progression locks, respawn grace, boss escape timer, and clearer combat rules
 - Stage-specific obstacle identities and calmer creature animation pacing
@@ -141,7 +142,7 @@ The debug APK lands in `app/build/outputs/apk/debug/` with the version in the
 filename, for example:
 
 ```text
-you-rush-alaska-2.7.3-beta-273-debug.apk
+you-rush-alaska-2.8.0-beta-280-debug.apk
 ```
 
 GitHub Actions also builds a debug APK using:

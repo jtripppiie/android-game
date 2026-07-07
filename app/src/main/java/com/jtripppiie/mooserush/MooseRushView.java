@@ -100,7 +100,7 @@ public class MooseRushView extends View {
 
     private static final StageConfig[] STAGES = {
             new StageConfig("Midnight Sun Run", "Jump driftwood trail rails before the sun boss.", SEASON_MIDNIGHT_SUN, "Sunburn Sprite", "SUN", "DRIFTWOOD RAILS", 5, 2, 150, 2.35f, 0),
-            new StageConfig("Salmon Rush", "Clear fish-camp racks while salmon arc in.", SEASON_SUMMER, "Salmon Boss", "SALMON", "FISH RACKS", 7, 3, 165, 2.15f, 1),
+            new StageConfig("Salmon Rush", "Vault slick river logs while salmon arc in.", SEASON_SUMMER, "Salmon Boss", "SALMON", "RIVER LOGS", 7, 3, 165, 2.15f, 1),
             new StageConfig("Moose Pass", "Vault antler barricades and dodge real moose.", SEASON_SUMMER, "Moose Boss", "MOOSE", "ANTLER BARRICADES", 8, 4, 178, 2.05f, 2),
             new StageConfig("Dark Winter", "Leap ice trail markers through low light.", SEASON_DARKNESS, "Eagle Boss", "EAGLE", "ICE MARKERS", 9, 4, 188, 1.95f, 3),
             new StageConfig("Bear Country", "Survive snowbank barricades and winter wildlife.", SEASON_WINTER, "Polar Bear Boss", "BEAR", "SNOWBANKS", 10, 6, 198, 1.85f, 4)
@@ -122,7 +122,7 @@ public class MooseRushView extends View {
     private static final int BOSS_PATTERN_SUMMON = 2;
     private static final int ATTACK_ICE = 0;
     private static final int ATTACK_SHOCKWAVE = 1;
-    private static final int ROAR_SPRITE_SOURCE_INSET_PX = 18;
+    private static final int ROAR_SPRITE_SOURCE_INSET_PX = 24;
     private static final int WEATHER_CLEAR = 0;
     private static final int WEATHER_AURORA = 1;
     private static final int WEATHER_RAIN = 2;
@@ -2721,14 +2721,13 @@ public class MooseRushView extends View {
         paint.setStyle(Paint.Style.STROKE);
         paint.setStrokeCap(Paint.Cap.ROUND);
         if (selectedStage == 1) {
-            paint.setStrokeWidth(dp(2.4f));
-            paint.setColor(Color.rgb(233, 218, 181));
-            for (float x = gate.x + dp(8); x < gate.x + gate.width - dp(4); x += dp(11)) {
-                canvas.drawLine(x, railBottom + dp(5), x + dp(7), ground - dp(12), paint);
-            }
             paint.setStyle(Paint.Style.FILL);
-            paint.setColor(Color.rgb(255, 98, 84));
-            canvas.drawOval(gate.x + gate.width * 0.42f, top + dp(6), gate.x + gate.width * 0.68f, top + dp(18), paint);
+            paint.setColor(Color.rgb(82, 54, 33));
+            canvas.drawRoundRect(gate.x + dp(4), railBottom + dp(4), gate.x + gate.width - dp(4), railBottom + dp(14), dp(6), dp(6), paint);
+            paint.setColor(Color.rgb(226, 169, 83));
+            canvas.drawRoundRect(gate.x + dp(8), railBottom + dp(6), gate.x + gate.width - dp(8), railBottom + dp(9), dp(3), dp(3), paint);
+            paint.setColor(Color.argb(150, 132, 213, 232));
+            canvas.drawOval(gate.x - dp(2), ground - dp(12), gate.x + gate.width + dp(8), ground - dp(2), paint);
             return;
         }
         if (selectedStage == 2) {
@@ -4490,7 +4489,7 @@ public class MooseRushView extends View {
 
     private String obstacleHudName(int stageIndex) {
         if (stageIndex == 0) return "RAILS";
-        if (stageIndex == 1) return "RACKS";
+        if (stageIndex == 1) return "LOGS";
         if (stageIndex == 2) return "ANTLERS";
         if (stageIndex == 3) return "ICE";
         if (stageIndex == 4) return "SNOWBANKS";

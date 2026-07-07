@@ -3,10 +3,10 @@ package com.jtripppiie.mooserush;
 final class RunnerTuning {
     static final float COYOTE_SECONDS = 0.08f;
     static final float JUMP_BUFFER_SECONDS = 0.10f;
-    static final float GROUND_JUMP_VELOCITY_DP = 620f;
-    static final float DOUBLE_JUMP_VELOCITY_DP = 540f;
-    static final float GRAVITY_DP = 1550f;
-    static final float DARKNESS_GRAVITY_DP = 1625f;
+    static final float GROUND_JUMP_VELOCITY_DP = 585f;
+    static final float DOUBLE_JUMP_VELOCITY_DP = 505f;
+    static final float GRAVITY_DP = 1725f;
+    static final float DARKNESS_GRAVITY_DP = 1810f;
     static final float MIN_GATE_COOLDOWN_SECONDS = 1.45f;
     static final float MIN_HAZARD_COOLDOWN_SECONDS = 1.95f;
 

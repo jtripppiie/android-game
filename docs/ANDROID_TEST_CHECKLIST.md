@@ -5,16 +5,16 @@ Use this after GitHub Actions produces the debug APK artifact.
 Current packaged beta:
 
 ```text
-versionCode: 273
-versionName: 2.7.3-beta
-build badge: ALASKA PASSPORT v2.7.3 BETA
+versionCode: 280
+versionName: 2.8.0-beta
+build badge: ALASKA PASSPORT v2.8 BETA
 ```
 
 ## Install test
 
 1. Download `you-rush-alaska-debug-apk` from the latest successful workflow run.
 2. Extract the ZIP if GitHub downloaded it as a ZIP.
-3. Install `you-rush-alaska-2.7.3-beta-273-debug.apk` on an Android phone.
+3. Install `you-rush-alaska-2.8.0-beta-280-debug.apk` on an Android phone.
 4. Allow installation from the browser/files app if Android prompts you.
 5. Open **You Rush**.
 6. Confirm the debug/version badge is visible and matches the packaged beta.
@@ -48,6 +48,7 @@ Test these controls:
 - RIGHT moves the character right.
 - JUMP bounces the character upward.
 - A second JUMP works once while airborne.
+- Jumping feels snappy and grounded, not floaty or odd.
 - FIRE launches a snowball.
 - PAUSE opens a frozen run overlay with Resume, Map, and Sprite options.
 - Resume returns to the same run without stuck movement or forced jump/fire input.
@@ -59,6 +60,7 @@ Confirm the beta loop behaves consistently:
 
 - The run starts with three lives.
 - Passing named obstacles advances the progress HUD and checkpoint.
+- Salmon Rush asks the player to vault river logs, not fish racks.
 - The live objective uses short stage labels and stays readable on common phone widths.
 - Tight obstacle clears can award a CLEAN VAULT popup without feeling mandatory.
 - Trail Map pickups activate SCOUT and show upcoming danger markers.
@@ -135,7 +137,7 @@ Check small and large screens:
 - Roaring bear sprites do not show edge artifacts from the original image border.
 - Eagle wing animation reads as deliberate flapping, not strobing.
 - Salmon animation reads as swimming, not jittering.
-- Stage obstacles have distinct identities: driftwood rails, fish racks, antler barricades, ice markers, and snowbanks.
+- Stage obstacles have distinct identities: driftwood rails, river logs, antler barricades, ice markers, and snowbanks.
 - Moose/polar/default bosses should be grounded; eagle/salmon bosses may fly or swim but should have grounded shadows and constrained lanes.
 - Bosses should visibly advance toward the player and retreat instead of parking at the far right.
 - Eagle wings flap at a natural pace instead of strobing.

@@ -28,7 +28,7 @@ The current Alaska map has five stages:
 | Stage | Season style | Main obstacle | Main hazard | Boss | Goal before boss |
 |---|---|---|---|---|---|
 | Midnight Sun Run | Midnight Sun | Driftwood rails | SUN | Sunburn Sprite | 5 jumps |
-| Salmon Rush | Summer | Fish racks | SALMON | Salmon Boss | 7 jumps |
+| Salmon Rush | Summer | River logs | SALMON | Salmon Boss | 7 jumps |
 | Moose Pass | Summer | Antler barricades | MOOSE | Moose Boss | 8 jumps |
 | Dark Winter | Darkness | Ice markers | EAGLE | Eagle Boss | 9 jumps |
 | Bear Country | Winter | Snowbanks | BEAR / POLAR / WOLF | Polar Bear Boss | 10 jumps |
