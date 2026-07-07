@@ -2465,6 +2465,7 @@ public class MooseRushView extends View {
         if (bossActive) {
             drawBoss(canvas);
         }
+        drawDebugObjectNumbers(canvas);
 
         drawPlayerLaneGuide(canvas);
         drawAuroraRushTrail(canvas);
@@ -3974,7 +3975,7 @@ public class MooseRushView extends View {
         float top = dp(100);
         paint.setStyle(Paint.Style.FILL);
         paint.setColor(Color.argb(156, 0, 0, 0));
-        canvas.drawRoundRect(dp(10), top, getWidth() - dp(10), top + dp(126), dp(8), dp(8), paint);
+        canvas.drawRoundRect(dp(10), top, getWidth() - dp(10), top + dp(156), dp(8), dp(8), paint);
 
         textPaint.setTextAlign(Paint.Align.LEFT);
         textPaint.setTextSize(dp(10));
@@ -3983,12 +3984,83 @@ public class MooseRushView extends View {
         textPaint.setColor(Color.WHITE);
         canvas.drawText("state=" + stateName() + " score=" + score + " boss=" + bossActive + " hp=" + bossHealth, dp(18), top + dp(34), textPaint);
         canvas.drawText("x=" + Math.round(playerX) + " y=" + Math.round(playerY) + " shots=" + shots.size() + " hazards=" + hazards.size(), dp(18), top + dp(50), textPaint);
+        canvas.drawText("numbers: G obstacle, H wildlife/sprite, * star, P pickup", dp(18), top + dp(64), textPaint);
+        canvas.drawText("T throw, A boss attack, B boss", dp(18), top + dp(78), textPaint);
 
         int max = Math.min(4, debugEvents.size());
         for (int i = 0; i < max; i++) {
             String event = debugEvents.get(debugEvents.size() - 1 - i);
-            canvas.drawText("• " + event, dp(18), top + dp(70 + i * 14), textPaint);
+            canvas.drawText("• " + event, dp(18), top + dp(98 + i * 14), textPaint);
         }
+    }
+
+    private void drawDebugObjectNumbers(Canvas canvas) {
+        if (!debugOverlay) {
+            return;
+        }
+        int number = 1;
+        for (Gate gate : gates) {
+            if (isDebugMarkerVisible(gate.x + gate.width * 0.5f, getGroundY() - gate.height * 0.5f, gate.width)) {
+                drawDebugObjectBadge(canvas, number++, "G", gate.x + gate.width * 0.5f, getGroundY() - gate.height - dp(34), Color.rgb(255, 218, 121));
+            }
+        }
+        for (Hazard hazard : hazards) {
+            float yRadius = hazard.radius * hazardVerticalScale(hazard.label);
+            if (isDebugMarkerVisible(hazard.x, hazard.y, hazard.radius * 2f)) {
+                drawDebugObjectBadge(canvas, number++, "H", hazard.x, hazard.y - yRadius - dp(24), Color.rgb(255, 98, 84));
+            }
+        }
+        for (Star star : stars) {
+            if (isDebugMarkerVisible(star.x, star.y, star.radius * 2f)) {
+                drawDebugObjectBadge(canvas, number++, "*", star.x, star.y - star.radius - dp(18), Color.rgb(255, 218, 121));
+            }
+        }
+        for (PowerUp powerUp : powerUps) {
+            if (isDebugMarkerVisible(powerUp.x, powerUp.y, powerUp.radius * 2f)) {
+                drawDebugObjectBadge(canvas, number++, "P", powerUp.x, powerUp.y - powerUp.radius - dp(22), Color.rgb(77, 219, 184));
+            }
+        }
+        for (Shot shot : shots) {
+            if (isDebugMarkerVisible(shot.x, shot.y, shot.radius * 2f)) {
+                drawDebugObjectBadge(canvas, number++, "T", shot.x, shot.y - shot.radius - dp(18), shot.empowered ? Color.rgb(255, 218, 121) : Color.rgb(132, 213, 232));
+            }
+        }
+        for (BossAttack attack : bossAttacks) {
+            if (isDebugMarkerVisible(attack.x, attack.y, attack.radius * 2f)) {
+                drawDebugObjectBadge(canvas, number++, "A", attack.x, attack.y - attack.radius - dp(20), Color.rgb(210, 232, 238));
+            }
+        }
+        if (bossActive) {
+            drawDebugObjectBadge(canvas, number, "B", bossX, bossY - bossRadius() - dp(28), Color.rgb(255, 98, 84));
+        }
+    }
+
+    private boolean isDebugMarkerVisible(float x, float y, float pad) {
+        return x + pad >= -dp(24) && x - pad <= getWidth() + dp(24)
+                && y + pad >= -dp(24) && y - pad <= getHeight() + dp(24);
+    }
+
+    private void drawDebugObjectBadge(Canvas canvas, int number, String type, float x, float y, int accentColor) {
+        String label = number + type;
+        float clampedX = clamp(x, dp(18), getWidth() - dp(18));
+        float clampedY = clamp(y, dp(54), getHeight() - dp(18));
+        textPaint.setTextAlign(Paint.Align.CENTER);
+        textPaint.setTextSize(dp(9.5f));
+        textPaint.setFakeBoldText(true);
+        float width = Math.max(dp(26), textPaint.measureText(label) + dp(10));
+        tempRect.set(clampedX - width * 0.5f, clampedY - dp(13), clampedX + width * 0.5f, clampedY + dp(5));
+
+        paint.setStyle(Paint.Style.FILL);
+        paint.setColor(Color.argb(218, 8, 18, 30));
+        canvas.drawRoundRect(tempRect, dp(7), dp(7), paint);
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setStrokeWidth(dp(1.4f));
+        paint.setColor(accentColor);
+        canvas.drawRoundRect(tempRect, dp(7), dp(7), paint);
+        paint.setStyle(Paint.Style.FILL);
+        textPaint.setColor(Color.WHITE);
+        canvas.drawText(label, clampedX, clampedY, textPaint);
+        textPaint.setFakeBoldText(false);
     }
 
     @SuppressWarnings("deprecation")

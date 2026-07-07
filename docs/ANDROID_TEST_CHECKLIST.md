@@ -5,16 +5,16 @@ Use this after GitHub Actions produces the debug APK artifact.
 Current packaged beta:
 
 ```text
-versionCode: 300
-versionName: 3.0.0-beta
-build badge: ALASKA PASSPORT v3.0 BETA
+versionCode: 301
+versionName: 3.0.1-beta
+build badge: ALASKA PASSPORT v3.0.1 BETA
 ```
 
 ## Install test
 
 1. Download `you-rush-alaska-debug-apk` from the latest successful workflow run.
 2. Extract the ZIP if GitHub downloaded it as a ZIP.
-3. Install `you-rush-alaska-3.0.0-beta-300-debug.apk` on an Android phone.
+3. Install `you-rush-alaska-3.0.1-beta-301-debug.apk` on an Android phone.
 4. Allow installation from the browser/files app if Android prompts you.
 5. Open **You Rush**.
 6. Confirm the debug/version badge is visible and matches the packaged beta.
@@ -39,6 +39,7 @@ Confirm these screens work:
 - Play starts the selected stage.
 - Daily Rush starts the rotating daily stage.
 - Main menu shows Trail Passport badge progress.
+- Turning DEBUG on shows numbered badges on active obstacles, wildlife, pickups, throws, boss attacks, and bosses.
 
 ## Gameplay test
 
