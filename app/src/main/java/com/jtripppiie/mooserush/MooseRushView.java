@@ -878,6 +878,11 @@ public class MooseRushView extends View {
             bestX = bossX;
             targetY = bossHurtCenterY();
         }
+        Gate gate = nearestDestructibleGate(startX, bestX);
+        if (gate != null) {
+            bestX = gate.x;
+            targetY = riverLogTop(gate) + riverLogHeight(gate) * 0.50f;
+        }
         for (Hazard hazard : hazards) {
             if (hazard.x <= startX || hazard.x >= bestX) {
                 continue;
@@ -1245,12 +1250,28 @@ public class MooseRushView extends View {
         for (Gate gate : gates) {
             float logHeight = riverLogHeight(gate);
             float logTop = riverLogTop(gate);
-            tempRect.set(gate.x - dp(6), logTop - dp(4), gate.x + gate.width + dp(8), logTop + logHeight + dp(5));
-            if (circleHitsRect(shot.x, shot.y, shot.radius * 1.35f, tempRect)) {
+            tempRect.set(gate.x - dp(10), logTop - dp(7), gate.x + gate.width + dp(12), logTop + logHeight + dp(8));
+            if (circleHitsRect(shot.x, shot.y, shot.radius * 1.55f, tempRect)) {
                 return gate;
             }
         }
         return null;
+    }
+
+    private Gate nearestDestructibleGate(float startX, float maxX) {
+        if (selectedStage != 1 || bossActive) {
+            return null;
+        }
+        Gate nearest = null;
+        float nearestX = maxX;
+        for (Gate gate : gates) {
+            if (gate.x <= startX || gate.x >= nearestX) {
+                continue;
+            }
+            nearest = gate;
+            nearestX = gate.x;
+        }
+        return nearest;
     }
 
     private void destroyGateWithShot(Gate gate) {
@@ -1261,17 +1282,18 @@ public class MooseRushView extends View {
             gameState.gatesPassed = gatesPassed;
         }
         gameState.addCombo();
-        int awarded = addScore(14, "River log blasted");
+        int awarded = addScore(18, "River log blasted");
         float x = gate.x + gate.width * 0.5f;
         float y = riverLogTop(gate) + riverLogHeight(gate) * 0.5f;
         effects.spawnScorePopup("LOG BOOM +" + awarded, x, y - dp(28), Color.rgb(255, 218, 121));
-        effects.spawnSparkBurst(x, y, 18, Color.rgb(226, 169, 83));
-        effects.spawnDustBurst(x, getGroundY(), 8, Color.argb(180, 132, 213, 232));
+        effects.spawnSparkBurst(x, y, 24, Color.rgb(226, 169, 83));
+        effects.spawnDustBurst(x, getGroundY(), 12, Color.argb(185, 132, 213, 232));
         runLogsBlasted++;
-        addAuroraMeter(10f, "Log blasted");
-        screenShake = Math.max(screenShake, 0.08f);
-        worldFlash = Math.max(worldFlash, 0.06f);
+        addAuroraMeter(12f, "Log blasted");
+        screenShake = Math.max(screenShake, 0.10f);
+        worldFlash = Math.max(worldFlash, 0.08f);
         checkMissionProgress();
+        showRunCallout("LOG BLASTED", 0.85f);
         showComboCallout();
         playSound("hit");
         logEvent("River log blasted " + gatesPassed + "/" + STAGES[selectedStage].goalGates + ".");
@@ -2814,6 +2836,16 @@ public class MooseRushView extends View {
         paint.setColor(Color.argb(150, 248, 252, 253));
         canvas.drawRoundRect(logLeft + dp(18), logBottom - dp(2), logRight - dp(14), logBottom + dp(2), dp(3), dp(3), paint);
 
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setStrokeWidth(dp(1.3f));
+        paint.setColor(Color.rgb(255, 246, 207));
+        float targetX = logLeft + (logRight - logLeft) * 0.68f;
+        float targetY = logTop + logHeight * 0.50f;
+        canvas.drawCircle(targetX, targetY, dp(5.5f), paint);
+        canvas.drawLine(targetX - dp(8), targetY, targetX + dp(8), targetY, paint);
+        canvas.drawLine(targetX, targetY - dp(6), targetX, targetY + dp(6), paint);
+        paint.setStyle(Paint.Style.FILL);
+
         drawObstacleNameplate(canvas, gate, top);
         paint.setStrokeCap(Paint.Cap.BUTT);
         paint.setStyle(Paint.Style.FILL);
@@ -3428,7 +3460,7 @@ public class MooseRushView extends View {
             return "RED ZONE: BACK UP";
         }
         if (bossPattern == BOSS_PATTERN_SNOW_WAVE) {
-            return "ICE ARC: JUMP";
+            return selectedStage == 4 ? "ICE THROW: JUMP" : "PROJECTILE ARC: JUMP";
         }
         return "SUMMON: STUN WILDLIFE";
     }
@@ -4011,7 +4043,7 @@ public class MooseRushView extends View {
         int number = 1;
         for (Gate gate : gates) {
             if (isDebugMarkerVisible(gate.x + gate.width * 0.5f, getGroundY() - gate.height * 0.5f, gate.width)) {
-                drawDebugObjectBadge(canvas, number++, "G", gate.x + gate.width * 0.5f, getGroundY() - gate.height - dp(34), Color.rgb(255, 218, 121));
+                drawDebugObjectBadge(canvas, number++, "G", debugGateDetail(gate), gate.x + gate.width * 0.5f, getGroundY() - gate.height - dp(34), Color.rgb(255, 218, 121));
             }
         }
         for (Hazard hazard : hazards) {
@@ -4032,7 +4064,7 @@ public class MooseRushView extends View {
         }
         for (Shot shot : shots) {
             if (isDebugMarkerVisible(shot.x, shot.y, shot.radius * 2f)) {
-                drawDebugObjectBadge(canvas, number++, "T", shot.x, shot.y - shot.radius - dp(18), shot.empowered ? Color.rgb(255, 218, 121) : Color.rgb(132, 213, 232));
+                drawDebugObjectBadge(canvas, number++, "T", shot.empowered ? "POWER" : "SNOW", shot.x, shot.y - shot.radius - dp(18), shot.empowered ? Color.rgb(255, 218, 121) : Color.rgb(132, 213, 232));
             }
         }
         for (BossAttack attack : bossAttacks) {
@@ -4050,6 +4082,13 @@ public class MooseRushView extends View {
             return hazard.label;
         }
         return hazard.label + (hazard.roaring ? " roar" : " f" + debugHazardFrame(hazard));
+    }
+
+    private String debugGateDetail(Gate gate) {
+        if (selectedStage == 1) {
+            return "LOG FIRE";
+        }
+        return obstacleHudName(selectedStage);
     }
 
     private int debugHazardFrame(Hazard hazard) {

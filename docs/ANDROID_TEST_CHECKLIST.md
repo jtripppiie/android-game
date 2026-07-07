@@ -5,16 +5,16 @@ Use this after GitHub Actions produces the debug APK artifact.
 Current packaged beta:
 
 ```text
-versionCode: 304
-versionName: 3.0.4-beta
-build badge: ALASKA PASSPORT v3.0.4 BETA
+versionCode: 305
+versionName: 3.0.5-beta
+build badge: ALASKA PASSPORT v3.0.5 BETA
 ```
 
 ## Install test
 
 1. Download `you-rush-alaska-debug-apk` from the latest successful workflow run.
 2. Extract the ZIP if GitHub downloaded it as a ZIP.
-3. Install `you-rush-alaska-3.0.4-beta-304-debug.apk` on an Android phone.
+3. Install `you-rush-alaska-3.0.5-beta-305-debug.apk` on an Android phone.
 4. Allow installation from the browser/files app if Android prompts you.
 5. Open **You Rush**.
 6. Confirm the debug/version badge is visible and matches the packaged beta.
@@ -42,6 +42,7 @@ Confirm these screens work:
 - Turning DEBUG on shows numbered badges on active obstacles, wildlife, pickups, throws, boss attacks, and bosses.
 - The DEBUG info panel is compact and does not block normal play.
 - DEBUG wildlife and boss badges show sprite/frame detail such as `BEAR f3`.
+- DEBUG gate badges identify Salmon Rush logs as `LOG FIRE`, and throw badges show `SNOW` or `POWER`.
 
 ## Gameplay test
 
@@ -67,6 +68,8 @@ Confirm the beta loop behaves consistently:
 - Salmon Rush asks the player to vault river logs, not fish racks.
 - Salmon Rush river logs look like logs and can be destroyed with snowballs.
 - Salmon Rush ready/rule text says FIRE can blast logs.
+- Snowballs arc toward nearby river logs and hit them without requiring pixel-perfect aim.
+- River logs show a small target mark and give clear blast feedback when destroyed.
 - Active weather fronts do not appear during gameplay.
 - HUD, map, ready screen, pause, missions, and results use stage-specific language such as CLEAR, VAULT, LEAP, and SURVIVE.
 - The live objective uses short stage labels and stays readable on common phone widths.
