@@ -2,16 +2,16 @@
 
 A personalized Android arcade game by **TripperDeeLabs**.
 
-**Current status: Alaska 2.8.0 movement-and-obstacle beta.**
+**Current status: Alaska 2.9.0 route-language beta.**
 
 This build is beta-ready for APK testing, tuning, and bug fixing. It is not final 1.0 or a larger milestone until it installs and plays well across all Alaska stages on a real phone.
 
 ## Current beta
 
 ```text
-versionCode: 280
-versionName: 2.8.0-beta
-build badge: ALASKA PASSPORT v2.8 BETA
+versionCode: 290
+versionName: 2.9.0-beta
+build badge: ALASKA PASSPORT v2.9 BETA
 ```
 
 ## Game flow
@@ -40,7 +40,8 @@ You Rush is a side-scrolling platform runner (Mario-style), not a flap-to-fly
 game. Your character runs along the ground under gravity. Stage-specific trail
 obstacles rise from the ground — driftwood rails, slick river logs, antler
 barricades, ice markers, and snowbanks — while wildlife hazards enter from the
-right. Jump obstacles, avoid or stun wildlife, and defeat bosses with snowballs.
+right. Clear, vault, leap, or survive stage obstacles; avoid or stun wildlife;
+and defeat bosses with snowballs.
 The ground is safe to land on; only hitting an obstacle, a hazard, or the boss
 ends the run.
 
@@ -91,7 +92,7 @@ Mobile mapping:
 - Boss phase-two escalation callouts
 - Expedition grading, route milestones, trail camp restocks, and beta run summaries
 - Progressive difficulty pacing for speed and spawn pressure
-- Hurdle progress bar
+- Route progress bar
 - Collectible star paths
 - Parallax Alaska scenery with generated background plates and snow-tree layers
 - Winter-mode polar bear, wolf, and roaring bear moments
@@ -107,6 +108,7 @@ Mobile mapping:
 - Splash screen title spacing and boss-fight readability polish
 - Stronger sprite edge guards for animal sheets and roar sprites
 - Snappier jump arc and trail-credible Salmon Rush river-log obstacles
+- Stage-specific route language across HUD, map, ready screen, pause, missions, and results
 - Result panels with next-goal guidance after wins and losses
 - Real map progression locks, respawn grace, boss escape timer, and clearer combat rules
 - Stage-specific obstacle identities and calmer creature animation pacing
@@ -142,7 +144,7 @@ The debug APK lands in `app/build/outputs/apk/debug/` with the version in the
 filename, for example:
 
 ```text
-you-rush-alaska-2.8.0-beta-280-debug.apk
+you-rush-alaska-2.9.0-beta-290-debug.apk
 ```
 
 GitHub Actions also builds a debug APK using:

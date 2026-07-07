@@ -27,11 +27,11 @@ The current Alaska map has five stages:
 
 | Stage | Season style | Main obstacle | Main hazard | Boss | Goal before boss |
 |---|---|---|---|---|---|
-| Midnight Sun Run | Midnight Sun | Driftwood rails | SUN | Sunburn Sprite | 5 jumps |
-| Salmon Rush | Summer | River logs | SALMON | Salmon Boss | 7 jumps |
-| Moose Pass | Summer | Antler barricades | MOOSE | Moose Boss | 8 jumps |
-| Dark Winter | Darkness | Ice markers | EAGLE | Eagle Boss | 9 jumps |
-| Bear Country | Winter | Snowbanks | BEAR / POLAR / WOLF | Polar Bear Boss | 10 jumps |
+| Midnight Sun Run | Midnight Sun | Driftwood rails | SUN | Sunburn Sprite | 5 clears |
+| Salmon Rush | Summer | River logs | SALMON | Salmon Boss | 7 vaults |
+| Moose Pass | Summer | Antler barricades | MOOSE | Moose Boss | 8 vaults |
+| Dark Winter | Darkness | Ice markers | EAGLE | Eagle Boss | 9 leaps |
+| Bear Country | Winter | Snowbanks | BEAR / POLAR / WOLF | Polar Bear Boss | 10 survival clears |
 
 ## Controls
 
@@ -58,7 +58,7 @@ Current scoring values:
 - Defeat a boss: **+100 + stage bonus**
 
 Combo multipliers increase rewards during clean play. Aurora Rush adds a short
-extra score multiplier when the meter fills from obstacle jumps, stars, near misses,
+extra score multiplier when the meter fills from route clears, stars, near misses,
 dodges, boss hits, shields, and missions. Best score, XP, Trail Tokens, cosmetic
 outfit unlocks, Trail Passport badges, and local level persist in shared
 preferences.
@@ -77,7 +77,7 @@ result panels plus the main menu badge count.
 ## Stage progression
 
 Each stage has a named obstacle goal. Once the player clears the required number
-of obstacle jumps, normal obstacle/hazard spawning stops and the boss phase
+of route obstacles, normal obstacle/hazard spawning stops and the boss phase
 begins.
 
 When the boss is defeated:

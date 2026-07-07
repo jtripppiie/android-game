@@ -5,16 +5,16 @@ Use this after GitHub Actions produces the debug APK artifact.
 Current packaged beta:
 
 ```text
-versionCode: 280
-versionName: 2.8.0-beta
-build badge: ALASKA PASSPORT v2.8 BETA
+versionCode: 290
+versionName: 2.9.0-beta
+build badge: ALASKA PASSPORT v2.9 BETA
 ```
 
 ## Install test
 
 1. Download `you-rush-alaska-debug-apk` from the latest successful workflow run.
 2. Extract the ZIP if GitHub downloaded it as a ZIP.
-3. Install `you-rush-alaska-2.8.0-beta-280-debug.apk` on an Android phone.
+3. Install `you-rush-alaska-2.9.0-beta-290-debug.apk` on an Android phone.
 4. Allow installation from the browser/files app if Android prompts you.
 5. Open **You Rush**.
 6. Confirm the debug/version badge is visible and matches the packaged beta.
@@ -49,6 +49,7 @@ Test these controls:
 - JUMP bounces the character upward.
 - A second JUMP works once while airborne.
 - Jumping feels snappy and grounded, not floaty or odd.
+- Releasing JUMP early produces a shorter hop.
 - FIRE launches a snowball.
 - PAUSE opens a frozen run overlay with Resume, Map, and Sprite options.
 - Resume returns to the same run without stuck movement or forced jump/fire input.
@@ -61,6 +62,7 @@ Confirm the beta loop behaves consistently:
 - The run starts with three lives.
 - Passing named obstacles advances the progress HUD and checkpoint.
 - Salmon Rush asks the player to vault river logs, not fish racks.
+- HUD, map, ready screen, pause, missions, and results use stage-specific language such as CLEAR, VAULT, LEAP, and SURVIVE.
 - The live objective uses short stage labels and stays readable on common phone widths.
 - Tight obstacle clears can award a CLEAN VAULT popup without feeling mandatory.
 - Trail Map pickups activate SCOUT and show upcoming danger markers.
@@ -118,10 +120,10 @@ Stage feel targets:
 Check small and large screens:
 
 - Top HUD elements do not overlap.
-- Hurdle/boss progress, lives, combo multiplier, XP level, score, run score, and best score remain readable.
+- Route/boss progress, lives, combo multiplier, XP level, score, run score, and best score remain readable.
 - Boss incoming and combo callout overlays appear without covering the player.
 - The ready screen shows goal, boss, and bonus briefing chips.
-- The ready screen names the current obstacle type instead of generic hurdles.
+- The ready screen names the current obstacle type instead of generic route props.
 - Boss health bar never overlaps the top HUD.
 - Boss tells show a clear readable action hint before the attack lands.
 - Boss lunge movement feels like a wind-up, attack, and recovery instead of a random jump.
@@ -166,7 +168,7 @@ On the main menu:
 
 ## First tuning targets
 
-- Hurdle spacing
+- Route obstacle spacing
 - Gravity and jump height
 - D-pad button size
 - Boss HP

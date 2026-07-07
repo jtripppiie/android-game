@@ -99,7 +99,7 @@ public class MooseRushView extends View {
     };
 
     private static final StageConfig[] STAGES = {
-            new StageConfig("Midnight Sun Run", "Jump driftwood trail rails before the sun boss.", SEASON_MIDNIGHT_SUN, "Sunburn Sprite", "SUN", "DRIFTWOOD RAILS", 5, 2, 150, 2.35f, 0),
+            new StageConfig("Midnight Sun Run", "Clear driftwood trail rails before the sun boss.", SEASON_MIDNIGHT_SUN, "Sunburn Sprite", "SUN", "DRIFTWOOD RAILS", 5, 2, 150, 2.35f, 0),
             new StageConfig("Salmon Rush", "Vault slick river logs while salmon arc in.", SEASON_SUMMER, "Salmon Boss", "SALMON", "RIVER LOGS", 7, 3, 165, 2.15f, 1),
             new StageConfig("Moose Pass", "Vault antler barricades and dodge real moose.", SEASON_SUMMER, "Moose Boss", "MOOSE", "ANTLER BARRICADES", 8, 4, 178, 2.05f, 2),
             new StageConfig("Dark Winter", "Leap ice trail markers through low light.", SEASON_DARKNESS, "Eagle Boss", "EAGLE", "ICE MARKERS", 9, 4, 188, 1.95f, 3),
@@ -238,6 +238,7 @@ public class MooseRushView extends View {
     private int runFocusPickups = 0;
     private int runTrailMaps = 0;
     private int runRescueKits = 0;
+    private int runCleanVaults = 0;
     private int runWeatherFronts = 0;
     private int routeMilestoneIndex = 0;
     private int expeditionLogs = 0;
@@ -635,7 +636,7 @@ public class MooseRushView extends View {
             state = STATE_RUNNING;
             readyTimer = 0f;
             lastFrameNanos = 0L;
-            showRunCallout("JUMP " + STAGES[selectedStage].obstacleName, 1.2f);
+            showRunCallout(stageActionVerb(selectedStage) + " " + STAGES[selectedStage].obstacleName, 1.2f);
             logEvent("Run started after ready screen.");
             return true;
         }
@@ -722,6 +723,10 @@ public class MooseRushView extends View {
         if (jumpPressed && !wasJumpPressed) {
             requestJump();
         }
+        if (!jumpPressed && wasJumpPressed && playerVelocityY < -dp(180)) {
+            playerVelocityY *= 0.56f;
+            effects.spawnDustBurst(playerX, playerY + playerRadius * 0.55f, 4, Color.argb(110, 235, 245, 248));
+        }
         if (firePressed && !wasFirePressed) {
             fireSnowball();
         }
@@ -787,6 +792,7 @@ public class MooseRushView extends View {
         runFocusPickups = 0;
         runTrailMaps = 0;
         runRescueKits = 0;
+        runCleanVaults = 0;
         runWeatherFronts = 0;
         routeMilestoneIndex = 0;
         livesLostThisRun = 0;
@@ -824,7 +830,7 @@ public class MooseRushView extends View {
         missionHurdlesComplete = false;
         missionStarsComplete = false;
         missionComboComplete = false;
-        logEvent("Missions: clear " + stage.goalGates + ", collect " + missionStarGoal + " stars, combo " + missionComboGoal + ".");
+        logEvent("Missions: " + stageActionVerb(selectedStage).toLowerCase() + " " + stage.goalGates + ", collect " + missionStarGoal + " stars, combo " + missionComboGoal + ".");
     }
 
     private void requestJump() {
@@ -973,7 +979,7 @@ public class MooseRushView extends View {
 
             for (Gate gate : gates) {
                 if (hitsGate(gate)) {
-                    endGame("Antler hurdle bonk.");
+                    endGame(STAGES[selectedStage].obstacleName + " bonk.");
                     return;
                 }
             }
@@ -1015,13 +1021,13 @@ public class MooseRushView extends View {
                 gatesPassed++;
                 gameState.gatesPassed = gatesPassed;
                 gameState.addCombo();
-                int awarded = addScore(10, "Hurdle cleared");
+                int awarded = addScore(10, stageActionVerb(selectedStage) + " cleared");
                 effects.spawnScorePopup("+" + awarded, gate.x + gate.width / 2f, getGroundY() - gate.height - dp(20), Color.rgb(255, 218, 121));
                 effects.spawnSparkBurst(gate.x + gate.width / 2f, getGroundY() - gate.height, 8, Color.rgb(255, 218, 121));
-                addAuroraMeter(8f, "Hurdle rhythm");
+                addAuroraMeter(8f, "Route rhythm");
                 maybeAwardCleanVault(gate);
                 showComboCallout();
-                logEvent(STAGES[selectedStage].obstacleName + " " + gatesPassed + "/" + STAGES[selectedStage].goalGates + " cleared.");
+                logEvent(stageActionVerb(selectedStage) + " " + STAGES[selectedStage].obstacleName + " " + gatesPassed + "/" + STAGES[selectedStage].goalGates + ".");
             }
 
             if (gate.x + gate.width < -dp(24)) {
@@ -1038,6 +1044,7 @@ public class MooseRushView extends View {
             return;
         }
         int awarded = addScore(8 + selectedStage, "Clean vault");
+        runCleanVaults++;
         addAuroraMeter(7f, "Clean vault");
         effects.spawnScorePopup("CLEAN VAULT +" + awarded, gate.x + gate.width / 2f, gateTop - dp(28), Color.rgb(77, 219, 184));
         effects.spawnSparkBurst(gate.x + gate.width / 2f, gateTop, 8, Color.rgb(77, 219, 184));
@@ -2336,7 +2343,7 @@ public class MooseRushView extends View {
         textPaint.setTextAlign(Paint.Align.CENTER);
         textPaint.setTextSize(isLandscape() ? dp(9.5f) : dp(11));
         textPaint.setColor(Color.rgb(220, 235, 239));
-        canvas.drawText("Selected: jump " + selected.obstacleName + " · stun " + selected.hazardLabel
+        canvas.drawText("Selected: " + stageActionVerb(selectedStage).toLowerCase() + " " + selected.obstacleName + " · stun " + selected.hazardLabel
                 + " · boss " + selected.bossName, getWidth() / 2f, getHeight() - dp(24), textPaint);
     }
 
@@ -3604,7 +3611,7 @@ public class MooseRushView extends View {
 
         float chipTop = top + dp(112);
         float chipWidth = (panelWidth - dp(52)) / 3f;
-        drawBriefingChip(canvas, left + dp(16), chipTop, chipWidth, "JUMP", stage.obstacleName);
+        drawBriefingChip(canvas, left + dp(16), chipTop, chipWidth, stageActionVerb(selectedStage), stage.obstacleName);
         drawBriefingChip(canvas, left + dp(26) + chipWidth, chipTop, chipWidth, "BOSS", stage.bossName);
         drawBriefingChip(canvas, left + dp(36) + chipWidth * 2f, chipTop, chipWidth, "MISSION", missionBriefLine());
 
@@ -3681,7 +3688,7 @@ public class MooseRushView extends View {
         textPaint.setColor(Color.rgb(255, 218, 121));
         String objective = bossActive
                 ? "FIRE BOSS " + Math.max(0, bossHealth) + "/" + bossMaxHealth + "  " + bossPatternLabel()
-                : "JUMP " + obstacleHudName(selectedStage) + " " + gatesPassed + "/" + STAGES[selectedStage].goalGates;
+                : stageActionVerb(selectedStage) + " " + obstacleHudName(selectedStage) + " " + gatesPassed + "/" + STAGES[selectedStage].goalGates;
         canvas.drawText(objective, getWidth() / 2f, dp(44), textPaint);
         textPaint.setColor(Color.WHITE);
         String comboLabel = (auroraRushTimer > 0f ? "AURORA " : "") + "COMBO " + gameState.combo + "   SCORE x" + multiplier;
@@ -4086,7 +4093,7 @@ public class MooseRushView extends View {
         textPaint.setTextSize(dp(12));
         canvas.drawText("Goal: " + STAGES[selectedStage].name, getWidth() / 2f, top + dp(76), textPaint);
         textPaint.setColor(Color.rgb(210, 232, 238));
-        canvas.drawText("Jump " + STAGES[selectedStage].obstacleName + " · FIRE stuns " + STAGES[selectedStage].hazardLabel, getWidth() / 2f, top + dp(98), textPaint);
+        canvas.drawText(stageActionVerb(selectedStage) + " " + STAGES[selectedStage].obstacleName + " · FIRE stuns " + STAGES[selectedStage].hazardLabel, getWidth() / 2f, top + dp(98), textPaint);
         canvas.drawText("Boss weak window: RECOVER", getWidth() / 2f, top + dp(118), textPaint);
 
         setButton(primaryButtonBounds, top + dp(151), dp(214), dp(38));
@@ -4412,7 +4419,7 @@ public class MooseRushView extends View {
             return "Complete · streak " + Math.max(1, dailyStreak);
         }
         int reward = RunRewardEconomy.dailyReward(dailyStreak);
-        return stage.name + " · " + dailyGateGoal() + " jumps · +" + reward;
+        return stage.name + " · " + dailyGateGoal() + " vaults · +" + reward;
     }
 
     private String dailyResultLine() {
@@ -4474,7 +4481,7 @@ public class MooseRushView extends View {
             return "Next: S rank, perfect clear, passport badges.";
         }
         if (gatesPassed < STAGES[selectedStage].goalGates) {
-            return "Next: clear " + STAGES[selectedStage].goalGates + " " + STAGES[selectedStage].obstacleName + ".";
+            return "Next: " + stageActionVerb(selectedStage).toLowerCase() + " " + STAGES[selectedStage].goalGates + " " + STAGES[selectedStage].obstacleName + ".";
         }
         return "Next: fire during RECOVER for weak-window double damage.";
     }
@@ -4484,7 +4491,7 @@ public class MooseRushView extends View {
     }
 
     private String stageRuleLine(StageConfig stage) {
-        return "Jump " + stage.obstacleName + ". FIRE stuns " + stage.hazardLabel + ".";
+        return stageActionVerb(selectedStage) + " " + stage.obstacleName + ". FIRE stuns " + stage.hazardLabel + ".";
     }
 
     private String obstacleHudName(int stageIndex) {
@@ -4496,8 +4503,23 @@ public class MooseRushView extends View {
         return STAGES[stageIndex].obstacleName;
     }
 
+    private String stageActionVerb(int stageIndex) {
+        if (stageIndex == 0) return "CLEAR";
+        if (stageIndex == 1) return "VAULT";
+        if (stageIndex == 2) return "VAULT";
+        if (stageIndex == 3) return "LEAP";
+        if (stageIndex == 4) return "SURVIVE";
+        return "CLEAR";
+    }
+
+    private String stageCounterLabel(int stageIndex) {
+        if (stageIndex == 3) return "LEAPS";
+        if (stageIndex == 4) return "SURVIVE";
+        return "VAULTS";
+    }
+
     private String missionProgressLine() {
-        return "MISSIONS " + missionsCompleted + "/3  JUMPS " + Math.min(gatesPassed, STAGES[selectedStage].goalGates) + "/" + STAGES[selectedStage].goalGates
+        return "MISSIONS " + missionsCompleted + "/3  " + stageCounterLabel(selectedStage) + " " + Math.min(gatesPassed, STAGES[selectedStage].goalGates) + "/" + STAGES[selectedStage].goalGates
                 + "  STARS " + gameState.stars + "/" + missionStarGoal
                 + "  COMBO " + gameState.bestCombo + "/" + missionComboGoal;
     }
@@ -4511,6 +4533,7 @@ public class MooseRushView extends View {
         if (runWeatherFronts > 0) score += 1;
         if (runTrailMaps > 0) score += 1;
         if (runRescueKits > 0) score += 1;
+        if (runCleanVaults >= 2) score += 1;
         if (missionsCompleted >= 3) score += 1;
         if (perfectRun && stageCleared) score += 1;
         return score;
@@ -4531,7 +4554,8 @@ public class MooseRushView extends View {
                 + " · Camp " + (campReached ? "yes" : "missed")
                 + " · Focus " + runFocusPickups
                 + " · Maps " + runTrailMaps
-                + " · Kits " + runRescueKits;
+                + " · Kits " + runRescueKits
+                + " · Vaults " + runCleanVaults;
     }
 
     private String weatherFrontLabel() {
