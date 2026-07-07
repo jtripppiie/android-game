@@ -5,16 +5,16 @@ Use this after GitHub Actions produces the debug APK artifact.
 Current packaged beta:
 
 ```text
-versionCode: 302
-versionName: 3.0.2-beta
-build badge: ALASKA PASSPORT v3.0.2 BETA
+versionCode: 303
+versionName: 3.0.3-beta
+build badge: ALASKA PASSPORT v3.0.3 BETA
 ```
 
 ## Install test
 
 1. Download `you-rush-alaska-debug-apk` from the latest successful workflow run.
 2. Extract the ZIP if GitHub downloaded it as a ZIP.
-3. Install `you-rush-alaska-3.0.2-beta-302-debug.apk` on an Android phone.
+3. Install `you-rush-alaska-3.0.3-beta-303-debug.apk` on an Android phone.
 4. Allow installation from the browser/files app if Android prompts you.
 5. Open **You Rush**.
 6. Confirm the debug/version badge is visible and matches the packaged beta.
@@ -65,6 +65,7 @@ Confirm the beta loop behaves consistently:
 - Passing named obstacles advances the progress HUD and checkpoint.
 - Salmon Rush asks the player to vault river logs, not fish racks.
 - Salmon Rush river logs look like logs and can be destroyed with snowballs.
+- Salmon Rush ready/rule text says FIRE can blast logs.
 - Active weather fronts do not appear during gameplay.
 - HUD, map, ready screen, pause, missions, and results use stage-specific language such as CLEAR, VAULT, LEAP, and SURVIVE.
 - The live objective uses short stage labels and stays readable on common phone widths.
@@ -96,6 +97,7 @@ Confirm score changes:
 - Powered snowballs during aurora focus or weak windows visibly hit harder.
 - Bosses summon wildlife after phase two and become faster when enraged.
 - Defeating a boss gives a larger stage-clear bonus with combo and star rewards.
+- Expedition results can include blasted log credit and no longer mention weather fronts.
 - Best score persists after restarting the app.
 - XP and level persist after restarting the app.
 - Cosmetic outfit unlocks spend Trail Tokens only and never change gameplay power.

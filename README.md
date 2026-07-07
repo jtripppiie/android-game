@@ -2,16 +2,16 @@
 
 A personalized Android arcade game by **TripperDeeLabs**.
 
-**Current status: Alaska 3.0.2 obstacle clarity beta.**
+**Current status: Alaska 3.0.3 cleanup and rule clarity beta.**
 
 This build is beta-ready for APK testing, tuning, and bug fixing. It is not final 1.0 or a larger milestone until it installs and plays well across all Alaska stages on a real phone.
 
 ## Current beta
 
 ```text
-versionCode: 302
-versionName: 3.0.2-beta
-build badge: ALASKA PASSPORT v3.0.2 BETA
+versionCode: 303
+versionName: 3.0.3-beta
+build badge: ALASKA PASSPORT v3.0.3 BETA
 ```
 
 ## Game flow
@@ -111,6 +111,9 @@ Mobile mapping:
 - Salmon Rush river logs now draw as logs and can be blasted apart with snowballs.
 - Dark Winter obstacles now read as icebergs instead of ice markers.
 - Weather fronts were removed from active gameplay for cleaner readability.
+- Removed leftover weather scoring/debug plumbing after disabling weather fronts.
+- Salmon Rush rules now explicitly say that FIRE blasts logs.
+- Expedition results now track blasted logs instead of weather fronts.
 - Splash screen title spacing and boss-fight readability polish
 - Stronger sprite edge guards for animal sheets and roar sprites
 - Snappier jump arc and trail-credible Salmon Rush river-log obstacles
@@ -150,7 +153,7 @@ The debug APK lands in `app/build/outputs/apk/debug/` with the version in the
 filename, for example:
 
 ```text
-you-rush-alaska-3.0.2-beta-302-debug.apk
+you-rush-alaska-3.0.3-beta-303-debug.apk
 ```
 
 GitHub Actions also builds a debug APK using:

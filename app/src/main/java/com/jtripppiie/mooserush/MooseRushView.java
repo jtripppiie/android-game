@@ -123,10 +123,6 @@ public class MooseRushView extends View {
     private static final int ATTACK_ICE = 0;
     private static final int ATTACK_SHOCKWAVE = 1;
     private static final int ROAR_SPRITE_SOURCE_INSET_PX = 28;
-    private static final int WEATHER_CLEAR = 0;
-    private static final int WEATHER_AURORA = 1;
-    private static final int WEATHER_RAIN = 2;
-    private static final int WEATHER_SNOW = 3;
     private static final int[][] MOOSE_FRAME_TRIMS = {
             {14, 226, 362, 527},
             {0, 224, 362, 528},
@@ -239,7 +235,7 @@ public class MooseRushView extends View {
     private int runTrailMaps = 0;
     private int runRescueKits = 0;
     private int runCleanVaults = 0;
-    private int runWeatherFronts = 0;
+    private int runLogsBlasted = 0;
     private int routeMilestoneIndex = 0;
     private int expeditionLogs = 0;
     private int unlockedOutfitMask = RunRewardEconomy.BASE_OUTFIT_UNLOCK_MASK;
@@ -308,8 +304,6 @@ public class MooseRushView extends View {
     private float respawnGraceTimer = 0f;
     private float scoutTimer = 0f;
     private float routeMilestoneTimer = 0f;
-    private float weatherFrontTimer = 0f;
-    private float weatherFrontDuration = 0f;
     private float playerX;
     private float playerY;
     private float playerVelocityY;
@@ -320,7 +314,6 @@ public class MooseRushView extends View {
     private int bossState = BOSS_STATE_ENTER;
     private int bossPattern = BOSS_PATTERN_LUNGE;
     private int bossPatternCount = 0;
-    private int weatherFront = WEATHER_CLEAR;
     private String runCallout = "";
     private String mapNotice = "";
     private float mapNoticeTimer = 0f;
@@ -794,7 +787,7 @@ public class MooseRushView extends View {
         runTrailMaps = 0;
         runRescueKits = 0;
         runCleanVaults = 0;
-        runWeatherFronts = 0;
+        runLogsBlasted = 0;
         routeMilestoneIndex = 0;
         livesLostThisRun = 0;
         dailyTokensEarned = 0;
@@ -809,9 +802,6 @@ public class MooseRushView extends View {
         runNewBest = false;
         runCallout = "";
         routeMilestoneTimer = 0f;
-        weatherFrontTimer = 5.5f + selectedStage * 0.65f;
-        weatherFrontDuration = 0f;
-        weatherFront = WEATHER_CLEAR;
         state = STATE_READY;
         readyTimer = 0f;
         playerX = playerStartX();
@@ -1277,9 +1267,11 @@ public class MooseRushView extends View {
         effects.spawnScorePopup("LOG BOOM +" + awarded, x, y - dp(28), Color.rgb(255, 218, 121));
         effects.spawnSparkBurst(x, y, 18, Color.rgb(226, 169, 83));
         effects.spawnDustBurst(x, getGroundY(), 8, Color.argb(180, 132, 213, 232));
+        runLogsBlasted++;
         addAuroraMeter(10f, "Log blasted");
         screenShake = Math.max(screenShake, 0.08f);
         worldFlash = Math.max(worldFlash, 0.06f);
+        checkMissionProgress();
         showComboCallout();
         playSound("hit");
         logEvent("River log blasted " + gatesPassed + "/" + STAGES[selectedStage].goalGates + ".");
@@ -1786,16 +1778,6 @@ public class MooseRushView extends View {
         showRunCallout("AURORA FOCUS", 1.25f);
         playSound("medal");
         logEvent("Aurora Focus collected.");
-    }
-
-    private void updateWeatherFront(float dt) {
-        weatherFront = WEATHER_CLEAR;
-        weatherFrontDuration = 0f;
-    }
-
-    private void startWeatherFront() {
-        weatherFront = WEATHER_CLEAR;
-        weatherFrontDuration = 0f;
     }
 
     private void addAuroraMeter(float amount, String reason) {
@@ -2677,35 +2659,6 @@ public class MooseRushView extends View {
         paint.setColor(winter ? Color.argb(125, 137, 159, 174) : Color.argb(120, 23, 64, 44));
         for (float x = -(groundScroll * 1.32f) % dp(76) - dp(40); x < width + dp(90); x += dp(76)) {
             canvas.drawOval(x, groundY + dp(27), x + dp(44), groundY + dp(34), paint);
-        }
-    }
-
-    private void drawWeatherFront(Canvas canvas) {
-        if (weatherFront == WEATHER_CLEAR || weatherFrontDuration <= 0f) {
-            return;
-        }
-        float pct = Math.min(1f, weatherFrontDuration / Math.max(0.01f, 4.2f + selectedStage * 0.35f));
-        paint.setStyle(Paint.Style.FILL);
-        if (weatherFront == WEATHER_AURORA) {
-            paint.setColor(Color.argb(Math.round(42 + 52 * pct), 77, 219, 184));
-            for (float x = -(sceneryScroll * 0.34f) % dp(260) - dp(80); x < getWidth() + dp(300); x += dp(260)) {
-                PathCompat.ribbon(canvas, paint, x, dp(98), x + dp(62), dp(74), x + dp(132), dp(116), x + dp(222), dp(82), dp(8));
-            }
-        } else {
-            int color = weatherFront == WEATHER_SNOW ? Color.argb(150, 248, 252, 253) : Color.argb(120, 132, 213, 232);
-            paint.setColor(color);
-            paint.setStrokeCap(Paint.Cap.ROUND);
-            paint.setStrokeWidth(weatherFront == WEATHER_SNOW ? dp(2.2f) : dp(1.8f));
-            paint.setStyle(Paint.Style.STROKE);
-            float spacing = weatherFront == WEATHER_SNOW ? dp(58) : dp(42);
-            float slant = weatherFront == WEATHER_SNOW ? dp(18) : dp(30);
-            for (float x = -(sceneryScroll * 0.72f) % spacing - dp(60); x < getWidth() + dp(110); x += spacing) {
-                for (float y = dp(82); y < getGroundY() - dp(12); y += spacing * 0.78f) {
-                    canvas.drawLine(x, y, x - slant, y + dp(18), paint);
-                }
-            }
-            paint.setStrokeCap(Paint.Cap.BUTT);
-            paint.setStyle(Paint.Style.FILL);
         }
     }
 
@@ -4678,6 +4631,9 @@ public class MooseRushView extends View {
     }
 
     private String stageRuleLine(StageConfig stage) {
+        if (selectedStage == 1) {
+            return "VAULT RIVER LOGS. FIRE blasts logs and stuns SALMON.";
+        }
         return stageActionVerb(selectedStage) + " " + stage.obstacleName + ". FIRE stuns " + stage.hazardLabel + ".";
     }
 
@@ -4685,7 +4641,7 @@ public class MooseRushView extends View {
         if (stageIndex == 0) return "RAILS";
         if (stageIndex == 1) return "LOGS";
         if (stageIndex == 2) return "ANTLERS";
-        if (stageIndex == 3) return "ICE";
+        if (stageIndex == 3) return "ICEBERGS";
         if (stageIndex == 4) return "SNOWBANKS";
         return STAGES[stageIndex].obstacleName;
     }
@@ -4717,7 +4673,7 @@ public class MooseRushView extends View {
         if (routeMilestoneIndex >= 3) score += 2;
         if (campReached) score += 1;
         if (runFocusPickups > 0) score += 1;
-        if (runWeatherFronts > 0) score += 1;
+        if (runLogsBlasted >= 2) score += 1;
         if (runTrailMaps > 0) score += 1;
         if (runRescueKits > 0) score += 1;
         if (runCleanVaults >= 2) score += 1;
@@ -4742,14 +4698,8 @@ public class MooseRushView extends View {
                 + " · Focus " + runFocusPickups
                 + " · Maps " + runTrailMaps
                 + " · Kits " + runRescueKits
+                + " · Logs " + runLogsBlasted
                 + " · Vaults " + runCleanVaults;
-    }
-
-    private String weatherFrontLabel() {
-        if (weatherFront == WEATHER_AURORA) return "Aurora";
-        if (weatherFront == WEATHER_RAIN) return "Rain";
-        if (weatherFront == WEATHER_SNOW) return "Snow";
-        return "Clear";
     }
 
     private String bossPatternLabel() {
