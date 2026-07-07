@@ -2,16 +2,16 @@
 
 A personalized Android arcade game by **TripperDeeLabs**.
 
-**Current status: Alaska 3.0.5 log combat and debug clarity beta.**
+**Current status: Alaska 3.25 defensive boss combat beta.**
 
 This build is beta-ready for APK testing, tuning, and bug fixing. It is not final 1.0 or a larger milestone until it installs and plays well across all Alaska stages on a real phone.
 
 ## Current beta
 
 ```text
-versionCode: 305
-versionName: 3.0.5-beta
-build badge: ALASKA PASSPORT v3.0.5 BETA
+versionCode: 325
+versionName: 3.2.5-beta
+build badge: ALASKA PASSPORT v3.25 BETA
 ```
 
 ## Game flow
@@ -119,6 +119,10 @@ Mobile mapping:
 - Snowballs now aim at destructible river logs and log hitboxes are more forgiving.
 - River logs now show a small FIRE target mark and give stronger blast feedback.
 - Debug badges identify log targets and thrown snowball type.
+- Snowballs can now shatter boss ice projectiles before they hit the player.
+- Boss projectile tells and boss HUD status now teach `JUMP OR FIRE`.
+- Debug boss-attack badges now identify shootable ice attacks.
+- The final bear boss now stands up for an eye-laser pattern the player must jump over.
 - Splash screen title spacing and boss-fight readability polish
 - Stronger sprite edge guards for animal sheets and roar sprites
 - Snappier jump arc and trail-credible Salmon Rush river-log obstacles
@@ -158,7 +162,7 @@ The debug APK lands in `app/build/outputs/apk/debug/` with the version in the
 filename, for example:
 
 ```text
-you-rush-alaska-3.0.5-beta-305-debug.apk
+you-rush-alaska-3.2.5-beta-325-debug.apk
 ```
 
 GitHub Actions also builds a debug APK using:

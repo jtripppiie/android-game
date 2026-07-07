@@ -5,16 +5,16 @@ Use this after GitHub Actions produces the debug APK artifact.
 Current packaged beta:
 
 ```text
-versionCode: 305
-versionName: 3.0.5-beta
-build badge: ALASKA PASSPORT v3.0.5 BETA
+versionCode: 325
+versionName: 3.2.5-beta
+build badge: ALASKA PASSPORT v3.25 BETA
 ```
 
 ## Install test
 
 1. Download `you-rush-alaska-debug-apk` from the latest successful workflow run.
 2. Extract the ZIP if GitHub downloaded it as a ZIP.
-3. Install `you-rush-alaska-3.0.5-beta-305-debug.apk` on an Android phone.
+3. Install `you-rush-alaska-3.2.5-beta-325-debug.apk` on an Android phone.
 4. Allow installation from the browser/files app if Android prompts you.
 5. Open **You Rush**.
 6. Confirm the debug/version badge is visible and matches the packaged beta.
@@ -43,6 +43,7 @@ Confirm these screens work:
 - The DEBUG info panel is compact and does not block normal play.
 - DEBUG wildlife and boss badges show sprite/frame detail such as `BEAR f3`.
 - DEBUG gate badges identify Salmon Rush logs as `LOG FIRE`, and throw badges show `SNOW` or `POWER`.
+- DEBUG boss attack badges identify shootable projectiles as `ICE FIRE`.
 
 ## Gameplay test
 
@@ -77,6 +78,8 @@ Confirm the beta loop behaves consistently:
 - Trail Map pickups activate SCOUT and show upcoming danger markers.
 - Boss RECOVER windows show a FIRE NOW reticle on the boss.
 - Boss health text shows phase two, enrage, or weak-window status when active.
+- Boss health text shows `FIRE PROJECTILES` when shootable projectiles are active.
+- The final bear boss stands up before its eye-laser attack.
 - Crashing with no shield spends one life.
 - Respawn resumes safely when lives remain.
 - Respawn grace shows a visible aura and prevents immediate repeat damage.
@@ -100,6 +103,8 @@ Confirm score changes:
 - Hitting a boss with snowballs increases score.
 - Powered snowballs during aurora focus or weak windows visibly hit harder.
 - Bosses summon wildlife after phase two and become faster when enraged.
+- Snowballs can shatter boss ice projectiles for score, meter, and defensive breathing room.
+- Eye lasers must be jumped over and should show `LASER JUMP` in DEBUG attack badges.
 - Defeating a boss gives a larger stage-clear bonus with combo and star rewards.
 - Expedition results can include blasted log credit and no longer mention weather fronts.
 - Best score persists after restarting the app.
