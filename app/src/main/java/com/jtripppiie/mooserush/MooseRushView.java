@@ -2158,33 +2158,52 @@ public class MooseRushView extends View {
         float maxTitleWidth = getWidth() - dp(50);
         do {
             textPaint.setTextSize(titleSize);
-            wordGap = Math.max(dp(78), titleSize * 1.85f);
+            wordGap = Math.max(dp(120), titleSize * 2.65f);
             youWidth = textPaint.measureText("YOU");
             rushWidth = textPaint.measureText("RUSH");
             totalWidth = youWidth + rushWidth + wordGap;
-            if (totalWidth <= maxTitleWidth || titleSize <= dp(27)) {
+            if (totalWidth <= maxTitleWidth || titleSize <= dp(25)) {
                 break;
             }
             titleSize -= dp(1.5f);
         } while (true);
-        float startX = getWidth() / 2f - totalWidth / 2f;
         float baseline = getHeight() * 0.48f;
-        textPaint.setTextAlign(Paint.Align.LEFT);
         paint.setStyle(Paint.Style.FILL);
-        paint.setColor(Color.argb(135, 0, 0, 0));
-        canvas.drawRoundRect(startX - dp(18), baseline - titleSize * 0.92f, startX + totalWidth + dp(18), baseline + dp(13), dp(14), dp(14), paint);
-        paint.setColor(Color.argb(185, 255, 218, 121));
-        float dividerX = startX + youWidth + wordGap * 0.50f;
-        canvas.drawRoundRect(dividerX - dp(1.3f), baseline - titleSize * 0.72f, dividerX + dp(1.3f), baseline + dp(4), dp(1.3f), dp(1.3f), paint);
-        textPaint.setColor(Color.WHITE);
-        canvas.drawText("YOU", startX, baseline, textPaint);
-        textPaint.setColor(Color.rgb(255, 218, 121));
-        canvas.drawText("RUSH", startX + youWidth + wordGap, baseline, textPaint);
+        if (getWidth() < dp(390) || totalWidth > maxTitleWidth) {
+            float firstBaseline = getHeight() * 0.445f;
+            float secondBaseline = firstBaseline + titleSize * 1.18f;
+            float panelWidth = Math.max(youWidth, rushWidth) + dp(50);
+            float panelLeft = getWidth() / 2f - panelWidth / 2f;
+            float panelRight = getWidth() / 2f + panelWidth / 2f;
+            paint.setColor(Color.argb(142, 0, 0, 0));
+            canvas.drawRoundRect(panelLeft, firstBaseline - titleSize * 0.88f, panelRight, secondBaseline + dp(13), dp(16), dp(16), paint);
+            paint.setColor(Color.argb(185, 255, 218, 121));
+            float dividerY = (firstBaseline + secondBaseline) * 0.50f - titleSize * 0.08f;
+            canvas.drawRoundRect(panelLeft + dp(16), dividerY - dp(1.1f), panelRight - dp(16), dividerY + dp(1.1f), dp(1.1f), dp(1.1f), paint);
+            textPaint.setTextAlign(Paint.Align.CENTER);
+            textPaint.setColor(Color.WHITE);
+            canvas.drawText("YOU", getWidth() / 2f, firstBaseline, textPaint);
+            textPaint.setColor(Color.rgb(255, 218, 121));
+            canvas.drawText("RUSH", getWidth() / 2f, secondBaseline, textPaint);
+            baseline = secondBaseline + titleSize * 0.90f;
+        } else {
+            float startX = getWidth() / 2f - totalWidth / 2f;
+            textPaint.setTextAlign(Paint.Align.LEFT);
+            paint.setColor(Color.argb(135, 0, 0, 0));
+            canvas.drawRoundRect(startX - dp(20), baseline - titleSize * 0.92f, startX + totalWidth + dp(20), baseline + dp(13), dp(14), dp(14), paint);
+            paint.setColor(Color.argb(185, 255, 218, 121));
+            float dividerX = startX + youWidth + wordGap * 0.50f;
+            canvas.drawRoundRect(dividerX - dp(1.3f), baseline - titleSize * 0.72f, dividerX + dp(1.3f), baseline + dp(4), dp(1.3f), dp(1.3f), paint);
+            textPaint.setColor(Color.WHITE);
+            canvas.drawText("YOU", startX, baseline, textPaint);
+            textPaint.setColor(Color.rgb(255, 218, 121));
+            canvas.drawText("RUSH", startX + youWidth + wordGap, baseline, textPaint);
+        }
         textPaint.setTextAlign(Paint.Align.CENTER);
 
         textPaint.setTextSize(dp(15));
         textPaint.setColor(Color.rgb(210, 232, 238));
-        canvas.drawText("Alaska platform runner", getWidth() / 2f, getHeight() * 0.61f, textPaint);
+        canvas.drawText("Alaska platform runner", getWidth() / 2f, Math.max(getHeight() * 0.61f, baseline), textPaint);
 
         textPaint.setTextSize(dp(14));
         textPaint.setColor(Color.rgb(255, 218, 121));

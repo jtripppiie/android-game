@@ -5,16 +5,16 @@ Use this after GitHub Actions produces the debug APK artifact.
 Current packaged beta:
 
 ```text
-versionCode: 272
-versionName: 2.7.2-beta
-build badge: ALASKA PASSPORT v2.7.2 BETA
+versionCode: 273
+versionName: 2.7.3-beta
+build badge: ALASKA PASSPORT v2.7.3 BETA
 ```
 
 ## Install test
 
 1. Download `you-rush-alaska-debug-apk` from the latest successful workflow run.
 2. Extract the ZIP if GitHub downloaded it as a ZIP.
-3. Install `you-rush-alaska-2.7.2-beta-272-debug.apk` on an Android phone.
+3. Install `you-rush-alaska-2.7.3-beta-273-debug.apk` on an Android phone.
 4. Allow installation from the browser/files app if Android prompts you.
 5. Open **You Rush**.
 6. Confirm the debug/version badge is visible and matches the packaged beta.
@@ -24,7 +24,7 @@ build badge: ALASKA PASSPORT v2.7.2 BETA
 Confirm these screens work:
 
 - Splash screen appears.
-- Splash title words have obvious spacing, a center divider, and do not collide on common phone widths.
+- Splash title words stack on narrow screens, spread apart on wide screens, and do not collide.
 - Main menu appears after splash or tap.
 - Alaska Map opens.
 - Locked map stages do not start early and show an unlock message.
