@@ -4,9 +4,12 @@ final class CollisionTuning {
     static final float PLAYER_BOSS_CONTACT_RADIUS_SCALE = 0.76f;
     static final float PLAYER_BOSS_ATTACK_RADIUS_SCALE = 0.80f;
     static final float PLAYER_BOSS_LASER_RADIUS_SCALE = 0.74f;
+    static final float PLAYER_GATE_RADIUS_SCALE = 0.68f;
     static final float PLAYER_THIN_ICE_RADIUS_SCALE = 0.62f;
     static final float PLAYER_HAZARD_RADIUS_SCALE = 0.82f;
     static final float PLAYER_NEAR_MISS_X_SCALE = 0.95f;
+    static final float GATE_HIT_INSET_X_DP = 4f;
+    static final float GATE_HIT_TOP_INSET_DP = 6f;
 
     static final float HAZARD_BODY_RADIUS_SCALE = 0.74f;
     static final float HAZARD_ROARING_RADIUS_SCALE = 0.92f;

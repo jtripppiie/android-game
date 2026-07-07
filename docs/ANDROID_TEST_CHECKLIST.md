@@ -5,16 +5,16 @@ Use this after GitHub Actions produces the debug APK artifact.
 Current packaged beta:
 
 ```text
-versionCode: 326
-versionName: 3.2.6-beta
-build badge: ALASKA PASSPORT v3.26 BETA
+versionCode: 327
+versionName: 3.2.7-beta
+build badge: ALASKA PASSPORT v3.27 BETA
 ```
 
 ## Install test
 
 1. Download `you-rush-alaska-debug-apk` from the latest successful workflow run.
 2. Extract the ZIP if GitHub downloaded it as a ZIP.
-3. Install `you-rush-alaska-3.2.6-beta-326-debug.apk` on an Android phone.
+3. Install `you-rush-alaska-3.2.7-beta-327-debug.apk` on an Android phone.
 4. Allow installation from the browser/files app if Android prompts you.
 5. Open **You Rush**.
 6. Confirm the debug/version badge is visible and matches the packaged beta.
@@ -41,10 +41,12 @@ Confirm these screens work:
 - Main menu shows Trail Passport badge progress.
 - Turning DEBUG on shows numbered badges on active obstacles, wildlife, pickups, throws, boss attacks, and bosses.
 - The DEBUG info panel is compact and does not block normal play.
-- DEBUG wildlife and boss badges show sprite/frame detail such as `BEAR f3`.
+- DEBUG wildlife and boss badges show sprite/frame detail such as `BEAR sheet f3 T`.
 - DEBUG gate badges identify Salmon Rush logs as `LOG FIRE`, and throw badges show `SNOW` or `POWER`.
 - DEBUG boss attack badges identify shootable projectiles as `ICE FIRE`.
 - DEBUG numbers line up with collision feel: wildlife contact, boss attacks, pickups, snowballs, and logs should match what the numbered badges imply on screen.
+- DEBUG mode shows translucent hitboxes for the player, gates, wildlife, pickups, throws, boss attacks, and the boss contact zone without hiding the action.
+- DEBUG sprite labels distinguish `sheet`, `roar png`, and `drawn` render paths, with `T` marking trimmed sprite-sheet frames.
 
 ## Gameplay test
 
@@ -57,6 +59,7 @@ Test these controls:
 - Jumping feels snappy and grounded, not floaty or odd.
 - Releasing JUMP early produces a shorter hop.
 - FIRE launches a snowball.
+- Snowballs can still destroy Salmon Rush river logs and shatter boss ice projectiles.
 - PAUSE opens a frozen run overlay with Resume, Map, and Sprite options.
 - Resume returns to the same run without stuck movement or forced jump/fire input.
 - Normal screen tap also requests a jump.
@@ -106,6 +109,7 @@ Confirm score changes:
 - Bosses summon wildlife after phase two and become faster when enraged.
 - Snowballs can shatter boss ice projectiles for score, meter, and defensive breathing room.
 - Eye lasers must be jumped over and should show `LASER JUMP` in DEBUG attack badges.
+- Boss phase-two and enrage timing still feel readable, with tells before attacks and short weak windows after recovery.
 - Defeating a boss gives a larger stage-clear bonus with combo and star rewards.
 - Expedition results can include blasted log credit and no longer mention weather fronts.
 - Best score persists after restarting the app.

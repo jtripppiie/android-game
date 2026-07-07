@@ -1405,9 +1405,8 @@ public class MooseRushView extends View {
         bossPatternTimer += dt;
         bossStunTimer = Math.max(0f, bossStunTimer - dt);
         StageConfig stage = STAGES[selectedStage];
-        float phasePressure = bossMaxHealth <= 0 ? 0f : 1f - bossHealth / (float) bossMaxHealth;
         boolean enraged = bossEnraged();
-        float stateSpeed = 1f + phasePressure * (selectedStage == 4 ? 0.55f : 0.35f) + (enraged ? 0.22f : 0f);
+        float stateSpeed = BossTuning.stateSpeed(selectedStage == 4, bossHealth, bossMaxHealth, enraged);
         if (!bossPhaseTwoAnnounced && bossMaxHealth > 1 && bossHealth <= bossMaxHealth / 2) {
             bossPhaseTwoAnnounced = true;
             showRunCallout("BOSS PHASE TWO", 1.25f);
@@ -1455,13 +1454,13 @@ public class MooseRushView extends View {
         bossVelocityY *= Math.max(0f, 1f - dt * 9f);
         bossY += bossVelocityY * dt;
 
-        if (bossTimer > 32f) {
+        if (bossTimer > BossTuning.BOSS_SURVIVAL_SECONDS) {
             endGame(stage.bossName + " outlasted you.");
         }
     }
 
     private float bossTimeRemaining() {
-        return Math.max(0f, 32f - bossTimer);
+        return Math.max(0f, BossTuning.BOSS_SURVIVAL_SECONDS - bossTimer);
     }
 
     private void enterBossTell(int pattern) {
@@ -1504,13 +1503,7 @@ public class MooseRushView extends View {
     }
 
     private int nextBossPattern() {
-        if (selectedStage == 4 && bossHealth <= bossMaxHealth / 2 && bossPatternCount % 4 == 3) {
-            return BOSS_PATTERN_LASER;
-        }
-        if (bossHealth <= bossMaxHealth / 2 && bossPatternCount % 3 == 2) {
-            return BOSS_PATTERN_SUMMON;
-        }
-        return bossPatternCount % 2 == 0 ? BOSS_PATTERN_LUNGE : BOSS_PATTERN_SNOW_WAVE;
+        return BossTuning.nextPattern(selectedStage == 4, bossHealth, bossMaxHealth, bossPatternCount, BOSS_PATTERN_LUNGE, BOSS_PATTERN_SNOW_WAVE, BOSS_PATTERN_SUMMON, BOSS_PATTERN_LASER);
     }
 
     private boolean bossEnraged() {
@@ -1542,21 +1535,15 @@ public class MooseRushView extends View {
     }
 
     private float bossTellDuration() {
-        return (selectedStage == 4 ? 0.98f : 0.78f) * (bossEnraged() ? 0.90f : 1f);
+        return BossTuning.tellDuration(selectedStage == 4, bossEnraged());
     }
 
     private float bossAttackDuration() {
-        if (bossPattern == BOSS_PATTERN_LUNGE) {
-            return (selectedStage == 4 ? 0.74f : 0.64f) * (bossEnraged() ? 0.94f : 1f);
-        }
-        if (bossPattern == BOSS_PATTERN_LASER) {
-            return 1.08f * (bossEnraged() ? 0.92f : 1f);
-        }
-        return (selectedStage == 4 ? 0.50f : 0.44f) * (bossEnraged() ? 0.92f : 1f);
+        return BossTuning.attackDuration(selectedStage == 4, bossEnraged(), bossPattern == BOSS_PATTERN_LUNGE, bossPattern == BOSS_PATTERN_LASER);
     }
 
     private float bossRecoverDuration() {
-        return (selectedStage == 4 ? 0.92f : 0.72f) * (bossEnraged() ? 0.82f : 1f);
+        return BossTuning.recoverDuration(selectedStage == 4, bossEnraged());
     }
 
     private void spawnBossSnowWave() {
@@ -2276,8 +2263,16 @@ public class MooseRushView extends View {
     }
 
     private boolean hitsGate(Gate gate) {
-        tempRect.set(gate.x + dp(4), getGroundY() - gate.height + dp(6), gate.x + gate.width - dp(4), getGroundY());
-        return circleHitsRect(playerX, playerY, playerRadius * 0.68f, tempRect);
+        gateHitRect(gate, tempRect);
+        return circleHitsRect(playerX, playerY, playerRadius * CollisionTuning.PLAYER_GATE_RADIUS_SCALE, tempRect);
+    }
+
+    private void gateHitRect(Gate gate, RectF out) {
+        out.set(
+                gate.x + dp(CollisionTuning.GATE_HIT_INSET_X_DP),
+                getGroundY() - gate.height + dp(CollisionTuning.GATE_HIT_TOP_INSET_DP),
+                gate.x + gate.width - dp(CollisionTuning.GATE_HIT_INSET_X_DP),
+                getGroundY());
     }
 
     private void drawSplashScreen(Canvas canvas) {
@@ -4174,6 +4169,7 @@ public class MooseRushView extends View {
         if (!debugOverlay) {
             return;
         }
+        drawDebugHitboxes(canvas);
         int number = 1;
         for (Gate gate : gates) {
             if (isDebugMarkerVisible(gate.x + gate.width * 0.5f, getGroundY() - gate.height * 0.5f, gate.width)) {
@@ -4211,11 +4207,87 @@ public class MooseRushView extends View {
         }
     }
 
-    private String debugHazardSpriteDetail(Hazard hazard) {
-        if (sheetForHazard(hazard.label) == null && roarSpriteForHazard(hazard.label) == null) {
-            return hazard.label;
+    private void drawDebugHitboxes(Canvas canvas) {
+        drawDebugCircle(canvas, playerX, playerY, playerRadius * CollisionTuning.PLAYER_HAZARD_RADIUS_SCALE, Color.rgb(132, 213, 232));
+        for (Gate gate : gates) {
+            if (!isDebugMarkerVisible(gate.x + gate.width * 0.5f, getGroundY() - gate.height * 0.5f, gate.width)) {
+                continue;
+            }
+            gateHitRect(gate, tempRect);
+            drawDebugRect(canvas, tempRect, Color.rgb(255, 218, 121));
         }
-        return hazard.label + (hazard.roaring ? " roar" : " f" + debugHazardFrame(hazard));
+        for (Hazard hazard : hazards) {
+            if (!isDebugMarkerVisible(hazard.x, hazard.y, hazard.radius * 2f)) {
+                continue;
+            }
+            if ("THIN ICE".equals(hazard.label)) {
+                tempRect.set(hazard.x - hazard.radius * 1.35f, getGroundY() - dp(18), hazard.x + hazard.radius * 1.35f, getGroundY() + dp(4));
+                drawDebugRect(canvas, tempRect, Color.rgb(132, 213, 232));
+            } else {
+                drawDebugCircle(canvas, hazard.x, CollisionTuning.hazardHitY(hazard.y, hazard.radius, hazard.roaring), hazard.radius * CollisionTuning.hazardRadiusScale(hazard.roaring), Color.rgb(255, 98, 84));
+            }
+        }
+        for (Star star : stars) {
+            if (isDebugMarkerVisible(star.x, star.y, star.radius * 2f)) {
+                drawDebugCircle(canvas, star.x, star.y, star.radius * CollisionTuning.STAR_RADIUS_SCALE, Color.rgb(255, 218, 121));
+            }
+        }
+        for (PowerUp powerUp : powerUps) {
+            if (isDebugMarkerVisible(powerUp.x, powerUp.y, powerUp.radius * 2f)) {
+                drawDebugCircle(canvas, powerUp.x, powerUp.y, powerUp.radius * CollisionTuning.POWERUP_RADIUS_SCALE, Color.rgb(77, 219, 184));
+            }
+        }
+        for (Shot shot : shots) {
+            if (isDebugMarkerVisible(shot.x, shot.y, shot.radius * 2f)) {
+                drawDebugCircle(canvas, shot.x, shot.y, shot.radius, shot.empowered ? Color.rgb(255, 218, 121) : Color.rgb(132, 213, 232));
+            }
+        }
+        for (BossAttack attack : bossAttacks) {
+            if (!isDebugMarkerVisible(attack.x, attack.y, attack.radius * 2f)) {
+                continue;
+            }
+            if (attack.type == ATTACK_LASER) {
+                laserAttackRect(attack, tempRect);
+                drawDebugRect(canvas, tempRect, Color.rgb(255, 98, 84));
+            } else {
+                drawDebugCircle(canvas, attack.x, attack.y, attack.radius, Color.rgb(210, 232, 238));
+            }
+        }
+        if (bossActive) {
+            drawDebugCircle(canvas, bossX, bossHurtCenterY(), bossContactRadius(), Color.rgb(255, 98, 84));
+        }
+    }
+
+    private void drawDebugCircle(Canvas canvas, float x, float y, float radius, int color) {
+        paint.setStyle(Paint.Style.FILL);
+        paint.setColor(Color.argb(36, Color.red(color), Color.green(color), Color.blue(color)));
+        canvas.drawCircle(x, y, radius, paint);
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setStrokeWidth(dp(1.1f));
+        paint.setColor(Color.argb(168, Color.red(color), Color.green(color), Color.blue(color)));
+        canvas.drawCircle(x, y, radius, paint);
+        paint.setStyle(Paint.Style.FILL);
+    }
+
+    private void drawDebugRect(Canvas canvas, RectF rect, int color) {
+        paint.setStyle(Paint.Style.FILL);
+        paint.setColor(Color.argb(32, Color.red(color), Color.green(color), Color.blue(color)));
+        canvas.drawRect(rect, paint);
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setStrokeWidth(dp(1.1f));
+        paint.setColor(Color.argb(168, Color.red(color), Color.green(color), Color.blue(color)));
+        canvas.drawRect(rect, paint);
+        paint.setStyle(Paint.Style.FILL);
+    }
+
+    private String debugHazardSpriteDetail(Hazard hazard) {
+        if (hazard.roaring && roarSpriteForHazard(hazard.label) != null) {
+            return hazard.label + " roar png";
+        }
+        if (sheetForHazard(hazard.label) != null) {
+            return hazard.label + " sheet f" + debugHazardFrame(hazard) + " T";
+        }
+        return hazard.label + " drawn";
     }
 
     private String debugGateDetail(Gate gate) {
@@ -4245,7 +4317,7 @@ public class MooseRushView extends View {
         if (bossStunTimer > 0f) {
             frame = Math.floorMod(frame + 2, SPRITE_SHEET_FRAMES);
         }
-        return "BOSS f" + frame;
+        return sheetForBoss(selectedStage) == null ? "BOSS drawn" : "BOSS sheet f" + frame + " T";
     }
 
     private String debugBossAttackDetail(BossAttack attack) {

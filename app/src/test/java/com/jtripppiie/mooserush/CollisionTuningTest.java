@@ -36,4 +36,11 @@ public class CollisionTuningTest {
         assertTrue(CollisionTuning.POWERUP_PLAYER_RADIUS_SCALE > CollisionTuning.PLAYER_HAZARD_RADIUS_SCALE);
         assertTrue(CollisionTuning.PLAYER_THIN_ICE_RADIUS_SCALE < CollisionTuning.PLAYER_HAZARD_RADIUS_SCALE);
     }
+
+    @Test
+    public void gateContactUsesTighterPlayerRadiusThanWildlife() {
+        assertTrue(CollisionTuning.PLAYER_GATE_RADIUS_SCALE < CollisionTuning.PLAYER_HAZARD_RADIUS_SCALE);
+        assertTrue(CollisionTuning.GATE_HIT_INSET_X_DP > 0f);
+        assertTrue(CollisionTuning.GATE_HIT_TOP_INSET_DP > 0f);
+    }
 }
