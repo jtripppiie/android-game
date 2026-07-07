@@ -5,16 +5,16 @@ Use this after GitHub Actions produces the debug APK artifact.
 Current packaged beta:
 
 ```text
-versionCode: 325
-versionName: 3.2.5-beta
-build badge: ALASKA PASSPORT v3.25 BETA
+versionCode: 326
+versionName: 3.2.6-beta
+build badge: ALASKA PASSPORT v3.26 BETA
 ```
 
 ## Install test
 
 1. Download `you-rush-alaska-debug-apk` from the latest successful workflow run.
 2. Extract the ZIP if GitHub downloaded it as a ZIP.
-3. Install `you-rush-alaska-3.2.5-beta-325-debug.apk` on an Android phone.
+3. Install `you-rush-alaska-3.2.6-beta-326-debug.apk` on an Android phone.
 4. Allow installation from the browser/files app if Android prompts you.
 5. Open **You Rush**.
 6. Confirm the debug/version badge is visible and matches the packaged beta.
@@ -44,6 +44,7 @@ Confirm these screens work:
 - DEBUG wildlife and boss badges show sprite/frame detail such as `BEAR f3`.
 - DEBUG gate badges identify Salmon Rush logs as `LOG FIRE`, and throw badges show `SNOW` or `POWER`.
 - DEBUG boss attack badges identify shootable projectiles as `ICE FIRE`.
+- DEBUG numbers line up with collision feel: wildlife contact, boss attacks, pickups, snowballs, and logs should match what the numbered badges imply on screen.
 
 ## Gameplay test
 

@@ -2,16 +2,16 @@
 
 A personalized Android arcade game by **TripperDeeLabs**.
 
-**Current status: Alaska 3.25 defensive boss combat beta.**
+**Current status: Alaska 3.26 collision tuning beta.**
 
 This build is beta-ready for APK testing, tuning, and bug fixing. It is not final 1.0 or a larger milestone until it installs and plays well across all Alaska stages on a real phone.
 
 ## Current beta
 
 ```text
-versionCode: 325
-versionName: 3.2.5-beta
-build badge: ALASKA PASSPORT v3.25 BETA
+versionCode: 326
+versionName: 3.2.6-beta
+build badge: ALASKA PASSPORT v3.26 BETA
 ```
 
 ## Game flow
@@ -162,7 +162,7 @@ The debug APK lands in `app/build/outputs/apk/debug/` with the version in the
 filename, for example:
 
 ```text
-you-rush-alaska-3.2.5-beta-325-debug.apk
+you-rush-alaska-3.2.6-beta-326-debug.apk
 ```
 
 GitHub Actions also builds a debug APK using:
@@ -188,6 +188,8 @@ unit tests:
 - `GameMath` — clamp and circle/rect collision helpers used by the game loop.
 - `LevelCurve` — XP thresholds and level/progress math used by the level HUD.
 - `RunnerTuning` — coyote time, jump buffer, and spawn-spacing fairness floors.
+- `CollisionTuning` — named player, wildlife, boss, pickup, throw, and log
+  hitbox scales used by collision feel.
 - `SpriteRenderer` / sprite trim tests — frame-edge guards that prevent atlas
   bleed artifacts during walking, swimming, and flying animation.
 - `RunRewardEconomy` — Trail Token payouts, outfit unlocks, and Daily Rush

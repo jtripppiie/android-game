@@ -895,7 +895,7 @@ public class MooseRushView extends View {
                 continue;
             }
             bestX = hazard.x;
-            targetY = hazard.roaring ? hazard.y - hazard.radius * 0.55f : hazard.y;
+            targetY = CollisionTuning.hazardHitY(hazard.y, hazard.radius, hazard.roaring);
         }
         return clamp(targetY, dp(74), getGroundY() - dp(18));
     }
@@ -985,7 +985,7 @@ public class MooseRushView extends View {
         if (respawnGraceTimer <= 0f) {
             if (bossActive
                     && bossStunTimer <= 0f
-                    && circleHitsCircle(playerX, playerY, playerRadius * 0.76f, bossX, bossHurtCenterY(), bossContactRadius())) {
+                    && circleHitsCircle(playerX, playerY, playerRadius * CollisionTuning.PLAYER_BOSS_CONTACT_RADIUS_SCALE, bossX, bossHurtCenterY(), bossContactRadius())) {
                 endGame(STAGES[selectedStage].bossName + " got you.");
                 return;
             }
@@ -1007,15 +1007,15 @@ public class MooseRushView extends View {
             for (Hazard hazard : hazards) {
                 if ("THIN ICE".equals(hazard.label)) {
                     tempRect.set(hazard.x - hazard.radius * 1.35f, getGroundY() - dp(18), hazard.x + hazard.radius * 1.35f, getGroundY() + dp(4));
-                    if (circleHitsRect(playerX, playerY, playerRadius * 0.62f, tempRect)) {
+                    if (circleHitsRect(playerX, playerY, playerRadius * CollisionTuning.PLAYER_THIN_ICE_RADIUS_SCALE, tempRect)) {
                         endGame("Thin ice cracked.");
                         return;
                     }
                     continue;
                 }
-                float hazardHitRadius = hazard.radius * (hazard.roaring ? 0.92f : 0.74f);
-                float hazardHitY = hazard.roaring ? hazard.y - hazard.radius * 0.55f : hazard.y;
-                if (circleHitsCircle(playerX, playerY, playerRadius * 0.82f, hazard.x, hazardHitY, hazardHitRadius)) {
+                float hazardHitRadius = hazard.radius * CollisionTuning.hazardRadiusScale(hazard.roaring);
+                float hazardHitY = CollisionTuning.hazardHitY(hazard.y, hazard.radius, hazard.roaring);
+                if (circleHitsCircle(playerX, playerY, playerRadius * CollisionTuning.PLAYER_HAZARD_RADIUS_SCALE, hazard.x, hazardHitY, hazardHitRadius)) {
                     endGame(hazard.label + " got you.");
                     return;
                 }
@@ -1137,14 +1137,14 @@ public class MooseRushView extends View {
             return;
         }
         float dx = Math.abs(hazard.x - playerX);
-        if (dx > playerRadius * 0.95f) {
+        if (dx > playerRadius * CollisionTuning.PLAYER_NEAR_MISS_X_SCALE) {
             return;
         }
-        float hazardHitRadius = hazard.radius * (hazard.roaring ? 0.92f : 0.74f);
-        float hazardHitY = hazard.roaring ? hazard.y - hazard.radius * 0.55f : hazard.y;
+        float hazardHitRadius = hazard.radius * CollisionTuning.hazardRadiusScale(hazard.roaring);
+        float hazardHitY = CollisionTuning.hazardHitY(hazard.y, hazard.radius, hazard.roaring);
         float dy = hazardHitY - playerY;
         float distance = (float) Math.sqrt(dx * dx + dy * dy);
-        float hitDistance = playerRadius * 0.82f + hazardHitRadius;
+        float hitDistance = playerRadius * CollisionTuning.PLAYER_HAZARD_RADIUS_SCALE + hazardHitRadius;
         float nearDistance = hitDistance + dp(20);
         if (distance > hitDistance && distance < nearDistance) {
             hazard.nearMissAwarded = true;
@@ -1249,15 +1249,15 @@ public class MooseRushView extends View {
     private boolean bossAttackHitsPlayer(BossAttack attack) {
         if (attack.type == ATTACK_LASER) {
             laserAttackRect(attack, tempRect);
-            return circleHitsRect(playerX, playerY, playerRadius * 0.74f, tempRect);
+            return circleHitsRect(playerX, playerY, playerRadius * CollisionTuning.PLAYER_BOSS_LASER_RADIUS_SCALE, tempRect);
         }
-        return circleHitsCircle(playerX, playerY, playerRadius * 0.80f, attack.x, attack.y, attack.radius);
+        return circleHitsCircle(playerX, playerY, playerRadius * CollisionTuning.PLAYER_BOSS_ATTACK_RADIUS_SCALE, attack.x, attack.y, attack.radius);
     }
 
     private Hazard hitHazardForShot(Shot shot) {
         for (Hazard hazard : hazards) {
-            float hitRadius = hazard.radius * (hazard.roaring ? 0.96f : 0.82f);
-            float hitY = hazard.roaring ? hazard.y - hazard.radius * 0.55f : hazard.y;
+            float hitRadius = hazard.radius * CollisionTuning.hazardShotRadiusScale(hazard.roaring);
+            float hitY = CollisionTuning.hazardHitY(hazard.y, hazard.radius, hazard.roaring);
             if (circleHitsCircle(shot.x, shot.y, shot.radius, hazard.x, hitY, hitRadius)) {
                 return hazard;
             }
@@ -1270,7 +1270,7 @@ public class MooseRushView extends View {
             if (!bossAttackCanBeShot(attack)) {
                 continue;
             }
-            if (circleHitsCircle(shot.x, shot.y, shot.radius * 1.45f, attack.x, attack.y, attack.radius * 1.20f)) {
+            if (circleHitsCircle(shot.x, shot.y, shot.radius * CollisionTuning.SHOT_BOSS_ATTACK_RADIUS_SCALE, attack.x, attack.y, attack.radius * CollisionTuning.BOSS_ATTACK_SHOT_RADIUS_SCALE)) {
                 return attack;
             }
         }
@@ -1314,7 +1314,7 @@ public class MooseRushView extends View {
             float logHeight = riverLogHeight(gate);
             float logTop = riverLogTop(gate);
             tempRect.set(gate.x - dp(10), logTop - dp(7), gate.x + gate.width + dp(12), logTop + logHeight + dp(8));
-            if (circleHitsRect(shot.x, shot.y, shot.radius * 1.55f, tempRect)) {
+            if (circleHitsRect(shot.x, shot.y, shot.radius * CollisionTuning.SHOT_LOG_RADIUS_SCALE, tempRect)) {
                 return gate;
             }
         }
@@ -2070,7 +2070,7 @@ public class MooseRushView extends View {
             Star star = iterator.next();
             star.x -= speed * dt;
             star.spin += dt * 7f;
-            if (circleHitsCircle(playerX, playerY, playerRadius * 0.95f, star.x, star.y, star.radius * 1.35f)) {
+            if (circleHitsCircle(playerX, playerY, playerRadius * CollisionTuning.STAR_PLAYER_RADIUS_SCALE, star.x, star.y, star.radius * CollisionTuning.STAR_RADIUS_SCALE)) {
                 iterator.remove();
                 gameState.stars++;
                 gameState.addCombo();
@@ -2095,7 +2095,7 @@ public class MooseRushView extends View {
             powerUp.x -= speed * dt;
             powerUp.spin += dt * 5.5f;
             powerUp.bob += dt * 4.5f;
-            if (circleHitsCircle(playerX, playerY, playerRadius * 1.05f, powerUp.x, powerUp.y, powerUp.radius * 1.55f)) {
+            if (circleHitsCircle(playerX, playerY, playerRadius * CollisionTuning.POWERUP_PLAYER_RADIUS_SCALE, powerUp.x, powerUp.y, powerUp.radius * CollisionTuning.POWERUP_RADIUS_SCALE)) {
                 iterator.remove();
                 activatePowerUp(powerUp);
                 continue;
