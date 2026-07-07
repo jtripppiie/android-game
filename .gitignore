@@ -1,5 +1,6 @@
 # Gradle / Android
 .gradle/
+.gradle-home/
 build/
 **/build/
 

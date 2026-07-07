@@ -2,16 +2,16 @@
 
 A personalized Android arcade game by **TripperDeeLabs**.
 
-**Current status: Alaska 3.0.1 numbered debug overlay beta.**
+**Current status: Alaska 3.0.2 obstacle clarity beta.**
 
 This build is beta-ready for APK testing, tuning, and bug fixing. It is not final 1.0 or a larger milestone until it installs and plays well across all Alaska stages on a real phone.
 
 ## Current beta
 
 ```text
-versionCode: 301
-versionName: 3.0.1-beta
-build badge: ALASKA PASSPORT v3.0.1 BETA
+versionCode: 302
+versionName: 3.0.2-beta
+build badge: ALASKA PASSPORT v3.0.2 BETA
 ```
 
 ## Game flow
@@ -39,7 +39,7 @@ build badge: ALASKA PASSPORT v3.0.1 BETA
 You Rush is a side-scrolling platform runner (Mario-style), not a flap-to-fly
 game. Your character runs along the ground under gravity. Stage-specific trail
 obstacles rise from the ground — driftwood rails, slick river logs, antler
-barricades, ice markers, and snowbanks — while wildlife hazards enter from the
+barricades, icebergs, and snowbanks — while wildlife hazards enter from the
 right. Clear, vault, leap, or survive stage obstacles; avoid or stun wildlife;
 and defeat bosses with snowballs.
 The ground is safe to land on; only hitting an obstacle, a hazard, or the boss
@@ -108,6 +108,9 @@ Mobile mapping:
 - Boss fights now escalate with phase two, enrage, summons, clearer weak windows, and stronger attack feedback
 - Snowballs now arc toward nearby threats, power up during focus/weak windows, and have clearer hit rewards
 - Debug mode numbers visible gameplay objects so phone-test notes can reference exact items.
+- Salmon Rush river logs now draw as logs and can be blasted apart with snowballs.
+- Dark Winter obstacles now read as icebergs instead of ice markers.
+- Weather fronts were removed from active gameplay for cleaner readability.
 - Splash screen title spacing and boss-fight readability polish
 - Stronger sprite edge guards for animal sheets and roar sprites
 - Snappier jump arc and trail-credible Salmon Rush river-log obstacles
@@ -147,7 +150,7 @@ The debug APK lands in `app/build/outputs/apk/debug/` with the version in the
 filename, for example:
 
 ```text
-you-rush-alaska-3.0.1-beta-301-debug.apk
+you-rush-alaska-3.0.2-beta-302-debug.apk
 ```
 
 GitHub Actions also builds a debug APK using:
