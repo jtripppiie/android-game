@@ -2,16 +2,16 @@
 
 A personalized Android arcade game by **TripperDeeLabs**.
 
-**Current status: Alaska 2.9.0 route-language beta.**
+**Current status: Alaska 3.0.0 boss, throwing, and sprite polish beta.**
 
 This build is beta-ready for APK testing, tuning, and bug fixing. It is not final 1.0 or a larger milestone until it installs and plays well across all Alaska stages on a real phone.
 
 ## Current beta
 
 ```text
-versionCode: 290
-versionName: 2.9.0-beta
-build badge: ALASKA PASSPORT v2.9 BETA
+versionCode: 300
+versionName: 3.0.0-beta
+build badge: ALASKA PASSPORT v3.0 BETA
 ```
 
 ## Game flow
@@ -105,6 +105,8 @@ Mobile mapping:
 - Debug overlay (off by default; toggle from the menu)
 - Version badge
 - Sampled photo decoding to reduce memory risk from large gallery images
+- Boss fights now escalate with phase two, enrage, summons, clearer weak windows, and stronger attack feedback
+- Snowballs now arc toward nearby threats, power up during focus/weak windows, and have clearer hit rewards
 - Splash screen title spacing and boss-fight readability polish
 - Stronger sprite edge guards for animal sheets and roar sprites
 - Snappier jump arc and trail-credible Salmon Rush river-log obstacles
@@ -144,7 +146,7 @@ The debug APK lands in `app/build/outputs/apk/debug/` with the version in the
 filename, for example:
 
 ```text
-you-rush-alaska-2.9.0-beta-290-debug.apk
+you-rush-alaska-3.0.0-beta-300-debug.apk
 ```
 
 GitHub Actions also builds a debug APK using:

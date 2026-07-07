@@ -122,7 +122,7 @@ public class MooseRushView extends View {
     private static final int BOSS_PATTERN_SUMMON = 2;
     private static final int ATTACK_ICE = 0;
     private static final int ATTACK_SHOCKWAVE = 1;
-    private static final int ROAR_SPRITE_SOURCE_INSET_PX = 24;
+    private static final int ROAR_SPRITE_SOURCE_INSET_PX = 28;
     private static final int WEATHER_CLEAR = 0;
     private static final int WEATHER_AURORA = 1;
     private static final int WEATHER_RAIN = 2;
@@ -274,6 +274,7 @@ public class MooseRushView extends View {
     private boolean dailyBonusAwarded = false;
     private boolean campReached = false;
     private boolean bossPhaseTwoAnnounced = false;
+    private boolean bossEnrageAnnounced = false;
     private boolean runNewBest = false;
     private int jumpsUsed = 0;
 
@@ -804,6 +805,7 @@ public class MooseRushView extends View {
         dailyBonusAwarded = false;
         campReached = false;
         bossPhaseTwoAnnounced = false;
+        bossEnrageAnnounced = false;
         runNewBest = false;
         runCallout = "";
         routeMilestoneTimer = 0f;
@@ -867,11 +869,33 @@ public class MooseRushView extends View {
         if (shotCooldown > 0f || state != STATE_RUNNING) {
             return;
         }
-        shots.add(new Shot(playerX + playerRadius * 0.9f, playerY + playerRadius * 0.05f, dp(460), gameplayDp(5.5f)));
-        effects.spawnSparkBurst(playerX + playerRadius * 1.05f, playerY, 5, Color.WHITE);
-        shotCooldown = auroraFocusTimer > 0f ? 0.22f : 0.32f;
+        float startX = playerX + playerRadius * 0.9f;
+        float startY = playerY + playerRadius * 0.02f;
+        float targetY = throwTargetY(startX, startY);
+        float verticalArc = clamp((targetY - startY) * 1.25f, -dp(210), dp(190));
+        boolean empowered = auroraFocusTimer > 0f || bossWeakWindowActive();
+        shots.add(new Shot(startX, startY, dp(empowered ? 540 : 500), verticalArc, gameplayDp(empowered ? 7.2f : 5.8f), empowered));
+        effects.spawnSparkBurst(playerX + playerRadius * 1.05f, playerY, empowered ? 8 : 5, empowered ? Color.rgb(255, 218, 121) : Color.WHITE);
+        shotCooldown = auroraFocusTimer > 0f ? 0.18f : 0.30f;
         playSound("throw");
-        logEvent("Snowball fired.");
+        logEvent(empowered ? "Powered snowball fired." : "Snowball fired.");
+    }
+
+    private float throwTargetY(float startX, float startY) {
+        float bestX = Float.MAX_VALUE;
+        float targetY = startY - dp(6);
+        if (bossActive && bossX > startX) {
+            bestX = bossX;
+            targetY = bossHurtCenterY();
+        }
+        for (Hazard hazard : hazards) {
+            if (hazard.x <= startX || hazard.x >= bestX) {
+                continue;
+            }
+            bestX = hazard.x;
+            targetY = hazard.roaring ? hazard.y - hazard.radius * 0.55f : hazard.y;
+        }
+        return clamp(targetY, dp(74), getGroundY() - dp(18));
     }
 
     private void updateGame(float dt) {
@@ -1168,11 +1192,14 @@ public class MooseRushView extends View {
         while (iterator.hasNext()) {
             Shot shot = iterator.next();
             shot.x += shot.speed * dt;
+            shot.y += shot.vy * dt;
+            shot.vy += dp(58) * dt;
             shot.wobble += dt * 9f;
-            if (random.nextFloat() < 0.45f) {
-                effects.spawnParticle(shot.x - shot.radius * 0.8f, shot.y, -dp(45), (random.nextFloat() - 0.5f) * dp(26), shot.radius * 0.45f, Color.argb(150, 230, 248, 255), 0.22f);
+            shot.age += dt;
+            if (random.nextFloat() < (shot.empowered ? 0.72f : 0.45f)) {
+                effects.spawnParticle(shot.x - shot.radius * 0.8f, shot.y, -dp(45), (random.nextFloat() - 0.5f) * dp(26), shot.radius * (shot.empowered ? 0.60f : 0.45f), shot.empowered ? Color.argb(178, 255, 218, 121) : Color.argb(150, 230, 248, 255), 0.22f);
             }
-            if (shot.x > getWidth() + dp(24)) {
+            if (shot.x > getWidth() + dp(32) || shot.y > getHeight() + dp(32)) {
                 iterator.remove();
                 continue;
             }
@@ -1186,16 +1213,19 @@ public class MooseRushView extends View {
 
             if (bossActive && circleHitsCircle(shot.x, shot.y, shot.radius, bossX, bossY, bossRadius())) {
                 iterator.remove();
-                int damage = bossWeakWindowActive() ? 2 : 1;
+                int damage = bossWeakWindowActive() ? (shot.empowered ? 3 : 2) : (shot.empowered ? 2 : 1);
                 bossHealth -= damage;
-                bossStunTimer = Math.max(bossStunTimer, selectedStage == 4 ? 0.20f : 0.12f);
-                damageFlash = 0.16f;
-                screenShake = Math.max(screenShake, 0.12f);
-                worldFlash = Math.max(worldFlash, 0.10f);
-                int awarded = addScore(25, "Boss hit");
-                effects.spawnScorePopup((damage > 1 ? "WEAK x2 +" : "HIT +") + awarded, bossX, bossY - bossRadius(), damage > 1 ? Color.rgb(255, 218, 121) : Color.rgb(255, 246, 207));
-                effects.spawnSparkBurst(bossX, bossY, damage > 1 ? 22 : 14, damage > 1 ? Color.rgb(255, 218, 121) : Color.rgb(255, 98, 84));
-                addAuroraMeter(damage > 1 ? 14f : 8f, "Boss hit");
+                bossStunTimer = Math.max(bossStunTimer, selectedStage == 4 ? 0.28f : 0.18f);
+                damageFlash = shot.empowered ? 0.22f : 0.16f;
+                screenShake = Math.max(screenShake, shot.empowered ? 0.16f : 0.12f);
+                worldFlash = Math.max(worldFlash, shot.empowered ? 0.15f : 0.10f);
+                if (damage >= 3 && bossState != BOSS_STATE_RECOVER) {
+                    enterBossRecover();
+                }
+                int awarded = addScore(25 + damage * 5, "Boss hit");
+                effects.spawnScorePopup((damage >= 3 ? "POWER WEAK +" : damage > 1 ? "WEAK x2 +" : "HIT +") + awarded, bossX, bossY - bossRadius(), damage > 1 ? Color.rgb(255, 218, 121) : Color.rgb(255, 246, 207));
+                effects.spawnSparkBurst(bossX, bossY, damage > 1 ? 28 : 14, damage > 1 ? Color.rgb(255, 218, 121) : Color.rgb(255, 98, 84));
+                addAuroraMeter(damage > 1 ? 18f : 8f, "Boss hit");
                 playSound("hit");
                 logEvent(STAGES[selectedStage].bossName + " hit. HP " + Math.max(0, bossHealth) + "/" + bossMaxHealth + ".");
                 if (bossHealth <= 0) {
@@ -1261,13 +1291,22 @@ public class MooseRushView extends View {
         bossStunTimer = Math.max(0f, bossStunTimer - dt);
         StageConfig stage = STAGES[selectedStage];
         float phasePressure = bossMaxHealth <= 0 ? 0f : 1f - bossHealth / (float) bossMaxHealth;
-        float stateSpeed = 1f + phasePressure * (selectedStage == 4 ? 0.55f : 0.35f);
+        boolean enraged = bossEnraged();
+        float stateSpeed = 1f + phasePressure * (selectedStage == 4 ? 0.55f : 0.35f) + (enraged ? 0.22f : 0f);
         if (!bossPhaseTwoAnnounced && bossMaxHealth > 1 && bossHealth <= bossMaxHealth / 2) {
             bossPhaseTwoAnnounced = true;
             showRunCallout("BOSS PHASE TWO", 1.25f);
             screenShake = Math.max(screenShake, 0.12f);
             effects.spawnSparkBurst(bossX, bossY - bossRadius(), 20, Color.rgb(255, 98, 84));
             logEvent(STAGES[selectedStage].bossName + " entered phase two.");
+        }
+        if (!bossEnrageAnnounced && bossMaxHealth > 2 && enraged) {
+            bossEnrageAnnounced = true;
+            showRunCallout("BOSS ENRAGED", 1.1f);
+            screenShake = Math.max(screenShake, 0.16f);
+            worldFlash = Math.max(worldFlash, 0.18f);
+            effects.spawnSparkBurst(bossX, bossY - bossRadius() * 0.4f, 26, Color.rgb(255, 98, 84));
+            logEvent(STAGES[selectedStage].bossName + " enraged.");
         }
 
         if (bossState == BOSS_STATE_ENTER && bossX <= bossRestX(selectedStage) + dp(12)) {
@@ -1346,10 +1385,14 @@ public class MooseRushView extends View {
     }
 
     private int nextBossPattern() {
-        if (selectedStage == 4 && bossHealth <= bossMaxHealth / 2 && bossPatternCount % 3 == 2) {
+        if (bossHealth <= bossMaxHealth / 2 && bossPatternCount % 3 == 2) {
             return BOSS_PATTERN_SUMMON;
         }
         return bossPatternCount % 2 == 0 ? BOSS_PATTERN_LUNGE : BOSS_PATTERN_SNOW_WAVE;
+    }
+
+    private boolean bossEnraged() {
+        return bossActive && bossMaxHealth > 2 && bossHealth <= Math.max(1, bossMaxHealth / 4);
     }
 
     private float bossDesiredX() {
@@ -1368,32 +1411,32 @@ public class MooseRushView extends View {
 
     private float bossTrackingRate() {
         if (bossState == BOSS_STATE_ATTACK && bossPattern == BOSS_PATTERN_LUNGE) {
-            return selectedStage == 4 ? 7.2f : 6.2f;
+            return (selectedStage == 4 ? 7.2f : 6.2f) + (bossEnraged() ? 0.9f : 0f);
         }
         if (bossState == BOSS_STATE_ENTER) {
             return 2.7f;
         }
-        return bossState == BOSS_STATE_RECOVER ? 4.2f : 3.4f;
+        return (bossState == BOSS_STATE_RECOVER ? 4.2f : 3.4f) + (bossEnraged() ? 0.45f : 0f);
     }
 
     private float bossTellDuration() {
-        return selectedStage == 4 ? 0.98f : 0.78f;
+        return (selectedStage == 4 ? 0.98f : 0.78f) * (bossEnraged() ? 0.90f : 1f);
     }
 
     private float bossAttackDuration() {
         if (bossPattern == BOSS_PATTERN_LUNGE) {
-            return selectedStage == 4 ? 0.74f : 0.64f;
+            return (selectedStage == 4 ? 0.74f : 0.64f) * (bossEnraged() ? 0.94f : 1f);
         }
-        return selectedStage == 4 ? 0.50f : 0.44f;
+        return (selectedStage == 4 ? 0.50f : 0.44f) * (bossEnraged() ? 0.92f : 1f);
     }
 
     private float bossRecoverDuration() {
-        return selectedStage == 4 ? 0.92f : 0.72f;
+        return (selectedStage == 4 ? 0.92f : 0.72f) * (bossEnraged() ? 0.82f : 1f);
     }
 
     private void spawnBossSnowWave() {
         float baseY = getGroundY() - dp(22);
-        int count = selectedStage == 4 && bossHealth <= bossMaxHealth / 2 ? 3 : 2;
+        int count = bossHealth <= bossMaxHealth / 2 ? 3 : 2;
         for (int i = 0; i < count; i++) {
             float y = i == 1 ? baseY - dp(54) : baseY;
             if (i == 2) {
@@ -1410,6 +1453,12 @@ public class MooseRushView extends View {
         float radius = gameplayDp(hazardRadiusDp(label));
         float y = hazardSpawnY(label, radius);
         hazards.add(new Hazard(getWidth() + dp(34), y, radius, hazardSpeedMultiplier(label) + 0.10f, random.nextFloat() * 4f, label, null));
+        if (bossEnraged()) {
+            String secondLabel = selectedStage == 4 ? STAGES[selectedStage].hazardLabel : "WOLF";
+            float secondRadius = gameplayDp(hazardRadiusDp(secondLabel));
+            float secondY = hazardSpawnY(secondLabel, secondRadius);
+            hazards.add(new Hazard(getWidth() + dp(96), secondY, secondRadius, hazardSpeedMultiplier(secondLabel) + 0.02f, random.nextFloat() * 4f, secondLabel, null));
+        }
         bossAttacks.add(new BossAttack(bossX - bossRadius(), getGroundY() - dp(14), dp(18), -dp(210), 0f, ATTACK_SHOCKWAVE, "Shockwave"));
         screenShake = Math.max(screenShake, 0.12f);
         effects.spawnScorePopup("ROAR", bossX, bossY - bossRadius(), Color.rgb(255, 246, 207));
@@ -3208,13 +3257,21 @@ public class MooseRushView extends View {
     }
 
     private void drawShot(Canvas canvas, Shot shot) {
+        float y = shot.y + (float) Math.sin(shot.wobble) * dp(2);
         paint.setStyle(Paint.Style.FILL);
-        paint.setColor(Color.argb(90, 200, 238, 255));
-        canvas.drawCircle(shot.x - shot.radius * 0.9f, shot.y + (float) Math.sin(shot.wobble) * dp(2), shot.radius * 1.7f, paint);
-        paint.setColor(Color.WHITE);
-        canvas.drawCircle(shot.x, shot.y + (float) Math.sin(shot.wobble) * dp(2), shot.radius, paint);
-        paint.setColor(Color.rgb(180, 220, 230));
-        canvas.drawCircle(shot.x - shot.radius * 0.3f, shot.y - shot.radius * 0.25f, shot.radius * 0.35f, paint);
+        paint.setColor(shot.empowered ? Color.argb(118, 255, 218, 121) : Color.argb(92, 200, 238, 255));
+        canvas.drawCircle(shot.x - shot.radius * 0.9f, y, shot.radius * (shot.empowered ? 2.05f : 1.70f), paint);
+        if (shot.empowered) {
+            paint.setStyle(Paint.Style.STROKE);
+            paint.setStrokeWidth(dp(1.6f));
+            paint.setColor(Color.argb(190, 255, 246, 207));
+            canvas.drawCircle(shot.x, y, shot.radius * 1.36f, paint);
+            paint.setStyle(Paint.Style.FILL);
+        }
+        paint.setColor(shot.empowered ? Color.rgb(255, 246, 207) : Color.WHITE);
+        canvas.drawCircle(shot.x, y, shot.radius, paint);
+        paint.setColor(shot.empowered ? Color.rgb(255, 166, 84) : Color.rgb(180, 220, 230));
+        canvas.drawCircle(shot.x - shot.radius * 0.3f, y - shot.radius * 0.25f, shot.radius * 0.35f, paint);
     }
 
     private void drawBossAttack(Canvas canvas, BossAttack attack) {
@@ -3501,8 +3558,9 @@ public class MooseRushView extends View {
         textPaint.setTextAlign(Paint.Align.CENTER);
         textPaint.setTextSize(dp(10));
         textPaint.setColor(Color.WHITE);
-        canvas.drawText(STAGES[selectedStage].bossName + " HP " + bossHealth + "/" + bossMaxHealth
-                + "  ESCAPE " + Math.round(bossTimeRemaining()) + "s", getWidth() / 2f, top - dp(6), textPaint);
+        String bossStatus = bossWeakWindowActive() ? "  WEAK WINDOW" : bossEnraged() ? "  ENRAGED" : bossPhaseTwoAnnounced ? "  PHASE 2" : "";
+        canvas.drawText(STAGES[selectedStage].bossName + " HP " + Math.max(0, bossHealth) + "/" + bossMaxHealth
+                + bossStatus + "  ESCAPE " + Math.round(bossTimeRemaining()) + "s", getWidth() / 2f, top - dp(6), textPaint);
     }
 
     private float bossRadius() {
@@ -4733,16 +4791,21 @@ public class MooseRushView extends View {
 
     private static class Shot {
         float x;
-        final float y;
+        float y;
         final float speed;
+        float vy;
         final float radius;
+        final boolean empowered;
         float wobble = 0f;
+        float age = 0f;
 
-        Shot(float x, float y, float speed, float radius) {
+        Shot(float x, float y, float speed, float vy, float radius, boolean empowered) {
             this.x = x;
             this.y = y;
             this.speed = speed;
+            this.vy = vy;
             this.radius = radius;
+            this.empowered = empowered;
         }
     }
 
