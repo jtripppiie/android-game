@@ -1,8 +1,8 @@
 package com.jtripppiie.mooserush;
 
 final class SpriteSheetMath {
-    private static final int SPRITE_EDGE_GUARD_PX = 12;
-    private static final int SPRITE_TRIM_INSET_PX = 5;
+    private static final int SPRITE_EDGE_GUARD_PX = 14;
+    private static final int SPRITE_TRIM_INSET_PX = 6;
 
     private SpriteSheetMath() {
     }

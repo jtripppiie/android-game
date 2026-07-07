@@ -5,16 +5,16 @@ Use this after GitHub Actions produces the debug APK artifact.
 Current packaged beta:
 
 ```text
-versionCode: 303
-versionName: 3.0.3-beta
-build badge: ALASKA PASSPORT v3.0.3 BETA
+versionCode: 304
+versionName: 3.0.4-beta
+build badge: ALASKA PASSPORT v3.0.4 BETA
 ```
 
 ## Install test
 
 1. Download `you-rush-alaska-debug-apk` from the latest successful workflow run.
 2. Extract the ZIP if GitHub downloaded it as a ZIP.
-3. Install `you-rush-alaska-3.0.3-beta-303-debug.apk` on an Android phone.
+3. Install `you-rush-alaska-3.0.4-beta-304-debug.apk` on an Android phone.
 4. Allow installation from the browser/files app if Android prompts you.
 5. Open **You Rush**.
 6. Confirm the debug/version badge is visible and matches the packaged beta.
@@ -41,6 +41,7 @@ Confirm these screens work:
 - Main menu shows Trail Passport badge progress.
 - Turning DEBUG on shows numbered badges on active obstacles, wildlife, pickups, throws, boss attacks, and bosses.
 - The DEBUG info panel is compact and does not block normal play.
+- DEBUG wildlife and boss badges show sprite/frame detail such as `BEAR f3`.
 
 ## Gameplay test
 
@@ -146,6 +147,7 @@ Check small and large screens:
 - Trees should visually connect to the ground and not float above the lane.
 - Polar bear and wolf sprites animate cleanly without magenta background artifacts.
 - Roaring bear sprites do not show edge artifacts from the original image border.
+- Player runner sprite edges do not show leftover source-frame pixels.
 - Eagle wing animation reads as deliberate flapping, not strobing.
 - Salmon animation reads as swimming, not jittering.
 - Stage obstacles have distinct identities: driftwood rails, river logs, antler barricades, icebergs, and snowbanks.

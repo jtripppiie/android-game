@@ -14,8 +14,8 @@ import android.graphics.Shader;
 
 final class SpriteRenderer {
     private static final int RUNNER_FRAMES = 6;
-    private static final int SPRITE_EDGE_GUARD_PX = 2;
-    private static final int RUNNER_TRIM_INSET_PX = 1;
+    private static final int SPRITE_EDGE_GUARD_PX = 5;
+    private static final int RUNNER_TRIM_INSET_PX = 3;
     private static final float RUNNER_BODY_HEIGHT_RUNNING = 2.68f;
     private static final float RUNNER_BODY_HEIGHT_STANDING = 2.62f;
     private static final float RUNNER_BODY_WIDTH_SCALE = 1.18f;

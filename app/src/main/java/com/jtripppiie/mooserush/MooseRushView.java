@@ -122,7 +122,7 @@ public class MooseRushView extends View {
     private static final int BOSS_PATTERN_SUMMON = 2;
     private static final int ATTACK_ICE = 0;
     private static final int ATTACK_SHOCKWAVE = 1;
-    private static final int ROAR_SPRITE_SOURCE_INSET_PX = 28;
+    private static final int ROAR_SPRITE_SOURCE_INSET_PX = 34;
     private static final int[][] MOOSE_FRAME_TRIMS = {
             {14, 226, 362, 527},
             {0, 224, 362, 528},
@@ -4017,7 +4017,7 @@ public class MooseRushView extends View {
         for (Hazard hazard : hazards) {
             float yRadius = hazard.radius * hazardVerticalScale(hazard.label);
             if (isDebugMarkerVisible(hazard.x, hazard.y, hazard.radius * 2f)) {
-                drawDebugObjectBadge(canvas, number++, "H", hazard.x, hazard.y - yRadius - dp(24), Color.rgb(255, 98, 84));
+                drawDebugObjectBadge(canvas, number++, "H", debugHazardSpriteDetail(hazard), hazard.x, hazard.y - yRadius - dp(24), Color.rgb(255, 98, 84));
             }
         }
         for (Star star : stars) {
@@ -4041,8 +4041,38 @@ public class MooseRushView extends View {
             }
         }
         if (bossActive) {
-            drawDebugObjectBadge(canvas, number, "B", bossX, bossY - bossRadius() - dp(28), Color.rgb(255, 98, 84));
+            drawDebugObjectBadge(canvas, number, "B", debugBossSpriteDetail(), bossX, bossY - bossRadius() - dp(28), Color.rgb(255, 98, 84));
         }
+    }
+
+    private String debugHazardSpriteDetail(Hazard hazard) {
+        if (sheetForHazard(hazard.label) == null && roarSpriteForHazard(hazard.label) == null) {
+            return hazard.label;
+        }
+        return hazard.label + (hazard.roaring ? " roar" : " f" + debugHazardFrame(hazard));
+    }
+
+    private int debugHazardFrame(Hazard hazard) {
+        int frame = Math.floorMod((int) (hazardVisualPhase(hazard) * hazardAnimationRate(hazard.label)), SPRITE_SHEET_FRAMES);
+        return hazard.roaring ? 3 : frame;
+    }
+
+    private String debugBossSpriteDetail() {
+        if (sheetForBoss(selectedStage) == null) {
+            return STAGES[selectedStage].bossName;
+        }
+        float phase = bossTimer + selectedStage * 0.37f;
+        float rate = selectedStage == 3 ? 1.85f : selectedStage == 1 ? 2.70f : selectedStage == 4 ? 2.45f : 2.35f;
+        if (bossState == BOSS_STATE_TELL) {
+            rate *= 0.45f;
+        } else if (bossState == BOSS_STATE_ATTACK) {
+            rate *= 1.55f;
+        }
+        int frame = Math.floorMod((int) (phase * rate), SPRITE_SHEET_FRAMES);
+        if (bossStunTimer > 0f) {
+            frame = Math.floorMod(frame + 2, SPRITE_SHEET_FRAMES);
+        }
+        return "BOSS f" + frame;
     }
 
     private boolean isDebugMarkerVisible(float x, float y, float pad) {
@@ -4051,6 +4081,10 @@ public class MooseRushView extends View {
     }
 
     private void drawDebugObjectBadge(Canvas canvas, int number, String type, float x, float y, int accentColor) {
+        drawDebugObjectBadge(canvas, number, type, "", x, y, accentColor);
+    }
+
+    private void drawDebugObjectBadge(Canvas canvas, int number, String type, String detail, float x, float y, int accentColor) {
         String label = number + type;
         float clampedX = clamp(x, dp(18), getWidth() - dp(18));
         float clampedY = clamp(y, dp(54), getHeight() - dp(18));
@@ -4058,7 +4092,16 @@ public class MooseRushView extends View {
         textPaint.setTextSize(dp(9.5f));
         textPaint.setFakeBoldText(true);
         float width = Math.max(dp(26), textPaint.measureText(label) + dp(10));
-        tempRect.set(clampedX - width * 0.5f, clampedY - dp(13), clampedX + width * 0.5f, clampedY + dp(5));
+        boolean hasDetail = detail != null && detail.length() > 0;
+        if (hasDetail) {
+            textPaint.setTextSize(dp(7.2f));
+            textPaint.setFakeBoldText(false);
+            width = Math.max(width, textPaint.measureText(detail) + dp(10));
+            textPaint.setTextSize(dp(9.5f));
+            textPaint.setFakeBoldText(true);
+        }
+        float height = hasDetail ? dp(29) : dp(18);
+        tempRect.set(clampedX - width * 0.5f, clampedY - height + dp(5), clampedX + width * 0.5f, clampedY + dp(5));
 
         paint.setStyle(Paint.Style.FILL);
         paint.setColor(Color.argb(218, 8, 18, 30));
@@ -4071,6 +4114,11 @@ public class MooseRushView extends View {
         textPaint.setColor(Color.WHITE);
         canvas.drawText(label, clampedX, clampedY, textPaint);
         textPaint.setFakeBoldText(false);
+        if (hasDetail) {
+            textPaint.setTextSize(dp(7.2f));
+            textPaint.setColor(Color.rgb(255, 246, 207));
+            canvas.drawText(detail, clampedX, clampedY + dp(10), textPaint);
+        }
     }
 
     @SuppressWarnings("deprecation")

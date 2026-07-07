@@ -38,6 +38,6 @@ public class SpriteRendererTest {
                 new int[]{0, 207, 328, 638}
         );
 
-        assertArrayEquals(new int[]{331, 208, 653, 637}, source);
+        assertArrayEquals(new int[]{336, 210, 648, 635}, source);
     }
 }
