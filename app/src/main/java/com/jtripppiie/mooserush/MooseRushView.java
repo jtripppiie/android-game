@@ -2151,11 +2151,22 @@ public class MooseRushView extends View {
 
         textPaint.setColor(Color.WHITE);
         float titleSize = Math.min(dp(46), Math.max(dp(34), getWidth() / 8.0f));
-        textPaint.setTextSize(titleSize);
-        float wordGap = Math.max(dp(28), titleSize * 0.82f);
-        float youWidth = textPaint.measureText("YOU");
-        float rushWidth = textPaint.measureText("RUSH");
-        float totalWidth = youWidth + rushWidth + wordGap;
+        float wordGap;
+        float youWidth;
+        float rushWidth;
+        float totalWidth;
+        float maxTitleWidth = getWidth() - dp(50);
+        do {
+            textPaint.setTextSize(titleSize);
+            wordGap = Math.max(dp(54), titleSize * 1.38f);
+            youWidth = textPaint.measureText("YOU");
+            rushWidth = textPaint.measureText("RUSH");
+            totalWidth = youWidth + rushWidth + wordGap;
+            if (totalWidth <= maxTitleWidth || titleSize <= dp(29)) {
+                break;
+            }
+            titleSize -= dp(1.5f);
+        } while (true);
         float startX = getWidth() / 2f - totalWidth / 2f;
         float baseline = getHeight() * 0.48f;
         textPaint.setTextAlign(Paint.Align.LEFT);
