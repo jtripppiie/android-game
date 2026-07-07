@@ -2158,11 +2158,11 @@ public class MooseRushView extends View {
         float maxTitleWidth = getWidth() - dp(50);
         do {
             textPaint.setTextSize(titleSize);
-            wordGap = Math.max(dp(54), titleSize * 1.38f);
+            wordGap = Math.max(dp(78), titleSize * 1.85f);
             youWidth = textPaint.measureText("YOU");
             rushWidth = textPaint.measureText("RUSH");
             totalWidth = youWidth + rushWidth + wordGap;
-            if (totalWidth <= maxTitleWidth || titleSize <= dp(29)) {
+            if (totalWidth <= maxTitleWidth || titleSize <= dp(27)) {
                 break;
             }
             titleSize -= dp(1.5f);
@@ -2172,7 +2172,10 @@ public class MooseRushView extends View {
         textPaint.setTextAlign(Paint.Align.LEFT);
         paint.setStyle(Paint.Style.FILL);
         paint.setColor(Color.argb(135, 0, 0, 0));
-        canvas.drawRoundRect(startX - dp(12), baseline - titleSize * 0.86f, startX + totalWidth + dp(12), baseline + dp(10), dp(12), dp(12), paint);
+        canvas.drawRoundRect(startX - dp(18), baseline - titleSize * 0.92f, startX + totalWidth + dp(18), baseline + dp(13), dp(14), dp(14), paint);
+        paint.setColor(Color.argb(185, 255, 218, 121));
+        float dividerX = startX + youWidth + wordGap * 0.50f;
+        canvas.drawRoundRect(dividerX - dp(1.3f), baseline - titleSize * 0.72f, dividerX + dp(1.3f), baseline + dp(4), dp(1.3f), dp(1.3f), paint);
         textPaint.setColor(Color.WHITE);
         canvas.drawText("YOU", startX, baseline, textPaint);
         textPaint.setColor(Color.rgb(255, 218, 121));
