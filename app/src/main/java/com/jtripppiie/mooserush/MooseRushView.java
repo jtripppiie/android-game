@@ -119,12 +119,6 @@ public class MooseRushView extends View {
     private static final float AURORA_METER_MAX = 100f;
     private static final float AURORA_RUSH_SECONDS = 6.5f;
     private static final float AURORA_FOCUS_SECONDS = 5.0f;
-    private static final int MAX_BEAR_SPRAY_CHARGES = 3;
-    private static final float BEAR_SPRAY_HOLD_SECONDS = 0.36f;
-    private static final float BEAR_SPRAY_COOLDOWN_SECONDS = 1.45f;
-    private static final float BEAR_SPRAY_CONE_SECONDS = 0.34f;
-    private static final float BEAR_SPRAY_RANGE_DP = 142f;
-    private static final float BEAR_SPRAY_HALF_HEIGHT_DP = 58f;
     private static final int BOSS_STATE_ENTER = 0;
     private static final int BOSS_STATE_TELL = 1;
     private static final int BOSS_STATE_ATTACK = 2;
@@ -201,6 +195,7 @@ public class MooseRushView extends View {
     private final GameState gameState = new GameState();
     private final GameAssets assets;
     private final SpriteRenderer spriteRenderer;
+    private final ObstacleRenderer obstacleRenderer;
     private final VisualEffects effects;
 
     private final RectF primaryButtonBounds = new RectF();
@@ -355,6 +350,7 @@ public class MooseRushView extends View {
         prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         assets = new GameAssets(context);
         spriteRenderer = new SpriteRenderer(context);
+        obstacleRenderer = new ObstacleRenderer(context, assets);
         effects = new VisualEffects(context);
         bestScore = prefs.getInt(PREF_BEST_SCORE, 0);
         selectedStage = clampInt(prefs.getInt(PREF_SELECTED_STAGE, 0), 0, STAGES.length - 1);
@@ -915,7 +911,7 @@ public class MooseRushView extends View {
             return;
         }
         fireHoldTimer += dt;
-        if (fireHoldTimer >= BEAR_SPRAY_HOLD_SECONDS) {
+        if (fireHoldTimer >= SprayTuning.HOLD_SECONDS) {
             useBearSpray();
             fireHoldTimer = -999f;
         }
@@ -927,8 +923,8 @@ public class MooseRushView extends View {
         }
         bearSprayCharges--;
         runBearSprays++;
-        bearSprayCooldown = BEAR_SPRAY_COOLDOWN_SECONDS;
-        bearSprayTimer = BEAR_SPRAY_CONE_SECONDS;
+        bearSprayCooldown = SprayTuning.COOLDOWN_SECONDS;
+        bearSprayTimer = SprayTuning.CONE_SECONDS;
         bearSprayOriginX = runnerHandX();
         bearSprayOriginY = runnerHandY();
 
@@ -991,12 +987,7 @@ public class MooseRushView extends View {
     }
 
     private boolean sprayHitsPoint(float x, float y, float radius) {
-        float dx = x - bearSprayOriginX;
-        if (dx < -radius * 0.35f || dx > dp(BEAR_SPRAY_RANGE_DP) + radius) {
-            return false;
-        }
-        float widthAtX = dp(18) + (dx / Math.max(1f, dp(BEAR_SPRAY_RANGE_DP))) * dp(BEAR_SPRAY_HALF_HEIGHT_DP);
-        return Math.abs(y - bearSprayOriginY) <= widthAtX + radius * 0.65f;
+        return SprayTuning.coneHitsPoint(bearSprayOriginX, bearSprayOriginY, x, y, radius, getResources().getDisplayMetrics().density);
     }
 
     private float runnerHandX() {
@@ -2164,7 +2155,7 @@ public class MooseRushView extends View {
             float kitY = getGroundY() - hurdleHeight - gameplayDp(52 + random.nextFloat() * 18);
             powerUps.add(new PowerUp(getWidth() + gateWidth + gameplayDp(246), Math.max(dp(88), kitY), gameplayDp(9.6f), "KIT"));
         }
-        if (gatesPassed >= 3 && bearSprayCharges < MAX_BEAR_SPRAY_CHARGES && random.nextFloat() < bearSpraySpawnChance()) {
+        if (gatesPassed >= 3 && bearSprayCharges < SprayTuning.MAX_CHARGES && random.nextFloat() < bearSpraySpawnChance()) {
             float sprayY = getGroundY() - hurdleHeight - gameplayDp(34 + random.nextFloat() * 20);
             powerUps.add(new PowerUp(getWidth() + gateWidth + gameplayDp(286), Math.max(dp(88), sprayY), gameplayDp(9.4f), "SPRAY"));
         }
@@ -2198,9 +2189,7 @@ public class MooseRushView extends View {
     }
 
     private float bearSpraySpawnChance() {
-        if (selectedStage >= 4) return 0.22f;
-        if (selectedStage >= 2) return 0.14f;
-        return 0.08f;
+        return SprayTuning.spawnChance(selectedStage);
     }
 
     private void updateStars(float dt, float speed) {
@@ -2303,7 +2292,7 @@ public class MooseRushView extends View {
             playSound("medal");
         } else if ("SPRAY".equals(powerUp.type)) {
             gameState.addCombo();
-            bearSprayCharges = Math.min(MAX_BEAR_SPRAY_CHARGES, bearSprayCharges + (selectedStage >= 4 ? 2 : 1));
+            bearSprayCharges = Math.min(SprayTuning.MAX_CHARGES, bearSprayCharges + (selectedStage >= 4 ? 2 : 1));
             int awarded = addScore(16, "Bear spray");
             effects.spawnScorePopup("SPRAY x" + bearSprayCharges, powerUp.x, powerUp.y - dp(12), Color.rgb(255, 166, 84));
             effects.spawnSparkBurst(powerUp.x, powerUp.y, 14, Color.rgb(255, 166, 84));
@@ -2974,7 +2963,7 @@ public class MooseRushView extends View {
             drawRiverLogGate(canvas, gate);
             return;
         }
-        if (drawSpriteObstacleGate(canvas, gate)) {
+        if (obstacleRenderer.drawSpriteGate(canvas, gate.x, gate.height, gate.width, selectedStage, STAGES[selectedStage].obstacleName, getGroundY())) {
             return;
         }
         float top = getGroundY() - gate.height;
@@ -3016,39 +3005,6 @@ public class MooseRushView extends View {
         drawObstacleNameplate(canvas, gate, top);
         paint.setStrokeCap(Paint.Cap.BUTT);
         paint.setStyle(Paint.Style.FILL);
-    }
-
-    private boolean drawSpriteObstacleGate(Canvas canvas, Gate gate) {
-        Drawable sprite = obstacleSpriteForStage(selectedStage);
-        if (sprite == null) {
-            return false;
-        }
-        float ground = getGroundY();
-        float height = gate.height + dp(selectedStage == 2 ? 30 : selectedStage == 3 ? 24 : 18);
-        float width = Math.max(gate.width + dp(selectedStage == 2 ? 54 : 42), height * (selectedStage == 2 ? 1.85f : 1.65f));
-        float left = gate.x + gate.width * 0.5f - width * 0.5f;
-        float right = left + width;
-        float top = ground - height;
-
-        paint.setStyle(Paint.Style.FILL);
-        paint.setColor(Color.argb(selectedStage == 4 ? 96 : 112, 0, 0, 0));
-        canvas.drawOval(left + width * 0.08f, ground - dp(7), right - width * 0.08f, ground + dp(8), paint);
-        drawDrawable(canvas, sprite, left, top, right, ground + dp(2));
-        drawObstacleNameplate(canvas, gate, top);
-        return true;
-    }
-
-    private Drawable obstacleSpriteForStage(int stage) {
-        if (stage == 2) {
-            return assets.obstacleAntlerBarricade();
-        }
-        if (stage == 3) {
-            return assets.obstacleIceberg();
-        }
-        if (stage == 4) {
-            return assets.obstacleSnowbank();
-        }
-        return null;
     }
 
     private int gateDarkColor() {
@@ -3642,11 +3598,12 @@ public class MooseRushView extends View {
         if (bearSprayTimer <= 0f) {
             return;
         }
-        float pct = Math.min(1f, bearSprayTimer / BEAR_SPRAY_CONE_SECONDS);
+        float pct = Math.min(1f, bearSprayTimer / SprayTuning.CONE_SECONDS);
         float originX = bearSprayOriginX <= 0f ? runnerHandX() : bearSprayOriginX;
         float originY = bearSprayOriginY <= 0f ? runnerHandY() : bearSprayOriginY;
-        float range = dp(BEAR_SPRAY_RANGE_DP) * (0.82f + 0.18f * pct);
-        float halfHeight = dp(BEAR_SPRAY_HALF_HEIGHT_DP) * (0.72f + 0.28f * pct);
+        float density = getResources().getDisplayMetrics().density;
+        float range = SprayTuning.effectRange(density, pct);
+        float halfHeight = SprayTuning.effectHalfHeight(density, pct);
 
         paint.setStyle(Paint.Style.FILL);
         paint.setColor(Color.argb(Math.round(82 * pct), 255, 166, 84));
