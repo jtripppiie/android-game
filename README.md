@@ -2,16 +2,16 @@
 
 A personalized Android arcade game by **TripperDeeLabs**.
 
-**Current status: Alaska 3.30 profile eye-beam beta.**
+**Current status: Alaska 3.31 debug preview expansion beta.**
 
 This build is beta-ready for APK testing, tuning, and bug fixing. It is not final 1.0 or a larger milestone until it installs and plays well across all Alaska stages on a real phone.
 
 ## Current beta
 
 ```text
-versionCode: 330
-versionName: 3.2.10-beta
-build badge: ALASKA PASSPORT v3.30 BETA
+versionCode: 331
+versionName: 3.2.11-beta
+build badge: ALASKA PASSPORT v3.31 BETA
 ```
 
 ## Fast UI preview
@@ -19,7 +19,10 @@ build badge: ALASKA PASSPORT v3.30 BETA
 Open `tools/menu-preview.html` in a browser to check the main-menu layout without
 installing the Android app. Open `tools/gameplay-preview.html` to audit gameplay
 HUD, controls, debug hitboxes, pause/results overlays, and contrast in a simple
-canvas sandbox. These files live only under `tools/`, are not packaged into the
+canvas sandbox. Open `tools/gear-obstacle-preview.html` for bear spray, logs,
+snow piles, icebergs, snowballs, hitboxes, and numbered tuning badges. Open
+`tools/sprite-sheet-audit.html` to inspect numbered sprite frames on a
+checkerboard. These files live only under `tools/`, are not packaged into the
 Android app, and can be removed by deleting the preview HTML files.
 
 ## Game flow
@@ -172,7 +175,7 @@ The debug APK lands in `app/build/outputs/apk/debug/` with the version in the
 filename, for example:
 
 ```text
-you-rush-alaska-3.2.10-beta-330-debug.apk
+you-rush-alaska-3.2.11-beta-331-debug.apk
 ```
 
 GitHub Actions also builds a debug APK using:
@@ -195,6 +198,10 @@ Artifacts:
 Local HTML tools live in `tools/`:
 
 - `laser-eyes-preview.html` — preview and tune the boss eye-beam tell/attack with a numbered calibration grid.
+- `gear-obstacle-preview.html` — preview logs, snow piles, icebergs, snowballs,
+  bear spray, hitboxes, and numbered debug badges.
+- `sprite-sheet-audit.html` — inspect actual PNG sprite sheets frame by frame
+  with checkerboard transparency, trim boxes, and frame numbers.
 - `debug-tuning-dashboard.html` — report format, debug legend, and QA checklist
   for numbered DEBUG screenshots.
 

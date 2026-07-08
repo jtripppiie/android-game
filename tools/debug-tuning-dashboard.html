@@ -105,11 +105,21 @@
 </head>
 <body>
   <header>
-    <h1>You Rush 3.28 Debug Tuning Dashboard</h1>
+    <h1>You Rush 3.31 Debug Tuning Dashboard</h1>
     <p>Use this alongside DEBUG mode screenshots. Turn DEBUG on in the game, capture the numbered object, then report the number, type letter, and what feels wrong.</p>
   </header>
 
   <main>
+    <section>
+      <h2>Preview Screens</h2>
+      <ul>
+        <li><a href="gameplay-preview.html">Gameplay preview</a> checks HUD, panels, controls, and debug hitboxes.</li>
+        <li><a href="laser-eyes-preview.html">Laser eyes preview</a> checks boss beam origin, sweep, and hitbox.</li>
+        <li><a href="gear-obstacle-preview.html">Gear + obstacle preview</a> checks logs, snow piles, icebergs, snowballs, and bear spray.</li>
+        <li><a href="sprite-sheet-audit.html">Sprite sheet audit</a> checks actual PNG frames for transparency and crop artifacts.</li>
+      </ul>
+    </section>
+
     <section>
       <h2>Report Format</h2>
       <ul>
@@ -122,13 +132,14 @@
     </section>
 
     <section>
-      <h2>3.28 Sprite Checks</h2>
+      <h2>3.31 Sprite Checks</h2>
       <ul>
         <li>River logs should read as wet logs, not racks.</li>
         <li>Snowbanks should look like grounded snow piles.</li>
         <li>Icebergs should be jagged and blue-white.</li>
         <li>Antler barricades should read as antlers lashed together.</li>
         <li>Vector sprite edges should have no PNG fringe.</li>
+        <li>Use the sprite-sheet audit frame number for PNG crop/artifact reports.</li>
       </ul>
     </section>
 

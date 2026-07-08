@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>You Rush Sprite Sheet Audit</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #081224;
+      color: #f7fbff;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 340px 1fr;
+    }
+
+    aside {
+      box-sizing: border-box;
+      max-height: 100vh;
+      overflow: auto;
+      padding: 18px;
+      background: #101926;
+      border-right: 1px solid rgba(255, 255, 255, 0.14);
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 20px;
+    }
+
+    p {
+      margin: 0 0 14px;
+      color: #c7d6df;
+      font-size: 13px;
+      line-height: 1.42;
+    }
+
+    label {
+      display: block;
+      margin: 12px 0 6px;
+      color: #c7d6df;
+      font-size: 13px;
+    }
+
+    select,
+    input {
+      box-sizing: border-box;
+      width: 100%;
+      min-height: 34px;
+      padding: 7px 9px;
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      border-radius: 6px;
+      background: #172235;
+      color: #fff;
+      font: inherit;
+    }
+
+    .checks label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 9px 0;
+    }
+
+    .checks input {
+      width: auto;
+      min-height: auto;
+    }
+
+    #report {
+      margin-top: 14px;
+      padding: 12px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      color: #dcebef;
+      font-size: 12.5px;
+      line-height: 1.45;
+      white-space: pre-wrap;
+    }
+
+    main {
+      min-width: 0;
+      padding: 22px;
+      overflow: auto;
+    }
+
+    canvas {
+      background: #081224;
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.42);
+    }
+  </style>
+</head>
+<body>
+  <aside>
+    <h1>Sprite Sheet Audit</h1>
+    <p>Loads the actual PNG sheets from the Android project and numbers every frame for artifact reports.</p>
+
+    <label for="sheet">Sprite sheet</label>
+    <select id="sheet">
+      <option value="../app/src/main/res/drawable-nodpi/sheet_player_run_headless.png,6">Runner body sheet</option>
+      <option value="../app/src/main/res/drawable-nodpi/sheet_dad_run.png,6">Dad runner sheet</option>
+      <option value="../app/src/main/res/drawable-nodpi/sheet_mom_run.png,6">Mom runner sheet</option>
+      <option value="../app/src/main/res/drawable-nodpi/sheet_polar_bear_walk.png,6">Polar bear walk sheet</option>
+      <option value="../app/src/main/res/drawable-nodpi/sheet_bear_walk.png,6">Bear walk sheet</option>
+      <option value="../app/src/main/res/drawable-nodpi/sheet_wolf_run.png,6">Wolf run sheet</option>
+      <option value="../app/src/main/res/drawable-nodpi/sheet_salmon_swim.png,6">Salmon swim sheet</option>
+      <option value="../app/src/main/res/drawable-nodpi/sheet_eagle_fly.png,6">Eagle fly sheet</option>
+      <option value="../app/src/main/res/drawable-nodpi/sprite_polar_bear_roar.png,1">Polar bear roar sprite</option>
+      <option value="../app/src/main/res/drawable-nodpi/sprite_bear_roar.png,1">Bear roar sprite</option>
+    </select>
+
+    <label for="zoom">Zoom: <span id="zoomLabel">2.0</span>x</label>
+    <input id="zoom" type="range" min="1" max="5" step="0.25" value="2">
+
+    <label for="trim">Trim inset: <span id="trimLabel">8</span> px</label>
+    <input id="trim" type="range" min="0" max="40" step="1" value="8">
+
+    <div class="checks">
+      <label><input id="checker" type="checkbox" checked> Transparency checkerboard</label>
+      <label><input id="frames" type="checkbox" checked> Frame boxes</label>
+      <label><input id="trimBox" type="checkbox" checked> Trim boxes</label>
+      <label><input id="badges" type="checkbox" checked> Numbered frame badges</label>
+    </div>
+
+    <div id="report"></div>
+  </aside>
+
+  <main>
+    <canvas id="preview" width="1280" height="720"></canvas>
+  </main>
+
+  <script>
+    const canvas = document.getElementById("preview");
+    const ctx = canvas.getContext("2d");
+    const ui = {
+      sheet: document.getElementById("sheet"),
+      zoom: document.getElementById("zoom"),
+      zoomLabel: document.getElementById("zoomLabel"),
+      trim: document.getElementById("trim"),
+      trimLabel: document.getElementById("trimLabel"),
+      checker: document.getElementById("checker"),
+      frames: document.getElementById("frames"),
+      trimBox: document.getElementById("trimBox"),
+      badges: document.getElementById("badges"),
+      report: document.getElementById("report")
+    };
+
+    const image = new Image();
+
+    function loadSheet() {
+      image.src = ui.sheet.value.split(",")[0];
+    }
+
+    function drawChecker(x, y, w, h, size) {
+      if (!ui.checker.checked) return;
+      for (let yy = y; yy < y + h; yy += size) {
+        for (let xx = x; xx < x + w; xx += size) {
+          const even = ((xx - x) / size + (yy - y) / size) % 2 === 0;
+          ctx.fillStyle = even ? "#2c3542" : "#182231";
+          ctx.fillRect(xx, yy, size, size);
+        }
+      }
+    }
+
+    function roundedRect(x, y, w, h, r, fill, stroke) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+      ctx.closePath();
+      if (fill) ctx.fill();
+      if (stroke) ctx.stroke();
+    }
+
+    function render() {
+      const zoom = Number(ui.zoom.value);
+      const trim = Number(ui.trim.value);
+      const parts = ui.sheet.value.split(",");
+      const frames = Number(parts[1]);
+      ui.zoomLabel.textContent = zoom.toFixed(2);
+      ui.trimLabel.textContent = String(trim);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "#081224";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      if (!image.complete || image.naturalWidth <= 0) {
+        ctx.fillStyle = "#fff6cf";
+        ctx.font = "700 18px Arial";
+        ctx.fillText("Loading sprite sheet...", 28, 42);
+        requestAnimationFrame(render);
+        return;
+      }
+
+      const frameW = image.naturalWidth / frames;
+      const frameH = image.naturalHeight;
+      const viewW = frameW * zoom;
+      const viewH = frameH * zoom;
+      const gap = 24;
+      const columns = Math.max(1, Math.floor((canvas.width - 40) / (viewW + gap)));
+      const rows = Math.ceil(frames / columns);
+      canvas.height = Math.max(720, 70 + rows * (viewH + 56));
+
+      for (let i = 0; i < frames; i++) {
+        const col = i % columns;
+        const row = Math.floor(i / columns);
+        const x = 24 + col * (viewW + gap);
+        const y = 54 + row * (viewH + 56);
+        drawChecker(x, y, viewW, viewH, 12);
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(image, i * frameW, 0, frameW, frameH, x, y, viewW, viewH);
+        if (ui.frames.checked) {
+          ctx.strokeStyle = "#ffda79";
+          ctx.lineWidth = 2;
+          ctx.strokeRect(x, y, viewW, viewH);
+        }
+        if (ui.trimBox.checked && trim > 0) {
+          ctx.strokeStyle = "#ff6254";
+          ctx.setLineDash([7, 5]);
+          ctx.strokeRect(x + trim * zoom, y + trim * zoom, viewW - trim * 2 * zoom, viewH - trim * 2 * zoom);
+          ctx.setLineDash([]);
+        }
+        if (ui.badges.checked) {
+          const label = "F" + (i + 1);
+          ctx.font = "700 14px Arial";
+          const badgeW = Math.max(34, ctx.measureText(label).width + 14);
+          ctx.fillStyle = "rgba(8,18,30,0.9)";
+          roundedRect(x, y - 32, badgeW, 24, 7, true, false);
+          ctx.strokeStyle = "#ff6254";
+          ctx.stroke();
+          ctx.fillStyle = "#fff6cf";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(label, x + badgeW / 2, y - 20);
+        }
+      }
+
+      ui.report.textContent =
+        "Report format:\n" +
+        "- F3 has foot artifact on lower right.\n" +
+        "- F5 trim box cuts too close to antler/ear.\n" +
+        "- Whole sheet has colored fringe on checkerboard.\n\n" +
+        "Current sheet:\n" +
+        parts[0].replace("../app/src/main/res/drawable-nodpi/", "") +
+        "\nFrames: " + frames +
+        "\nFrame size: " + Math.round(frameW) + " x " + Math.round(frameH) +
+        "\nTrim inset preview: " + trim + " px";
+
+      requestAnimationFrame(render);
+    }
+
+    ui.sheet.addEventListener("change", loadSheet);
+    image.addEventListener("load", render);
+    loadSheet();
+    requestAnimationFrame(render);
+  </script>
+</body>
+</html>

@@ -1,0 +1,534 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>You Rush Gear + Obstacle Debug Preview</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #081224;
+      color: #f7fbff;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 340px 1fr;
+    }
+
+    aside {
+      box-sizing: border-box;
+      max-height: 100vh;
+      overflow: auto;
+      padding: 18px;
+      background: #101926;
+      border-right: 1px solid rgba(255, 255, 255, 0.14);
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 20px;
+    }
+
+    p {
+      margin: 0 0 14px;
+      color: #c7d6df;
+      font-size: 13px;
+      line-height: 1.42;
+    }
+
+    label {
+      display: block;
+      margin: 12px 0 6px;
+      color: #c7d6df;
+      font-size: 13px;
+    }
+
+    select,
+    input,
+    button {
+      box-sizing: border-box;
+      width: 100%;
+      min-height: 34px;
+      padding: 7px 9px;
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      border-radius: 6px;
+      background: #172235;
+      color: #fff;
+      font: inherit;
+    }
+
+    button {
+      margin-top: 10px;
+      cursor: pointer;
+      background: #ffda79;
+      color: #18202a;
+      font-weight: 700;
+    }
+
+    .checks label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 9px 0;
+    }
+
+    .checks input {
+      width: auto;
+      min-height: auto;
+    }
+
+    #report {
+      margin-top: 14px;
+      padding: 12px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      color: #dcebef;
+      font-size: 12.5px;
+      line-height: 1.45;
+      white-space: pre-wrap;
+    }
+
+    main {
+      display: grid;
+      place-items: center;
+      min-width: 0;
+      padding: 22px;
+      overflow: auto;
+    }
+
+    canvas {
+      max-width: 100%;
+      max-height: calc(100vh - 44px);
+      background: #081224;
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.42);
+    }
+
+    @media (max-width: 920px) {
+      body {
+        grid-template-columns: 1fr;
+      }
+
+      aside {
+        max-height: none;
+        border-right: 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+      }
+    }
+  </style>
+</head>
+<body>
+  <aside>
+    <h1>Gear + Obstacles</h1>
+    <p>Debug canvas for checking log, snow pile, iceberg, snowball, and bear spray readability before touching the Android build.</p>
+
+    <label for="scene">Scene</label>
+    <select id="scene">
+      <option value="salmon">Salmon Rush: snowballs blow up logs</option>
+      <option value="winter">Dark Winter: icebergs</option>
+      <option value="bear">Bear Country: snow piles + bear spray</option>
+      <option value="all">All sprites side by side</option>
+    </select>
+
+    <label for="density">Density scale: <span id="densityLabel">2.4</span></label>
+    <input id="density" type="range" min="1" max="4" step="0.1" value="2.4">
+
+    <label for="scale">Sprite scale: <span id="scaleLabel">1.0</span>x</label>
+    <input id="scale" type="range" min="0.65" max="1.6" step="0.05" value="1">
+
+    <label for="speed">Animation speed: <span id="speedLabel">1.0</span>x</label>
+    <input id="speed" type="range" min="0" max="2" step="0.1" value="1">
+
+    <div class="checks">
+      <label><input id="debug" type="checkbox" checked> Numbered debug badges</label>
+      <label><input id="hitboxes" type="checkbox" checked> Hitboxes and blast radii</label>
+      <label><input id="grid" type="checkbox" checked> Numbered grid</label>
+      <label><input id="labels" type="checkbox" checked> Gameplay labels</label>
+    </div>
+
+    <button id="snapshot">Pause / resume</button>
+    <div id="report"></div>
+  </aside>
+
+  <main>
+    <canvas id="preview" width="1280" height="720"></canvas>
+  </main>
+
+  <script>
+    const canvas = document.getElementById("preview");
+    const ctx = canvas.getContext("2d");
+    const ui = {
+      scene: document.getElementById("scene"),
+      density: document.getElementById("density"),
+      densityLabel: document.getElementById("densityLabel"),
+      scale: document.getElementById("scale"),
+      scaleLabel: document.getElementById("scaleLabel"),
+      speed: document.getElementById("speed"),
+      speedLabel: document.getElementById("speedLabel"),
+      debug: document.getElementById("debug"),
+      hitboxes: document.getElementById("hitboxes"),
+      grid: document.getElementById("grid"),
+      labels: document.getElementById("labels"),
+      snapshot: document.getElementById("snapshot"),
+      report: document.getElementById("report")
+    };
+
+    let paused = false;
+    let time = 0;
+    let last = performance.now();
+    const debugItems = [];
+
+    function dp(value) {
+      return value * Number(ui.density.value);
+    }
+
+    function roundedRect(x, y, w, h, r, fill, stroke) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+      ctx.closePath();
+      if (fill) ctx.fill();
+      if (stroke) ctx.stroke();
+    }
+
+    function drawBackground() {
+      const sky = ctx.createLinearGradient(0, 0, 0, canvas.height);
+      sky.addColorStop(0, "#0a1830");
+      sky.addColorStop(0.58, "#17395a");
+      sky.addColorStop(1, "#dcebef");
+      ctx.fillStyle = sky;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "rgba(93, 225, 201, 0.18)";
+      for (let i = 0; i < 9; i++) {
+        const x = i * 180 - 90 + Math.sin(time + i) * 18;
+        ctx.beginPath();
+        ctx.ellipse(x, 146 + Math.sin(i) * 20, 110, 24, -0.2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.fillStyle = "#203f64";
+      mountain(0, 474, 208, 210, 410, 474);
+      mountain(280, 474, 556, 172, 850, 474);
+      mountain(760, 474, 980, 232, 1280, 474);
+      ctx.fillStyle = "#eaf5f8";
+      ctx.fillRect(0, 506, canvas.width, 214);
+      ctx.strokeStyle = "rgba(89, 181, 207, 0.24)";
+      ctx.lineWidth = 5;
+      for (let x = -80; x < canvas.width; x += 116) {
+        ctx.beginPath();
+        ctx.moveTo(x + (time * 36) % 116, 602);
+        ctx.lineTo(x + 52 + (time * 36) % 116, 602);
+        ctx.stroke();
+      }
+    }
+
+    function mountain(x1, y1, x2, y2, x3, y3) {
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.lineTo(x3, y3);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    function drawGrid() {
+      if (!ui.grid.checked) return;
+      ctx.save();
+      ctx.font = "11px Arial";
+      ctx.lineWidth = 1;
+      for (let x = 0; x <= canvas.width; x += 80) {
+        ctx.strokeStyle = x % 240 === 0 ? "rgba(255,218,121,0.26)" : "rgba(255,255,255,0.1)";
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, canvas.height);
+        ctx.stroke();
+        ctx.fillStyle = "rgba(255,246,207,0.72)";
+        ctx.fillText(String(x), x + 4, 16);
+      }
+      for (let y = 0; y <= canvas.height; y += 80) {
+        ctx.strokeStyle = y % 240 === 0 ? "rgba(255,218,121,0.26)" : "rgba(255,255,255,0.1)";
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(canvas.width, y);
+        ctx.stroke();
+        ctx.fillStyle = "rgba(255,246,207,0.72)";
+        ctx.fillText(String(y), 4, y + 14);
+      }
+      ctx.restore();
+    }
+
+    function drawLog(x, y, scale, id) {
+      const w = 138 * scale;
+      const h = 44 * scale;
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(Math.sin(time * 1.7 + id) * 0.03);
+      ctx.fillStyle = "rgba(0,0,0,0.22)";
+      ctx.beginPath();
+      ctx.ellipse(0, h * 0.72, w * 0.44, h * 0.18, 0, 0, Math.PI * 2);
+      ctx.fill();
+      const body = ctx.createLinearGradient(-w / 2, -h / 2, w / 2, h / 2);
+      body.addColorStop(0, "#6a4328");
+      body.addColorStop(0.45, "#9a6336");
+      body.addColorStop(1, "#4e2d1c");
+      ctx.fillStyle = body;
+      roundedRect(-w / 2, -h / 2, w, h, h / 2, true, false);
+      ctx.strokeStyle = "#2d1a13";
+      ctx.lineWidth = 4 * scale;
+      ctx.stroke();
+      ctx.strokeStyle = "rgba(255,246,207,0.24)";
+      ctx.lineWidth = 2 * scale;
+      for (let i = -2; i <= 2; i++) {
+        ctx.beginPath();
+        ctx.moveTo(-w * 0.32 + i * w * 0.15, -h * 0.34);
+        ctx.lineTo(-w * 0.22 + i * w * 0.15, h * 0.34);
+        ctx.stroke();
+      }
+      ctx.fillStyle = "#d49a58";
+      ctx.beginPath();
+      ctx.ellipse(-w / 2 + h * 0.5, 0, h * 0.34, h * 0.38, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#5c351f";
+      ctx.stroke();
+      ctx.restore();
+      register(id, "G", "river log", x, y - h / 2, w, h);
+    }
+
+    function drawSnowbank(x, y, scale, id) {
+      const w = 120 * scale;
+      const h = 72 * scale;
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.fillStyle = "rgba(0,0,0,0.17)";
+      ctx.beginPath();
+      ctx.ellipse(0, h * 0.56, w * 0.48, h * 0.16, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#f7fbff";
+      ctx.strokeStyle = "#98bed0";
+      ctx.lineWidth = 3 * scale;
+      ctx.beginPath();
+      ctx.moveTo(-w / 2, h * 0.28);
+      ctx.bezierCurveTo(-w * 0.42, -h * 0.22, -w * 0.18, -h * 0.38, 0, -h * 0.18);
+      ctx.bezierCurveTo(w * 0.16, -h * 0.48, w * 0.46, -h * 0.24, w / 2, h * 0.28);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.strokeStyle = "rgba(89,181,207,0.32)";
+      ctx.beginPath();
+      ctx.moveTo(-w * 0.32, h * 0.08);
+      ctx.quadraticCurveTo(-w * 0.08, -h * 0.08, w * 0.2, h * 0.05);
+      ctx.stroke();
+      ctx.restore();
+      register(id, "G", "snow pile", x, y - h * 0.3, w, h * 0.78);
+    }
+
+    function drawIceberg(x, y, scale, id) {
+      const w = 112 * scale;
+      const h = 96 * scale;
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.fillStyle = "rgba(0,0,0,0.18)";
+      ctx.beginPath();
+      ctx.ellipse(0, h * 0.5, w * 0.46, h * 0.13, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#dff9ff";
+      ctx.strokeStyle = "#5ab5cf";
+      ctx.lineWidth = 3 * scale;
+      ctx.beginPath();
+      ctx.moveTo(-w * 0.48, h * 0.34);
+      ctx.lineTo(-w * 0.24, -h * 0.1);
+      ctx.lineTo(-w * 0.08, h * 0.08);
+      ctx.lineTo(w * 0.1, -h * 0.48);
+      ctx.lineTo(w * 0.46, h * 0.34);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.strokeStyle = "rgba(23,75,112,0.32)";
+      ctx.beginPath();
+      ctx.moveTo(w * 0.1, -h * 0.44);
+      ctx.lineTo(w * 0.04, h * 0.28);
+      ctx.moveTo(-w * 0.24, -h * 0.1);
+      ctx.lineTo(-w * 0.14, h * 0.24);
+      ctx.stroke();
+      ctx.restore();
+      register(id, "G", "iceberg", x, y - h * 0.46, w, h * 0.82);
+    }
+
+    function drawRunner(x, y) {
+      ctx.save();
+      ctx.lineWidth = 5;
+      ctx.strokeStyle = "#1f2226";
+      ctx.fillStyle = "#3486c4";
+      roundedRect(x - 20, y - 52, 40, 58, 9, true, true);
+      ctx.fillStyle = "#ffb146";
+      ctx.beginPath();
+      ctx.arc(x, y - 76, 22, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.strokeStyle = "#1f2226";
+      ctx.lineWidth = 6;
+      ctx.beginPath();
+      ctx.moveTo(x + 16, y - 36);
+      ctx.lineTo(x + 48, y - 52);
+      ctx.moveTo(x - 14, y + 4);
+      ctx.lineTo(x - 34, y + 38);
+      ctx.moveTo(x + 12, y + 4);
+      ctx.lineTo(x + 34, y + 38);
+      ctx.stroke();
+      ctx.restore();
+      register(1, "P", "runner hand", x + 48, y - 52, 22, 22);
+      return { handX: x + 48, handY: y - 52 };
+    }
+
+    function drawSnowball(x, y, targetX, targetY, id) {
+      ctx.save();
+      ctx.strokeStyle = "rgba(255,246,207,0.74)";
+      ctx.setLineDash([8, 8]);
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.quadraticCurveTo((x + targetX) / 2, Math.min(y, targetY) - 84, targetX, targetY);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = "#f7fbff";
+      ctx.strokeStyle = "#98bed0";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(targetX - 44 + Math.sin(time * 5) * 18, targetY - 32, 12, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+      register(id, "T", "snowball arc", targetX - 44, targetY - 32, 26, 26);
+    }
+
+    function drawBearSpray(handX, handY, id) {
+      ctx.save();
+      const range = 260;
+      const half = 72 + Math.sin(time * 9) * 8;
+      const cone = ctx.createLinearGradient(handX, handY, handX + range, handY);
+      cone.addColorStop(0, "rgba(255,166,84,0.72)");
+      cone.addColorStop(1, "rgba(255,218,121,0.02)");
+      ctx.fillStyle = cone;
+      ctx.beginPath();
+      ctx.moveTo(handX, handY);
+      ctx.quadraticCurveTo(handX + range * 0.55, handY - half, handX + range, handY - half * 0.45);
+      ctx.lineTo(handX + range, handY + half * 0.45);
+      ctx.quadraticCurveTo(handX + range * 0.55, handY + half, handX, handY);
+      ctx.fill();
+      ctx.strokeStyle = "rgba(255,218,121,0.62)";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.fillStyle = "#ff8f3d";
+      roundedRect(handX - 14, handY - 12, 28, 24, 6, true, true);
+      ctx.restore();
+      register(id, "U", "bear spray cone", handX, handY - half, range, half * 2);
+    }
+
+    function register(id, type, name, cx, cy, w, h) {
+      debugItems.push({ id, type, name, left: cx - w / 2, top: cy - h / 2, right: cx + w / 2, bottom: cy + h / 2, x: cx, y: cy });
+    }
+
+    function drawHitboxes() {
+      if (!ui.hitboxes.checked) return;
+      ctx.save();
+      ctx.lineWidth = 2;
+      for (const item of debugItems) {
+        ctx.strokeStyle = item.type === "T" ? "#fff6cf" : item.type === "U" ? "#ffa654" : "#ff6254";
+        ctx.strokeRect(item.left, item.top, item.right - item.left, item.bottom - item.top);
+      }
+      ctx.restore();
+    }
+
+    function drawDebugBadges() {
+      if (!ui.debug.checked) return;
+      ctx.save();
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.font = "700 14px Arial";
+      for (const item of debugItems) {
+        const label = item.id + item.type;
+        const w = Math.max(34, ctx.measureText(label).width + 12);
+        ctx.fillStyle = "rgba(8,18,30,0.9)";
+        roundedRect(item.x - w / 2, item.top - 32, w, 24, 7, true, false);
+        ctx.strokeStyle = item.type === "U" ? "#ffa654" : "#ff6254";
+        ctx.stroke();
+        ctx.fillStyle = "#fff6cf";
+        ctx.fillText(label, item.x, item.top - 20);
+      }
+      ctx.restore();
+    }
+
+    function drawLabel(text, x, y) {
+      if (!ui.labels.checked) return;
+      ctx.save();
+      ctx.font = "700 18px Arial";
+      ctx.textAlign = "center";
+      ctx.fillStyle = "rgba(8,18,30,0.82)";
+      roundedRect(x - 112, y - 23, 224, 32, 8, true, false);
+      ctx.fillStyle = "#fff6cf";
+      ctx.fillText(text, x, y);
+      ctx.restore();
+    }
+
+    function drawScene() {
+      debugItems.length = 0;
+      drawBackground();
+      const scale = Number(ui.scale.value);
+      const ground = 512;
+      const hand = drawRunner(160, ground);
+      const scene = ui.scene.value;
+      if (scene === "salmon" || scene === "all") {
+        drawLog(520, ground - 24, scale, 1);
+        drawLog(720, ground - 28, scale * 1.08, 2);
+        drawSnowball(hand.handX, hand.handY, 520, ground - 24, 3);
+        drawLabel("Snowballs blow up river logs", 640, 430);
+      }
+      if (scene === "winter" || scene === "all") {
+        drawIceberg(scene === "all" ? 910 : 580, ground - 48, scale, scene === "all" ? 4 : 1);
+        drawIceberg(scene === "all" ? 1080 : 780, ground - 42, scale * 0.92, scene === "all" ? 5 : 2);
+        drawLabel("Icebergs replace ice markers", scene === "all" ? 990 : 680, 430);
+      }
+      if (scene === "bear" || scene === "all") {
+        const offset = scene === "all" ? 0 : -80;
+        drawSnowbank(585 + offset, ground - 34, scale, scene === "all" ? 6 : 1);
+        drawSnowbank(760 + offset, ground - 28, scale * 0.94, scene === "all" ? 7 : 2);
+        drawBearSpray(hand.handX, hand.handY, scene === "all" ? 8 : 3);
+        drawLabel("Hold FIRE: bear spray from hand", 620 + offset, 360);
+      }
+      drawHitboxes();
+      drawDebugBadges();
+      drawGrid();
+    }
+
+    function render(now) {
+      const dt = Math.min(0.033, (now - last) / 1000);
+      last = now;
+      if (!paused) time += dt * Number(ui.speed.value);
+      ui.densityLabel.textContent = Number(ui.density.value).toFixed(1);
+      ui.scaleLabel.textContent = Number(ui.scale.value).toFixed(2);
+      ui.speedLabel.textContent = Number(ui.speed.value).toFixed(1);
+      drawScene();
+      ui.report.textContent =
+        "Confirmed systems:\n" +
+        "- Bear spray exists as SPRAY pickup, charges, hold-FIRE cone, stun, and boss interrupt.\n" +
+        "- River logs are distinct obstacles and snowball targets.\n" +
+        "- Snow piles are Bear Country obstacles.\n" +
+        "- Icebergs are Dark Winter obstacles.\n\n" +
+        "Report format:\n" +
+        debugItems.map((item) => item.id + item.type + " = " + item.name + " @ x=" + Math.round(item.x) + ", y=" + Math.round(item.y)).join("\n");
+      requestAnimationFrame(render);
+    }
+
+    ui.snapshot.addEventListener("click", () => {
+      paused = !paused;
+    });
+
+    requestAnimationFrame(render);
+  </script>
+</body>
+</html>
