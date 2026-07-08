@@ -1,0 +1,478 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>You Rush Menu Layout Preview</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #09121f;
+      color: #f5f7fb;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 320px 1fr;
+    }
+
+    aside {
+      padding: 18px;
+      background: #101926;
+      border-right: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    h1 {
+      margin: 0 0 14px;
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    label {
+      display: block;
+      margin: 14px 0 6px;
+      color: #c7d6df;
+      font-size: 13px;
+    }
+
+    select,
+    input,
+    button {
+      width: 100%;
+      box-sizing: border-box;
+      min-height: 34px;
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      border-radius: 6px;
+      background: #172235;
+      color: #fff;
+      padding: 7px 9px;
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+      background: #ffda79;
+      color: #18202a;
+      font-weight: 700;
+    }
+
+    .pair {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .checks label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 10px 0;
+    }
+
+    .checks input {
+      width: auto;
+      min-height: auto;
+    }
+
+    #report {
+      margin-top: 16px;
+      padding: 12px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      color: #d7e8ef;
+      font-size: 13px;
+      line-height: 1.45;
+      white-space: pre-wrap;
+    }
+
+    main {
+      display: grid;
+      place-items: center;
+      min-width: 0;
+      padding: 22px;
+      overflow: auto;
+    }
+
+    canvas {
+      max-width: 100%;
+      max-height: calc(100vh - 44px);
+      background: #081224;
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.42);
+    }
+  </style>
+</head>
+<body>
+  <aside>
+    <h1>Menu Layout Preview</h1>
+
+    <label for="preset">Device preset</label>
+    <select id="preset">
+      <option value="2048,931,2.4">Screenshot wide landscape</option>
+      <option value="2340,1080,2.4">Android landscape 1080p</option>
+      <option value="2400,1080,2.4">Pixel landscape</option>
+      <option value="1920,1080,2.5">Tablet landscape</option>
+      <option value="1080,2340,2.4">Pixel portrait</option>
+      <option value="720,1280,2">Small portrait</option>
+    </select>
+
+    <div class="pair">
+      <div>
+        <label for="width">Width px</label>
+        <input id="width" type="number" min="320" value="2048">
+      </div>
+      <div>
+        <label for="height">Height px</label>
+        <input id="height" type="number" min="320" value="931">
+      </div>
+    </div>
+
+    <label for="density">Preview density: <span id="densityLabel">2.4</span></label>
+    <input id="density" type="range" min="1" max="4" step="0.1" value="2.4">
+
+    <div class="checks">
+      <label><input id="showBounds" type="checkbox" checked> Show bounds</label>
+      <label><input id="showOld" type="checkbox"> Show old problem layout</label>
+    </div>
+
+    <button id="swap">Swap orientation</button>
+    <div id="report"></div>
+  </aside>
+
+  <main>
+    <canvas id="preview" width="2048" height="931"></canvas>
+  </main>
+
+  <script>
+    const canvas = document.getElementById("preview");
+    const ctx = canvas.getContext("2d");
+    const bg = new Image();
+    bg.src = "../app/src/main/res/drawable-nodpi/background_dark_winter_art.png";
+
+    const ui = {
+      preset: document.getElementById("preset"),
+      width: document.getElementById("width"),
+      height: document.getElementById("height"),
+      density: document.getElementById("density"),
+      densityLabel: document.getElementById("densityLabel"),
+      showBounds: document.getElementById("showBounds"),
+      showOld: document.getElementById("showOld"),
+      swap: document.getElementById("swap"),
+      report: document.getElementById("report")
+    };
+
+    const state = {
+      bestScore: 3638,
+      trailTokens: 551,
+      expeditionLogs: 54,
+      missions: 18,
+      unlockedStage: 4,
+      stages: 5,
+      outfits: 4,
+      outfitCount: 8,
+      badges: 9,
+      badgeCount: 10,
+      stageName: "Bear Country"
+    };
+
+    function dp(value) {
+      return value * Number(ui.density.value);
+    }
+
+    function rect(cx, cy, w, h, name) {
+      return { left: cx - w / 2, top: cy - h / 2, right: cx + w / 2, bottom: cy + h / 2, name };
+    }
+
+    function isLandscape() {
+      return canvas.width > canvas.height;
+    }
+
+    function applyPreset() {
+      const [w, h, d] = ui.preset.value.split(",").map(Number);
+      ui.width.value = w;
+      ui.height.value = h;
+      ui.density.value = d;
+      draw();
+    }
+
+    function layoutNew() {
+      const w = canvas.width;
+      const h = canvas.height;
+      const landscape = isLandscape();
+      const x = landscape ? w * 0.68 : w / 2;
+      const y = landscape ? Math.max(dp(96), h * 0.31) : h * 0.53;
+      const statsTop = h - (landscape ? dp(42) : dp(58));
+      const boxes = {};
+
+      if (landscape) {
+        const wideButtonWidth = dp(230);
+        const mainButtonHeight = dp(38);
+        const dailyHeight = dp(34);
+        const gap = dp(10);
+        const smallButtonHeight = dp(30);
+        let dailyY = y;
+        let primaryY = dailyY + dailyHeight / 2 + gap + mainButtonHeight / 2;
+        let secondaryY = primaryY + mainButtonHeight + gap;
+        let thirdY = secondaryY + mainButtonHeight + gap;
+        const maxThirdY = statsTop - dp(8) - mainButtonHeight / 2;
+
+        if (thirdY > maxThirdY) {
+          const shift = thirdY - maxThirdY;
+          dailyY -= shift;
+          primaryY -= shift;
+          secondaryY -= shift;
+          thirdY -= shift;
+        }
+
+        boxes.daily = rect(x, dailyY, wideButtonWidth, dailyHeight, "Daily Rush");
+        boxes.primary = rect(x, primaryY, wideButtonWidth, mainButtonHeight, "Play");
+        boxes.secondary = rect(x, secondaryY, wideButtonWidth, mainButtonHeight, "Create/Edit");
+        boxes.third = rect(x, thirdY, wideButtonWidth, mainButtonHeight, "Map");
+        boxes.debug = rect(w - dp(165), statsTop + dp(21), dp(98), smallButtonHeight, "Debug");
+        boxes.audio = rect(w - dp(60), statsTop + dp(21), dp(98), smallButtonHeight, "Audio");
+      } else {
+        boxes.primary = rect(x, y, dp(230), dp(44), "Play");
+        boxes.secondary = rect(x, y + dp(54), dp(230), dp(44), "Create/Edit");
+        boxes.third = rect(x, y + dp(108), dp(230), dp(44), "Map");
+        boxes.daily = rect(x, y - dp(58), dp(230), dp(42), "Daily Rush");
+        boxes.debug = rect(x - dp(58), y + dp(160), dp(104), dp(36), "Debug");
+        boxes.audio = rect(x + dp(58), y + dp(160), dp(104), dp(36), "Audio");
+      }
+
+      boxes.brand = { left: 0, top: 0, right: w, bottom: landscape ? dp(76) : dp(112), name: "Top brand" };
+      boxes.stats = { left: 0, top: statsTop, right: w, bottom: h, name: "Stats strip" };
+      boxes.avatar = rect(landscape ? w * 0.28 : w / 2, landscape ? h * 0.45 : h * 0.33, landscape ? dp(92) : dp(102), landscape ? dp(126) : dp(134), "Avatar");
+      return boxes;
+    }
+
+    function layoutOld() {
+      const w = canvas.width;
+      const h = canvas.height;
+      const x = isLandscape() ? w * 0.68 : w / 2;
+      const y = isLandscape() ? h * 0.34 : h * 0.53;
+      return {
+        brand: { left: 0, top: 0, right: w, bottom: isLandscape() ? dp(76) : dp(112), name: "Top brand" },
+        primary: rect(x, y, dp(230), dp(44), "Play"),
+        secondary: rect(x, y + dp(54), dp(230), dp(44), "Create/Edit"),
+        third: rect(x, y + dp(108), dp(230), dp(44), "Map"),
+        daily: rect(x, y - dp(58), dp(230), dp(42), "Daily Rush"),
+        debug: rect(x - dp(58), y + dp(160), dp(104), dp(36), "Debug"),
+        audio: rect(x + dp(58), y + dp(160), dp(104), dp(36), "Audio"),
+        statsText: rect(w / 2, h - dp(45), dp(470), dp(28), "Stats text")
+      };
+    }
+
+    function overlaps(a, b) {
+      return a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
+    }
+
+    function drawBackground() {
+      if (bg.complete && bg.naturalWidth > 0) {
+        ctx.drawImage(bg, 0, 0, canvas.width, canvas.height);
+      } else {
+        const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+        gradient.addColorStop(0, "#071021");
+        gradient.addColorStop(0.45, "#0c4780");
+        gradient.addColorStop(1, "#7da7d6");
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
+    }
+
+    function roundRect(box, radius) {
+      const width = box.right - box.left;
+      const height = box.bottom - box.top;
+      ctx.beginPath();
+      ctx.roundRect(box.left, box.top, width, height, radius);
+      ctx.fill();
+      ctx.stroke();
+    }
+
+    function centerText(text, x, y, size, color) {
+      ctx.font = `${size}px Arial, Helvetica, sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = color;
+      ctx.fillText(text, x, y);
+    }
+
+    function drawTopBrand(boxes) {
+      const brand = boxes.brand;
+      const landscape = isLandscape();
+      ctx.fillStyle = "rgba(0, 0, 0, 0.75)";
+      ctx.fillRect(0, 0, canvas.width, brand.bottom);
+      centerText("TRIPPERDEE LABS · ALASKA PASSPORT v3.27 BETA", canvas.width / 2, landscape ? dp(18) : dp(25), landscape ? dp(8.5) : dp(9.5), "#ffda79");
+      centerText("YOU RUSH: ALASKA", canvas.width / 2, landscape ? dp(45) : dp(61), landscape ? dp(20) : dp(26), "#fff");
+      centerText("Upload your face. Beat local chaos.", canvas.width / 2, landscape ? dp(65) : dp(88), landscape ? dp(11) : dp(13), "#d2e8ee");
+    }
+
+    function drawAvatar(box) {
+      const cx = (box.left + box.right) / 2;
+      const cy = (box.top + box.bottom) / 2;
+      ctx.strokeStyle = "rgba(24, 30, 38, 0.95)";
+      ctx.fillStyle = "#c7432f";
+      ctx.lineWidth = dp(2);
+      ctx.fillRect(cx - dp(17), cy + dp(15), dp(34), dp(52));
+      ctx.fillStyle = "#ffc552";
+      ctx.beginPath();
+      ctx.roundRect(cx - dp(26), cy - dp(55), dp(52), dp(52), dp(8));
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = "#765031";
+      ctx.beginPath();
+      ctx.roundRect(cx - dp(24), cy - dp(54), dp(48), dp(15), dp(7));
+      ctx.fill();
+      ctx.fillStyle = "#1f2430";
+      ctx.beginPath();
+      ctx.arc(cx - dp(10), cy - dp(30), dp(3), 0, Math.PI * 2);
+      ctx.arc(cx + dp(10), cy - dp(30), dp(3), 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillRect(cx - dp(10), cy - dp(18), dp(20), dp(3));
+    }
+
+    function drawButton(box, label, small) {
+      ctx.lineWidth = small ? dp(1.2) : dp(1.6);
+      ctx.strokeStyle = small ? "rgba(210, 232, 238, 0.86)" : "#523912";
+      ctx.fillStyle = small ? "rgba(10, 18, 29, 0.97)" : "#ffda79";
+      roundRect(box, small ? dp(12) : dp(15));
+      centerText(label, (box.left + box.right) / 2, (box.top + box.bottom) / 2 + (small ? dp(1) : dp(1.5)), small ? dp(12) : dp(13), small ? "#fff" : "#181e26");
+    }
+
+    function drawDaily(box) {
+      ctx.lineWidth = dp(1.5);
+      ctx.strokeStyle = "rgba(255, 246, 207, 0.86)";
+      ctx.fillStyle = "rgba(13, 42, 39, 0.96)";
+      roundRect(box, dp(13));
+      centerText("DAILY RUSH", (box.left + box.right) / 2, box.top + (isLandscape() ? dp(12) : dp(15)), isLandscape() ? dp(8.5) : dp(9), "#d2e8ee");
+      centerText("Complete · streak 2", (box.left + box.right) / 2, box.top + (isLandscape() ? dp(26) : dp(31)), isLandscape() ? dp(10) : dp(10.5), "#fff");
+    }
+
+    function drawStats(boxes) {
+      const stats = boxes.stats;
+      const landscape = isLandscape();
+      ctx.fillStyle = `rgba(0, 0, 0, ${landscape ? 0.75 : 0.70})`;
+      ctx.fillRect(0, stats.top, canvas.width, stats.bottom - stats.top);
+      const x = landscape ? canvas.width * 0.36 : canvas.width / 2;
+      centerText(`Best ${state.bestScore}   Tokens ${state.trailTokens}   Logs ${state.expeditionLogs}   Missions ${state.missions}`, x, stats.top + (landscape ? dp(16) : dp(18)), landscape ? dp(10.5) : dp(13), "#fff");
+      centerText(`Stages ${state.unlockedStage + 1}/${state.stages}   Outfits ${state.outfits}/${state.outfitCount}   Badges ${state.badges}/${state.badgeCount}`, x, stats.top + (landscape ? dp(33) : dp(42)), landscape ? dp(9.5) : dp(11), "#dcebef");
+    }
+
+    function drawBounds(boxes, color) {
+      ctx.save();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = color;
+      ctx.fillStyle = color;
+      ctx.font = "13px Arial, Helvetica, sans-serif";
+      ctx.textAlign = "left";
+      Object.values(boxes).forEach((box) => {
+        ctx.strokeRect(box.left, box.top, box.right - box.left, box.bottom - box.top);
+        ctx.fillText(box.name, box.left + 5, box.top + 15);
+      });
+      ctx.restore();
+    }
+
+    function hexToRgb(hex) {
+      const clean = hex.replace("#", "");
+      const value = Number.parseInt(clean, 16);
+      return [(value >> 16) & 255, (value >> 8) & 255, value & 255];
+    }
+
+    function channel(value) {
+      const normalized = value / 255;
+      return normalized <= 0.03928 ? normalized / 12.92 : Math.pow((normalized + 0.055) / 1.055, 2.4);
+    }
+
+    function luminance(hex) {
+      const [r, g, b] = hexToRgb(hex).map(channel);
+      return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    }
+
+    function contrast(foreground, background) {
+      const a = luminance(foreground);
+      const b = luminance(background);
+      return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+    }
+
+    function contrastReport() {
+      const checks = [
+        ["Title", "#ffffff", "#000000"],
+        ["Brand gold", "#ffda79", "#000000"],
+        ["Subtitle", "#d2e8ee", "#000000"],
+        ["Primary buttons", "#181e26", "#ffda79"],
+        ["Daily complete", "#ffffff", "#0d2a27"],
+        ["Daily label", "#d2e8ee", "#0d2a27"],
+        ["Stats", "#ffffff", "#000000"],
+        ["Secondary stats", "#dcebef", "#000000"],
+        ["Debug/audio", "#ffffff", "#0a121d"]
+      ];
+      return checks.map(([label, fg, bg]) => {
+        const ratio = contrast(fg, bg);
+        return `${label}: ${ratio.toFixed(1)}:1 ${ratio >= 4.5 ? "PASS" : "CHECK"}`;
+      });
+    }
+
+    function report(boxes) {
+      const keys = Object.keys(boxes);
+      const hits = [];
+      for (let i = 0; i < keys.length; i += 1) {
+        for (let j = i + 1; j < keys.length; j += 1) {
+          const a = boxes[keys[i]];
+          const b = boxes[keys[j]];
+          if (overlaps(a, b)) {
+            const allowed = (a.name === "Stats strip" && (b.name === "Debug" || b.name === "Audio"))
+              || (b.name === "Stats strip" && (a.name === "Debug" || a.name === "Audio"));
+            if (!allowed) {
+              hits.push(`${a.name} overlaps ${b.name}`);
+            }
+          }
+        }
+      }
+      const layoutText = hits.length === 0
+        ? `OK: no unexpected overlaps\n${canvas.width}x${canvas.height}, density ${Number(ui.density.value).toFixed(1)}`
+        : `Overlap warnings:\n${hits.join("\n")}`;
+      ui.report.textContent = `${layoutText}\n\nContrast checks:\n${contrastReport().join("\n")}`;
+    }
+
+    function draw() {
+      const width = Math.max(320, Number(ui.width.value) || 2048);
+      const height = Math.max(320, Number(ui.height.value) || 931);
+      canvas.width = width;
+      canvas.height = height;
+      ui.densityLabel.textContent = Number(ui.density.value).toFixed(1);
+
+      drawBackground();
+      const boxes = layoutNew();
+      drawTopBrand(boxes);
+      drawAvatar(boxes.avatar);
+      drawDaily(boxes.daily);
+      drawButton(boxes.primary, `Play ${state.stageName}`, false);
+      drawButton(boxes.secondary, "Create Your Sprite", false);
+      drawButton(boxes.third, "ALASKA MAP", false);
+      drawStats(boxes);
+      drawButton(boxes.debug, "DEBUG: OFF", true);
+      drawButton(boxes.audio, "AUDIO", true);
+
+      if (ui.showOld.checked) {
+        drawBounds(layoutOld(), "rgba(255, 80, 80, 0.92)");
+      }
+      if (ui.showBounds.checked) {
+        drawBounds(boxes, "rgba(83, 219, 184, 0.9)");
+      }
+      report(boxes);
+    }
+
+    ui.preset.addEventListener("change", applyPreset);
+    [ui.width, ui.height, ui.density, ui.showBounds, ui.showOld].forEach((el) => el.addEventListener("input", draw));
+    ui.swap.addEventListener("click", () => {
+      const oldWidth = ui.width.value;
+      ui.width.value = ui.height.value;
+      ui.height.value = oldWidth;
+      draw();
+    });
+    bg.addEventListener("load", draw);
+    applyPreset();
+  </script>
+</body>
+</html>

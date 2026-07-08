@@ -1,0 +1,709 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>You Rush Gameplay Preview</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #081224;
+      color: #f7fbff;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 330px 1fr;
+    }
+
+    aside {
+      padding: 18px;
+      background: #101926;
+      border-right: 1px solid rgba(255, 255, 255, 0.14);
+      overflow: auto;
+      max-height: 100vh;
+      box-sizing: border-box;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 20px;
+    }
+
+    p {
+      margin: 0 0 14px;
+      color: #c7d6df;
+      font-size: 13px;
+      line-height: 1.42;
+    }
+
+    label {
+      display: block;
+      margin: 12px 0 6px;
+      color: #c7d6df;
+      font-size: 13px;
+    }
+
+    select,
+    input,
+    button {
+      width: 100%;
+      box-sizing: border-box;
+      min-height: 34px;
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      border-radius: 6px;
+      background: #172235;
+      color: #fff;
+      padding: 7px 9px;
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+      background: #ffda79;
+      color: #18202a;
+      font-weight: 700;
+    }
+
+    .pair {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .checks label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 9px 0;
+    }
+
+    .checks input {
+      width: auto;
+      min-height: auto;
+    }
+
+    #report {
+      margin-top: 14px;
+      padding: 12px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      color: #dcebef;
+      font-size: 12.5px;
+      line-height: 1.45;
+      white-space: pre-wrap;
+    }
+
+    main {
+      display: grid;
+      place-items: center;
+      min-width: 0;
+      padding: 22px;
+      overflow: auto;
+    }
+
+    canvas {
+      max-width: 100%;
+      max-height: calc(100vh - 44px);
+      background: #081224;
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.42);
+    }
+  </style>
+</head>
+<body>
+  <aside>
+    <h1>Gameplay Preview</h1>
+    <p>Standalone canvas sandbox for auditing gameplay HUD, overlays, controls, hitboxes, and contrast before compiling the Android app.</p>
+
+    <label for="scene">Scene</label>
+    <select id="scene">
+      <option value="run">Normal run</option>
+      <option value="boss">Boss fight</option>
+      <option value="warning">Boss warning</option>
+      <option value="paused">Pause panel</option>
+      <option value="gameover">Game over panel</option>
+      <option value="clear">Stage clear panel</option>
+    </select>
+
+    <label for="preset">Device preset</label>
+    <select id="preset">
+      <option value="2048,931,2.4">Screenshot wide landscape</option>
+      <option value="2340,1080,2.4">Android landscape 1080p</option>
+      <option value="2400,1080,2.4">Pixel landscape</option>
+      <option value="1920,1080,2.5">Tablet landscape</option>
+      <option value="1080,2340,2.4">Pixel portrait</option>
+      <option value="720,1280,2">Small portrait</option>
+    </select>
+
+    <div class="pair">
+      <div>
+        <label for="width">Width px</label>
+        <input id="width" type="number" min="320" value="2048">
+      </div>
+      <div>
+        <label for="height">Height px</label>
+        <input id="height" type="number" min="320" value="931">
+      </div>
+    </div>
+
+    <label for="density">Preview density: <span id="densityLabel">2.4</span></label>
+    <input id="density" type="range" min="1" max="4" step="0.1" value="2.4">
+
+    <label for="speed">Game speed: <span id="speedLabel">1.0</span>x</label>
+    <input id="speed" type="range" min="0" max="2.5" step="0.1" value="1">
+
+    <label for="spawn">Object spacing: <span id="spawnLabel">1.0</span>x</label>
+    <input id="spawn" type="range" min="0.5" max="1.8" step="0.1" value="1">
+
+    <div class="checks">
+      <label><input id="animate" type="checkbox" checked> Animate</label>
+      <label><input id="showBounds" type="checkbox" checked> Show UI bounds</label>
+      <label><input id="debug" type="checkbox" checked> Show debug hitboxes</label>
+      <label><input id="contrast" type="checkbox" checked> Show contrast report</label>
+    </div>
+
+    <button id="swap">Swap orientation</button>
+    <div id="report"></div>
+  </aside>
+
+  <main>
+    <canvas id="preview" width="2048" height="931"></canvas>
+  </main>
+
+  <script>
+    const canvas = document.getElementById("preview");
+    const ctx = canvas.getContext("2d");
+    const bg = new Image();
+    bg.src = "../app/src/main/res/drawable-nodpi/background_dark_winter_art.png";
+
+    const ui = {
+      scene: document.getElementById("scene"),
+      preset: document.getElementById("preset"),
+      width: document.getElementById("width"),
+      height: document.getElementById("height"),
+      density: document.getElementById("density"),
+      densityLabel: document.getElementById("densityLabel"),
+      speed: document.getElementById("speed"),
+      speedLabel: document.getElementById("speedLabel"),
+      spawn: document.getElementById("spawn"),
+      spawnLabel: document.getElementById("spawnLabel"),
+      animate: document.getElementById("animate"),
+      showBounds: document.getElementById("showBounds"),
+      debug: document.getElementById("debug"),
+      contrast: document.getElementById("contrast"),
+      swap: document.getElementById("swap"),
+      report: document.getElementById("report")
+    };
+
+    let time = 0;
+    let lastMs = performance.now();
+    let boxes = {};
+    const state = {
+      score: 2480,
+      runScore: 630,
+      best: 3638,
+      level: 7,
+      tokens: 551,
+      combo: 4,
+      multiplier: 2,
+      gates: 5,
+      goal: 10,
+      lives: 3,
+      stars: 6,
+      bossHealth: 7,
+      bossMax: 12,
+      stage: "Bear Country",
+      obstacle: "Snowbanks",
+      hazard: "BEAR",
+      boss: "Polar Bear Boss"
+    };
+
+    function dp(value) {
+      return value * Number(ui.density.value);
+    }
+
+    function landscape() {
+      return canvas.width > canvas.height;
+    }
+
+    function rect(name, left, top, right, bottom) {
+      const box = { name, left, top, right, bottom };
+      boxes[name] = box;
+      return box;
+    }
+
+    function setButton(name, cx, cy, w, h) {
+      return rect(name, cx - w / 2, cy - h / 2, cx + w / 2, cy + h / 2);
+    }
+
+    function overlaps(a, b) {
+      return a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
+    }
+
+    function roundRect(box, radius, fill, stroke, lineWidth = 1) {
+      ctx.beginPath();
+      ctx.roundRect(box.left, box.top, box.right - box.left, box.bottom - box.top, radius);
+      if (fill) {
+        ctx.fillStyle = fill;
+        ctx.fill();
+      }
+      if (stroke) {
+        ctx.lineWidth = lineWidth;
+        ctx.strokeStyle = stroke;
+        ctx.stroke();
+      }
+    }
+
+    function text(label, x, y, size, color, align = "center", weight = "400") {
+      ctx.font = `${weight} ${size}px Arial, Helvetica, sans-serif`;
+      ctx.textAlign = align;
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = color;
+      ctx.fillText(label, x, y);
+    }
+
+    function drawBackground() {
+      if (bg.complete && bg.naturalWidth > 0) {
+        ctx.drawImage(bg, 0, 0, canvas.width, canvas.height);
+      } else {
+        const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+        gradient.addColorStop(0, "#071021");
+        gradient.addColorStop(0.45, "#0c4780");
+        gradient.addColorStop(1, "#7da7d6");
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
+      ctx.fillStyle = "rgba(0, 0, 0, 0.10)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function groundY() {
+      return canvas.height - (landscape() ? dp(78) : dp(126));
+    }
+
+    function drawWorld() {
+      const ground = groundY();
+      ctx.fillStyle = "rgba(226, 242, 250, 0.72)";
+      ctx.fillRect(0, ground, canvas.width, canvas.height - ground);
+      ctx.fillStyle = "rgba(8, 18, 30, 0.32)";
+      ctx.fillRect(0, ground, canvas.width, dp(4));
+
+      const spacing = dp(230) * Number(ui.spawn.value);
+      const offset = ui.animate.checked ? (time * dp(95) * Number(ui.speed.value)) % spacing : dp(40);
+      const objects = [
+        { x: canvas.width * 0.62 - offset, w: dp(42), h: dp(54), label: "G1 snowbank", color: "#ffda79" },
+        { x: canvas.width * 0.62 - offset + spacing, w: dp(48), h: dp(48), label: "G2 snowbank", color: "#ffda79" },
+        { x: canvas.width * 0.62 - offset + spacing * 2, w: dp(56), h: dp(64), label: "G3 tall bank", color: "#ffda79" }
+      ];
+      objects.forEach((obj) => {
+        const box = { left: obj.x, top: ground - obj.h, right: obj.x + obj.w, bottom: ground };
+        ctx.fillStyle = "rgba(180, 232, 250, 0.88)";
+        ctx.fillRect(box.left, box.top, obj.w, obj.h);
+        ctx.fillStyle = "rgba(36, 78, 108, 0.88)";
+        ctx.fillRect(box.left + dp(4), box.top + dp(5), obj.w - dp(8), obj.h - dp(10));
+        if (ui.debug.checked) debugRect(box, obj.color, obj.label);
+      });
+
+      const hazardX = canvas.width * 0.74 - offset * 0.8 + spacing * 0.45;
+      drawHazard(hazardX, ground - dp(30), dp(25), "H1 bear");
+      drawHazard(hazardX + spacing * 0.62, ground - dp(24), dp(18), "H2 wolf");
+      drawStar(canvas.width * 0.50 - offset * 0.45 + spacing * 0.3, ground - dp(130), dp(8), "*1 star");
+      drawPowerUp(canvas.width * 0.42 - offset * 0.35 + spacing * 0.8, ground - dp(95), dp(12), "K1 kit");
+      drawShot(canvas.width * 0.35 + offset * 0.34, ground - dp(58), dp(7), "T1 snow");
+      if (ui.scene.value === "boss" || ui.scene.value === "warning") {
+        drawBossAttack(canvas.width * 0.68 - offset * 0.55, ground - dp(54), dp(16), "A1 shock");
+      }
+      drawPlayer(canvas.width * 0.24, ground - dp(38), dp(25));
+
+      if (ui.scene.value === "boss" || ui.scene.value === "warning" || ui.scene.value === "clear") {
+        drawBoss(canvas.width * 0.77, ground - dp(62), dp(44));
+      }
+    }
+
+    function drawPlayer(x, y, radius) {
+      ctx.fillStyle = "#c7432f";
+      ctx.fillRect(x - radius * 0.45, y, radius * 0.9, radius * 1.45);
+      ctx.fillStyle = "#ffc552";
+      ctx.beginPath();
+      ctx.roundRect(x - radius, y - radius * 1.3, radius * 2, radius * 1.7, dp(7));
+      ctx.fill();
+      ctx.strokeStyle = "#1f2430";
+      ctx.lineWidth = dp(1.4);
+      ctx.stroke();
+      ctx.fillStyle = "#1f2430";
+      ctx.beginPath();
+      ctx.arc(x - radius * 0.38, y - radius * 0.7, radius * 0.12, 0, Math.PI * 2);
+      ctx.arc(x + radius * 0.38, y - radius * 0.7, radius * 0.12, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillRect(x - radius * 0.38, y - radius * 0.25, radius * 0.76, radius * 0.09);
+      if (ui.debug.checked) debugCircle(x, y - radius * 0.35, radius * 0.82, "#84d5e8", "P");
+    }
+
+    function drawHazard(x, y, radius, label) {
+      ctx.fillStyle = "#6b4936";
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#321b14";
+      ctx.beginPath();
+      ctx.arc(x - radius * 0.3, y - radius * 0.15, radius * 0.1, 0, Math.PI * 2);
+      ctx.arc(x + radius * 0.3, y - radius * 0.15, radius * 0.1, 0, Math.PI * 2);
+      ctx.fill();
+      if (ui.debug.checked) debugCircle(x, y, radius * 0.85, "#ff6254", label);
+    }
+
+    function drawBoss(x, y, radius) {
+      ctx.fillStyle = "#e9f5fb";
+      ctx.beginPath();
+      ctx.ellipse(x, y, radius * 1.25, radius * 0.85, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#1d2938";
+      ctx.beginPath();
+      ctx.arc(x - radius * 0.34, y - radius * 0.18, radius * 0.08, 0, Math.PI * 2);
+      ctx.arc(x + radius * 0.34, y - radius * 0.18, radius * 0.08, 0, Math.PI * 2);
+      ctx.fill();
+      if (ui.debug.checked) debugCircle(x, y, radius * 0.96, "#ff6254", "B");
+    }
+
+    function drawStar(x, y, radius, label = "*") {
+      ctx.fillStyle = "#ffda79";
+      ctx.beginPath();
+      for (let i = 0; i < 10; i += 1) {
+        const r = i % 2 === 0 ? radius : radius * 0.45;
+        const angle = -Math.PI / 2 + i * Math.PI / 5;
+        const px = x + Math.cos(angle) * r;
+        const py = y + Math.sin(angle) * r;
+        if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+      ctx.fill();
+      if (ui.debug.checked) debugCircle(x, y, radius * 0.9, "#ffda79", label);
+    }
+
+    function drawPowerUp(x, y, radius, label = "K") {
+      ctx.fillStyle = "#4ddbb8";
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      ctx.fill();
+      text("+", x, y + dp(0.5), dp(12), "#08121e", "center", "700");
+      if (ui.debug.checked) debugCircle(x, y, radius, "#4ddbb8", label);
+    }
+
+    function drawShot(x, y, radius, label) {
+      ctx.fillStyle = "#d2e8ee";
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#ffda79";
+      ctx.lineWidth = dp(1.4);
+      ctx.stroke();
+      if (ui.debug.checked) debugCircle(x, y, radius * 1.2, "#84d5e8", label);
+    }
+
+    function drawBossAttack(x, y, radius, label) {
+      ctx.fillStyle = "rgba(255, 98, 84, 0.78)";
+      ctx.beginPath();
+      ctx.ellipse(x, y, radius * 2.2, radius * 0.8, 0, 0, Math.PI * 2);
+      ctx.fill();
+      if (ui.debug.checked) debugRect({ left: x - radius * 2.2, top: y - radius * 0.8, right: x + radius * 2.2, bottom: y + radius * 0.8 }, "#ff6254", label);
+    }
+
+    function debugCircle(x, y, radius, color, label) {
+      ctx.fillStyle = `${color}33`;
+      ctx.strokeStyle = `${color}cc`;
+      ctx.lineWidth = dp(1.1);
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      drawBadge(label, x, y - radius - dp(13), color);
+    }
+
+    function debugRect(box, color, label) {
+      ctx.fillStyle = `${color}24`;
+      ctx.strokeStyle = `${color}cc`;
+      ctx.lineWidth = dp(1.1);
+      ctx.fillRect(box.left, box.top, box.right - box.left, box.bottom - box.top);
+      ctx.strokeRect(box.left, box.top, box.right - box.left, box.bottom - box.top);
+      drawBadge(label, (box.left + box.right) / 2, box.top - dp(13), color);
+    }
+
+    function drawBadge(label, x, y, color) {
+      const w = Math.max(dp(24), label.length * dp(8));
+      const box = { left: x - w / 2, top: y - dp(8), right: x + w / 2, bottom: y + dp(8) };
+      roundRect(box, dp(5), color, "#08121e", dp(1));
+      text(label, x, y + dp(0.5), dp(8), "#08121e", "center", "700");
+    }
+
+    function drawHud() {
+      const bar = rect("HUD", dp(10), dp(10), canvas.width - dp(10), dp(68));
+      roundRect(bar, dp(10), "rgba(10, 18, 29, 0.82)", null);
+      roundRect({ left: bar.left + dp(2), top: bar.top + dp(2), right: bar.right - dp(2), bottom: bar.top + dp(18) }, dp(9), "rgba(255,255,255,0.20)", null);
+
+      text("SCORE", dp(20), dp(22), dp(10), "#d2e8ee", "left");
+      text(String(state.score), dp(20), dp(45), dp(17), "#ffffff", "left");
+      text("RUN +" + state.runScore, dp(82), dp(45), dp(9), "#ffda79", "left");
+
+      const progressLeft = canvas.width * 0.34;
+      const progressRight = canvas.width * 0.66;
+      const progress = ui.scene.value === "boss" ? 1 - state.bossHealth / state.bossMax : state.gates / state.goal;
+      roundRect(rect("Route progress", progressLeft, dp(19), progressRight, dp(29)), dp(6), "rgba(0,0,0,0.68)", "rgba(255,255,255,0.74)");
+      roundRect({ left: progressLeft, top: dp(19), right: progressLeft + (progressRight - progressLeft) * progress, bottom: dp(29) }, dp(6), ui.scene.value === "boss" ? "#ff6254" : "#ffda79", null);
+
+      const objective = ui.scene.value === "boss"
+        ? `FIRE BOSS ${state.bossHealth}/${state.bossMax}  RECOVER`
+        : `Vault SNOWBANKS ${state.gates}/${state.goal}`;
+      text(objective, canvas.width / 2, dp(44), dp(11), "#ffda79");
+      text(`COMBO ${state.combo}   SCORE x${state.multiplier}`, canvas.width / 2, dp(58), dp(11), "#ffffff");
+      roundRect(rect("Aurora meter", progressLeft, dp(61), progressRight, dp(65)), dp(3), "rgba(4,12,20,0.74)", "rgba(255,246,207,0.67)");
+      roundRect({ left: progressLeft, top: dp(61), right: progressLeft + (progressRight - progressLeft) * 0.45, bottom: dp(65) }, dp(3), "#84d5e8", null);
+
+      text(state.stage, canvas.width - dp(20), dp(22), dp(10), "#d2e8ee", "right");
+      text(`BEST ${state.best}   LV ${state.level}   T ${state.tokens}`, canvas.width - dp(20), dp(45), dp(11), "#ffffff", "right");
+      drawHudIcons();
+      drawPauseButton();
+      drawMissionTracker();
+      drawJourneyTracker();
+      drawActionOverlay();
+      if (ui.debug.checked) drawDebugPanel();
+    }
+
+    function drawHudIcons() {
+      for (let i = 0; i < 3; i += 1) {
+        ctx.fillStyle = i < state.lives ? "#ff6254" : "rgba(255,255,255,0.43)";
+        ctx.beginPath();
+        ctx.arc(dp(145) + i * dp(14), dp(42), dp(4.8), 0, Math.PI * 2);
+        ctx.fill();
+      }
+      drawStar(canvas.width - dp(104), dp(42), dp(6));
+      text(String(state.stars), canvas.width - dp(92), dp(45), dp(11), "#ffffff", "left");
+      ctx.fillStyle = "#84d5e8";
+      ctx.beginPath();
+      ctx.arc(canvas.width - dp(54), dp(22), dp(7), 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    function drawPauseButton() {
+      const box = rect("Pause button", canvas.width - dp(78), dp(76), canvas.width - dp(18), dp(106));
+      roundRect(box, dp(10), "rgba(16,25,37,0.86)", "rgba(255,255,255,0.90)", dp(1.4));
+      text("PAUSE", (box.left + box.right) / 2, (box.top + box.bottom) / 2 + dp(2), dp(9.5), "#ffffff");
+    }
+
+    function drawMissionTracker() {
+      if (ui.scene.value === "boss" || ui.scene.value === "warning") return;
+      const w = Math.min(canvas.width - dp(70), dp(430));
+      const left = (canvas.width - w) / 2;
+      const box = rect("Mission tracker", left, dp(69), left + w, dp(91));
+      roundRect(box, dp(8), "rgba(8,18,30,0.70)", "rgba(132,213,232,0.63)");
+      text("MISSIONS 2/3  Snowbanks 5/10  Stars 6/10", canvas.width / 2, dp(83.5), dp(8.5), "#dcebef");
+    }
+
+    function drawJourneyTracker() {
+      const w = Math.min(canvas.width - dp(92), dp(360));
+      const left = (canvas.width - w) / 2;
+      const top = ui.scene.value === "boss" ? dp(84) : dp(94);
+      const box = rect("Journey tracker", left, top, left + w, top + dp(20));
+      roundRect(box, dp(7), "rgba(8,18,30,0.62)", "rgba(255,246,207,0.65)");
+      roundRect({ left, top, right: left + w * 0.54, bottom: top + dp(20) }, dp(7), "rgba(77,219,184,0.45)", null);
+      text(ui.scene.value === "boss" ? "BOSS TERRITORY" : "RIDGE PASS  SCOUT 8", canvas.width / 2, top + dp(11), dp(8.5), "#ffffff");
+    }
+
+    function drawActionOverlay() {
+      if (ui.scene.value === "warning") {
+        const w = Math.min(canvas.width - dp(64), dp(420));
+        const box = rect("Boss warning", (canvas.width - w) / 2, dp(76), (canvas.width + w) / 2, dp(120));
+        roundRect(box, dp(10), "rgba(82,18,24,0.82)", "rgba(255,218,121,0.90)", dp(2));
+        text("BOSS INCOMING", canvas.width / 2, dp(105), dp(19), "#fff6cf", "center", "700");
+        return;
+      }
+      if (ui.scene.value === "run") {
+        const label = "CLEAN VAULT +50";
+        const w = Math.min(canvas.width - dp(86), Math.max(dp(190), label.length * dp(10)));
+        const box = rect("Run callout", (canvas.width - w) / 2, dp(78), (canvas.width + w) / 2, dp(110));
+        roundRect(box, dp(9), "rgba(8,18,30,0.74)", "rgba(255,218,121,0.86)");
+        text(label, canvas.width / 2, dp(100), dp(13), "#fff6cf");
+      }
+    }
+
+    function drawDebugPanel() {
+      const w = Math.min(canvas.width - dp(20), dp(236));
+      const box = rect("Debug panel", dp(10), dp(74), dp(10) + w, dp(148));
+      roundRect(box, dp(8), "rgba(0,0,0,0.44)", null);
+      text("DEBUG IDs  G/H/*/P/T/A/B", box.left + dp(8), box.top + dp(14), dp(8.8), "#ffda79", "left");
+      text(`running score=${state.score} boss=${ui.scene.value === "boss"} hp=${state.bossHealth}`, box.left + dp(8), box.top + dp(29), dp(8.8), "#ffffff", "left");
+      text("shots=1 hazards=1 x=24%", box.left + dp(8), box.top + dp(43), dp(8.8), "#ffffff", "left");
+      text("> preview sandbox", box.left + dp(8), box.top + dp(59), dp(8.8), "#ffffff", "left");
+    }
+
+    function drawVirtualControls() {
+      const bottom = canvas.height - dp(14);
+      const size = dp(48);
+      const controls = [
+        rect("Left control", dp(16), bottom - size, dp(16) + size, bottom),
+        rect("Right control", dp(74), bottom - size, dp(74) + size, bottom),
+        rect("Jump control", canvas.width - dp(132), bottom - size, canvas.width - dp(132) + size, bottom),
+        rect("Fire control", canvas.width - dp(74), bottom - size, canvas.width - dp(74) + size, bottom)
+      ];
+      ["L", "R", "JUMP", "FIRE"].forEach((label, index) => drawControl(controls[index], label, index === 3 && ui.scene.value === "boss"));
+    }
+
+    function drawControl(box, label, active) {
+      roundRect({ left: box.left, top: box.top + dp(3), right: box.right, bottom: box.bottom + dp(3) }, dp(14), "rgba(0,0,0,0.47)", null);
+      roundRect(box, dp(14), active ? "rgba(255,218,121,0.90)" : "rgba(16,25,37,0.70)", active ? "#181e26" : "rgba(255,255,255,0.86)", dp(2));
+      text(label, (box.left + box.right) / 2, (box.top + box.bottom) / 2 + dp(2), label.length > 2 ? dp(10) : dp(20), active ? "#181e26" : "#ffffff", "center", "700");
+    }
+
+    function drawPanel(kind) {
+      if (kind === "paused") {
+        const w = Math.min(canvas.width - dp(44), dp(340));
+        const h = dp(216);
+        const left = (canvas.width - w) / 2;
+        const top = (canvas.height - h) / 2;
+        const panel = rect("Pause panel", left, top, left + w, top + h);
+        roundRect(panel, dp(18), "rgba(10,18,29,0.92)", "#ffda79", dp(2));
+        text("TRAIL PAUSED", canvas.width / 2, top + dp(45), dp(25), "#ffda79", "center", "700");
+        text("Goal: Bear Country", canvas.width / 2, top + dp(76), dp(12), "#ffffff");
+        text("Vault Snowbanks - FIRE stuns BEAR", canvas.width / 2, top + dp(98), dp(12), "#d2e8ee");
+        text("Boss weak window: RECOVER", canvas.width / 2, top + dp(118), dp(12), "#d2e8ee");
+        drawButton(setButton("Resume button", canvas.width / 2, top + dp(151), dp(214), dp(38)), "RESUME", false);
+        drawButton(setButton("Map button", canvas.width / 2 - dp(58), top + dp(190), dp(104), dp(32)), "MAP", true);
+        drawButton(setButton("Sprite button", canvas.width / 2 + dp(58), top + dp(190), dp(104), dp(32)), "SPRITE", true);
+      } else {
+        const clear = kind === "clear";
+        const w = Math.min(canvas.width - dp(40), dp(348));
+        const h = clear ? dp(348) : dp(344);
+        const left = (canvas.width - w) / 2;
+        const top = (canvas.height - h) / 2;
+        const panel = rect(clear ? "Stage clear panel" : "Game over panel", left, top, left + w, top + h);
+        roundRect(panel, dp(22), clear ? "rgba(10,42,38,0.91)" : "rgba(14,21,31,0.90)", null);
+        text(clear ? "ALASKA SURVIVED" : "BONKED", canvas.width / 2, top + dp(50), clear ? dp(29) : dp(34), clear ? "#ffda79" : "#ffffff", "center", "700");
+        text(clear ? "Polar Bear Boss defeated" : "Snowbank got you", canvas.width / 2, top + dp(84), dp(15), "#ffffff");
+        const lines = clear
+          ? ["Score 2480 - Best 3638", "Rank A - Missions 2/3 - Stars 6", "Tokens +42 - Bank 551 - Logs 54", "Daily +20 - streak 2", "Expedition grade A - logs +3", "Badge +1 - Aurora Runner", "Next: perfect clear"]
+          : ["Score 2480 - Jumps 5", "Missions 2/3 - Combo 8 - Rank B", "Tokens +18 - Bank 551 - Logs 54", "Daily already complete", "Expedition grade C - logs +1", "Badge progress saved", "Next: clear Bear Country"];
+        lines.forEach((line, index) => text(line, canvas.width / 2, top + dp(110 + index * 22), dp(13), index < 3 ? "#ffda79" : "#d2e8ee"));
+        drawButton(setButton("Panel left button", canvas.width / 2 - dp(64), top + dp(clear ? 318 : 316), dp(118), dp(36)), "MAP", true);
+        drawButton(setButton("Panel right button", canvas.width / 2 + dp(64), top + dp(clear ? 318 : 316), dp(118), dp(36)), clear ? "NEXT" : "CUSTOMIZE", true);
+      }
+    }
+
+    function drawButton(box, label, small) {
+      roundRect(box, small ? dp(12) : dp(15), small ? "rgba(10,18,29,0.97)" : "#ffda79", small ? "rgba(210,232,238,0.86)" : "#523912", small ? dp(1.2) : dp(1.6));
+      text(label, (box.left + box.right) / 2, (box.top + box.bottom) / 2 + dp(1.5), small ? dp(12) : dp(13), small ? "#ffffff" : "#181e26", "center", "700");
+    }
+
+    function hexToRgb(hex) {
+      const clean = hex.replace("#", "");
+      const value = Number.parseInt(clean, 16);
+      return [(value >> 16) & 255, (value >> 8) & 255, value & 255];
+    }
+
+    function channel(value) {
+      const normalized = value / 255;
+      return normalized <= 0.03928 ? normalized / 12.92 : Math.pow((normalized + 0.055) / 1.055, 2.4);
+    }
+
+    function luminance(hex) {
+      const [r, g, b] = hexToRgb(hex).map(channel);
+      return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    }
+
+    function contrast(fg, bgColor) {
+      const a = luminance(fg);
+      const b = luminance(bgColor);
+      return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+    }
+
+    function drawBounds() {
+      ctx.save();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "rgba(83, 219, 184, 0.92)";
+      ctx.fillStyle = "rgba(83, 219, 184, 0.92)";
+      ctx.font = "13px Arial, Helvetica, sans-serif";
+      ctx.textAlign = "left";
+      Object.values(boxes).forEach((box) => {
+        ctx.strokeRect(box.left, box.top, box.right - box.left, box.bottom - box.top);
+        ctx.fillText(box.name, box.left + 5, box.top + 15);
+      });
+      ctx.restore();
+    }
+
+    function report() {
+      const names = Object.keys(boxes);
+      const warnings = [];
+      for (let i = 0; i < names.length; i += 1) {
+        for (let j = i + 1; j < names.length; j += 1) {
+          const a = boxes[names[i]];
+          const b = boxes[names[j]];
+          if (!overlaps(a, b)) continue;
+          const pair = `${a.name} overlaps ${b.name}`;
+          const allowed = pair.includes("HUD overlaps") || pair.includes("Debug panel") || pair.includes("Route progress") || pair.includes("Aurora meter");
+          if (!allowed) warnings.push(pair);
+        }
+      }
+
+      const contrastLines = [
+        ["HUD white", "#ffffff", "#0a121d"],
+        ["HUD blue", "#d2e8ee", "#0a121d"],
+        ["HUD gold", "#ffda79", "#0a121d"],
+        ["Yellow button", "#181e26", "#ffda79"],
+        ["Dark button", "#ffffff", "#0a121d"],
+        ["Boss warning", "#fff6cf", "#521218"],
+        ["Clear panel", "#d2e8ee", "#0a2a26"],
+        ["Game over panel", "#ffffff", "#0e151f"]
+      ].map(([label, fg, bgColor]) => {
+        const ratio = contrast(fg, bgColor);
+        return `${label}: ${ratio.toFixed(1)}:1 ${ratio >= 4.5 ? "PASS" : "CHECK"}`;
+      });
+
+      const layout = warnings.length === 0 ? "OK: no unexpected UI overlaps" : `Overlap warnings:\n${warnings.join("\n")}`;
+      ui.report.textContent = `${layout}\n${canvas.width}x${canvas.height}, density ${Number(ui.density.value).toFixed(1)}\n\n${ui.contrast.checked ? `Contrast checks:\n${contrastLines.join("\n")}` : "Contrast checks hidden"}`;
+    }
+
+    function drawFrame(ms) {
+      const dt = Math.min(0.05, (ms - lastMs) / 1000);
+      lastMs = ms;
+      if (ui.animate.checked) time += dt;
+      canvas.width = Math.max(320, Number(ui.width.value) || 2048);
+      canvas.height = Math.max(320, Number(ui.height.value) || 931);
+      ui.densityLabel.textContent = Number(ui.density.value).toFixed(1);
+      ui.speedLabel.textContent = Number(ui.speed.value).toFixed(1);
+      ui.spawnLabel.textContent = Number(ui.spawn.value).toFixed(1);
+      boxes = {};
+
+      drawBackground();
+      drawWorld();
+      drawHud();
+      drawVirtualControls();
+      if (ui.scene.value === "paused" || ui.scene.value === "gameover" || ui.scene.value === "clear") {
+        ctx.fillStyle = "rgba(0, 0, 0, 0.36)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        drawPanel(ui.scene.value);
+      }
+      if (ui.showBounds.checked) drawBounds();
+      report();
+      requestAnimationFrame(drawFrame);
+    }
+
+    function applyPreset() {
+      const [w, h, d] = ui.preset.value.split(",").map(Number);
+      ui.width.value = w;
+      ui.height.value = h;
+      ui.density.value = d;
+    }
+
+    ui.preset.addEventListener("change", applyPreset);
+    ui.swap.addEventListener("click", () => {
+      const old = ui.width.value;
+      ui.width.value = ui.height.value;
+      ui.height.value = old;
+    });
+    bg.addEventListener("load", () => {});
+    applyPreset();
+    requestAnimationFrame(drawFrame);
+  </script>
+</body>
+</html>

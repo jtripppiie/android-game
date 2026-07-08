@@ -108,7 +108,7 @@ public class MooseRushView extends View {
     private static final int SPRITE_SHEET_FRAMES = 6;
     private static final float PLAYER_START_X_FRACTION = 0.265f;
     private static final float PLAYER_HEAD_DRAW_OFFSET = 2.18f;
-    private static final float PLAYFIELD_BOTTOM_MARGIN_DP = 62f;
+    private static final float PLAYFIELD_BOTTOM_MARGIN_DP = 52f;
     private static final float JUMP_CEILING_TOP_MARGIN_DP = 40f;
     private static final float AURORA_METER_MAX = 100f;
     private static final float AURORA_RUSH_SECONDS = 6.5f;
@@ -2359,43 +2359,81 @@ public class MooseRushView extends View {
         drawTopBrand(canvas, "YOU RUSH: ALASKA", "Upload your face. Beat local chaos.");
 
         if (isLandscape()) {
-            drawCharacterPreview(canvas, getWidth() * 0.28f, getHeight() * 0.42f, dp(27));
+            drawCharacterPreview(canvas, getWidth() * 0.28f, getHeight() * 0.45f, dp(25));
         } else {
             drawCharacterPreview(canvas, getWidth() / 2f, getHeight() * 0.33f, dp(28));
         }
 
-        float y = isLandscape() ? getHeight() * 0.34f : getHeight() * 0.53f;
+        float y = isLandscape() ? Math.max(dp(96), getHeight() * 0.31f) : getHeight() * 0.53f;
         float x = isLandscape() ? getWidth() * 0.68f : getWidth() / 2f;
-        setButton(primaryButtonBounds, x, y, dp(230), dp(44));
-        setButton(secondaryButtonBounds, x, y + dp(54), dp(230), dp(44));
-        setButton(thirdButtonBounds, x, y + dp(108), dp(230), dp(44));
-        setButton(dailyButtonBounds, x, y - dp(58), dp(230), dp(42));
-        setButton(debugButtonBounds, x - dp(58), y + dp(160), dp(104), dp(36));
-        setButton(muteButtonBounds, x + dp(58), y + dp(160), dp(104), dp(36));
+        if (isLandscape()) {
+            float wideButtonWidth = dp(230);
+            float mainButtonHeight = dp(38);
+            float dailyHeight = dp(34);
+            float buttonGap = dp(10);
+            float smallButtonHeight = dp(30);
+            float statsPanelTop = getHeight() - dp(42);
+            float dailyY = y;
+            float primaryY = dailyY + dailyHeight / 2f + buttonGap + mainButtonHeight / 2f;
+            float secondaryY = primaryY + mainButtonHeight + buttonGap;
+            float thirdY = secondaryY + mainButtonHeight + buttonGap;
+            float maxThirdY = statsPanelTop - dp(8) - mainButtonHeight / 2f;
+            if (thirdY > maxThirdY) {
+                float shift = thirdY - maxThirdY;
+                dailyY -= shift;
+                primaryY -= shift;
+                secondaryY -= shift;
+                thirdY -= shift;
+            }
+            setButton(dailyButtonBounds, x, dailyY, wideButtonWidth, dailyHeight);
+            setButton(primaryButtonBounds, x, primaryY, wideButtonWidth, mainButtonHeight);
+            setButton(secondaryButtonBounds, x, secondaryY, wideButtonWidth, mainButtonHeight);
+            setButton(thirdButtonBounds, x, thirdY, wideButtonWidth, mainButtonHeight);
+            setButton(debugButtonBounds, getWidth() - dp(165), statsPanelTop + dp(21), dp(98), smallButtonHeight);
+            setButton(muteButtonBounds, getWidth() - dp(60), statsPanelTop + dp(21), dp(98), smallButtonHeight);
+        } else {
+            setButton(primaryButtonBounds, x, y, dp(230), dp(44));
+            setButton(secondaryButtonBounds, x, y + dp(54), dp(230), dp(44));
+            setButton(thirdButtonBounds, x, y + dp(108), dp(230), dp(44));
+            setButton(dailyButtonBounds, x, y - dp(58), dp(230), dp(42));
+            setButton(debugButtonBounds, x - dp(58), y + dp(160), dp(104), dp(36));
+            setButton(muteButtonBounds, x + dp(58), y + dp(160), dp(104), dp(36));
+        }
 
         drawDailyRushButton(canvas, dailyButtonBounds);
-        drawButton(canvas, primaryButtonBounds, "PLAY " + STAGES[selectedStage].name);
-        drawButton(canvas, secondaryButtonBounds, playerPhoto == null ? "CREATE YOUR SPRITE" : "EDIT YOUR SPRITE");
+        drawButton(canvas, primaryButtonBounds, "Play " + STAGES[selectedStage].name);
+        drawButton(canvas, secondaryButtonBounds, playerPhoto == null ? "Create Your Sprite" : "Edit Your Sprite");
         drawButton(canvas, thirdButtonBounds, "ALASKA MAP");
+        drawMenuStats(canvas);
         drawSmallButton(canvas, debugButtonBounds, "DEBUG: " + (debugOverlay ? "ON" : "OFF"));
         drawSmallButton(canvas, muteButtonBounds, gameState.muted ? "MUTED" : "AUDIO");
+    }
+
+    private void drawMenuStats(Canvas canvas) {
+        float panelHeight = isLandscape() ? dp(42) : dp(58);
+        float top = getHeight() - panelHeight;
+        paint.setStyle(Paint.Style.FILL);
+        paint.setColor(Color.argb(isLandscape() ? 190 : 178, 0, 0, 0));
+        canvas.drawRect(0, top, getWidth(), getHeight(), paint);
 
         textPaint.setTextAlign(Paint.Align.CENTER);
-        textPaint.setTextSize(dp(13));
+        textPaint.setTextSize(isLandscape() ? dp(10.5f) : dp(13));
         textPaint.setColor(Color.WHITE);
-        canvas.drawText("Best " + bestScore + "   Tokens " + trailTokens + "   Logs " + expeditionLogs + "   Missions " + totalMissionsCompleted, getWidth() / 2f, getHeight() - dp(45), textPaint);
-        textPaint.setTextSize(dp(11));
+        float statsX = isLandscape() ? getWidth() * 0.36f : getWidth() / 2f;
+        canvas.drawText("Best " + bestScore + "   Tokens " + trailTokens + "   Logs " + expeditionLogs + "   Missions " + totalMissionsCompleted,
+                statsX, top + (isLandscape() ? dp(16) : dp(18)), textPaint);
+        textPaint.setTextSize(isLandscape() ? dp(9.5f) : dp(11));
         textPaint.setColor(Color.rgb(220, 235, 239));
         canvas.drawText("Stages " + (unlockedStage + 1) + "/" + STAGES.length
                 + "   Outfits " + unlockedOutfitCount() + "/" + OUTFIT_COLORS.length
                 + "   Badges " + TrailBadgeCatalog.badgeCount(trailBadgeMask) + "/" + TrailBadgeCatalog.BADGE_COUNT,
-                getWidth() / 2f, getHeight() - dp(25), textPaint);
+                statsX, top + (isLandscape() ? dp(33) : dp(42)), textPaint);
     }
 
     private void drawDailyRushButton(Canvas canvas, RectF bounds) {
         boolean complete = dailyRushCompleteToday();
         paint.setStyle(Paint.Style.FILL);
-        paint.setColor(complete ? Color.argb(218, 18, 52, 48) : Color.argb(230, 77, 219, 184));
+        paint.setColor(complete ? Color.argb(246, 13, 42, 39) : Color.argb(250, 77, 219, 184));
         canvas.drawRoundRect(bounds, dp(13), dp(13), paint);
         paint.setColor(Color.argb(50, 255, 255, 255));
         canvas.drawRoundRect(bounds.left + dp(3), bounds.top + dp(3), bounds.right - dp(3), bounds.top + bounds.height() * 0.46f, dp(10), dp(10), paint);
@@ -2406,12 +2444,12 @@ public class MooseRushView extends View {
         paint.setStyle(Paint.Style.FILL);
 
         textPaint.setTextAlign(Paint.Align.CENTER);
-        textPaint.setTextSize(dp(9));
+        textPaint.setTextSize(isLandscape() ? dp(8.5f) : dp(9));
         textPaint.setColor(complete ? Color.rgb(210, 232, 238) : Color.rgb(8, 18, 30));
-        canvas.drawText("DAILY RUSH", bounds.centerX(), bounds.top + dp(15), textPaint);
-        textPaint.setTextSize(dp(10.5f));
+        canvas.drawText("DAILY RUSH", bounds.centerX(), bounds.top + (isLandscape() ? dp(12) : dp(15)), textPaint);
+        textPaint.setTextSize(isLandscape() ? dp(10) : dp(10.5f));
         textPaint.setColor(complete ? Color.WHITE : Color.rgb(8, 18, 30));
-        canvas.drawText(dailyRushLine(), bounds.centerX(), bounds.top + dp(31), textPaint);
+        canvas.drawText(dailyRushLine(), bounds.centerX(), bounds.top + (isLandscape() ? dp(26) : dp(31)), textPaint);
     }
 
     private void drawMapScreen(Canvas canvas) {
@@ -4145,7 +4183,7 @@ public class MooseRushView extends View {
         float top = dp(74);
         float left = dp(10);
         float width = Math.min(getWidth() - dp(20), dp(236));
-        float height = dp(74);
+        float height = dp(100);
         paint.setStyle(Paint.Style.FILL);
         paint.setColor(Color.argb(112, 0, 0, 0));
         canvas.drawRoundRect(left, top, left + width, top + height, dp(8), dp(8), paint);
@@ -4153,12 +4191,12 @@ public class MooseRushView extends View {
         textPaint.setTextAlign(Paint.Align.LEFT);
         textPaint.setTextSize(dp(8.8f));
         textPaint.setColor(Color.rgb(255, 218, 121));
-        canvas.drawText("DEBUG IDs  G/H/*/P/T/A/B", left + dp(8), top + dp(14), textPaint);
+        canvas.drawText("DEBUG IDS  L/P/G/H/*/U/T/A/B", left + dp(8), top + dp(14), textPaint);
         textPaint.setColor(Color.WHITE);
         canvas.drawText(stateName() + " score=" + score + " boss=" + bossActive + " hp=" + bossHealth, left + dp(8), top + dp(29), textPaint);
         canvas.drawText("shots=" + shots.size() + " hazards=" + hazards.size() + " x=" + Math.round(playerX), left + dp(8), top + dp(43), textPaint);
 
-        int max = Math.min(1, debugEvents.size());
+        int max = Math.min(3, debugEvents.size());
         for (int i = 0; i < max; i++) {
             String event = debugEvents.get(debugEvents.size() - 1 - i);
             canvas.drawText("> " + event, left + dp(8), top + dp(59 + i * 13), textPaint);
@@ -4171,6 +4209,7 @@ public class MooseRushView extends View {
         }
         drawDebugHitboxes(canvas);
         int number = 1;
+        drawDebugObjectBadge(canvas, number++, "P", "PLAYER", playerX, playerY - playerRadius - dp(24), Color.rgb(132, 213, 232));
         for (Gate gate : gates) {
             if (isDebugMarkerVisible(gate.x + gate.width * 0.5f, getGroundY() - gate.height * 0.5f, gate.width)) {
                 drawDebugObjectBadge(canvas, number++, "G", debugGateDetail(gate), gate.x + gate.width * 0.5f, getGroundY() - gate.height - dp(34), Color.rgb(255, 218, 121));
@@ -4184,12 +4223,12 @@ public class MooseRushView extends View {
         }
         for (Star star : stars) {
             if (isDebugMarkerVisible(star.x, star.y, star.radius * 2f)) {
-                drawDebugObjectBadge(canvas, number++, "*", star.x, star.y - star.radius - dp(18), Color.rgb(255, 218, 121));
+                drawDebugObjectBadge(canvas, number++, "*", "STAR", star.x, star.y - star.radius - dp(18), Color.rgb(255, 218, 121));
             }
         }
         for (PowerUp powerUp : powerUps) {
             if (isDebugMarkerVisible(powerUp.x, powerUp.y, powerUp.radius * 2f)) {
-                drawDebugObjectBadge(canvas, number++, "P", powerUp.x, powerUp.y - powerUp.radius - dp(22), Color.rgb(77, 219, 184));
+                drawDebugObjectBadge(canvas, number++, "U", debugPowerUpDetail(powerUp), powerUp.x, powerUp.y - powerUp.radius - dp(22), Color.rgb(77, 219, 184));
             }
         }
         for (Shot shot : shots) {
@@ -4208,6 +4247,7 @@ public class MooseRushView extends View {
     }
 
     private void drawDebugHitboxes(Canvas canvas) {
+        drawDebugGroundLine(canvas);
         drawDebugCircle(canvas, playerX, playerY, playerRadius * CollisionTuning.PLAYER_HAZARD_RADIUS_SCALE, Color.rgb(132, 213, 232));
         for (Gate gate : gates) {
             if (!isDebugMarkerVisible(gate.x + gate.width * 0.5f, getGroundY() - gate.height * 0.5f, gate.width)) {
@@ -4258,6 +4298,16 @@ public class MooseRushView extends View {
         }
     }
 
+    private void drawDebugGroundLine(Canvas canvas) {
+        float ground = getGroundY();
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setStrokeWidth(dp(1.2f));
+        paint.setColor(Color.argb(190, 255, 218, 121));
+        canvas.drawLine(0, ground, getWidth(), ground, paint);
+        paint.setStyle(Paint.Style.FILL);
+        drawDebugObjectBadge(canvas, 0, "L", "GROUND", dp(42), ground - dp(8), Color.rgb(255, 218, 121));
+    }
+
     private void drawDebugCircle(Canvas canvas, float x, float y, float radius, int color) {
         paint.setStyle(Paint.Style.FILL);
         paint.setColor(Color.argb(36, Color.red(color), Color.green(color), Color.blue(color)));
@@ -4297,6 +4347,10 @@ public class MooseRushView extends View {
         return obstacleHudName(selectedStage);
     }
 
+    private String debugPowerUpDetail(PowerUp powerUp) {
+        return powerUp.type;
+    }
+
     private int debugHazardFrame(Hazard hazard) {
         int frame = Math.floorMod((int) (hazardVisualPhase(hazard) * hazardAnimationRate(hazard.label)), SPRITE_SHEET_FRAMES);
         return hazard.roaring ? 3 : frame;
@@ -4334,8 +4388,8 @@ public class MooseRushView extends View {
     }
 
     private boolean isDebugMarkerVisible(float x, float y, float pad) {
-        return x + pad >= -dp(24) && x - pad <= getWidth() + dp(24)
-                && y + pad >= -dp(24) && y - pad <= getHeight() + dp(24);
+        return x + pad >= -dp(72) && x - pad <= getWidth() + dp(72)
+                && y + pad >= -dp(72) && y - pad <= getHeight() + dp(72);
     }
 
     private void drawDebugObjectBadge(Canvas canvas, int number, String type, float x, float y, int accentColor) {
@@ -4343,7 +4397,7 @@ public class MooseRushView extends View {
     }
 
     private void drawDebugObjectBadge(Canvas canvas, int number, String type, String detail, float x, float y, int accentColor) {
-        String label = number + type;
+        String label = number > 0 ? number + type : type;
         float clampedX = clamp(x, dp(18), getWidth() - dp(18));
         float clampedY = clamp(y, dp(54), getHeight() - dp(18));
         textPaint.setTextAlign(Paint.Align.CENTER);
@@ -4634,7 +4688,7 @@ public class MooseRushView extends View {
 
     private void drawTopBrand(Canvas canvas, String title, String subtitle) {
         paint.setStyle(Paint.Style.FILL);
-        paint.setColor(Color.argb(150, 0, 0, 0));
+        paint.setColor(Color.argb(190, 0, 0, 0));
         float height = isLandscape() ? dp(76) : dp(112);
         canvas.drawRect(0, 0, getWidth(), height, paint);
 
@@ -4644,7 +4698,7 @@ public class MooseRushView extends View {
         canvas.drawText("TRIPPERDEE LABS · " + BuildConfig.BUILD_BADGE, getWidth() / 2f, isLandscape() ? dp(18) : dp(25), textPaint);
 
         textPaint.setColor(Color.WHITE);
-        textPaint.setTextSize(isLandscape() ? dp(22) : dp(28));
+        textPaint.setTextSize(isLandscape() ? dp(20) : dp(26));
         canvas.drawText(title, getWidth() / 2f, isLandscape() ? dp(45) : dp(61), textPaint);
 
         textPaint.setColor(Color.rgb(210, 232, 238));
@@ -4654,8 +4708,13 @@ public class MooseRushView extends View {
 
     private void drawButton(Canvas canvas, RectF bounds, String label) {
         paint.setStyle(Paint.Style.FILL);
-        paint.setColor(Color.argb(234, 255, 218, 121));
+        paint.setColor(Color.rgb(255, 218, 121));
         canvas.drawRoundRect(bounds, dp(15), dp(15), paint);
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setStrokeWidth(dp(1.6f));
+        paint.setColor(Color.rgb(82, 57, 18));
+        canvas.drawRoundRect(bounds, dp(15), dp(15), paint);
+        paint.setStyle(Paint.Style.FILL);
 
         textPaint.setTextAlign(Paint.Align.CENTER);
         textPaint.setTextSize(dp(13));
@@ -4690,8 +4749,13 @@ public class MooseRushView extends View {
 
     private void drawSmallButton(Canvas canvas, RectF bounds, String label) {
         paint.setStyle(Paint.Style.FILL);
-        paint.setColor(Color.argb(230, 16, 25, 37));
+        paint.setColor(Color.argb(248, 10, 18, 29));
         canvas.drawRoundRect(bounds, dp(12), dp(12), paint);
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setStrokeWidth(dp(1.2f));
+        paint.setColor(Color.argb(220, 210, 232, 238));
+        canvas.drawRoundRect(bounds, dp(12), dp(12), paint);
+        paint.setStyle(Paint.Style.FILL);
 
         textPaint.setTextAlign(Paint.Align.CENTER);
         textPaint.setTextSize(dp(12));

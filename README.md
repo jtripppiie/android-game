@@ -14,6 +14,14 @@ versionName: 3.2.7-beta
 build badge: ALASKA PASSPORT v3.27 BETA
 ```
 
+## Fast UI preview
+
+Open `tools/menu-preview.html` in a browser to check the main-menu layout without
+installing the Android app. Open `tools/gameplay-preview.html` to audit gameplay
+HUD, controls, debug hitboxes, pause/results overlays, and contrast in a simple
+canvas sandbox. These files live only under `tools/`, are not packaged into the
+Android app, and can be removed by deleting the preview HTML files.
+
 ## Game flow
 
 1. Splash screen
