@@ -59,6 +59,7 @@ public class MooseRushView extends View {
     private static final String PREF_MUTED = "muted";
     private static final String PREF_XP = "xp";
     private static final String PREF_OUTFIT = "outfit";
+    private static final String PREF_BODY_STYLE = "body_style";
     private static final String PREF_TRAIL_TOKENS = "trail_tokens";
     private static final String PREF_UNLOCKED_OUTFITS = "unlocked_outfits";
     private static final String PREF_TOTAL_MISSIONS = "total_missions";
@@ -89,6 +90,11 @@ public class MooseRushView extends View {
     };
     private static final int[] OUTFIT_TOKEN_COSTS = {
             0, 0, 0, 0, 35, 55, 75, 100
+    };
+    private static final String[] BODY_STYLE_NAMES = {
+            "PHOTO RUNNER",
+            "FEMALE RUNNER",
+            "MALE RUNNER"
     };
 
     private static final String[] SEASONS = {
@@ -205,6 +211,7 @@ public class MooseRushView extends View {
     private final RectF backButtonBounds = new RectF();
     private final RectF seasonButtonBounds = new RectF();
     private final RectF outfitButtonBounds = new RectF();
+    private final RectF bodyStyleButtonBounds = new RectF();
     private final RectF debugButtonBounds = new RectF();
     private final RectF muteButtonBounds = new RectF();
     private final RectF dailyButtonBounds = new RectF();
@@ -227,6 +234,7 @@ public class MooseRushView extends View {
     private int selectedSeason = SEASON_MIDNIGHT_SUN;
     private int unlockedStage = 0;
     private int selectedOutfit = 0;
+    private int selectedBodyStyle = SpriteRenderer.BODY_STYLE_PHOTO;
     private int gatesPassed = 0;
     private int stageAttempts = 0;
     private int bossHealth = 0;
@@ -353,6 +361,7 @@ public class MooseRushView extends View {
         selectedSeason = clampInt(prefs.getInt(PREF_SELECTED_SEASON, STAGES[selectedStage].season), 0, SEASONS.length - 1);
         unlockedStage = clampInt(prefs.getInt(PREF_UNLOCKED_STAGE, 0), 0, STAGES.length - 1);
         selectedOutfit = clampInt(prefs.getInt(PREF_OUTFIT, 0), 0, OUTFIT_COLORS.length - 1);
+        selectedBodyStyle = clampInt(prefs.getInt(PREF_BODY_STYLE, SpriteRenderer.BODY_STYLE_PHOTO), 0, BODY_STYLE_NAMES.length - 1);
         trailTokens = prefs.getInt(PREF_TRAIL_TOKENS, 0);
         unlockedOutfitMask = prefs.getInt(PREF_UNLOCKED_OUTFITS, RunRewardEconomy.BASE_OUTFIT_UNLOCK_MASK);
         totalMissionsCompleted = prefs.getInt(PREF_TOTAL_MISSIONS, 0);
@@ -605,6 +614,10 @@ public class MooseRushView extends View {
                 logEvent("Season set to " + SEASONS[selectedSeason] + ".");
             } else if (outfitButtonBounds.contains(x, y)) {
                 handleOutfitTap();
+            } else if (bodyStyleButtonBounds.contains(x, y)) {
+                selectedBodyStyle = (selectedBodyStyle + 1) % BODY_STYLE_NAMES.length;
+                saveChoices();
+                logEvent("Runner body: " + BODY_STYLE_NAMES[selectedBodyStyle] + ".");
             }
             return true;
         }
@@ -2686,19 +2699,21 @@ public class MooseRushView extends View {
         setButton(resetPhotoButtonBounds, x, y + buttonGap, dp(226), isLandscape() ? dp(38) : dp(44));
         setButton(seasonButtonBounds, x, y + buttonGap * 2f, dp(226), isLandscape() ? dp(40) : dp(48));
         setButton(outfitButtonBounds, x, y + buttonGap * 3f, dp(226), isLandscape() ? dp(38) : dp(44));
+        setButton(bodyStyleButtonBounds, x, y + buttonGap * 4f, dp(226), isLandscape() ? dp(38) : dp(44));
 
         drawButton(canvas, photoButtonBounds, playerPhoto == null ? "SELECT PLAYER PHOTO" : "CHANGE PLAYER PHOTO");
         drawButton(canvas, resetPhotoButtonBounds, "RESET TO DEFAULT SPRITE");
         drawButton(canvas, seasonButtonBounds, "SEASON: " + SEASONS[selectedSeason]);
         drawButton(canvas, outfitButtonBounds, outfitButtonLabel());
         drawOutfitSwatch(canvas, outfitButtonBounds);
+        drawButton(canvas, bodyStyleButtonBounds, "BODY: " + BODY_STYLE_NAMES[selectedBodyStyle]);
 
         textPaint.setTextSize(dp(14));
         textPaint.setColor(playerPhoto == null ? Color.rgb(255, 218, 121) : Color.WHITE);
-        canvas.drawText(playerPhoto == null ? "Default runner is active." : "Photo sprite ready for this run.", x, y + buttonGap * 3f + dp(42), textPaint);
+        canvas.drawText(playerPhoto == null ? "Default runner is active." : "Photo sprite ready for this run.", x, y + buttonGap * 4f + dp(42), textPaint);
         textPaint.setTextSize(dp(12));
         textPaint.setColor(Color.rgb(220, 235, 239));
-        canvas.drawText("Tokens " + trailTokens + "   Outfit " + outfitStatusLabel(), x, y + buttonGap * 3f + dp(62), textPaint);
+        canvas.drawText("Tokens " + trailTokens + "   Outfit " + outfitStatusLabel(), x, y + buttonGap * 4f + dp(62), textPaint);
     }
 
     private void drawWorld(Canvas canvas) {
@@ -4106,7 +4121,7 @@ public class MooseRushView extends View {
 
     private SpriteRenderer.PlayerFrame playerFrame(float x, float y, float radius) {
         int outfitColor = playerPhoto == null ? Color.rgb(255, 218, 121) : OUTFIT_COLORS[selectedOutfit];
-        return new SpriteRenderer.PlayerFrame(x, y, radius, runnerClock, grounded, playerVelocityY, playerPhoto, outfitColor);
+        return new SpriteRenderer.PlayerFrame(x, y, radius, runnerClock, grounded, playerVelocityY, playerPhoto, outfitColor, selectedBodyStyle);
     }
 
     private void drawReadyScreen(Canvas canvas) {
@@ -5104,6 +5119,7 @@ public class MooseRushView extends View {
                 .putInt(PREF_SELECTED_STAGE, selectedStage)
                 .putInt(PREF_SELECTED_SEASON, selectedSeason)
                 .putInt(PREF_OUTFIT, effectiveOutfitIndex())
+                .putInt(PREF_BODY_STYLE, selectedBodyStyle)
                 .putInt(PREF_TRAIL_TOKENS, trailTokens)
                 .putInt(PREF_UNLOCKED_OUTFITS, unlockedOutfitMask)
                 .putInt(PREF_TOTAL_MISSIONS, totalMissionsCompleted)

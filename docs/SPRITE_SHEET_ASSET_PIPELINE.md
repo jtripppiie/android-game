@@ -1,7 +1,7 @@
 # Sprite Sheet Asset Pipeline
 
-This document captures the repeatable process used for the `1.8.x` graphics
-passes.
+This document captures the repeatable process for creating and validating raster
+sprite assets used by the Android game.
 
 ## Goal
 
@@ -17,9 +17,9 @@ into real raster game art:
 ## Current Package
 
 ```text
-versionCode: 196
-versionName: 1.9.6-alpha
-badge: ALASKA PASSPORT v1.9.6
+versionCode: 331
+versionName: 3.2.11-beta
+badge: ALASKA PASSPORT v3.31 BETA
 ```
 
 ## Generated Assets

@@ -162,6 +162,7 @@
       <label><input id="animate" type="checkbox" checked> Animate</label>
       <label><input id="showBounds" type="checkbox" checked> Show UI bounds</label>
       <label><input id="debug" type="checkbox" checked> Show debug hitboxes</label>
+      <label><input id="grid" type="checkbox" checked> Show 15 px grid</label>
       <label><input id="contrast" type="checkbox" checked> Show contrast report</label>
     </div>
 
@@ -193,6 +194,7 @@
       animate: document.getElementById("animate"),
       showBounds: document.getElementById("showBounds"),
       debug: document.getElementById("debug"),
+      grid: document.getElementById("grid"),
       contrast: document.getElementById("contrast"),
       swap: document.getElementById("swap"),
       report: document.getElementById("report")
@@ -631,6 +633,39 @@
       ctx.restore();
     }
 
+    function drawGrid() {
+      if (!ui.grid.checked) return;
+      ctx.save();
+      ctx.font = "10px Arial, Helvetica, sans-serif";
+      ctx.textAlign = "left";
+      ctx.lineWidth = 1;
+      for (let x = 0; x <= canvas.width; x += 15) {
+        const major = x % 60 === 0;
+        ctx.strokeStyle = major ? "rgba(255, 218, 121, 0.26)" : "rgba(255, 255, 255, 0.075)";
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, canvas.height);
+        ctx.stroke();
+        if (major) {
+          ctx.fillStyle = "rgba(255, 246, 207, 0.72)";
+          ctx.fillText(String(x), x + 3, 14);
+        }
+      }
+      for (let y = 0; y <= canvas.height; y += 15) {
+        const major = y % 60 === 0;
+        ctx.strokeStyle = major ? "rgba(255, 218, 121, 0.26)" : "rgba(255, 255, 255, 0.075)";
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(canvas.width, y);
+        ctx.stroke();
+        if (major) {
+          ctx.fillStyle = "rgba(255, 246, 207, 0.72)";
+          ctx.fillText(String(y), 4, y + 12);
+        }
+      }
+      ctx.restore();
+    }
+
     function report() {
       const names = Object.keys(boxes);
       const warnings = [];
@@ -684,6 +719,7 @@
         drawPanel(ui.scene.value);
       }
       if (ui.showBounds.checked) drawBounds();
+      drawGrid();
       report();
       requestAnimationFrame(drawFrame);
     }

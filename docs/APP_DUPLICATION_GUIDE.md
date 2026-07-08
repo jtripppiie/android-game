@@ -59,7 +59,7 @@ app/src/main/java/com/jtripppiie/mooserush/MooseRushView.java
 app/src/main/java/com/jtripppiie/mooserush/GameAssets.java
 app/src/main/assets/regions/alaska/region.json
 app/src/main/res/drawable-nodpi/
-docs/ALASKA_GAMEPLAY_BUILD.md
+docs/archive/ALASKA_GAMEPLAY_BUILD.md
 docs/SPRITE_SHEET_ASSET_PIPELINE.md
 docs/ANDROID_TEST_CHECKLIST.md
 ```
@@ -222,7 +222,7 @@ For every meaningful release, update:
 - `README.md`
 - `docs/VERSIONING.md`
 - `docs/ANDROID_TEST_CHECKLIST.md`
-- `docs/ALASKA_GAMEPLAY_BUILD.md`
+- `docs/archive/ALASKA_GAMEPLAY_BUILD.md`
 - `docs/REGION_REPLICATION_PLAYBOOK.md`
 - `docs/SPRITE_SHEET_ASSET_PIPELINE.md` when assets change
 - `app/src/main/assets/regions/alaska/region.json` when stage metadata changes

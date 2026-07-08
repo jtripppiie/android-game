@@ -454,18 +454,20 @@
       ctx.font = "10px Arial";
       ctx.textAlign = "left";
       ctx.lineWidth = 1;
-      for (let x = 0; x <= canvas.width; x += 40) {
-        ctx.strokeStyle = x % 120 === 0 ? "rgba(255, 218, 121, 0.28)" : "rgba(255,255,255,0.10)";
+      for (let x = 0; x <= canvas.width; x += 15) {
+        const major = x % 60 === 0;
+        ctx.strokeStyle = major ? "rgba(255, 218, 121, 0.28)" : "rgba(255,255,255,0.075)";
         line(x, 0, x, canvas.height);
-        if (x % 80 === 0) {
+        if (major) {
           ctx.fillStyle = "rgba(255, 246, 207, 0.72)";
           ctx.fillText(String(x), x + 3, 14);
         }
       }
-      for (let y = 0; y <= canvas.height; y += 40) {
-        ctx.strokeStyle = y % 120 === 0 ? "rgba(255, 218, 121, 0.28)" : "rgba(255,255,255,0.10)";
+      for (let y = 0; y <= canvas.height; y += 15) {
+        const major = y % 60 === 0;
+        ctx.strokeStyle = major ? "rgba(255, 218, 121, 0.28)" : "rgba(255,255,255,0.075)";
         line(0, y, canvas.width, y);
-        if (y % 80 === 0) {
+        if (major) {
           ctx.fillStyle = "rgba(255, 246, 207, 0.72)";
           ctx.fillText(String(y), 4, y + 12);
         }

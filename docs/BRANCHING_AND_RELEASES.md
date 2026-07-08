@@ -18,17 +18,17 @@ replay-economy          example future feature branch
 Android versions live in `app/build.gradle`:
 
 ```gradle
-versionCode 196
-versionName "1.9.6-alpha"
+versionCode 331
+versionName "3.2.11-beta"
 ```
 
 The visible in-app test badge also lives in `app/build.gradle`:
 
 ```gradle
-buildConfigField "String", "BUILD_BADGE", '"ALASKA PASSPORT v1.9.6"'
+buildConfigField "String", "BUILD_BADGE", '"ALASKA PASSPORT v3.31 BETA"'
 ```
 
-## Why They Differed
+## Historical Drift Example
 
 The branch named `graphics-1.8.0` began as the graphics architecture branch.
 Work continued there after the Android package advanced to `1.8.6-alpha`,

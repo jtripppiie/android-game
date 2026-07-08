@@ -1,258 +1,110 @@
 # You Rush
 
-A personalized Android arcade game by **TripperDeeLabs**.
+**You Rush** is a local-first Android arcade runner by **TripperDeeLabs**.
 
-**Current status: Alaska 3.31 debug preview expansion beta.**
+Players choose an Alaska stage, optionally personalize the runner with a local
+photo, then move, jump, throw snowballs, collect rewards, and survive regional
+wildlife encounters through stage runs and boss fights.
 
-This build is beta-ready for APK testing, tuning, and bug fixing. It is not final 1.0 or a larger milestone until it installs and plays well across all Alaska stages on a real phone.
-
-## Current beta
+## Current Build
 
 ```text
-versionCode: 331
-versionName: 3.2.11-beta
-build badge: ALASKA PASSPORT v3.31 BETA
+versionCode: 332
+versionName: 3.2.12-beta
+build badge: ALASKA PASSPORT v3.32 BETA
+APK: app/build/outputs/apk/debug/you-rush-alaska-3.2.12-beta-332-debug.apk
 ```
 
-## Fast UI preview
+This is a beta package for device testing and gameplay tuning. It is not a
+signed public-store release.
 
-Open `tools/menu-preview.html` in a browser to check the main-menu layout without
-installing the Android app. Open `tools/gameplay-preview.html` to audit gameplay
-HUD, controls, debug hitboxes, pause/results overlays, and contrast in a simple
-canvas sandbox. Open `tools/gear-obstacle-preview.html` for bear spray, logs,
-snow piles, icebergs, snowballs, hitboxes, and numbered tuning badges. Open
-`tools/sprite-sheet-audit.html` to inspect numbered sprite frames on a
-checkerboard. These files live only under `tools/`, are not packaged into the
-Android app, and can be removed by deleting the preview HTML files.
+## Gameplay
 
-## Game flow
-
-1. Splash screen
-2. Main menu
-3. Daily Rush or Alaska map
-4. Selected-stage start
-5. Customization / photo personalization
-6. Main arcade run with a single unified HUD
-7. Boss phase
-8. Stage clear or retry
-9. Next stage unlock / score chase
+- Five Alaska stages with distinct obstacles, hazards, bosses, and seasonal
+  presentation.
+- Platform-runner controls: move left/right, jump, double jump, and fire.
+- Snowballs can damage bosses, clear specific threats, and destroy Salmon Rush
+  river logs.
+- Bear spray is a scarce pickup that uses hold-FIRE to stun close wildlife and
+  interrupt close boss lunges.
+- Customize lets players choose a photo/default body style, including female
+  and male runner bodies.
+- Progression includes stage unlocks, XP, Trail Tokens, Daily Rush, Trail
+  Passport badges, Expedition Logs, cosmetics, combo scoring, near-miss rewards,
+  and local best scores.
 
 ## Controls
 
-- **LEFT**: move left
-- **RIGHT**: move right
-- **JUMP**: jump from the ground; tap again in the air for a double jump
-- **FIRE**: tap to launch a snowball; hold with SPRAY charges to use bear spray
-- **PAUSE**: freeze the current run, resume, return to map, or edit sprite
+- `LEFT`: move left
+- `RIGHT`: move right
+- `JUMP`: jump, with one air jump available
+- `FIRE`: tap for snowball, hold with SPRAY charges for bear spray
+- `PAUSE`: pause, resume, return to map, or edit the runner sprite
 
-## Gameplay style
+## Build And Test
 
-You Rush is a side-scrolling platform runner (Mario-style), not a flap-to-fly
-game. Your character runs along the ground under gravity. Stage-specific trail
-obstacles rise from the ground — driftwood rails, slick river logs, antler
-barricades, icebergs, and snowbanks — while wildlife hazards enter from the
-right. Clear, vault, leap, or survive stage obstacles; avoid or stun wildlife;
-and defeat bosses with snowballs.
-The ground is safe to land on; only hitting an obstacle, a hazard, or the boss
-ends the run. Bear spray is scarce survival gear: collect SPRAY pickups, then
-hold FIRE to emit a short hand-origin cone that stuns close wildlife and can
-interrupt a boss lunge.
+Open the project in Android Studio, or use the Gradle wrapper:
 
-
-## Contra code
-
-```text
-UP UP DOWN DOWN LEFT RIGHT LEFT RIGHT B A START
+```bash
+./gradlew testDebugUnitTest
+./gradlew lintDebug
+./gradlew assembleDebug
 ```
 
-Mobile mapping:
+Debug APKs are generated under:
 
-- `UP` = tap upper screen
-- `DOWN` = tap lower middle screen
-- `LEFT` = left control
-- `RIGHT` = right control
-- `B` = throw
-- `A` = jump
-- `START` = pause
+```text
+app/build/outputs/apk/debug/
+```
 
-## Beta systems
+GitHub Actions also publishes the debug APK as the
+`you-rush-alaska-debug-apk` artifact.
 
-- Splash and menu flow
-- Alaska map
-- Photo-personalized player sprite with outfit color selection
-- Local saved progress
-- Five Alaska stages
-- Unified run HUD
-- Launch-style boss and combo callout overlays
-- Combo-based score multipliers and stage-clear bonus scoring
-- Near-miss rewards for tight dodges
-- Run missions and shield powerup pickups
-- Aurora Rush meter and score burst mode
-- Trail Tokens with cosmetic outfit unlocks
-- Daily Rush rotating unlocked-stage challenge with local streak rewards
-- Trail Passport collectible badges with token rewards
-- Expedition Logs for higher-grade clears
-- Trail Map and Rescue Kit pickups
-- Real in-run pause/resume overlay with map and sprite exits
-- Map route intel that calls out each selected stage's obstacles, hazard, and boss
-- Stage-specific tactical briefing and launch callout
-- Short live-HUD objective labels for better top-bar readability on phones
-- Trail Scout mode from map pickups with upcoming danger markers
-- Clean Vault skill bonuses for tight obstacle clears
-- Boss weak-window reticle and FIRE NOW prompt
-- Adaptive splash title: stacked words on narrow screens, huge spacing on wide screens
-- Hazard forecast warnings
-- Boss phase-two escalation callouts
-- Expedition grading, route milestones, trail camp restocks, and beta run summaries
-- Progressive difficulty pacing for speed and spawn pressure
-- Route progress bar
-- Collectible star paths
-- Parallax Alaska scenery with generated background plates and snow-tree layers
-- Winter-mode polar bear, wolf, and roaring bear moments
-- Three lives per run
-- Checkpoint respawn after passed obstacles
-- Snowball interactions
-- Combo counter
-- Persistent XP and local levels
-- SoundPool generated SFX with persisted mute toggle
-- Debug overlay (off by default; toggle from the menu)
-- Version badge
-- Sampled photo decoding to reduce memory risk from large gallery images
-- Boss fights now escalate with phase two, enrage, summons, clearer weak windows, and stronger attack feedback
-- Snowballs now arc toward nearby threats, power up during focus/weak windows, and have clearer hit rewards
-- Debug mode numbers visible gameplay objects so phone-test notes can reference exact items.
-- Salmon Rush river logs now draw as logs and can be blasted apart with snowballs.
-- Dark Winter obstacles now read as icebergs instead of ice markers.
-- Weather fronts were removed from active gameplay for cleaner readability.
-- Removed leftover weather scoring/debug plumbing after disabling weather fronts.
-- Salmon Rush rules now explicitly say that FIRE blasts logs.
-- Expedition results now track blasted logs instead of weather fronts.
-- Tighter player, wildlife, boss, and roaring-bear sprite crops to reduce edge artifacts.
-- Debug sprite badges now include creature/frame details for precise artifact reports.
-- Snowballs now aim at destructible river logs and log hitboxes are more forgiving.
-- River logs now show a small FIRE target mark and give stronger blast feedback.
-- Debug badges identify log targets and thrown snowball type.
-- Snowballs can now shatter boss ice projectiles before they hit the player.
-- Boss projectile tells and boss HUD status now teach `JUMP OR FIRE`.
-- Debug boss-attack badges now identify shootable ice attacks.
-- The final bear boss now stands up for eye beams that sweep vertically toward the runner.
-- Splash screen title spacing and boss-fight readability polish
-- Stronger sprite edge guards for animal sheets and roar sprites
-- Snappier jump arc and trail-credible Salmon Rush river-log obstacles
-- Stage-specific route language across HUD, map, ready screen, pause, missions, and results
-- Result panels with next-goal guidance after wins and losses
-- Real map progression locks, respawn grace, boss escape timer, and clearer combat rules
-- Stage-specific obstacle identities and calmer creature animation pacing
-- Build-log artifact workflow
-- Safer launcher vector paths
-- Hardened app manifest
+## Debug Tools
 
-## Runtime architecture
+Local browser previews live in `tools/` and are not packaged into the app.
 
-`MainActivity` loads one game view:
+- `menu-preview.html`: main menu layout review with 15 px grid overlay
+- `gameplay-preview.html`: HUD, overlays, controls, hitboxes, contrast, and 15
+  px grid overlay
+- `laser-eyes-preview.html`: polar bear boss beam origin and sweep tuning with
+  15 px grid overlay
+- `gear-obstacle-preview.html`: logs, snow piles, icebergs, snowballs, bear
+  spray, hitboxes, numbered debug badges, and 15 px grid overlay
+- `sprite-sheet-audit.html`: actual PNG sprite sheets with frame numbers,
+  checkerboard transparency, trim boxes, and 15 px grid overlay
+- `debug-tuning-dashboard.html`: reporting guide for numbered DEBUG screenshots
+
+## Documentation
+
+Start with [docs/README.md](docs/README.md).
+
+Key active docs:
+
+- [Versioning](docs/VERSIONING.md)
+- [Android test checklist](docs/ANDROID_TEST_CHECKLIST.md)
+- [Privacy notes](docs/PRIVACY.md)
+- [Store listing draft](docs/STORE_LISTING_DRAFT.md)
+- [Sprite sheet asset pipeline](docs/SPRITE_SHEET_ASSET_PIPELINE.md)
+- [Region replication playbook](docs/REGION_REPLICATION_PLAYBOOK.md)
+
+Historical release notes and rapid-iteration logs are preserved in
+[docs/archive](docs/archive/).
+
+## Architecture
+
+`MainActivity` hosts a single custom Android view:
 
 ```java
 new MooseRushView(this)
 ```
 
-The previous subclass stack was removed in 1.3.2. Gameplay state now flows
-through `GameState`, platformer constants live in `RunnerTuning`, and the HUD is
-drawn once by `MooseRushView`.
+Pure gameplay math and tuning helpers live in small Java classes with fast JVM
+unit coverage. Rendering, input, game state, persistence, and moment-to-moment
+gameplay currently live in `MooseRushView`.
 
-## Build
+## Privacy
 
-Open the repo in Android Studio and run the `app` configuration on a device or emulator.
-
-From the command line, use the committed Gradle wrapper:
-
-```bash
-./gradlew assembleDebug        # build the debug APK
-./gradlew testDebugUnitTest    # run JVM unit tests (GameMath, LevelCurve)
-./gradlew lintDebug            # run Android lint
-```
-
-The debug APK lands in `app/build/outputs/apk/debug/` with the version in the
-filename, for example:
-
-```text
-you-rush-alaska-3.2.11-beta-331-debug.apk
-```
-
-GitHub Actions also builds a debug APK using:
-
-```text
-.github/workflows/android-debug-apk.yml
-```
-
-The workflow runs on manual dispatch, `main`, `jtripp`, and the historical
-`graphics-1.8.0` graphics branch. APK files are ignored by git; GitHub stores
-the package as a workflow artifact instead of committing it to the repository.
-
-Artifacts:
-
-- `you-rush-alaska-debug-apk`
-- `you-rush-alaska-build-logs`
-
-## Debug previews
-
-Local HTML tools live in `tools/`:
-
-- `laser-eyes-preview.html` — preview and tune the boss eye-beam tell/attack with a numbered calibration grid.
-- `gear-obstacle-preview.html` — preview logs, snow piles, icebergs, snowballs,
-  bear spray, hitboxes, and numbered debug badges.
-- `sprite-sheet-audit.html` — inspect actual PNG sprite sheets frame by frame
-  with checkerboard transparency, trim boxes, and frame numbers.
-- `debug-tuning-dashboard.html` — report format, debug legend, and QA checklist
-  for numbered DEBUG screenshots.
-
-## Tests
-
-Pure game math lives in dependency-free classes so it can be covered by fast JVM
-unit tests:
-
-- `GameMath` — clamp and circle/rect collision helpers used by the game loop.
-- `LevelCurve` — XP thresholds and level/progress math used by the level HUD.
-- `RunnerTuning` — coyote time, jump buffer, and spawn-spacing fairness floors.
-- `CollisionTuning` — named player, wildlife, boss, pickup, throw, and log
-  hitbox scales used by collision feel.
-- `BossTuning` — boss phase speed, tell/attack/recover windows, survival timer,
-  and phase-two pattern selection.
-- `SpriteRenderer` / sprite trim tests — frame-edge guards that prevent atlas
-  bleed artifacts during walking, swimming, and flying animation.
-- `RunRewardEconomy` — Trail Token payouts, outfit unlocks, and Daily Rush
-  rotation/streak math.
-- `TrailBadgeCatalog` — local Trail Passport badge unlock rules and badge
-  token rewards.
-
-Run them with `./gradlew testDebugUnitTest`.
-
-## Documentation Map
-
-- `docs/APP_DUPLICATION_GUIDE.md` explains how to clone this app structure for a new region or new branded runner.
-- `docs/REGION_REPLICATION_PLAYBOOK.md` is the detailed step-by-step manual for replicating the game for other regions.
-- `docs/BRANCHING_AND_RELEASES.md` explains why Git branch names and Android app versions are separate, and how `main` should be used.
-- `docs/ALASKA_GAMEPLAY_BUILD.md` documents the current gameplay loop, stages, scoring, assets, and debug hooks.
-- `docs/SPRITE_SHEET_ASSET_PIPELINE.md` preserves the repeatable art-generation prompts and sprite-sheet rules.
-- `docs/ANDROID_TEST_CHECKLIST.md` is the phone QA checklist for each APK.
-- `docs/RELEASE_2_2_BETA_LAUNCH_READINESS.md` documents the 2.2.0-beta release-owner hardening pass.
-- `docs/RELEASE_2_3_BETA_GAMEPLAY_POLISH.md` documents the next-five gameplay polish pass.
-- `docs/RELEASE_2_4_BETA_PROGRESSION_POLISH.md` documents the progression and fairness polish pass.
-- `docs/RELEASE_2_5_BETA_VISUAL_CONTRACT.md` documents the obstacle-identity and animation-readability pass.
-
-## App icon
-
-The launcher uses an adaptive icon (`res/mipmap-anydpi-v26/ic_launcher.xml`) with
-separate background, foreground, and monochrome (themed-icon) layers, plus a
-full-bleed vector fallback in `res/mipmap-anydpi/` for API 23–25.
-
-
-## Beta test checklist
-
-1. Confirm GitHub Actions builds the APK.
-2. Install the APK on a real Android device.
-3. Verify photo picker and photo restore.
-4. Verify all five Alaska stages.
-5. Verify movement, jump, double jump, fire, lives, checkpoint respawn, unified HUD, combo, XP, all bosses, and mute toggle.
-6. Tune movement, spacing, scoring, spawn rates, stage difficulty, and HUD overlap.
-7. Confirm no crash in a 15-minute phone test.
-8. Keep 2.5.x focused on visual/gameplay clarity, phone QA, and crash-free beta testing.
+The current beta is local-first: no account, no normal-play network dependency,
+and no image upload. Optional photo personalization uses Android's system picker
+and decodes the selected image locally.

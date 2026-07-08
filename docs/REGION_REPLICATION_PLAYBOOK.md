@@ -585,11 +585,11 @@ application id, imports, and any build/CI scripts together.
 Before making a package build, update:
 
 ```gradle
-versionCode 196
-versionName "1.9.6-alpha"
+versionCode 331
+versionName "3.2.11-beta"
 
 buildConfigField "String", "BUILD_CHANNEL", '"ALASKA BETA"'
-buildConfigField "String", "BUILD_BADGE", '"ALASKA PASSPORT v1.9.6"'
+buildConfigField "String", "BUILD_BADGE", '"ALASKA PASSPORT v3.31 BETA"'
 ```
 
 For a new region, use a badge like:
@@ -788,7 +788,7 @@ docs/ANDROID_TEST_CHECKLIST.md
 docs/APP_DUPLICATION_GUIDE.md
 docs/REGION_REPLICATION_PLAYBOOK.md
 docs/SPRITE_SHEET_ASSET_PIPELINE.md
-docs/ALASKA_GAMEPLAY_BUILD.md or the new region gameplay build doc
+docs/archive/ALASKA_GAMEPLAY_BUILD.md or the new region gameplay build doc
 app/src/main/assets/regions/<region_id>/region.json
 ```
 

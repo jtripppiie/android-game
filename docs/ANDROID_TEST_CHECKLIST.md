@@ -5,16 +5,16 @@ Use this after GitHub Actions produces the debug APK artifact.
 Current packaged beta:
 
 ```text
-versionCode: 331
-versionName: 3.2.11-beta
-build badge: ALASKA PASSPORT v3.31 BETA
+versionCode: 332
+versionName: 3.2.12-beta
+build badge: ALASKA PASSPORT v3.32 BETA
 ```
 
 ## Install test
 
 1. Download `you-rush-alaska-debug-apk` from the latest successful workflow run.
 2. Extract the ZIP if GitHub downloaded it as a ZIP.
-3. Install `you-rush-alaska-3.2.11-beta-331-debug.apk` on an Android phone.
+3. Install `you-rush-alaska-3.2.12-beta-332-debug.apk` on an Android phone.
 4. Allow installation from the browser/files app if Android prompts you.
 5. Open **You Rush**.
 6. Confirm the debug/version badge is visible and matches the packaged beta.
@@ -35,6 +35,8 @@ Confirm these screens work:
 - Large modern phone photos do not crash import; unusable photos show a friendly rejection.
 - The selected player photo restores after closing and reopening the app.
 - Outfit color selection persists after closing and reopening the app.
+- Body style selection cycles through photo/default, female runner, and male
+  runner, then persists after closing and reopening the app.
 - Back buttons return to menu.
 - Play starts the selected stage.
 - Daily Rush starts the rotating daily stage.

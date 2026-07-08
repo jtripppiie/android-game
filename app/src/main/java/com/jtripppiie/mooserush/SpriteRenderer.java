@@ -13,6 +13,10 @@ import android.graphics.RectF;
 import android.graphics.Shader;
 
 final class SpriteRenderer {
+    static final int BODY_STYLE_PHOTO = 0;
+    static final int BODY_STYLE_FEMALE = 1;
+    static final int BODY_STYLE_MALE = 2;
+
     private static final int RUNNER_FRAMES = 6;
     private static final int SPRITE_EDGE_GUARD_PX = 5;
     private static final int RUNNER_TRIM_INSET_PX = 3;
@@ -35,28 +39,38 @@ final class SpriteRenderer {
     private final Rect sourceRect = new Rect();
     private final Matrix photoMatrix = new Matrix();
     private final Bitmap runnerBodySheet;
+    private final Bitmap femaleRunnerSheet;
+    private final Bitmap maleRunnerSheet;
     private final float density;
 
     SpriteRenderer(Context context) {
         density = context.getResources().getDisplayMetrics().density;
         runnerBodySheet = BitmapFactory.decodeResource(context.getResources(), R.drawable.sheet_player_run_headless);
+        femaleRunnerSheet = BitmapFactory.decodeResource(context.getResources(), R.drawable.sheet_mom_run);
+        maleRunnerSheet = BitmapFactory.decodeResource(context.getResources(), R.drawable.sheet_dad_run);
         bitmapPaint.setFilterBitmap(true);
     }
 
     void drawRunner(Canvas canvas, PlayerFrame frame) {
         float bob = (float) Math.sin(frame.spriteClock * Math.PI * 2f) * dp(4.0f);
         float headY = frame.y + bob;
-        if (!drawRunnerSheetBody(canvas, frame, headY, true)) {
+        boolean fullBody = drawFullRunnerSheet(canvas, frame, headY, true);
+        if (!fullBody && !drawRunnerSheetBody(canvas, frame, headY, true)) {
             drawRunningBody(canvas, frame, headY);
         }
-        drawHead(canvas, frame.x, headY, frame.radius, frame.playerPhoto);
+        if (!fullBody || frame.playerPhoto != null) {
+            drawHead(canvas, frame.x, headY, frame.radius, frame.playerPhoto);
+        }
     }
 
     void drawStanding(Canvas canvas, PlayerFrame frame) {
-        if (!drawRunnerSheetBody(canvas, frame, frame.y, false)) {
+        boolean fullBody = drawFullRunnerSheet(canvas, frame, frame.y, false);
+        if (!fullBody && !drawRunnerSheetBody(canvas, frame, frame.y, false)) {
             drawStandingBody(canvas, frame);
         }
-        drawHead(canvas, frame.x, frame.y, frame.radius, frame.playerPhoto);
+        if (!fullBody || frame.playerPhoto != null) {
+            drawHead(canvas, frame.x, frame.y, frame.radius, frame.playerPhoto);
+        }
     }
 
     private void drawHead(Canvas canvas, float x, float headY, float radius, Bitmap playerPhoto) {
@@ -94,6 +108,43 @@ final class SpriteRenderer {
         tempRect.set(centerX - bodyWidth * 0.50f, top, centerX + bodyWidth * 0.50f, top + bodyHeight);
         canvas.drawBitmap(runnerBodySheet, sourceRect, tempRect, bitmapPaint);
         return true;
+    }
+
+    private boolean drawFullRunnerSheet(Canvas canvas, PlayerFrame frame, float headY, boolean animated) {
+        Bitmap sheet = fullRunnerSheet(frame.bodyStyle);
+        if (sheet == null || sheet.getWidth() <= 0 || sheet.getHeight() <= 0) {
+            return false;
+        }
+
+        int frameWidth = sheet.getWidth() / RUNNER_FRAMES;
+        if (frameWidth <= 0) {
+            return false;
+        }
+
+        int frameIndex = animated ? runnerSheetFrame(frame.spriteClock) : 0;
+        int guard = Math.min(SPRITE_EDGE_GUARD_PX + RUNNER_TRIM_INSET_PX, Math.min(frameWidth, sheet.getHeight()) / 12);
+        sourceRect.set(frameIndex * frameWidth + guard, guard, (frameIndex + 1) * frameWidth - guard, sheet.getHeight() - guard);
+        if (sourceRect.width() <= 0 || sourceRect.height() <= 0) {
+            return false;
+        }
+
+        float bodyHeight = frame.radius * (animated ? 4.08f : 4.02f);
+        float bodyWidth = bodyHeight * (sourceRect.width() / (float) sourceRect.height());
+        float centerX = frame.x + frame.radius * 0.04f;
+        float top = headY - frame.radius * 1.12f;
+        tempRect.set(centerX - bodyWidth * 0.50f, top, centerX + bodyWidth * 0.50f, top + bodyHeight);
+        canvas.drawBitmap(sheet, sourceRect, tempRect, bitmapPaint);
+        return true;
+    }
+
+    private Bitmap fullRunnerSheet(int bodyStyle) {
+        if (bodyStyle == BODY_STYLE_FEMALE) {
+            return femaleRunnerSheet;
+        }
+        if (bodyStyle == BODY_STYLE_MALE) {
+            return maleRunnerSheet;
+        }
+        return null;
     }
 
     static int runnerSheetFrame(float runnerClock) {
@@ -381,8 +432,9 @@ final class SpriteRenderer {
         final float velocityY;
         final Bitmap playerPhoto;
         final int outfitColor;
+        final int bodyStyle;
 
-        PlayerFrame(float x, float y, float radius, float spriteClock, boolean grounded, float velocityY, Bitmap playerPhoto, int outfitColor) {
+        PlayerFrame(float x, float y, float radius, float spriteClock, boolean grounded, float velocityY, Bitmap playerPhoto, int outfitColor, int bodyStyle) {
             this.x = x;
             this.y = y;
             this.radius = radius;
@@ -391,6 +443,7 @@ final class SpriteRenderer {
             this.velocityY = velocityY;
             this.playerPhoto = playerPhoto;
             this.outfitColor = outfitColor;
+            this.bodyStyle = bodyStyle;
         }
     }
 }

@@ -134,6 +134,7 @@
 
     <div class="checks">
       <label><input id="showBounds" type="checkbox" checked> Show bounds</label>
+      <label><input id="showGrid" type="checkbox" checked> Show 15 px grid</label>
       <label><input id="showOld" type="checkbox"> Show old problem layout</label>
     </div>
 
@@ -158,6 +159,7 @@
       density: document.getElementById("density"),
       densityLabel: document.getElementById("densityLabel"),
       showBounds: document.getElementById("showBounds"),
+      showGrid: document.getElementById("showGrid"),
       showOld: document.getElementById("showOld"),
       swap: document.getElementById("swap"),
       report: document.getElementById("report")
@@ -373,6 +375,39 @@
       ctx.restore();
     }
 
+    function drawGrid() {
+      if (!ui.showGrid.checked) return;
+      ctx.save();
+      ctx.font = "10px Arial, Helvetica, sans-serif";
+      ctx.textAlign = "left";
+      ctx.lineWidth = 1;
+      for (let x = 0; x <= canvas.width; x += 15) {
+        const major = x % 60 === 0;
+        ctx.strokeStyle = major ? "rgba(255, 218, 121, 0.26)" : "rgba(255, 255, 255, 0.075)";
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, canvas.height);
+        ctx.stroke();
+        if (major) {
+          ctx.fillStyle = "rgba(255, 246, 207, 0.72)";
+          ctx.fillText(String(x), x + 3, 14);
+        }
+      }
+      for (let y = 0; y <= canvas.height; y += 15) {
+        const major = y % 60 === 0;
+        ctx.strokeStyle = major ? "rgba(255, 218, 121, 0.26)" : "rgba(255, 255, 255, 0.075)";
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(canvas.width, y);
+        ctx.stroke();
+        if (major) {
+          ctx.fillStyle = "rgba(255, 246, 207, 0.72)";
+          ctx.fillText(String(y), 4, y + 12);
+        }
+      }
+      ctx.restore();
+    }
+
     function hexToRgb(hex) {
       const clean = hex.replace("#", "");
       const value = Number.parseInt(clean, 16);
@@ -460,11 +495,12 @@
       if (ui.showBounds.checked) {
         drawBounds(boxes, "rgba(83, 219, 184, 0.9)");
       }
+      drawGrid();
       report(boxes);
     }
 
     ui.preset.addEventListener("change", applyPreset);
-    [ui.width, ui.height, ui.density, ui.showBounds, ui.showOld].forEach((el) => el.addEventListener("input", draw));
+    [ui.width, ui.height, ui.density, ui.showBounds, ui.showGrid, ui.showOld].forEach((el) => el.addEventListener("input", draw));
     ui.swap.addEventListener("click", () => {
       const oldWidth = ui.width.value;
       ui.width.value = ui.height.value;

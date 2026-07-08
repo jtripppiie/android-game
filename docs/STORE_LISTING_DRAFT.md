@@ -10,9 +10,11 @@ A personalized Alaska arcade runner starring your own face.
 
 ## Full description
 
-You Rush is a fast, funny, local-first arcade game by TripperDeeLabs.
+You Rush is a fast, local-first arcade runner by TripperDeeLabs.
 
-Pick an Alaska stage, add your face if you want, and survive a ridiculous local arcade challenge. Move, jump, throw snowballs, use trees carefully, chase combos, and try to clear each stage.
+Pick an Alaska stage, optionally personalize the runner with your own face, and
+survive a regional arcade challenge built around movement, snowballs, wildlife,
+terrain, and boss fights.
 
 The Alaska beta includes five stages, personalized character art, stage intros, near-miss scoring, combo streaks, wildlife and terrain warnings, snowball interactions, stage challenges, Expedition Logs, Daily Rush, Trail Passport badges, and local saved progress.
 
