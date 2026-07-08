@@ -2,16 +2,16 @@
 
 A personalized Android arcade game by **TripperDeeLabs**.
 
-**Current status: Alaska 3.29 eye-beam calibration beta.**
+**Current status: Alaska 3.30 profile eye-beam beta.**
 
 This build is beta-ready for APK testing, tuning, and bug fixing. It is not final 1.0 or a larger milestone until it installs and plays well across all Alaska stages on a real phone.
 
 ## Current beta
 
 ```text
-versionCode: 329
-versionName: 3.2.9-beta
-build badge: ALASKA PASSPORT v3.29 BETA
+versionCode: 330
+versionName: 3.2.10-beta
+build badge: ALASKA PASSPORT v3.30 BETA
 ```
 
 ## Fast UI preview
@@ -172,7 +172,7 @@ The debug APK lands in `app/build/outputs/apk/debug/` with the version in the
 filename, for example:
 
 ```text
-you-rush-alaska-3.2.9-beta-329-debug.apk
+you-rush-alaska-3.2.10-beta-330-debug.apk
 ```
 
 GitHub Actions also builds a debug APK using:
@@ -194,7 +194,7 @@ Artifacts:
 
 Local HTML tools live in `tools/`:
 
-- `laser-eyes-preview.html` — preview and tune the boss eye-beam tell/attack.
+- `laser-eyes-preview.html` — preview and tune the boss eye-beam tell/attack with a numbered calibration grid.
 - `debug-tuning-dashboard.html` — report format, debug legend, and QA checklist
   for numbered DEBUG screenshots.
 

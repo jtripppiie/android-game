@@ -155,6 +155,7 @@
     <div class="checks">
       <label><input id="hitbox" type="checkbox" checked> Show hitbox</label>
       <label><input id="debug" type="checkbox" checked> Show debug labels</label>
+      <label><input id="grid" type="checkbox" checked> Show numbered grid</label>
       <label><input id="slow" type="checkbox"> Slow motion</label>
     </div>
 
@@ -178,6 +179,7 @@
       shake: document.getElementById("shake"),
       hitbox: document.getElementById("hitbox"),
       debug: document.getElementById("debug"),
+      grid: document.getElementById("grid"),
       slow: document.getElementById("slow"),
       report: document.getElementById("report"),
       snapshot: document.getElementById("snapshot")
@@ -317,8 +319,8 @@
         ctx.fill();
         ctx.stroke();
       }
-      const eyeX = x - 38;
-      const eyeY = bottom - h + 26;
+      const eyeX = 717;
+      const eyeY = bottom - h + 23;
       drawEyes(eyeX, eyeY, phase, progress);
       ctx.restore();
       return { x, eyeX, eyeY, ground };
@@ -331,8 +333,7 @@
       ctx.shadowBlur = 10 + glow * 12;
       ctx.fillStyle = `rgba(255, ${Math.round(150 - glow * 52)}, 84, ${0.35 + glow * 0.65})`;
       ctx.beginPath();
-      ctx.arc(x - 4, y - 3, 2.5 + glow * 2.0, 0, Math.PI * 2);
-      ctx.arc(x + 7, y + 2, 2.2 + glow * 1.7, 0, Math.PI * 2);
+      ctx.arc(x, y, 2.4 + glow * 1.8, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
     }
@@ -344,8 +345,7 @@
       const tell = phase === "tell";
       const alpha = active ? 1 : tell ? progress * 0.62 : Math.max(0, 1 - progress) * 0.24;
       const length = active ? 560 : 130 + progress * 250;
-      const leftEyeX = boss.eyeX - 2;
-      const rightEyeX = boss.eyeX + 6;
+      const leftEyeX = boss.eyeX;
       const startX = boss.eyeX;
       const targetY = Math.max(280, Math.min(390, player.bodyY + Math.sin(time * 5.4) * 18));
       const y = active ? boss.eyeY + (targetY - boss.eyeY) * Math.min(1, progress * 1.18) : boss.eyeY + 6;
@@ -355,14 +355,14 @@
 
       ctx.save();
       ctx.globalCompositeOperation = "lighter";
-      drawBeamCore(leftEyeX, boss.eyeY - 3, endX, y - 16, beamHeight, alpha, intensity, pulse);
+      drawBeamCore(leftEyeX, boss.eyeY, endX, y, beamHeight, alpha, intensity, pulse);
       if (style === "double") {
-        drawBeamCore(rightEyeX, boss.eyeY + 5, endX, y + 13, beamHeight * 0.9, alpha, intensity, pulse);
+        drawBeamCore(leftEyeX, boss.eyeY, endX, y + 3, beamHeight * 0.55, alpha * 0.55, intensity, pulse);
       } else if (style === "merged") {
-        drawBeamCore(startX, boss.eyeY + 1, endX, y - 4, beamHeight * 1.45, alpha, intensity, pulse);
+        drawBeamCore(startX, boss.eyeY, endX, y, beamHeight * 1.05, alpha, intensity, pulse);
       } else {
         const sweep = Math.sin(time * 8) * 20;
-        drawBeamCore(startX, boss.eyeY + sweep * 0.08, endX, y - 5 + sweep, beamHeight * (0.8 + pulse * 0.55), alpha, intensity, pulse);
+        drawBeamCore(startX, boss.eyeY, endX, y + sweep, beamHeight * (0.55 + pulse * 0.24), alpha, intensity, pulse);
       }
       ctx.restore();
 
@@ -448,6 +448,31 @@
       ctx.stroke();
     }
 
+    function drawCalibrationGrid() {
+      if (!controls.grid.checked) return;
+      ctx.save();
+      ctx.font = "10px Arial";
+      ctx.textAlign = "left";
+      ctx.lineWidth = 1;
+      for (let x = 0; x <= canvas.width; x += 40) {
+        ctx.strokeStyle = x % 120 === 0 ? "rgba(255, 218, 121, 0.28)" : "rgba(255,255,255,0.10)";
+        line(x, 0, x, canvas.height);
+        if (x % 80 === 0) {
+          ctx.fillStyle = "rgba(255, 246, 207, 0.72)";
+          ctx.fillText(String(x), x + 3, 14);
+        }
+      }
+      for (let y = 0; y <= canvas.height; y += 40) {
+        ctx.strokeStyle = y % 120 === 0 ? "rgba(255, 218, 121, 0.28)" : "rgba(255,255,255,0.10)";
+        line(0, y, canvas.width, y);
+        if (y % 80 === 0) {
+          ctx.fillStyle = "rgba(255, 246, 207, 0.72)";
+          ctx.fillText(String(y), 4, y + 12);
+        }
+      }
+      ctx.restore();
+    }
+
     function render(now) {
       const dt = Math.min(0.033, (now - last) / 1000);
       last = now;
@@ -468,16 +493,19 @@
       const boss = drawBoss(phase, progress);
       drawLaser(boss, player, phase, progress);
       drawHud(phase, progress);
+      drawCalibrationGrid();
 
       controls.report.textContent =
         "Recommended game read:\n" +
         "- Tell: eyes glow, boss rises, warning label appears.\n" +
         "- Attack: beams start at the eyes and sweep up/down toward the runner.\n" +
         "- Hitbox: rectangle is slightly thinner than the visual glow.\n" +
-        "- Recover: boss gives a short FIRE NOW window.\n\n" +
+        "- Recover: boss gives a short FIRE NOW window.\n" +
+        "- Grid: report eye origin as exact X/Y coordinates for tuning.\n\n" +
         "Current: " + phase + " / " + controls.style.value +
         " / intensity " + Number(controls.intensity.value).toFixed(2) +
-        " / height " + Number(controls.height.value).toFixed(2);
+        " / height " + Number(controls.height.value).toFixed(2) +
+        "\nEye origin: x=" + Math.round(boss.eyeX) + ", y=" + Math.round(boss.eyeY);
 
       requestAnimationFrame(render);
     }

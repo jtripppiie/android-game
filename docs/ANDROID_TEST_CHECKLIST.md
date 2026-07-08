@@ -5,16 +5,16 @@ Use this after GitHub Actions produces the debug APK artifact.
 Current packaged beta:
 
 ```text
-versionCode: 329
-versionName: 3.2.9-beta
-build badge: ALASKA PASSPORT v3.29 BETA
+versionCode: 330
+versionName: 3.2.10-beta
+build badge: ALASKA PASSPORT v3.30 BETA
 ```
 
 ## Install test
 
 1. Download `you-rush-alaska-debug-apk` from the latest successful workflow run.
 2. Extract the ZIP if GitHub downloaded it as a ZIP.
-3. Install `you-rush-alaska-3.2.9-beta-329-debug.apk` on an Android phone.
+3. Install `you-rush-alaska-3.2.10-beta-330-debug.apk` on an Android phone.
 4. Allow installation from the browser/files app if Android prompts you.
 5. Open **You Rush**.
 6. Confirm the debug/version badge is visible and matches the packaged beta.
@@ -114,6 +114,7 @@ Confirm score changes:
 - Snowballs can shatter boss ice projectiles for score, meter, and defensive breathing room.
 - Eye beams originate from the boss eyes, sweep vertically toward the runner, and should show `BEAM DODGE` in DEBUG attack badges.
 - Eye beams should appear as thin laser lines from the eye area, not a thick chest/mouth beam.
+- The side-view bear should show one small visible eye glint, not two oversized red dots.
 - Bear spray can stun close wildlife and interrupt a boss lunge when timed well.
 - Boss phase-two and enrage timing still feel readable, with tells before attacks and short weak windows after recovery.
 - Defeating a boss gives a larger stage-clear bonus with combo and star rewards.
