@@ -10,6 +10,10 @@ final class GameAssets {
     private final Drawable backgroundDarkWinter;
     private final Drawable treeSummer;
     private final Drawable treeWinter;
+    private final Drawable obstacleRiverLog;
+    private final Drawable obstacleSnowbank;
+    private final Drawable obstacleIceberg;
+    private final Drawable obstacleAntlerBarricade;
     private final Bitmap mooseWalkSheet;
     private final Bitmap bearWalkSheet;
     private final Bitmap polarBearWalkSheet;
@@ -24,6 +28,10 @@ final class GameAssets {
         backgroundDarkWinter = context.getDrawable(R.drawable.background_dark_winter_art);
         treeSummer = context.getDrawable(R.drawable.sprite_tree_summer);
         treeWinter = context.getDrawable(R.drawable.sprite_tree_winter);
+        obstacleRiverLog = context.getDrawable(R.drawable.obstacle_river_log);
+        obstacleSnowbank = context.getDrawable(R.drawable.obstacle_snowbank);
+        obstacleIceberg = context.getDrawable(R.drawable.obstacle_iceberg);
+        obstacleAntlerBarricade = context.getDrawable(R.drawable.obstacle_antler_barricade);
         mooseWalkSheet = BitmapFactory.decodeResource(context.getResources(), R.drawable.sheet_moose_walk);
         bearWalkSheet = BitmapFactory.decodeResource(context.getResources(), R.drawable.sheet_bear_walk);
         polarBearWalkSheet = BitmapFactory.decodeResource(context.getResources(), R.drawable.sheet_polar_bear_walk);
@@ -40,6 +48,22 @@ final class GameAssets {
 
     Drawable tree(boolean winter) {
         return winter ? treeWinter : treeSummer;
+    }
+
+    Drawable obstacleRiverLog() {
+        return obstacleRiverLog;
+    }
+
+    Drawable obstacleSnowbank() {
+        return obstacleSnowbank;
+    }
+
+    Drawable obstacleIceberg() {
+        return obstacleIceberg;
+    }
+
+    Drawable obstacleAntlerBarricade() {
+        return obstacleAntlerBarricade;
     }
 
     Bitmap mooseWalkSheet() {

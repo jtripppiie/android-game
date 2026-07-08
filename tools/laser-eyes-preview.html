@@ -1,0 +1,488 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>You Rush Boss Laser Eyes Preview</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #081224;
+      color: #f7fbff;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 330px 1fr;
+    }
+
+    aside {
+      padding: 18px;
+      background: #101926;
+      border-right: 1px solid rgba(255, 255, 255, 0.14);
+      box-sizing: border-box;
+      max-height: 100vh;
+      overflow: auto;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 20px;
+    }
+
+    p {
+      margin: 0 0 14px;
+      color: #c7d6df;
+      font-size: 13px;
+      line-height: 1.42;
+    }
+
+    label {
+      display: block;
+      margin: 12px 0 6px;
+      color: #c7d6df;
+      font-size: 13px;
+    }
+
+    select,
+    input,
+    button {
+      width: 100%;
+      box-sizing: border-box;
+      min-height: 34px;
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      border-radius: 6px;
+      background: #172235;
+      color: #fff;
+      padding: 7px 9px;
+      font: inherit;
+    }
+
+    input[type="range"] {
+      padding: 0;
+    }
+
+    button {
+      cursor: pointer;
+      background: #ffda79;
+      color: #18202a;
+      font-weight: 700;
+    }
+
+    .checks label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 9px 0;
+    }
+
+    .checks input {
+      width: auto;
+      min-height: auto;
+    }
+
+    #report {
+      margin-top: 14px;
+      padding: 12px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      color: #dcebef;
+      font-size: 12.5px;
+      line-height: 1.45;
+      white-space: pre-wrap;
+    }
+
+    main {
+      display: grid;
+      place-items: center;
+      min-width: 0;
+      padding: 22px;
+      overflow: auto;
+    }
+
+    canvas {
+      max-width: 100%;
+      max-height: calc(100vh - 44px);
+      background: #081224;
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.42);
+    }
+
+    @media (max-width: 820px) {
+      body {
+        grid-template-columns: 1fr;
+      }
+
+      aside {
+        max-height: none;
+        border-right: 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+      }
+    }
+  </style>
+</head>
+<body>
+  <aside>
+    <h1>Laser Eyes Preview</h1>
+    <p>Visual sandbox for the Bear Country boss eye-laser. Use this to compare tell readability, beam thickness, hitbox placement, and jump timing before changing the Android renderer.</p>
+
+    <label for="phase">Phase</label>
+    <select id="phase">
+      <option value="auto">Auto cycle</option>
+      <option value="tell">Tell only</option>
+      <option value="fire">Laser firing</option>
+      <option value="recover">Recover</option>
+    </select>
+
+    <label for="style">Beam style</label>
+    <select id="style">
+      <option value="double">Twin beams</option>
+      <option value="merged">Merged beam</option>
+      <option value="pulse">Pulsing sweep</option>
+    </select>
+
+    <label for="intensity">Intensity</label>
+    <input id="intensity" type="range" min="0.6" max="1.6" value="1.05" step="0.05">
+
+    <label for="height">Beam height</label>
+    <input id="height" type="range" min="0.55" max="1.35" value="0.9" step="0.05">
+
+    <label for="shake">Screen shake</label>
+    <input id="shake" type="range" min="0" max="1" value="0.35" step="0.05">
+
+    <div class="checks">
+      <label><input id="hitbox" type="checkbox" checked> Show hitbox</label>
+      <label><input id="debug" type="checkbox" checked> Show debug labels</label>
+      <label><input id="slow" type="checkbox"> Slow motion</label>
+    </div>
+
+    <button id="snapshot">Pause / resume</button>
+
+    <div id="report"></div>
+  </aside>
+
+  <main>
+    <canvas id="preview" width="960" height="540"></canvas>
+  </main>
+
+  <script>
+    const canvas = document.getElementById("preview");
+    const ctx = canvas.getContext("2d");
+    const controls = {
+      phase: document.getElementById("phase"),
+      style: document.getElementById("style"),
+      intensity: document.getElementById("intensity"),
+      height: document.getElementById("height"),
+      shake: document.getElementById("shake"),
+      hitbox: document.getElementById("hitbox"),
+      debug: document.getElementById("debug"),
+      slow: document.getElementById("slow"),
+      report: document.getElementById("report"),
+      snapshot: document.getElementById("snapshot")
+    };
+
+    const polar = new Image();
+    polar.src = "../app/src/main/res/drawable-nodpi/sprite_polar_bear_roar.png";
+    const winter = new Image();
+    winter.src = "../app/src/main/res/drawable-nodpi/background_dark_winter_art.png";
+
+    let paused = false;
+    let time = 0;
+    let last = performance.now();
+
+    controls.snapshot.addEventListener("click", () => {
+      paused = !paused;
+      controls.snapshot.textContent = paused ? "Resume" : "Pause";
+    });
+
+    function phaseForTime(t) {
+      if (controls.phase.value !== "auto") return controls.phase.value;
+      const cycle = t % 3.8;
+      if (cycle < 1.05) return "tell";
+      if (cycle < 2.35) return "fire";
+      return "recover";
+    }
+
+    function phaseProgress(t, phase) {
+      if (controls.phase.value !== "auto") {
+        return (Math.sin(t * 2.4) + 1) * 0.5;
+      }
+      const cycle = t % 3.8;
+      if (phase === "tell") return Math.min(1, cycle / 1.05);
+      if (phase === "fire") return Math.min(1, (cycle - 1.05) / 1.30);
+      return Math.min(1, (cycle - 2.35) / 1.45);
+    }
+
+    function drawBackground(shakeX, shakeY) {
+      ctx.save();
+      ctx.translate(shakeX, shakeY);
+      if (winter.complete && winter.naturalWidth > 0) {
+        ctx.drawImage(winter, -8, -8, canvas.width + 16, canvas.height + 16);
+      } else {
+        const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+        gradient.addColorStop(0, "#081224");
+        gradient.addColorStop(0.55, "#152337");
+        gradient.addColorStop(1, "#dcebef");
+        ctx.fillStyle = gradient;
+        ctx.fillRect(-8, -8, canvas.width + 16, canvas.height + 16);
+      }
+      ctx.fillStyle = "rgba(5, 12, 24, 0.28)";
+      ctx.fillRect(-8, -8, canvas.width + 16, canvas.height + 16);
+      ctx.restore();
+    }
+
+    function drawSnow() {
+      ctx.save();
+      ctx.fillStyle = "rgba(235, 245, 248, 0.72)";
+      for (let i = 0; i < 80; i++) {
+        const x = (i * 71 + time * 32 * (1 + (i % 4) * 0.18)) % canvas.width;
+        const y = (i * 47 + time * 54 * (1 + (i % 5) * 0.12)) % canvas.height;
+        const r = 1 + (i % 3) * 0.45;
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    function drawGround() {
+      const ground = 430;
+      ctx.fillStyle = "#e9f3f6";
+      ctx.fillRect(0, ground, canvas.width, canvas.height - ground);
+      ctx.fillStyle = "rgba(132, 213, 232, 0.25)";
+      for (let x = -20; x < canvas.width + 40; x += 76) {
+        ctx.fillRect(x, ground + 30 + Math.sin(time + x * 0.02) * 4, 48, 4);
+      }
+    }
+
+    function drawPlayer(phase) {
+      const x = 230;
+      const ground = 430;
+      const jump = phase === "fire" ? 62 + Math.sin(time * 5) * 8 : 0;
+      const y = ground - 46 - jump;
+      ctx.save();
+      ctx.fillStyle = "rgba(0,0,0,0.22)";
+      ctx.beginPath();
+      ctx.ellipse(x, ground + 4, 42, 9, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#3486c4";
+      ctx.strokeStyle = "#1f2226";
+      ctx.lineWidth = 5;
+      roundedRect(x - 20, y + 18, 40, 58, 10, true, true);
+      ctx.fillStyle = "#ffb146";
+      ctx.beginPath();
+      ctx.arc(x, y, 22, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.strokeStyle = "#1f2226";
+      ctx.lineWidth = 7;
+      ctx.beginPath();
+      ctx.moveTo(x - 14, y + 70);
+      ctx.lineTo(x - 34, y + 102);
+      ctx.moveTo(x + 12, y + 70);
+      ctx.lineTo(x + 29, y + 102);
+      ctx.stroke();
+      ctx.restore();
+      return { x, y, bodyY: y + 46, ground };
+    }
+
+    function drawBoss(phase, progress) {
+      const x = 748;
+      const ground = 430;
+      const standLift = phase === "tell" ? progress * 18 : phase === "fire" ? 18 : (1 - progress) * 18;
+      const h = 245 + standLift;
+      const w = 185;
+      const bottom = ground + 4;
+      const y = bottom - h / 2;
+      ctx.save();
+      ctx.fillStyle = "rgba(0,0,0,0.26)";
+      ctx.beginPath();
+      ctx.ellipse(x, ground + 7, 92, 15, 0, 0, Math.PI * 2);
+      ctx.fill();
+      if (polar.complete && polar.naturalWidth > 0) {
+        ctx.drawImage(polar, 34, 34, polar.naturalWidth - 68, polar.naturalHeight - 68, x - w / 2, bottom - h, w, h);
+      } else {
+        ctx.fillStyle = "#f7fbff";
+        ctx.strokeStyle = "#7f98a8";
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        ctx.ellipse(x, y, w * 0.42, h * 0.46, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(x - 38, y - 84, 42, 0, Math.PI * 2);
+        ctx.arc(x + 38, y - 84, 42, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+      }
+      const eyeX = x - 70;
+      const eyeY = bottom - h + 68;
+      drawEyes(eyeX, eyeY, phase, progress);
+      ctx.restore();
+      return { x, eyeX, eyeY, ground };
+    }
+
+    function drawEyes(x, y, phase, progress) {
+      const glow = phase === "fire" ? 1 : phase === "tell" ? progress : Math.max(0, 1 - progress);
+      ctx.save();
+      ctx.shadowColor = "rgba(255, 98, 84, 0.95)";
+      ctx.shadowBlur = 10 + glow * 12;
+      ctx.fillStyle = `rgba(255, ${Math.round(150 - glow * 52)}, 84, ${0.35 + glow * 0.65})`;
+      ctx.beginPath();
+      ctx.arc(x - 4, y - 3, 2.5 + glow * 2.0, 0, Math.PI * 2);
+      ctx.arc(x + 7, y + 2, 2.2 + glow * 1.7, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function drawLaser(boss, player, phase, progress) {
+      const intensity = Number(controls.intensity.value);
+      const beamHeight = 18 * Number(controls.height.value);
+      const active = phase === "fire";
+      const tell = phase === "tell";
+      const alpha = active ? 1 : tell ? progress * 0.62 : Math.max(0, 1 - progress) * 0.24;
+      const length = active ? 560 : 130 + progress * 250;
+      const leftEyeX = boss.eyeX - 5;
+      const rightEyeX = boss.eyeX + 9;
+      const startX = boss.eyeX - 2;
+      const targetY = Math.max(280, Math.min(390, player.bodyY + Math.sin(time * 5.4) * 18));
+      const y = active ? boss.eyeY + (targetY - boss.eyeY) * Math.min(1, progress * 1.18) : boss.eyeY + 6;
+      const endX = Math.max(92, startX - length);
+      const pulse = 0.72 + Math.sin(time * 26) * 0.28;
+      const style = controls.style.value;
+
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
+      drawBeamCore(leftEyeX, boss.eyeY - 3, endX, y - 16, beamHeight, alpha, intensity, pulse);
+      if (style === "double") {
+        drawBeamCore(rightEyeX, boss.eyeY + 5, endX, y + 13, beamHeight * 0.9, alpha, intensity, pulse);
+      } else if (style === "merged") {
+        drawBeamCore(startX, boss.eyeY + 1, endX, y - 4, beamHeight * 1.45, alpha, intensity, pulse);
+      } else {
+        const sweep = Math.sin(time * 8) * 20;
+        drawBeamCore(startX, boss.eyeY + sweep * 0.08, endX, y - 5 + sweep, beamHeight * (0.8 + pulse * 0.55), alpha, intensity, pulse);
+      }
+      ctx.restore();
+
+      if (controls.hitbox.checked) {
+        ctx.save();
+        ctx.fillStyle = "rgba(255, 98, 84, 0.13)";
+        ctx.strokeStyle = "rgba(255, 98, 84, 0.78)";
+        ctx.lineWidth = 2;
+        roundedRect(endX, y - 24, startX - endX, 48, 5, true, true);
+        ctx.restore();
+      }
+
+      if (controls.debug.checked) {
+        ctx.save();
+        ctx.font = "700 15px Arial";
+        ctx.textAlign = "center";
+        ctx.fillStyle = "rgba(8,18,30,0.88)";
+        roundedRect(412, 78, 158, 34, 8, true, false);
+        ctx.strokeStyle = "#ff6254";
+        ctx.stroke();
+        ctx.fillStyle = "#fff6cf";
+        ctx.fillText(active ? "A BEAM DODGE" : tell ? "B TELL: LASER" : "B RECOVER", 491, 100);
+        ctx.restore();
+      }
+    }
+
+    function drawBeamCore(x1, y1, x2, y2, h, alpha, intensity, pulse) {
+      const gradient = ctx.createLinearGradient(x1, y1, x2, y2);
+      gradient.addColorStop(0, `rgba(255, 246, 207, ${0.92 * alpha})`);
+      gradient.addColorStop(0.25, `rgba(255, 98, 84, ${0.82 * alpha})`);
+      gradient.addColorStop(1, `rgba(132, 213, 232, ${0.18 * alpha})`);
+
+      ctx.lineCap = "round";
+      ctx.strokeStyle = `rgba(255, 98, 84, ${0.18 * alpha * intensity})`;
+      ctx.lineWidth = h * 3.6 * intensity;
+      ctx.shadowColor = "rgba(255, 98, 84, 0.95)";
+      ctx.shadowBlur = 34 * intensity;
+      line(x1, y1, x2, y2);
+
+      ctx.strokeStyle = gradient;
+      ctx.lineWidth = h * (1.5 + pulse * 0.28) * intensity;
+      ctx.shadowBlur = 20 * intensity;
+      line(x1, y1, x2, y2);
+
+      ctx.strokeStyle = `rgba(255,255,255,${0.78 * alpha})`;
+      ctx.lineWidth = Math.max(2, h * 0.34);
+      ctx.shadowBlur = 8;
+      line(x1, y1, x2, y2);
+    }
+
+    function drawHud(phase, progress) {
+      ctx.save();
+      ctx.fillStyle = "rgba(8, 18, 30, 0.78)";
+      roundedRect(54, 44, 470, 42, 9, true, false);
+      ctx.fillStyle = "#ff6254";
+      roundedRect(72, 59, 236, 10, 5, true, false);
+      ctx.fillStyle = "#fff6cf";
+      ctx.font = "700 15px Arial";
+      ctx.textAlign = "left";
+      ctx.fillText("POLAR BEAR BOSS", 72, 38);
+      ctx.font = "13px Arial";
+      const action = phase === "tell" ? "TELL: EYE LASER" : phase === "fire" ? "JUMP THE LASER" : "RECOVER: FIRE NOW";
+      ctx.fillText(action + "   " + Math.round(progress * 100) + "%", 326, 69);
+      ctx.restore();
+    }
+
+    function roundedRect(x, y, w, h, r, fill, stroke) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+      ctx.closePath();
+      if (fill) ctx.fill();
+      if (stroke) ctx.stroke();
+    }
+
+    function line(x1, y1, x2, y2) {
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+    }
+
+    function render(now) {
+      const dt = Math.min(0.033, (now - last) / 1000);
+      last = now;
+      if (!paused) {
+        time += dt * (controls.slow.checked ? 0.35 : 1);
+      }
+      const phase = phaseForTime(time);
+      const progress = phaseProgress(time, phase);
+      const shakeAmount = phase === "fire" ? Number(controls.shake.value) * 5 : phase === "tell" ? progress * Number(controls.shake.value) * 1.5 : 0;
+      const shakeX = Math.sin(time * 48) * shakeAmount;
+      const shakeY = Math.cos(time * 39) * shakeAmount * 0.45;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawBackground(shakeX, shakeY);
+      drawSnow();
+      drawGround();
+      const player = drawPlayer(phase);
+      const boss = drawBoss(phase, progress);
+      drawLaser(boss, player, phase, progress);
+      drawHud(phase, progress);
+
+      controls.report.textContent =
+        "Recommended game read:\n" +
+        "- Tell: eyes glow, boss rises, warning label appears.\n" +
+        "- Attack: beams start at the eyes and sweep up/down toward the runner.\n" +
+        "- Hitbox: rectangle is slightly thinner than the visual glow.\n" +
+        "- Recover: boss gives a short FIRE NOW window.\n\n" +
+        "Current: " + phase + " / " + controls.style.value +
+        " / intensity " + Number(controls.intensity.value).toFixed(2) +
+        " / height " + Number(controls.height.value).toFixed(2);
+
+      requestAnimationFrame(render);
+    }
+
+    requestAnimationFrame(render);
+  </script>
+</body>
+</html>

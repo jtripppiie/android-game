@@ -2,16 +2,16 @@
 
 A personalized Android arcade game by **TripperDeeLabs**.
 
-**Current status: Alaska 3.27 debug hitbox and boss tuning beta.**
+**Current status: Alaska 3.28 gear and obstacle sprite beta.**
 
 This build is beta-ready for APK testing, tuning, and bug fixing. It is not final 1.0 or a larger milestone until it installs and plays well across all Alaska stages on a real phone.
 
 ## Current beta
 
 ```text
-versionCode: 327
-versionName: 3.2.7-beta
-build badge: ALASKA PASSPORT v3.27 BETA
+versionCode: 328
+versionName: 3.2.8-beta
+build badge: ALASKA PASSPORT v3.28 BETA
 ```
 
 ## Fast UI preview
@@ -39,7 +39,7 @@ Android app, and can be removed by deleting the preview HTML files.
 - **LEFT**: move left
 - **RIGHT**: move right
 - **JUMP**: jump from the ground; tap again in the air for a double jump
-- **FIRE**: launch a snowball
+- **FIRE**: tap to launch a snowball; hold with SPRAY charges to use bear spray
 - **PAUSE**: freeze the current run, resume, return to map, or edit sprite
 
 ## Gameplay style
@@ -51,7 +51,9 @@ barricades, icebergs, and snowbanks — while wildlife hazards enter from the
 right. Clear, vault, leap, or survive stage obstacles; avoid or stun wildlife;
 and defeat bosses with snowballs.
 The ground is safe to land on; only hitting an obstacle, a hazard, or the boss
-ends the run.
+ends the run. Bear spray is scarce survival gear: collect SPRAY pickups, then
+hold FIRE to emit a short hand-origin cone that stuns close wildlife and can
+interrupt a boss lunge.
 
 
 ## Contra code
@@ -130,7 +132,7 @@ Mobile mapping:
 - Snowballs can now shatter boss ice projectiles before they hit the player.
 - Boss projectile tells and boss HUD status now teach `JUMP OR FIRE`.
 - Debug boss-attack badges now identify shootable ice attacks.
-- The final bear boss now stands up for an eye-laser pattern the player must jump over.
+- The final bear boss now stands up for eye beams that sweep vertically toward the runner.
 - Splash screen title spacing and boss-fight readability polish
 - Stronger sprite edge guards for animal sheets and roar sprites
 - Snappier jump arc and trail-credible Salmon Rush river-log obstacles
@@ -170,7 +172,7 @@ The debug APK lands in `app/build/outputs/apk/debug/` with the version in the
 filename, for example:
 
 ```text
-you-rush-alaska-3.2.7-beta-327-debug.apk
+you-rush-alaska-3.2.8-beta-328-debug.apk
 ```
 
 GitHub Actions also builds a debug APK using:
@@ -187,6 +189,14 @@ Artifacts:
 
 - `you-rush-alaska-debug-apk`
 - `you-rush-alaska-build-logs`
+
+## Debug previews
+
+Local HTML tools live in `tools/`:
+
+- `laser-eyes-preview.html` — preview and tune the boss eye-beam tell/attack.
+- `debug-tuning-dashboard.html` — report format, debug legend, and QA checklist
+  for numbered DEBUG screenshots.
 
 ## Tests
 

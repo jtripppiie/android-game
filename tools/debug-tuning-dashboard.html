@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>You Rush Debug Tuning Dashboard</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #081224;
+      color: #f7fbff;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #081224;
+    }
+
+    header {
+      padding: 22px 24px 12px;
+      background: #101926;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: 24px;
+    }
+
+    p {
+      margin: 0;
+      color: #c7d6df;
+      line-height: 1.45;
+    }
+
+    main {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(220px, 1fr));
+      gap: 14px;
+      padding: 18px;
+    }
+
+    section {
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.055);
+      padding: 14px;
+      min-height: 150px;
+    }
+
+    h2 {
+      margin: 0 0 10px;
+      font-size: 16px;
+      color: #ffda79;
+    }
+
+    ul {
+      margin: 0;
+      padding-left: 18px;
+      color: #dcebef;
+      line-height: 1.5;
+      font-size: 13px;
+    }
+
+    code {
+      color: #fff6cf;
+      background: rgba(0, 0, 0, 0.24);
+      padding: 2px 5px;
+      border-radius: 4px;
+    }
+
+    .wide {
+      grid-column: span 2;
+    }
+
+    .badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .badge {
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      border-radius: 999px;
+      padding: 6px 9px;
+      color: #fff;
+      background: rgba(8, 18, 30, 0.82);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    @media (max-width: 920px) {
+      main {
+        grid-template-columns: 1fr;
+      }
+
+      .wide {
+        grid-column: span 1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>You Rush 3.28 Debug Tuning Dashboard</h1>
+    <p>Use this alongside DEBUG mode screenshots. Turn DEBUG on in the game, capture the numbered object, then report the number, type letter, and what feels wrong.</p>
+  </header>
+
+  <main>
+    <section>
+      <h2>Report Format</h2>
+      <ul>
+        <li><code>3G</code> obstacle sprite/hitbox issue.</li>
+        <li><code>2H</code> wildlife sprite, motion, or collision issue.</li>
+        <li><code>1B</code> boss pose, contact, tell, or hitbox issue.</li>
+        <li><code>4A</code> boss attack issue such as beam/projectile fairness.</li>
+        <li><code>5U</code> pickup readability or placement issue.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>3.28 Sprite Checks</h2>
+      <ul>
+        <li>River logs should read as wet logs, not racks.</li>
+        <li>Snowbanks should look like grounded snow piles.</li>
+        <li>Icebergs should be jagged and blue-white.</li>
+        <li>Antler barricades should read as antlers lashed together.</li>
+        <li>Vector sprite edges should have no PNG fringe.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Bear Spray Checks</h2>
+      <ul>
+        <li>SPRAY pickup should look like an orange can.</li>
+        <li>Hold FIRE should spray from the runner's forward hand.</li>
+        <li>The cone should be short-range and readable.</li>
+        <li>Spray should stun close wildlife, not replace snowballs.</li>
+        <li>Spray should interrupt a boss lunge only when close.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Laser Beam Checks</h2>
+      <ul>
+        <li>Beam starts at the boss eyes, not chest or paws.</li>
+        <li>Beam sweeps up/down toward the runner.</li>
+        <li>Player can dodge by jumping or repositioning.</li>
+        <li>DEBUG attack label should read <code>BEAM DODGE</code>.</li>
+        <li>Hitbox should be thinner than the glow.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Growth Hooks</h2>
+      <ul>
+        <li>Gear can become unlockable and upgradable.</li>
+        <li>Obstacle sprites support themed level packs.</li>
+        <li>Trail Passport can reward cosmetics and gear skins.</li>
+        <li>Keep paid growth cosmetic/convenience-first, not pay-to-win.</li>
+        <li>Use Daily Rush and badges for retention loops.</li>
+      </ul>
+    </section>
+
+    <section class="wide">
+      <h2>Debug Legend</h2>
+      <div class="badge-row">
+        <span class="badge">G obstacle/gate</span>
+        <span class="badge">H hazard/wildlife</span>
+        <span class="badge">U pickup</span>
+        <span class="badge">T throw/snowball</span>
+        <span class="badge">A boss attack</span>
+        <span class="badge">B boss</span>
+        <span class="badge">sheet f# T = trimmed sprite frame</span>
+        <span class="badge">roar png = roar asset</span>
+        <span class="badge">drawn = fallback renderer</span>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
