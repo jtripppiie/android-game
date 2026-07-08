@@ -196,6 +196,7 @@ public class MooseRushView extends View {
     private final GameAssets assets;
     private final SpriteRenderer spriteRenderer;
     private final ObstacleRenderer obstacleRenderer;
+    private final DebugOverlayRenderer debugOverlayRenderer;
     private final VisualEffects effects;
 
     private final RectF primaryButtonBounds = new RectF();
@@ -351,6 +352,7 @@ public class MooseRushView extends View {
         assets = new GameAssets(context);
         spriteRenderer = new SpriteRenderer(context);
         obstacleRenderer = new ObstacleRenderer(context, assets);
+        debugOverlayRenderer = new DebugOverlayRenderer(context);
         effects = new VisualEffects(context);
         bestScore = prefs.getInt(PREF_BEST_SCORE, 0);
         selectedStage = clampInt(prefs.getInt(PREF_SELECTED_STAGE, 0), 0, STAGES.length - 1);
@@ -4547,35 +4549,15 @@ public class MooseRushView extends View {
     }
 
     private void drawDebugGroundLine(Canvas canvas) {
-        float ground = getGroundY();
-        paint.setStyle(Paint.Style.STROKE);
-        paint.setStrokeWidth(dp(1.2f));
-        paint.setColor(Color.argb(190, 255, 218, 121));
-        canvas.drawLine(0, ground, getWidth(), ground, paint);
-        paint.setStyle(Paint.Style.FILL);
-        drawDebugObjectBadge(canvas, 0, "L", "GROUND", dp(42), ground - dp(8), Color.rgb(255, 218, 121));
+        debugOverlayRenderer.drawGroundLine(canvas, getWidth(), getGroundY());
     }
 
     private void drawDebugCircle(Canvas canvas, float x, float y, float radius, int color) {
-        paint.setStyle(Paint.Style.FILL);
-        paint.setColor(Color.argb(36, Color.red(color), Color.green(color), Color.blue(color)));
-        canvas.drawCircle(x, y, radius, paint);
-        paint.setStyle(Paint.Style.STROKE);
-        paint.setStrokeWidth(dp(1.1f));
-        paint.setColor(Color.argb(168, Color.red(color), Color.green(color), Color.blue(color)));
-        canvas.drawCircle(x, y, radius, paint);
-        paint.setStyle(Paint.Style.FILL);
+        debugOverlayRenderer.drawCircle(canvas, x, y, radius, color);
     }
 
     private void drawDebugRect(Canvas canvas, RectF rect, int color) {
-        paint.setStyle(Paint.Style.FILL);
-        paint.setColor(Color.argb(32, Color.red(color), Color.green(color), Color.blue(color)));
-        canvas.drawRect(rect, paint);
-        paint.setStyle(Paint.Style.STROKE);
-        paint.setStrokeWidth(dp(1.1f));
-        paint.setColor(Color.argb(168, Color.red(color), Color.green(color), Color.blue(color)));
-        canvas.drawRect(rect, paint);
-        paint.setStyle(Paint.Style.FILL);
+        debugOverlayRenderer.drawRect(canvas, rect, color);
     }
 
     private String debugHazardSpriteDetail(Hazard hazard) {
@@ -4645,40 +4627,7 @@ public class MooseRushView extends View {
     }
 
     private void drawDebugObjectBadge(Canvas canvas, int number, String type, String detail, float x, float y, int accentColor) {
-        String label = number > 0 ? number + type : type;
-        float clampedX = clamp(x, dp(18), getWidth() - dp(18));
-        float clampedY = clamp(y, dp(54), getHeight() - dp(18));
-        textPaint.setTextAlign(Paint.Align.CENTER);
-        textPaint.setTextSize(dp(9.5f));
-        textPaint.setFakeBoldText(true);
-        float width = Math.max(dp(26), textPaint.measureText(label) + dp(10));
-        boolean hasDetail = detail != null && detail.length() > 0;
-        if (hasDetail) {
-            textPaint.setTextSize(dp(7.2f));
-            textPaint.setFakeBoldText(false);
-            width = Math.max(width, textPaint.measureText(detail) + dp(10));
-            textPaint.setTextSize(dp(9.5f));
-            textPaint.setFakeBoldText(true);
-        }
-        float height = hasDetail ? dp(29) : dp(18);
-        tempRect.set(clampedX - width * 0.5f, clampedY - height + dp(5), clampedX + width * 0.5f, clampedY + dp(5));
-
-        paint.setStyle(Paint.Style.FILL);
-        paint.setColor(Color.argb(218, 8, 18, 30));
-        canvas.drawRoundRect(tempRect, dp(7), dp(7), paint);
-        paint.setStyle(Paint.Style.STROKE);
-        paint.setStrokeWidth(dp(1.4f));
-        paint.setColor(accentColor);
-        canvas.drawRoundRect(tempRect, dp(7), dp(7), paint);
-        paint.setStyle(Paint.Style.FILL);
-        textPaint.setColor(Color.WHITE);
-        canvas.drawText(label, clampedX, clampedY, textPaint);
-        textPaint.setFakeBoldText(false);
-        if (hasDetail) {
-            textPaint.setTextSize(dp(7.2f));
-            textPaint.setColor(Color.rgb(255, 246, 207));
-            canvas.drawText(detail, clampedX, clampedY + dp(10), textPaint);
-        }
+        debugOverlayRenderer.drawObjectBadge(canvas, getWidth(), getHeight(), number, type, detail, x, y, accentColor);
     }
 
     @SuppressWarnings("deprecation")

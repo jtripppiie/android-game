@@ -6,17 +6,17 @@ Current release details are tracked in `docs/VERSIONING.md` and the root
 ## Latest Beta
 
 ```text
-3.2.13-beta
-versionCode 333
-ALASKA PASSPORT v3.33 BETA
+3.2.14-beta
+versionCode 334
+ALASKA PASSPORT v3.34 BETA
 ```
 
 Highlights:
 
-- Extracted bear spray balance constants and cone hit math into `SprayTuning`.
-- Added unit coverage for spray cone range, width, and spawn chance behavior.
-- Extracted sprite-backed obstacle gate rendering into `ObstacleRenderer`.
-- Confirmed boss survival/timing constants remain centralized in `BossTuning`.
+- Extracted debug overlay drawing primitives into `DebugOverlayRenderer`.
+- Moved debug hitbox circles, rectangles, ground line, and object badges out of
+  `MooseRushView`.
+- Kept `MooseRushView` responsible for deciding which gameplay objects to label.
 - Preserved detailed historical release notes under `docs/archive/`.
 
 ## Historical Releases
