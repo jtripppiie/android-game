@@ -2,16 +2,16 @@
 
 A personalized Android arcade game by **TripperDeeLabs**.
 
-**Current status: Alaska 3.28 gear and obstacle sprite beta.**
+**Current status: Alaska 3.29 eye-beam calibration beta.**
 
 This build is beta-ready for APK testing, tuning, and bug fixing. It is not final 1.0 or a larger milestone until it installs and plays well across all Alaska stages on a real phone.
 
 ## Current beta
 
 ```text
-versionCode: 328
-versionName: 3.2.8-beta
-build badge: ALASKA PASSPORT v3.28 BETA
+versionCode: 329
+versionName: 3.2.9-beta
+build badge: ALASKA PASSPORT v3.29 BETA
 ```
 
 ## Fast UI preview
@@ -172,7 +172,7 @@ The debug APK lands in `app/build/outputs/apk/debug/` with the version in the
 filename, for example:
 
 ```text
-you-rush-alaska-3.2.8-beta-328-debug.apk
+you-rush-alaska-3.2.9-beta-329-debug.apk
 ```
 
 GitHub Actions also builds a debug APK using:

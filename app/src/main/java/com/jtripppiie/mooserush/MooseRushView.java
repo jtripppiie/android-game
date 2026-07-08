@@ -1701,7 +1701,7 @@ public class MooseRushView extends View {
     private void spawnBossLaser() {
         float beamX = bossLaserEyeX();
         float beamY = bossLaserEyeY();
-        bossAttacks.add(new BossAttack(beamX, beamY, dp(8), 0f, 0f, ATTACK_LASER, "Eye beam"));
+        bossAttacks.add(new BossAttack(beamX, beamY, dp(4.2f), 0f, 0f, ATTACK_LASER, "Eye beam"));
         screenShake = Math.max(screenShake, 0.14f);
         effects.spawnSparkBurst(beamX, beamY, 18, Color.rgb(132, 213, 232));
         playSound("throw");
@@ -3671,18 +3671,26 @@ public class MooseRushView extends View {
         if (attack.type == ATTACK_LASER) {
             laserAttackRect(attack, tempRect);
             float pulse = 0.5f + 0.5f * (float) Math.sin(attack.age * 42f);
-            float core = dp(2.2f + 0.8f * pulse);
-            paint.setStyle(Paint.Style.FILL);
-            paint.setColor(Color.argb(Math.round(62 + 48 * pulse), 77, 219, 184));
-            canvas.drawRoundRect(tempRect, dp(8), dp(8), paint);
-            paint.setColor(Color.argb(Math.round(132 + 62 * pulse), 132, 213, 232));
-            canvas.drawRoundRect(tempRect.left, tempRect.centerY() - dp(5.2f), tempRect.right, tempRect.centerY() + dp(5.2f), dp(6), dp(6), paint);
-            paint.setColor(Color.argb(228, 255, 246, 207));
-            canvas.drawRoundRect(tempRect.left, tempRect.centerY() - core, tempRect.right, tempRect.centerY() + core, dp(3), dp(3), paint);
+            float left = tempRect.left;
+            float upperEyeY = attack.y - dp(2.0f);
+            float lowerEyeY = attack.y + dp(2.2f);
+            float upperEndY = tempRect.centerY() - dp(5.2f);
+            float lowerEndY = tempRect.centerY() + dp(5.2f);
             paint.setStyle(Paint.Style.STROKE);
-            paint.setStrokeWidth(dp(1.8f));
-            paint.setColor(Color.argb(210, 255, 246, 207));
-            canvas.drawRoundRect(tempRect, dp(8), dp(8), paint);
+            paint.setStrokeCap(Paint.Cap.ROUND);
+            paint.setStrokeWidth(dp(7.5f + 1.2f * pulse));
+            paint.setColor(Color.argb(Math.round(40 + 42 * pulse), 255, 98, 84));
+            canvas.drawLine(attack.x, upperEyeY, left, upperEndY, paint);
+            canvas.drawLine(attack.x + dp(2.8f), lowerEyeY, left, lowerEndY, paint);
+            paint.setStrokeWidth(dp(2.7f + 0.55f * pulse));
+            paint.setColor(Color.argb(Math.round(172 + 48 * pulse), 255, 98, 84));
+            canvas.drawLine(attack.x, upperEyeY, left, upperEndY, paint);
+            canvas.drawLine(attack.x + dp(2.8f), lowerEyeY, left, lowerEndY, paint);
+            paint.setStrokeWidth(dp(0.95f));
+            paint.setColor(Color.argb(230, 255, 246, 207));
+            canvas.drawLine(attack.x, upperEyeY, left, upperEndY, paint);
+            canvas.drawLine(attack.x + dp(2.8f), lowerEyeY, left, lowerEndY, paint);
+            paint.setStrokeCap(Paint.Cap.BUTT);
             drawBossLaserEyeEmitter(canvas, attack.x, attack.y, pulse);
             paint.setStyle(Paint.Style.FILL);
             return;
@@ -3717,12 +3725,12 @@ public class MooseRushView extends View {
     }
 
     private float bossLaserEyeX() {
-        return bossX - bossRadius() * (selectedStage == 4 ? 1.45f : 0.62f);
+        return bossX - bossRadius() * (selectedStage == 4 ? 0.84f : 0.62f);
     }
 
     private float bossLaserEyeY() {
         if (selectedStage == 4) {
-            return getGroundY() - bossRadius() * 3.05f;
+            return getGroundY() - bossRadius() * 3.74f;
         }
         return bossY - bossRadius() * 0.28f;
     }
