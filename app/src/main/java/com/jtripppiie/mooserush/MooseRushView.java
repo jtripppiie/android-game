@@ -105,7 +105,7 @@ public class MooseRushView extends View {
     };
 
     private static final StageConfig[] STAGES = {
-            new StageConfig("Midnight Sun Run", "Clear driftwood trail rails before the sun boss.", SEASON_MIDNIGHT_SUN, "Sunburn Sprite", "SUN", "DRIFTWOOD RAILS", 5, 2, 150, 2.35f, 0),
+            new StageConfig("Midnight Sun Run", "Vault driftwood logs before the sun boss.", SEASON_MIDNIGHT_SUN, "Sunburn Sprite", "SUN", "DRIFTWOOD LOGS", 5, 2, 150, 2.35f, 0),
             new StageConfig("Salmon Rush", "Vault slick river logs while salmon arc in.", SEASON_SUMMER, "Salmon Boss", "SALMON", "RIVER LOGS", 7, 3, 165, 2.15f, 1),
             new StageConfig("Moose Pass", "Vault antler barricades and dodge real moose.", SEASON_SUMMER, "Moose Boss", "MOOSE", "ANTLER BARRICADES", 8, 4, 178, 2.05f, 2),
             new StageConfig("Dark Winter", "Leap jagged icebergs through low light.", SEASON_DARKNESS, "Eagle Boss", "EAGLE", "ICEBERGS", 9, 4, 188, 1.95f, 3),
@@ -3046,7 +3046,7 @@ public class MooseRushView extends View {
     }
 
     private void drawGate(Canvas canvas, Gate gate) {
-        if (selectedStage == 1) {
+        if (selectedStage == 0 || selectedStage == 1) {
             drawRiverLogGate(canvas, gate);
             return;
         }
@@ -4718,7 +4718,7 @@ public class MooseRushView extends View {
     }
 
     private String debugGateDetail(Gate gate) {
-        if (selectedStage == 1) {
+        if (selectedStage == 0 || selectedStage == 1) {
             return "LOG FIRE";
         }
         return obstacleHudName(selectedStage);
@@ -5394,14 +5394,14 @@ public class MooseRushView extends View {
     }
 
     private String stageRuleLine(StageConfig stage) {
-        if (selectedStage == 1) {
-            return "VAULT RIVER LOGS. Tap FIRE blasts logs; hold FIRE uses SPRAY.";
+        if (selectedStage == 0 || selectedStage == 1) {
+            return "VAULT " + stage.obstacleName + ". Tap FIRE blasts logs; hold FIRE uses SPRAY.";
         }
         return stageActionVerb(selectedStage) + " " + stage.obstacleName + ". Tap FIRE throws; hold FIRE sprays.";
     }
 
     private String obstacleHudName(int stageIndex) {
-        if (stageIndex == 0) return "RAILS";
+        if (stageIndex == 0) return "LOGS";
         if (stageIndex == 1) return "LOGS";
         if (stageIndex == 2) return "ANTLERS";
         if (stageIndex == 3) return "ICEBERGS";
