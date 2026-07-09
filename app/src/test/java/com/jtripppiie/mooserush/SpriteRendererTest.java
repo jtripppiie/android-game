@@ -48,4 +48,11 @@ public class SpriteRendererTest {
         assertEquals(1689, SpriteRenderer.fullRunnerFrameLeft(2027, 5));
         assertEquals(2027, SpriteRenderer.fullRunnerFrameRight(2027, 5));
     }
+
+    @Test
+    public void fullRunnerSourceGuardsInternalFrameSeams() {
+        assertArrayEquals(new int[]{0, 0, 324, 776}, SpriteRenderer.fullRunnerSourceValues(2027, 776, 0));
+        assertArrayEquals(new int[]{352, 0, 662, 776}, SpriteRenderer.fullRunnerSourceValues(2027, 776, 1));
+        assertArrayEquals(new int[]{1703, 0, 2027, 776}, SpriteRenderer.fullRunnerSourceValues(2027, 776, 5));
+    }
 }

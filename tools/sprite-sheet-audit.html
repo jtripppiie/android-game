@@ -157,6 +157,8 @@
     const image = new Image();
     const SPRITE_EDGE_GUARD_PX = 14;
     const SPRITE_TRIM_INSET_PX = 6;
+    const FULL_RUNNER_FRAME_GUARD_PX = 14;
+    const fullRunnerSheets = new Set(["sheet_mom_run.png", "sheet_dad_run.png"]);
     const runtimeTrims = {
       "sheet_moose_walk.png": [
         [14, 226, 362, 527],
@@ -273,6 +275,20 @@
     }
 
     function runtimeSource(frameIndex, frameW, frameH, trim) {
+      const name = sheetName(ui.sheet.value.split(",")[0]);
+      if (fullRunnerSheets.has(name)) {
+        const rawLeft = Math.round(image.naturalWidth * (frameIndex / Number(ui.sheet.value.split(",")[1])));
+        const rawRight = Math.round(image.naturalWidth * ((frameIndex + 1) / Number(ui.sheet.value.split(",")[1])));
+        let left = rawLeft;
+        let right = rawRight;
+        if (frameIndex > 0) left += FULL_RUNNER_FRAME_GUARD_PX;
+        if (frameIndex < Number(ui.sheet.value.split(",")[1]) - 1) right -= FULL_RUNNER_FRAME_GUARD_PX;
+        if (right <= left) {
+          left = rawLeft;
+          right = rawRight;
+        }
+        return { left, top: 0, width: right - left, height: frameH };
+      }
       if (!trim) {
         return { left: frameIndex * frameW, top: 0, width: frameW, height: frameH };
       }
@@ -344,9 +360,10 @@
           ctx.strokeRect(x + trim * zoom, y + trim * zoom, viewW - trim * 2 * zoom, viewH - trim * 2 * zoom);
           ctx.setLineDash([]);
         }
-        if (ui.runtimeCrop.checked && sheetTrims && sheetTrims[i]) {
-          const source = runtimeSource(i, frameW, frameH, sheetTrims[i]);
-          const cropX = x + (source.left - i * frameW) * zoom;
+        if (ui.runtimeCrop.checked && ((sheetTrims && sheetTrims[i]) || fullRunnerSheets.has(name))) {
+          const source = runtimeSource(i, frameW, frameH, sheetTrims && sheetTrims[i]);
+          const rawFrameLeft = fullRunnerSheets.has(name) ? Math.round(image.naturalWidth * (i / frames)) : i * frameW;
+          const cropX = x + (source.left - rawFrameLeft) * zoom;
           const cropY = y + source.top * zoom;
           const cropW = source.width * zoom;
           const cropH = source.height * zoom;
@@ -381,7 +398,7 @@
         "\nFrames: " + frames +
         "\nFrame size: " + Math.round(frameW) + " x " + Math.round(frameH) +
         "\nTrim inset preview: " + trim + " px" +
-        "\nRuntime crop: " + (sheetTrims ? "available, green box" : "none for this sheet");
+        "\nRuntime crop: " + (sheetTrims || fullRunnerSheets.has(name) ? "available, green box" : "none for this sheet");
 
       requestAnimationFrame(render);
     }

@@ -20,6 +20,7 @@ final class SpriteRenderer {
     private static final int RUNNER_FRAMES = 6;
     private static final int SPRITE_EDGE_GUARD_PX = 5;
     private static final int RUNNER_TRIM_INSET_PX = 3;
+    private static final int FULL_RUNNER_FRAME_GUARD_PX = 14;
     private static final float RUNNER_BODY_HEIGHT_RUNNING = 2.68f;
     private static final float RUNNER_BODY_HEIGHT_STANDING = 2.62f;
     private static final float RUNNER_BODY_WIDTH_SCALE = 1.18f;
@@ -117,7 +118,8 @@ final class SpriteRenderer {
         }
 
         int frameIndex = animated ? runnerSheetFrame(frame.spriteClock) : 0;
-        sourceRect.set(fullRunnerFrameLeft(sheet.getWidth(), frameIndex), 0, fullRunnerFrameRight(sheet.getWidth(), frameIndex), sheet.getHeight());
+        int[] source = fullRunnerSourceValues(sheet.getWidth(), sheet.getHeight(), frameIndex);
+        sourceRect.set(source[0], source[1], source[2], source[3]);
         if (sourceRect.width() <= 0 || sourceRect.height() <= 0) {
             return false;
         }
@@ -154,6 +156,23 @@ final class SpriteRenderer {
 
     static int fullRunnerFrameRight(int sheetWidth, int frameIndex) {
         return Math.round(sheetWidth * ((frameIndex + 1) / (float) RUNNER_FRAMES));
+    }
+
+    static int[] fullRunnerSourceValues(int sheetWidth, int sheetHeight, int frameIndex) {
+        int safeFrame = Math.floorMod(frameIndex, RUNNER_FRAMES);
+        int left = fullRunnerFrameLeft(sheetWidth, safeFrame);
+        int right = fullRunnerFrameRight(sheetWidth, safeFrame);
+        if (safeFrame > 0) {
+            left += FULL_RUNNER_FRAME_GUARD_PX;
+        }
+        if (safeFrame < RUNNER_FRAMES - 1) {
+            right -= FULL_RUNNER_FRAME_GUARD_PX;
+        }
+        if (right <= left) {
+            left = fullRunnerFrameLeft(sheetWidth, safeFrame);
+            right = fullRunnerFrameRight(sheetWidth, safeFrame);
+        }
+        return new int[]{left, 0, right, sheetHeight};
     }
 
     static float runnerSheetBodyHeight(float radius, boolean animated) {
