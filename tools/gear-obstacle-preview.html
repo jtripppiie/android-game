@@ -123,10 +123,11 @@
 <body>
   <aside>
     <h1>Gear + Obstacles</h1>
-    <p>Debug canvas for checking log, snow pile, iceberg, snowball, and bear spray readability before touching the Android build.</p>
+    <p>Debug canvas for checking driftwood logs, river logs, snow piles, icebergs, snowballs, and bear spray readability before touching the Android build.</p>
 
     <label for="scene">Scene</label>
     <select id="scene">
+      <option value="midnight">Midnight Sun Run: driftwood logs</option>
       <option value="salmon">Salmon Rush: snowballs blow up logs</option>
       <option value="winter">Dark Winter: icebergs</option>
       <option value="bear">Bear Country: snow piles + bear spray</option>
@@ -269,7 +270,7 @@
       ctx.restore();
     }
 
-    function drawLog(x, y, scale, id) {
+    function drawLog(x, y, scale, id, name = "river log") {
       const w = 138 * scale;
       const h = 44 * scale;
       ctx.save();
@@ -303,7 +304,7 @@
       ctx.strokeStyle = "#5c351f";
       ctx.stroke();
       ctx.restore();
-      register(id, "G", "river log", x, y - h / 2, w, h);
+      register(id, "G", name, x, y - h / 2, w, h);
     }
 
     function drawSnowbank(x, y, scale, id) {
@@ -489,6 +490,11 @@
       const ground = 512;
       const hand = drawRunner(160, ground);
       const scene = ui.scene.value;
+      if (scene === "midnight") {
+        drawLog(520, ground - 24, scale, 1, "driftwood log");
+        drawLog(720, ground - 28, scale * 1.08, 2, "driftwood log");
+        drawLabel("DRIFTWOOD LOGS, not fake rails", 640, 430);
+      }
       if (scene === "salmon" || scene === "all") {
         drawLog(520, ground - 24, scale, 1);
         drawLog(720, ground - 28, scale * 1.08, 2);
@@ -523,6 +529,7 @@
       ui.report.textContent =
         "Confirmed systems:\n" +
         "- Bear spray exists as SPRAY pickup, charges, hold-FIRE cone, stun, and boss interrupt.\n" +
+        "- Midnight Sun uses driftwood log obstacles instead of rail placeholders.\n" +
         "- River logs are distinct obstacles and snowball targets.\n" +
         "- Snow piles are Bear Country obstacles.\n" +
         "- Icebergs are Dark Winter obstacles.\n\n" +
