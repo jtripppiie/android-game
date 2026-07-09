@@ -53,6 +53,15 @@ Open the project in Android Studio, or use the Gradle wrapper:
 ./gradlew assembleDebug
 ```
 
+For the simplest local emulator install and launch:
+
+```bash
+tools/install-local-debug.sh
+```
+
+This reads `local.properties`, adds the Android SDK tools for that command, runs
+`app:installDebug`, and opens You Rush on the connected emulator/device.
+
 Debug APKs are generated under:
 
 ```text
