@@ -33,5 +33,4 @@ adb devices
 
 ./gradlew app:installDebug
 
-adb shell monkey -p com.jtripppiie.mooserush -c android.intent.category.LAUNCHER 1
-
+adb shell am start -n com.jtripppiie.mooserush/.MainActivity
