@@ -13,10 +13,13 @@ ALASKA PASSPORT v3.34 BETA
 
 Highlights:
 
-- Extracted debug overlay drawing primitives into `DebugOverlayRenderer`.
-- Moved debug hitbox circles, rectangles, ground line, and object badges out of
-  `MooseRushView`.
-- Kept `MooseRushView` responsible for deciding which gameplay objects to label.
+- Added FLOW gameplay for clean vault streaks, with bonus scoring, pickup pull,
+  HUD timer feedback, and run-summary stats.
+- Improved runner reset behavior and proportional ground-line placement.
+- Hardened runner and wildlife sprite-sheet sampling to reduce adjacent-frame
+  bleed and late-frame clipping.
+- Refreshed launcher branding across adaptive, monochrome, and legacy icons.
+- Expanded the sprite-sheet audit tool with Android runtime crop overlays.
 - Preserved detailed historical release notes under `docs/archive/`.
 
 ## Historical Releases

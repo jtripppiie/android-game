@@ -124,6 +124,7 @@
       <label><input id="checker" type="checkbox" checked> Transparency checkerboard</label>
       <label><input id="frames" type="checkbox" checked> Frame boxes</label>
       <label><input id="trimBox" type="checkbox" checked> Trim boxes</label>
+      <label><input id="runtimeCrop" type="checkbox" checked> Runtime safe crop</label>
       <label><input id="badges" type="checkbox" checked> Numbered frame badges</label>
       <label><input id="grid" type="checkbox" checked> Show 15 px grid</label>
     </div>
@@ -147,12 +148,65 @@
       checker: document.getElementById("checker"),
       frames: document.getElementById("frames"),
       trimBox: document.getElementById("trimBox"),
+      runtimeCrop: document.getElementById("runtimeCrop"),
       badges: document.getElementById("badges"),
       grid: document.getElementById("grid"),
       report: document.getElementById("report")
     };
 
     const image = new Image();
+    const SPRITE_EDGE_GUARD_PX = 14;
+    const SPRITE_TRIM_INSET_PX = 6;
+    const runtimeTrims = {
+      "sheet_moose_walk.png": [
+        [14, 226, 362, 527],
+        [0, 224, 362, 528],
+        [0, 223, 362, 527],
+        [0, 217, 362, 528],
+        [0, 233, 362, 528],
+        [0, 229, 336, 527]
+      ],
+      "sheet_bear_walk.png": [
+        [21, 263, 362, 499],
+        [0, 292, 358, 502],
+        [6, 293, 354, 500],
+        [0, 288, 362, 502],
+        [0, 292, 362, 504],
+        [0, 283, 339, 504]
+      ],
+      "sheet_polar_bear_walk.png": [
+        [30, 273, 362, 476],
+        [0, 275, 362, 476],
+        [0, 275, 360, 477],
+        [10, 275, 362, 476],
+        [22, 275, 361, 477],
+        [2, 275, 346, 477]
+      ],
+      "sheet_wolf_run.png": [
+        [28, 266, 362, 469],
+        [0, 275, 362, 461],
+        [0, 266, 362, 467],
+        [0, 274, 362, 469],
+        [0, 272, 362, 468],
+        [0, 271, 342, 468]
+      ],
+      "sheet_salmon_swim.png": [
+        [22, 296, 361, 436],
+        [34, 262, 362, 436],
+        [0, 260, 362, 456],
+        [0, 298, 362, 438],
+        [0, 308, 362, 492],
+        [0, 305, 352, 497]
+      ],
+      "sheet_eagle_fly.png": [
+        [17, 146, 362, 490],
+        [0, 258, 307, 494],
+        [0, 396, 334, 596],
+        [8, 221, 362, 501],
+        [0, 151, 362, 505],
+        [0, 376, 345, 509]
+      ]
+    };
 
     function loadSheet() {
       image.src = ui.sheet.value.split(",")[0];
@@ -214,11 +268,37 @@
       ctx.restore();
     }
 
+    function sheetName(path) {
+      return path.split("/").pop();
+    }
+
+    function runtimeSource(frameIndex, frameW, frameH, trim) {
+      if (!trim) {
+        return { left: frameIndex * frameW, top: 0, width: frameW, height: frameH };
+      }
+      const left = (trim[0] === 0 ? SPRITE_EDGE_GUARD_PX : trim[0]) + SPRITE_TRIM_INSET_PX;
+      const top = trim[1] + SPRITE_TRIM_INSET_PX;
+      const right = (trim[2] >= frameW ? frameW - SPRITE_EDGE_GUARD_PX : trim[2]) - SPRITE_TRIM_INSET_PX;
+      const bottom = Math.min(trim[3], frameH) - SPRITE_TRIM_INSET_PX;
+      if (right <= left || bottom <= top) {
+        return { left: frameIndex * frameW, top: 0, width: frameW, height: frameH };
+      }
+      return {
+        left: frameIndex * frameW + left,
+        top,
+        width: right - left,
+        height: bottom - top
+      };
+    }
+
     function render() {
       const zoom = Number(ui.zoom.value);
       const trim = Number(ui.trim.value);
       const parts = ui.sheet.value.split(",");
+      const path = parts[0];
+      const name = sheetName(path);
       const frames = Number(parts[1]);
+      const sheetTrims = runtimeTrims[name] || null;
       ui.zoomLabel.textContent = zoom.toFixed(2);
       ui.trimLabel.textContent = String(trim);
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -264,6 +344,18 @@
           ctx.strokeRect(x + trim * zoom, y + trim * zoom, viewW - trim * 2 * zoom, viewH - trim * 2 * zoom);
           ctx.setLineDash([]);
         }
+        if (ui.runtimeCrop.checked && sheetTrims && sheetTrims[i]) {
+          const source = runtimeSource(i, frameW, frameH, sheetTrims[i]);
+          const cropX = x + (source.left - i * frameW) * zoom;
+          const cropY = y + source.top * zoom;
+          const cropW = source.width * zoom;
+          const cropH = source.height * zoom;
+          ctx.strokeStyle = "#4ddbb8";
+          ctx.lineWidth = 2;
+          ctx.strokeRect(cropX, cropY, cropW, cropH);
+          ctx.fillStyle = "rgba(77, 219, 184, 0.10)";
+          ctx.fillRect(cropX, cropY, cropW, cropH);
+        }
         if (ui.badges.checked) {
           const label = "F" + (i + 1);
           ctx.font = "700 14px Arial";
@@ -285,10 +377,11 @@
         "- F5 trim box cuts too close to antler/ear.\n" +
         "- Whole sheet has colored fringe on checkerboard.\n\n" +
         "Current sheet:\n" +
-        parts[0].replace("../app/src/main/res/drawable-nodpi/", "") +
+        path.replace("../app/src/main/res/drawable-nodpi/", "") +
         "\nFrames: " + frames +
         "\nFrame size: " + Math.round(frameW) + " x " + Math.round(frameH) +
-        "\nTrim inset preview: " + trim + " px";
+        "\nTrim inset preview: " + trim + " px" +
+        "\nRuntime crop: " + (sheetTrims ? "available, green box" : "none for this sheet");
 
       requestAnimationFrame(render);
     }

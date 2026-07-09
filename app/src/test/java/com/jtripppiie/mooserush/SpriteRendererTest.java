@@ -40,4 +40,12 @@ public class SpriteRendererTest {
 
         assertArrayEquals(new int[]{336, 210, 648, 635}, source);
     }
+
+    @Test
+    public void fullRunnerFramesDistributeOddSheetWidth() {
+        assertEquals(0, SpriteRenderer.fullRunnerFrameLeft(2027, 0));
+        assertEquals(338, SpriteRenderer.fullRunnerFrameRight(2027, 0));
+        assertEquals(1689, SpriteRenderer.fullRunnerFrameLeft(2027, 5));
+        assertEquals(2027, SpriteRenderer.fullRunnerFrameRight(2027, 5));
+    }
 }

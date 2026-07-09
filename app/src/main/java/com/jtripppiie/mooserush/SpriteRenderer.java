@@ -116,14 +116,8 @@ final class SpriteRenderer {
             return false;
         }
 
-        int frameWidth = sheet.getWidth() / RUNNER_FRAMES;
-        if (frameWidth <= 0) {
-            return false;
-        }
-
         int frameIndex = animated ? runnerSheetFrame(frame.spriteClock) : 0;
-        int guard = Math.min(SPRITE_EDGE_GUARD_PX + RUNNER_TRIM_INSET_PX, Math.min(frameWidth, sheet.getHeight()) / 12);
-        sourceRect.set(frameIndex * frameWidth + guard, guard, (frameIndex + 1) * frameWidth - guard, sheet.getHeight() - guard);
+        sourceRect.set(fullRunnerFrameLeft(sheet.getWidth(), frameIndex), 0, fullRunnerFrameRight(sheet.getWidth(), frameIndex), sheet.getHeight());
         if (sourceRect.width() <= 0 || sourceRect.height() <= 0) {
             return false;
         }
@@ -133,7 +127,10 @@ final class SpriteRenderer {
         float centerX = frame.x + frame.radius * 0.04f;
         float top = headY - frame.radius * 1.12f;
         tempRect.set(centerX - bodyWidth * 0.50f, top, centerX + bodyWidth * 0.50f, top + bodyHeight);
+        boolean previousFilter = bitmapPaint.isFilterBitmap();
+        bitmapPaint.setFilterBitmap(false);
         canvas.drawBitmap(sheet, sourceRect, tempRect, bitmapPaint);
+        bitmapPaint.setFilterBitmap(previousFilter);
         return true;
     }
 
@@ -149,6 +146,14 @@ final class SpriteRenderer {
 
     static int runnerSheetFrame(float runnerClock) {
         return Math.floorMod((int) (runnerClock * RUNNER_FRAMES), RUNNER_FRAMES);
+    }
+
+    static int fullRunnerFrameLeft(int sheetWidth, int frameIndex) {
+        return Math.round(sheetWidth * (frameIndex / (float) RUNNER_FRAMES));
+    }
+
+    static int fullRunnerFrameRight(int sheetWidth, int frameIndex) {
+        return Math.round(sheetWidth * ((frameIndex + 1) / (float) RUNNER_FRAMES));
     }
 
     static float runnerSheetBodyHeight(float radius, boolean animated) {

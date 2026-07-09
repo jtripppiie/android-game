@@ -39,7 +39,7 @@ Turn it off for a public store package.
 ## Version path
 
 ```text
-3.2.14-beta  debug overlay renderer cleanup beta
+3.2.14-beta  flow gameplay, sprite sampling, and launcher branding beta
 3.2.13-beta  spray tuning and obstacle renderer cleanup beta
 3.2.12-beta  runner body selector and 15 px preview-grid beta
 3.2.11-beta  debug preview expansion beta

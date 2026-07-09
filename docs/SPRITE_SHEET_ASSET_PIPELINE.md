@@ -85,10 +85,31 @@ sheet_mom_run.png              1983 x 793
 sheet_dad_run.png              2027 x 776
 ```
 
-The renderer calculates each frame width as:
+Animal sheets use fixed 362 px atlas cells. Runtime rendering applies guarded
+trim rectangles and disables bitmap filtering for atlas draws so adjacent frame
+pixels do not bleed across the source rectangle.
+
+Family runner sheets can have odd total widths, so the renderer uses rounded
+proportional frame boundaries instead of integer-dividing the sheet width. This
+keeps late frames from drifting left and clipping hands, boots, or faces.
+
+The sprite sheet audit tool shows raw frame boxes plus the Android runtime-safe
+crop in green. If art crosses a yellow raw frame boundary but sits outside the
+green crop, it should not render in-game. The best source asset still has clean
+transparent gutters, because runtime trims are a guardrail rather than a
+replacement for clean source art.
+
+Animal frame width:
 
 ```java
 frameWidth = sheet.getWidth() / frameCount
+```
+
+Family runner frame bounds:
+
+```java
+left = round(sheetWidth * frameIndex / frameCount)
+right = round(sheetWidth * (frameIndex + 1) / frameCount)
 ```
 
 ## Prompts

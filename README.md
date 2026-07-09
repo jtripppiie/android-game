@@ -27,6 +27,8 @@ signed public-store release.
   river logs.
 - Bear spray is a scarce pickup that uses hold-FIRE to stun close wildlife and
   interrupt close boss lunges.
+- Clean vault streaks trigger FLOW, a short momentum state with bonus scoring,
+  pickup pull, HUD feedback, and a runner aura.
 - Customize lets players choose a photo/default body style, including female
   and male runner bodies.
 - Progression includes stage unlocks, XP, Trail Tokens, Daily Rush, Trail
@@ -72,7 +74,8 @@ Local browser previews live in `tools/` and are not packaged into the app.
 - `gear-obstacle-preview.html`: logs, snow piles, icebergs, snowballs, bear
   spray, hitboxes, numbered debug badges, and 15 px grid overlay
 - `sprite-sheet-audit.html`: actual PNG sprite sheets with frame numbers,
-  checkerboard transparency, trim boxes, and 15 px grid overlay
+  checkerboard transparency, trim boxes, runtime crop boxes, and 15 px grid
+  overlay
 - `debug-tuning-dashboard.html`: reporting guide for numbered DEBUG screenshots
 
 ## Documentation

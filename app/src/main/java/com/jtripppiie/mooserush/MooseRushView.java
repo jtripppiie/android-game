@@ -115,10 +115,15 @@ public class MooseRushView extends View {
     private static final float PLAYER_START_X_FRACTION = 0.265f;
     private static final float PLAYER_HEAD_DRAW_OFFSET = 2.18f;
     private static final float PLAYFIELD_BOTTOM_MARGIN_DP = 52f;
+    private static final float GROUND_LINE_HEIGHT_FRACTION = 0.82f;
     private static final float JUMP_CEILING_TOP_MARGIN_DP = 40f;
     private static final float AURORA_METER_MAX = 100f;
     private static final float AURORA_RUSH_SECONDS = 6.5f;
     private static final float AURORA_FOCUS_SECONDS = 5.0f;
+    private static final int FLOW_STREAK_THRESHOLD = 3;
+    private static final float FLOW_TIMER_SECONDS = 5.5f;
+    private static final float FLOW_MAGNET_RADIUS_DP = 92f;
+    private static final float FLOW_MAGNET_SPEED_DP = 430f;
     private static final int BOSS_STATE_ENTER = 0;
     private static final int BOSS_STATE_TELL = 1;
     private static final int BOSS_STATE_ATTACK = 2;
@@ -248,6 +253,8 @@ public class MooseRushView extends View {
     private int runRescueKits = 0;
     private int runBearSprays = 0;
     private int runCleanVaults = 0;
+    private int cleanVaultStreak = 0;
+    private int bestCleanVaultStreak = 0;
     private int runLogsBlasted = 0;
     private int routeMilestoneIndex = 0;
     private int expeditionLogs = 0;
@@ -314,6 +321,7 @@ public class MooseRushView extends View {
     private float auroraMeter = 0f;
     private float auroraRushTimer = 0f;
     private float auroraFocusTimer = 0f;
+    private float flowTimer = 0f;
     private float respawnGraceTimer = 0f;
     private float routeMilestoneTimer = 0f;
     private float scoutTimer = 0f;
@@ -601,10 +609,12 @@ public class MooseRushView extends View {
                 }
             } else if (resetPhotoButtonBounds.contains(x, y)) {
                 playerPhoto = null;
+                selectedBodyStyle = SpriteRenderer.BODY_STYLE_PHOTO;
+                saveChoices();
                 if (photoRequestListener != null) {
                     photoRequestListener.onPhotoResetRequested();
                 }
-                logEvent("Photo reset requested.");
+                logEvent("Runner reset to default.");
             } else if (seasonButtonBounds.contains(x, y)) {
                 selectedSeason = (selectedSeason + 1) % SEASONS.length;
                 saveChoices();
@@ -808,6 +818,7 @@ public class MooseRushView extends View {
         auroraMeter = 0f;
         auroraRushTimer = 0f;
         auroraFocusTimer = 0f;
+        flowTimer = 0f;
         scoutTimer = 0f;
         auroraRushes = 0;
         runTokensEarned = 0;
@@ -818,6 +829,8 @@ public class MooseRushView extends View {
         runRescueKits = 0;
         runBearSprays = 0;
         runCleanVaults = 0;
+        cleanVaultStreak = 0;
+        bestCleanVaultStreak = 0;
         runLogsBlasted = 0;
         routeMilestoneIndex = 0;
         livesLostThisRun = 0;
@@ -1051,6 +1064,7 @@ public class MooseRushView extends View {
         damageFlash = Math.max(0f, damageFlash - dt);
         updateAuroraRush(dt);
         updateAuroraFocus(dt);
+        updateFlowTimer(dt);
         respawnGraceTimer = Math.max(0f, respawnGraceTimer - dt);
         jumpBufferTimer = Math.max(0f, jumpBufferTimer - dt);
         coyoteTimer = grounded ? RunnerTuning.COYOTE_SECONDS : Math.max(0f, coyoteTimer - dt);
@@ -1173,7 +1187,9 @@ public class MooseRushView extends View {
                 effects.spawnScorePopup("+" + awarded, gate.x + gate.width / 2f, getGroundY() - gate.height - dp(20), Color.rgb(255, 218, 121));
                 effects.spawnSparkBurst(gate.x + gate.width / 2f, getGroundY() - gate.height, 8, Color.rgb(255, 218, 121));
                 addAuroraMeter(8f, "Route rhythm");
-                maybeAwardCleanVault(gate);
+                if (!maybeAwardCleanVault(gate)) {
+                    cleanVaultStreak = 0;
+                }
                 showComboCallout();
                 logEvent(stageActionVerb(selectedStage) + " " + STAGES[selectedStage].obstacleName + " " + gatesPassed + "/" + STAGES[selectedStage].goalGates + ".");
             }
@@ -1184,18 +1200,25 @@ public class MooseRushView extends View {
         }
     }
 
-    private void maybeAwardCleanVault(Gate gate) {
+    private boolean maybeAwardCleanVault(Gate gate) {
         float gateTop = getGroundY() - gate.height;
         float playerBottom = playerY + playerRadius * 0.78f;
         float clearance = gateTop - playerBottom;
         if (clearance < -dp(8) || clearance > dp(34) || playerVelocityY > dp(420)) {
-            return;
+            return false;
         }
+        cleanVaultStreak++;
+        bestCleanVaultStreak = Math.max(bestCleanVaultStreak, cleanVaultStreak);
         int awarded = addScore(8 + selectedStage, "Clean vault");
         runCleanVaults++;
         addAuroraMeter(7f, "Clean vault");
-        effects.spawnScorePopup("CLEAN VAULT +" + awarded, gate.x + gate.width / 2f, gateTop - dp(28), Color.rgb(77, 219, 184));
+        String label = cleanVaultStreak >= FLOW_STREAK_THRESHOLD ? "FLOW x" + cleanVaultStreak : "CLEAN VAULT";
+        effects.spawnScorePopup(label + " +" + awarded, gate.x + gate.width / 2f, gateTop - dp(28), Color.rgb(77, 219, 184));
         effects.spawnSparkBurst(gate.x + gate.width / 2f, gateTop, 8, Color.rgb(77, 219, 184));
+        if (cleanVaultStreak >= FLOW_STREAK_THRESHOLD) {
+            activateFlow(gate.x + gate.width / 2f, gateTop);
+        }
+        return true;
     }
 
     private void updateHazards(float dt, float speed) {
@@ -1932,6 +1955,8 @@ public class MooseRushView extends View {
         jumpsUsed = 0;
         coyoteTimer = RunnerTuning.COYOTE_SECONDS;
         jumpBufferTimer = 0f;
+        cleanVaultStreak = 0;
+        flowTimer = 0f;
         spawnCooldown = 0.75f;
         hazardCooldown = 1.25f;
         respawnGraceTimer = 1.35f;
@@ -1960,13 +1985,17 @@ public class MooseRushView extends View {
         if (auroraRushTimer > 0f) {
             multiplier = Math.min(5, multiplier + 1);
         }
+        if (flowActive()) {
+            multiplier = Math.min(5, multiplier + 1);
+        }
         return multiplier;
     }
 
     private void showComboCallout() {
         int multiplier = activeScoreMultiplier();
         if (gameState.combo >= 3 || multiplier > 1) {
-            showRunCallout((auroraRushTimer > 0f ? "AURORA " : "") + "COMBO " + gameState.combo + "  SCORE x" + multiplier, 1.15f);
+            String prefix = auroraRushTimer > 0f ? "AURORA " : flowActive() ? "FLOW " : "";
+            showRunCallout(prefix + "COMBO " + gameState.combo + "  SCORE x" + multiplier, 1.15f);
         }
         checkMissionProgress();
     }
@@ -1997,8 +2026,46 @@ public class MooseRushView extends View {
         }
     }
 
+    private void updateFlowTimer(float dt) {
+        if (flowTimer <= 0f) {
+            return;
+        }
+        flowTimer = Math.max(0f, flowTimer - dt);
+        if (flowTimer <= 0f && cleanVaultStreak < FLOW_STREAK_THRESHOLD) {
+            showRunCallout("FLOW FADED", 0.70f);
+        }
+    }
+
+    private boolean flowActive() {
+        return flowTimer > 0f;
+    }
+
+    private void activateFlow(float x, float y) {
+        flowTimer = FLOW_TIMER_SECONDS;
+        int awarded = 0;
+        if (cleanVaultStreak == FLOW_STREAK_THRESHOLD || cleanVaultStreak % 2 == 0) {
+            awarded = addScore(12 + cleanVaultStreak * 2, "Flow streak");
+            addAuroraMeter(9f + cleanVaultStreak, "Flow streak");
+        }
+        effects.spawnSparkBurst(x, y, 10 + Math.min(12, cleanVaultStreak * 2), Color.rgb(77, 219, 184));
+        if (awarded > 0) {
+            effects.spawnScorePopup("FLOW +" + awarded, x, y - dp(42), Color.rgb(77, 219, 184));
+        }
+        screenShake = Math.max(screenShake, 0.045f);
+        showRunCallout("FLOW x" + cleanVaultStreak + "  PICKUPS PULL IN", 1.20f);
+        logEvent("Flow streak x" + cleanVaultStreak + ".");
+    }
+
     private float worldSpeedMultiplier() {
-        return auroraFocusTimer > 0f ? 0.78f : 1f;
+        float multiplier = auroraFocusTimer > 0f ? 0.78f : 1f;
+        if (flowActive()) {
+            multiplier *= 0.94f;
+        }
+        return multiplier;
+    }
+
+    private float flowProgress() {
+        return flowActive() ? Math.min(1f, flowTimer / FLOW_TIMER_SECONDS) : 0f;
     }
 
     private void activateAuroraFocus(float x, float y) {
@@ -2225,6 +2292,7 @@ public class MooseRushView extends View {
             powerUp.x -= speed * dt;
             powerUp.spin += dt * 5.5f;
             powerUp.bob += dt * 4.5f;
+            attractPowerUp(powerUp, dt);
             if (circleHitsCircle(playerX, playerY, playerRadius * CollisionTuning.POWERUP_PLAYER_RADIUS_SCALE, powerUp.x, powerUp.y, powerUp.radius * CollisionTuning.POWERUP_RADIUS_SCALE)) {
                 iterator.remove();
                 activatePowerUp(powerUp);
@@ -2234,6 +2302,22 @@ public class MooseRushView extends View {
                 iterator.remove();
             }
         }
+    }
+
+    private void attractPowerUp(PowerUp powerUp, float dt) {
+        if (!flowActive()) {
+            return;
+        }
+        float dx = playerX - powerUp.x;
+        float dy = playerY - powerUp.y;
+        float distance = (float) Math.sqrt(dx * dx + dy * dy);
+        float radius = dp(FLOW_MAGNET_RADIUS_DP) + powerUp.radius;
+        if (distance <= 1f || distance > radius) {
+            return;
+        }
+        float pull = dp(FLOW_MAGNET_SPEED_DP) * dt * (1f - distance / radius);
+        powerUp.x += dx / distance * pull;
+        powerUp.y += dy / distance * pull;
     }
 
     private void activatePowerUp(PowerUp powerUp) {
@@ -2693,7 +2777,7 @@ public class MooseRushView extends View {
         setButton(bodyStyleButtonBounds, x, y + buttonGap * 4f, dp(226), isLandscape() ? dp(38) : dp(44));
 
         drawButton(canvas, photoButtonBounds, playerPhoto == null ? "SELECT PLAYER PHOTO" : "CHANGE PLAYER PHOTO");
-        drawButton(canvas, resetPhotoButtonBounds, "RESET TO DEFAULT SPRITE");
+        drawButton(canvas, resetPhotoButtonBounds, "RESET TO DEFAULT RUNNER");
         drawButton(canvas, seasonButtonBounds, "SEASON: " + SEASONS[selectedSeason]);
         drawButton(canvas, outfitButtonBounds, outfitButtonLabel());
         drawOutfitSwatch(canvas, outfitButtonBounds);
@@ -2747,6 +2831,7 @@ public class MooseRushView extends View {
         drawAuroraRushTrail(canvas);
         drawAuroraFocusTrail(canvas);
         effects.drawParticles(canvas);
+        drawFlowAura(canvas);
         drawShieldAura(canvas);
         drawRespawnGraceAura(canvas);
         drawCharacter(canvas, playerX, playerY - playerRadius * PLAYER_HEAD_DRAW_OFFSET, playerRadius);
@@ -3576,6 +3661,26 @@ public class MooseRushView extends View {
         paint.setStyle(Paint.Style.FILL);
     }
 
+    private void drawFlowAura(Canvas canvas) {
+        if (!flowActive()) {
+            return;
+        }
+        float pct = flowProgress();
+        float pulse = 0.5f + 0.5f * (float) Math.sin(spriteClock * 10.5f);
+        float headY = playerY - playerRadius * PLAYER_HEAD_DRAW_OFFSET;
+        float centerY = headY + playerRadius * 1.74f;
+        float width = playerRadius * (2.35f + pulse * 0.24f);
+        float height = playerRadius * (3.78f + pulse * 0.28f);
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setStrokeWidth(dp(1.8f));
+        paint.setColor(Color.argb(Math.round(78 + 92 * pct), 77, 219, 184));
+        canvas.drawOval(playerX - width * 0.50f, centerY - height * 0.50f, playerX + width * 0.50f, centerY + height * 0.50f, paint);
+        paint.setStrokeWidth(dp(1.1f));
+        paint.setColor(Color.argb(Math.round(54 + 64 * pct), 230, 248, 255));
+        canvas.drawCircle(playerX, centerY, playerRadius * (1.62f + pulse * 0.12f), paint);
+        paint.setStyle(Paint.Style.FILL);
+    }
+
     private void drawRespawnGraceAura(Canvas canvas) {
         if (respawnGraceTimer <= 0f) {
             return;
@@ -3957,7 +4062,10 @@ public class MooseRushView extends View {
         if (Math.abs(rotationDegrees) > 0.01f) {
             canvas.rotate(rotationDegrees, centerX, centerY);
         }
+        boolean previousFilter = spriteBitmapPaint.isFilterBitmap();
+        spriteBitmapPaint.setFilterBitmap(false);
         canvas.drawBitmap(sheet, spriteSourceRect, tempRect, spriteBitmapPaint);
+        spriteBitmapPaint.setFilterBitmap(previousFilter);
         canvas.restoreToCount(saved);
     }
 
@@ -4196,9 +4304,11 @@ public class MooseRushView extends View {
                 : stageActionVerb(selectedStage) + " " + obstacleHudName(selectedStage) + " " + gatesPassed + "/" + STAGES[selectedStage].goalGates;
         canvas.drawText(objective, getWidth() / 2f, dp(44), textPaint);
         textPaint.setColor(Color.WHITE);
-        String comboLabel = (auroraRushTimer > 0f ? "AURORA " : "") + "COMBO " + gameState.combo + "   SCORE x" + multiplier;
+        String comboPrefix = auroraRushTimer > 0f ? "AURORA " : flowActive() ? "FLOW " : "";
+        String comboLabel = comboPrefix + "COMBO " + gameState.combo + "   SCORE x" + multiplier;
         canvas.drawText(comboLabel, getWidth() / 2f, dp(58), textPaint);
         drawAuroraMeter(canvas, progressLeft, progressRight, dp(61), dp(65));
+        drawFlowMeter(canvas, progressLeft, progressRight, dp(66.5f), dp(70.5f));
 
         textPaint.setTextAlign(Paint.Align.RIGHT);
         textPaint.setTextSize(dp(10));
@@ -4235,6 +4345,22 @@ public class MooseRushView extends View {
         paint.setColor(Color.argb(170, 255, 246, 207));
         canvas.drawRoundRect(left, top, right, bottom, dp(3), dp(3), paint);
         paint.setStyle(Paint.Style.FILL);
+    }
+
+    private void drawFlowMeter(Canvas canvas, float left, float right, float top, float bottom) {
+        if (!flowActive()) {
+            return;
+        }
+        float pct = flowProgress();
+        paint.setStyle(Paint.Style.FILL);
+        paint.setColor(Color.argb(118, 4, 12, 20));
+        canvas.drawRoundRect(left, top, right, bottom, dp(3), dp(3), paint);
+        paint.setColor(Color.rgb(77, 219, 184));
+        canvas.drawRoundRect(left, top, left + (right - left) * pct, bottom, dp(3), dp(3), paint);
+        textPaint.setTextAlign(Paint.Align.CENTER);
+        textPaint.setTextSize(dp(7.5f));
+        textPaint.setColor(Color.rgb(230, 248, 255));
+        canvas.drawText("FLOW x" + cleanVaultStreak, (left + right) * 0.5f, bottom + dp(8), textPaint);
     }
 
     private void drawHudIcons(Canvas canvas) {
@@ -4285,6 +4411,20 @@ public class MooseRushView extends View {
             paint.setStrokeWidth(dp(1.4f));
             paint.setColor(Color.WHITE);
             canvas.drawCircle(focusX, focusY, dp(3.3f), paint);
+            paint.setStyle(Paint.Style.FILL);
+        }
+
+        if (flowActive()) {
+            float flowX = getWidth() - dp(72);
+            float flowY = auroraFocusTimer > 0f ? dp(40) : dp(22);
+            paint.setColor(Color.rgb(77, 219, 184));
+            canvas.drawCircle(flowX, flowY, dp(7), paint);
+            paint.setColor(Color.rgb(8, 18, 30));
+            canvas.drawCircle(flowX, flowY, dp(4.4f), paint);
+            paint.setStyle(Paint.Style.STROKE);
+            paint.setStrokeWidth(dp(1.2f));
+            paint.setColor(Color.WHITE);
+            canvas.drawCircle(flowX, flowY, dp(2.7f + flowProgress() * 1.1f), paint);
             paint.setStyle(Paint.Style.FILL);
         }
 
@@ -4826,7 +4966,7 @@ public class MooseRushView extends View {
         textPaint.setTextSize(dp(13));
         textPaint.setColor(Color.rgb(255, 218, 121));
         canvas.drawText("Score " + score + (runNewBest ? " · NEW BEST" : "") + " · Jumps " + gatesPassed, getWidth() / 2f, top + dp(118), textPaint);
-        canvas.drawText("Missions " + missionsCompleted + "/3 · Combo " + gameState.bestCombo + " · Rank " + runRank(), getWidth() / 2f, top + dp(142), textPaint);
+        canvas.drawText("Missions " + missionsCompleted + "/3 · Combo " + gameState.bestCombo + " · Flow " + bestCleanVaultStreak + " · Rank " + runRank(), getWidth() / 2f, top + dp(142), textPaint);
         canvas.drawText("Tokens +" + runTokensEarned + " · Bank " + trailTokens + " · Logs " + expeditionLogs, getWidth() / 2f, top + dp(166), textPaint);
         canvas.drawText(dailyResultLine(), getWidth() / 2f, top + dp(188), textPaint);
         canvas.drawText(expeditionLine(false), getWidth() / 2f, top + dp(210), textPaint);
@@ -4867,7 +5007,7 @@ public class MooseRushView extends View {
 
         textPaint.setColor(Color.rgb(210, 232, 238));
         textPaint.setTextSize(dp(13));
-        canvas.drawText("Rank " + runRank() + " · Missions " + missionsCompleted + "/3 · Stars " + gameState.stars, getWidth() / 2f, top + dp(134), textPaint);
+        canvas.drawText("Rank " + runRank() + " · Missions " + missionsCompleted + "/3 · Stars " + gameState.stars + " · Flow " + bestCleanVaultStreak, getWidth() / 2f, top + dp(134), textPaint);
         canvas.drawText("Tokens +" + runTokensEarned + " · Bank " + trailTokens + " · Logs " + expeditionLogs, getWidth() / 2f, top + dp(160), textPaint);
         canvas.drawText(dailyResultLine(), getWidth() / 2f, top + dp(184), textPaint);
         canvas.drawText(expeditionLine(true), getWidth() / 2f, top + dp(207), textPaint);
@@ -5327,7 +5467,10 @@ public class MooseRushView extends View {
     }
 
     private float getGroundY() {
-        return getHeight() - dp(PLAYFIELD_BOTTOM_MARGIN_DP);
+        float fractionLine = getHeight() * GROUND_LINE_HEIGHT_FRACTION;
+        float minLine = getHeight() * 0.6f;
+        float maxLine = getHeight() - dp(PLAYFIELD_BOTTOM_MARGIN_DP);
+        return clamp(fractionLine, minLine, maxLine);
     }
 
     private float playerStartX() {
@@ -5493,7 +5636,7 @@ public class MooseRushView extends View {
 
     private static class PowerUp {
         float x;
-        final float y;
+        float y;
         final float radius;
         final String type;
         float spin = 0f;
