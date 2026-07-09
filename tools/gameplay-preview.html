@@ -463,13 +463,13 @@
       const objective = ui.scene.value === "boss"
         ? `FIRE BOSS ${state.bossHealth}/${state.bossMax}  RECOVER`
         : `Vault SNOWBANKS ${state.gates}/${state.goal}`;
-      text(objective, canvas.width / 2, dp(44), dp(11), "#ffda79");
-      text(`COMBO ${state.combo}   SCORE x${state.multiplier}`, canvas.width / 2, dp(58), dp(11), "#ffffff");
+      textFit(objective, canvas.width / 2, dp(44), progressRight - progressLeft - dp(12), dp(11), dp(8.5), "#ffda79");
+      textFit(`COMBO ${state.combo}   SCORE x${state.multiplier}`, canvas.width / 2, dp(58), progressRight - progressLeft - dp(12), dp(11), dp(8.5), "#ffffff");
       roundRect(rect("Aurora meter", progressLeft, dp(61), progressRight, dp(65)), dp(3), "rgba(4,12,20,0.74)", "rgba(255,246,207,0.67)");
       roundRect({ left: progressLeft, top: dp(61), right: progressLeft + (progressRight - progressLeft) * 0.45, bottom: dp(65) }, dp(3), "#84d5e8", null);
 
       text(state.stage, canvas.width - dp(20), dp(22), dp(10), "#d2e8ee", "right");
-      text(`BEST ${state.best}   LV ${state.level}   T ${state.tokens}`, canvas.width - dp(20), dp(45), dp(11), "#ffffff", "right");
+      textFit(`BEST ${state.best}   LV ${state.level}   T ${state.tokens}`, canvas.width - dp(20), dp(45), canvas.width * 0.29, dp(11), dp(8.5), "#ffffff", "right");
       drawHudIcons();
       drawPauseButton();
       drawMissionTracker();
@@ -505,7 +505,7 @@
       const left = (canvas.width - w) / 2;
       const box = rect("Mission tracker", left, dp(69), left + w, dp(91));
       roundRect(box, dp(8), "rgba(8,18,30,0.70)", "rgba(132,213,232,0.63)");
-      text("MISSIONS 2/3  Snowbanks 5/10  Stars 6/10", canvas.width / 2, dp(83.5), dp(8.5), "#dcebef");
+      textFit("MISSIONS 2/3  Snowbanks 5/10  Stars 6/10", canvas.width / 2, dp(83.5), w - dp(12), dp(8.5), dp(7.2), "#dcebef");
     }
 
     function drawJourneyTracker() {
@@ -515,7 +515,7 @@
       const box = rect("Journey tracker", left, top, left + w, top + dp(20));
       roundRect(box, dp(7), "rgba(8,18,30,0.62)", "rgba(255,246,207,0.65)");
       roundRect({ left, top, right: left + w * 0.54, bottom: top + dp(20) }, dp(7), "rgba(77,219,184,0.45)", null);
-      text(ui.scene.value === "boss" ? "BOSS TERRITORY" : "RIDGE PASS  SCOUT 8", canvas.width / 2, top + dp(11), dp(8.5), "#ffffff");
+      textFit(ui.scene.value === "boss" ? "BOSS TERRITORY" : "RIDGE PASS  SCOUT 8", canvas.width / 2, top + dp(11), w - dp(12), dp(8.5), dp(7.2), "#ffffff");
     }
 
     function drawActionOverlay() {
@@ -531,7 +531,7 @@
         const w = Math.min(canvas.width - dp(86), Math.max(dp(190), label.length * dp(10)));
         const box = rect("Run callout", (canvas.width - w) / 2, dp(78), (canvas.width + w) / 2, dp(110));
         roundRect(box, dp(9), "rgba(8,18,30,0.74)", "rgba(255,218,121,0.86)");
-        text(label, canvas.width / 2, dp(100), dp(13), "#fff6cf");
+        textFit(label, canvas.width / 2, dp(100), w - dp(18), dp(13), dp(9), "#fff6cf");
       }
     }
 
@@ -573,7 +573,7 @@
         roundRect(panel, dp(18), "rgba(10,18,29,0.92)", "#ffda79", dp(2));
         text("TRAIL PAUSED", canvas.width / 2, top + dp(45), dp(25), "#ffda79", "center", "700");
         text("Goal: Bear Country", canvas.width / 2, top + dp(76), dp(12), "#ffffff");
-        text("Vault Snowbanks - FIRE stuns BEAR", canvas.width / 2, top + dp(98), dp(12), "#d2e8ee");
+        textFit("Vault Snowbanks - FIRE stuns BEAR", canvas.width / 2, top + dp(98), w - dp(36), dp(12), dp(8.5), "#d2e8ee");
         text("Boss weak window: RECOVER", canvas.width / 2, top + dp(118), dp(12), "#d2e8ee");
         drawButton(setButton("Resume button", canvas.width / 2, top + dp(151), dp(214), dp(38)), "RESUME", false);
         drawButton(setButton("Map button", canvas.width / 2 - dp(58), top + dp(190), dp(104), dp(32)), "MAP", true);
@@ -587,11 +587,11 @@
         const panel = rect(clear ? "Stage clear panel" : "Game over panel", left, top, left + w, top + h);
         roundRect(panel, dp(22), clear ? "rgba(10,42,38,0.91)" : "rgba(14,21,31,0.90)", null);
         text(clear ? "ALASKA SURVIVED" : "BONKED", canvas.width / 2, top + dp(50), clear ? dp(29) : dp(34), clear ? "#ffda79" : "#ffffff", "center", "700");
-        text(clear ? "Polar Bear Boss defeated" : "Snowbank got you", canvas.width / 2, top + dp(84), dp(15), "#ffffff");
+        textFit(clear ? "Polar Bear Boss defeated" : "Snowbank got you", canvas.width / 2, top + dp(84), w - dp(30), dp(15), dp(10), "#ffffff");
         const lines = clear
           ? ["Score 2480 - Best 3638", "Rank A - Missions 2/3 - Stars 6", "Tokens +42 - Bank 551 - Logs 54", "Daily +20 - streak 2", "Expedition grade A - logs +3", "Badge +1 - Aurora Runner", "Next: perfect clear"]
           : ["Score 2480 - Jumps 5", "Missions 2/3 - Combo 8 - Rank B", "Tokens +18 - Bank 551 - Logs 54", "Daily already complete", "Expedition grade C - logs +1", "Badge progress saved", "Next: clear Bear Country"];
-        lines.forEach((line, index) => text(line, canvas.width / 2, top + dp(110 + index * 22), dp(13), index < 3 ? "#ffda79" : "#d2e8ee"));
+        lines.forEach((line, index) => textFit(line, canvas.width / 2, top + dp(110 + index * 22), w - dp(30), dp(13), dp(9), index < 3 ? "#ffda79" : "#d2e8ee"));
         drawButton(setButton("Panel left button", canvas.width / 2 - dp(64), top + dp(clear ? 318 : 316), dp(118), dp(36)), "MAP", true);
         drawButton(setButton("Panel right button", canvas.width / 2 + dp(64), top + dp(clear ? 318 : 316), dp(118), dp(36)), clear ? "NEXT" : "CUSTOMIZE", true);
       }
@@ -599,7 +599,22 @@
 
     function drawButton(box, label, small) {
       roundRect(box, small ? dp(12) : dp(15), small ? "rgba(10,18,29,0.97)" : "#ffda79", small ? "rgba(210,232,238,0.86)" : "#523912", small ? dp(1.2) : dp(1.6));
-      text(label, (box.left + box.right) / 2, (box.top + box.bottom) / 2 + dp(1.5), small ? dp(12) : dp(13), small ? "#ffffff" : "#181e26", "center", "700");
+      textFit(label, (box.left + box.right) / 2, (box.top + box.bottom) / 2 + dp(1.5), (box.right - box.left) - dp(small ? 12 : 18), small ? dp(12) : dp(13), small ? dp(8.5) : dp(9), small ? "#ffffff" : "#181e26", "center", "700");
+    }
+
+    function textFit(value, x, y, maxWidth, preferredSize, minSize, color, align = "center", weight = "700") {
+      let size = preferredSize;
+      ctx.save();
+      ctx.fillStyle = color;
+      ctx.textAlign = align;
+      ctx.textBaseline = "alphabetic";
+      do {
+        ctx.font = `${weight} ${size}px Arial, Helvetica, sans-serif`;
+        if (ctx.measureText(value).width <= maxWidth || size <= minSize) break;
+        size -= dp(0.5);
+      } while (size > 0);
+      ctx.fillText(value, x, y);
+      ctx.restore();
     }
 
     function hexToRgb(hex) {

@@ -19,17 +19,11 @@ final class SpriteRenderer {
 
     private static final int RUNNER_FRAMES = 6;
     private static final int FULL_RUNNER_FRAME_GUARD_PX = 14;
+    private static final int RUNNER_BODY_CROP_PAD_PX = 2;
     private static final float RUNNER_BODY_HEIGHT_RUNNING = 2.68f;
     private static final float RUNNER_BODY_HEIGHT_STANDING = 2.62f;
     private static final float RUNNER_BODY_WIDTH_SCALE = 1.18f;
-    private static final int[][] RUNNER_BODY_FRAME_CROPS = {
-            {24, 198, 328, 643},
-            {0, 207, 328, 638},
-            {0, 221, 325, 638},
-            {18, 173, 289, 624},
-            {3, 222, 328, 642},
-            {0, 218, 307, 639}
-    };
+    private static final float RUNNER_BODY_TOP_FROM_HEAD = 0.60f;
 
     private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint bitmapPaint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.DITHER_FLAG);
@@ -40,6 +34,7 @@ final class SpriteRenderer {
     private final Bitmap runnerBodySheet;
     private final Bitmap femaleRunnerSheet;
     private final Bitmap maleRunnerSheet;
+    private final Rect[] runnerBodyCrops;
     private final Rect[] femaleRunnerCrops;
     private final Rect[] maleRunnerCrops;
     private final float density;
@@ -49,9 +44,10 @@ final class SpriteRenderer {
         runnerBodySheet = BitmapFactory.decodeResource(context.getResources(), R.drawable.sheet_player_run_headless);
         femaleRunnerSheet = BitmapFactory.decodeResource(context.getResources(), R.drawable.sheet_mom_run);
         maleRunnerSheet = BitmapFactory.decodeResource(context.getResources(), R.drawable.sheet_dad_run);
+        runnerBodyCrops = SpriteFrameCropper.computeCellContentCrops(runnerBodySheet, RUNNER_FRAMES, RUNNER_BODY_CROP_PAD_PX);
         femaleRunnerCrops = SpriteFrameCropper.computeMainFrameCrops(femaleRunnerSheet, RUNNER_FRAMES, FULL_RUNNER_FRAME_GUARD_PX);
         maleRunnerCrops = SpriteFrameCropper.computeMainFrameCrops(maleRunnerSheet, RUNNER_FRAMES, FULL_RUNNER_FRAME_GUARD_PX);
-        bitmapPaint.setFilterBitmap(true);
+        bitmapPaint.setFilterBitmap(false);
     }
 
     void drawRunner(Canvas canvas, PlayerFrame frame) {
@@ -89,28 +85,33 @@ final class SpriteRenderer {
             return false;
         }
 
-        int frameWidth = runnerBodySheet.getWidth() / RUNNER_FRAMES;
-        if (frameWidth <= 0) {
-            return false;
-        }
-
         int frameIndex = animated ? runnerSheetFrame(frame.spriteClock) : 0;
-        int[] source = trimmedRunnerSourceValues(frameIndex, frameWidth, runnerBodySheet.getHeight(), RUNNER_BODY_FRAME_CROPS[frameIndex]);
-        if (source.length != 4) {
+        Rect crop = runnerBodyCrop(frameIndex);
+        if (crop == null || crop.width() <= 0 || crop.height() <= 0) {
             return false;
         }
-        sourceRect.set(source[0], source[1], source[2], source[3]);
+        sourceRect.set(crop.left, crop.top, crop.right, crop.bottom);
 
         float sourceWidth = sourceRect.width();
         float sourceHeight = sourceRect.height();
         float bodyHeight = runnerSheetBodyHeight(frame.radius, animated);
         float bodyWidth = bodyHeight * (sourceWidth / sourceHeight) * RUNNER_BODY_WIDTH_SCALE;
-        float top = headY + frame.radius * 0.60f;
+        float top = headY + frame.radius * RUNNER_BODY_TOP_FROM_HEAD;
         float centerX = frame.x + frame.radius * 0.10f;
 
         tempRect.set(centerX - bodyWidth * 0.50f, top, centerX + bodyWidth * 0.50f, top + bodyHeight);
+        boolean previousFilter = bitmapPaint.isFilterBitmap();
+        bitmapPaint.setFilterBitmap(false);
         canvas.drawBitmap(runnerBodySheet, sourceRect, tempRect, bitmapPaint);
+        bitmapPaint.setFilterBitmap(previousFilter);
         return true;
+    }
+
+    private Rect runnerBodyCrop(int frameIndex) {
+        if (runnerBodyCrops == null || runnerBodyCrops.length == 0) {
+            return null;
+        }
+        return runnerBodyCrops[Math.floorMod(frameIndex, runnerBodyCrops.length)];
     }
 
     private boolean drawFullRunnerSheet(Canvas canvas, PlayerFrame frame, float headY, boolean animated) {
@@ -200,15 +201,22 @@ final class SpriteRenderer {
         return radius * (animated ? RUNNER_BODY_HEIGHT_RUNNING : RUNNER_BODY_HEIGHT_STANDING);
     }
 
+    /**
+     * Vertical distance from the head anchor (the {@code y} passed to
+     * {@link #drawRunner}/{@link #drawStanding}) down to the sole of the runner's
+     * foot. Callers use this to keep the feet grounded when the drawn radius is
+     * scaled independently of the collision radius.
+     */
+    static float runnerFeetDropFromHead(float radius, boolean animated) {
+        return radius * RUNNER_BODY_TOP_FROM_HEAD + runnerSheetBodyHeight(radius, animated);
+    }
+
     static int[] trimmedRunnerSourceValues(int frameIndex, int frameWidth, int sheetHeight, int[] trim) {
-        int left = trim[0];
-        int top = trim[1];
-        int right = Math.min(trim[2], frameWidth);
-        int bottom = Math.min(trim[3], sheetHeight);
-        if (right <= left || bottom <= top) {
+        if (trim == null || trim.length != 4) {
             return new int[0];
         }
-        return new int[]{frameIndex * frameWidth + left, top, frameIndex * frameWidth + right, bottom};
+        int safeFrame = Math.floorMod(frameIndex, RUNNER_FRAMES);
+        return SpriteSheetMath.trimmedSourceValues(safeFrame, frameWidth, sheetHeight, trim);
     }
 
     private void drawStandingBody(Canvas canvas, PlayerFrame frame) {
@@ -400,21 +408,24 @@ final class SpriteRenderer {
     }
 
     private void drawDefaultPlayerHead(Canvas canvas, float x, float headY, float radius) {
+        float headRadius = radius * 0.82f;
+        float outlineRadius = radius * 0.91f;
+        float eyeRadius = Math.max(dp(1.7f), radius * 0.085f);
         paint.setShader(null);
         paint.setStyle(Paint.Style.FILL);
         paint.setColor(Color.rgb(31, 34, 38));
-        canvas.drawRoundRect(x - radius * 1.06f, headY - radius * 1.06f, x + radius * 1.06f, headY + radius * 1.06f, dp(10), dp(10), paint);
+        canvas.drawRoundRect(x - outlineRadius, headY - outlineRadius, x + outlineRadius, headY + outlineRadius, dp(9), dp(9), paint);
 
         paint.setColor(Color.rgb(255, 192, 81));
-        canvas.drawRoundRect(x - radius, headY - radius, x + radius, headY + radius, dp(8), dp(8), paint);
+        canvas.drawRoundRect(x - headRadius, headY - headRadius, x + headRadius, headY + headRadius, dp(8), dp(8), paint);
 
         paint.setColor(Color.argb(230, 87, 54, 38));
-        canvas.drawRoundRect(x - radius * 0.95f, headY - radius * 0.98f, x + radius * 0.95f, headY - radius * 0.42f, dp(8), dp(8), paint);
+        canvas.drawRoundRect(x - headRadius * 0.95f, headY - headRadius * 0.97f, x + headRadius * 0.95f, headY - headRadius * 0.43f, dp(8), dp(8), paint);
 
         paint.setColor(Color.rgb(43, 32, 31));
-        canvas.drawCircle(x - radius * 0.35f, headY - radius * 0.12f, dp(3), paint);
-        canvas.drawCircle(x + radius * 0.35f, headY - radius * 0.12f, dp(3), paint);
-        canvas.drawRoundRect(x - radius * 0.35f, headY + radius * 0.25f, x + radius * 0.35f, headY + radius * 0.38f, dp(5), dp(5), paint);
+        canvas.drawCircle(x - headRadius * 0.34f, headY - headRadius * 0.09f, eyeRadius, paint);
+        canvas.drawCircle(x + headRadius * 0.34f, headY - headRadius * 0.09f, eyeRadius, paint);
+        canvas.drawRoundRect(x - headRadius * 0.32f, headY + headRadius * 0.28f, x + headRadius * 0.32f, headY + headRadius * 0.39f, dp(4), dp(4), paint);
     }
 
     private void drawPlayerPhoto(Canvas canvas, float x, float headY, float radius, Bitmap playerPhoto) {

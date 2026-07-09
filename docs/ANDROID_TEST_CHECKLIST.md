@@ -5,16 +5,16 @@ Use this after GitHub Actions produces the debug APK artifact.
 Current packaged beta:
 
 ```text
-versionCode: 334
-versionName: 3.2.14-beta
-build badge: ALASKA PASSPORT v3.34 BETA
+versionCode: 341
+versionName: 3.2.21-beta
+build badge: ALASKA PASSPORT v3.41 BETA
 ```
 
 ## Install test
 
 1. Download `you-rush-alaska-debug-apk` from the latest successful workflow run.
 2. Extract the ZIP if GitHub downloaded it as a ZIP.
-3. Install `you-rush-alaska-3.2.14-beta-334-debug.apk` on an Android phone.
+3. Install `you-rush-alaska-3.2.21-beta-341-debug.apk` on an Android phone.
 4. Allow installation from the browser/files app if Android prompts you.
 5. Open **You Rush**.
 6. Confirm the debug/version badge is visible and matches the packaged beta.
@@ -26,6 +26,8 @@ Confirm these screens work:
 - Splash screen appears.
 - Splash title words stack on narrow screens, spread apart on wide screens, and do not collide.
 - Main menu appears after splash or tap.
+- Main menu runner preview shows full standing legs on landscape screens, and
+  the default head is smaller and cleaner than the old square fallback.
 - Alaska Map opens.
 - Locked map stages do not start early and show an unlock message.
 - Alaska Map bottom route intel updates for the selected stage.
@@ -39,6 +41,8 @@ Confirm these screens work:
   runner, then persists after closing and reopening the app.
 - Back buttons return to menu.
 - Play starts the selected stage.
+- Default red runner running frames do not show neighboring-frame artifacts,
+  edge slivers, or flickering sprite seams.
 - Daily Rush starts the rotating daily stage.
 - Main menu shows Trail Passport badge progress.
 - Turning DEBUG on shows numbered badges on active obstacles, wildlife, pickups, throws, boss attacks, and bosses.

@@ -191,6 +191,35 @@
       return canvas.width > canvas.height;
     }
 
+    function clamp(value, min, max) {
+      return Math.min(Math.max(value, min), max);
+    }
+
+    function menuAvatarBox() {
+      const w = canvas.width;
+      const h = canvas.height;
+      const landscape = isLandscape();
+      const x = landscape ? w * 0.28 : w / 2;
+      const desiredHeadY = landscape ? h * 0.45 : h * 0.33;
+      const topLimit = landscape ? dp(10) : dp(82);
+      const bottomLimit = landscape ? h - dp(8) : h * 0.50;
+      let radius = landscape ? Math.min(dp(25), h * 0.16) : dp(28);
+      radius = Math.min(radius, Math.max(dp(10), (bottomLimit - topLimit) / 4.25));
+      const minHeadY = topLimit + radius;
+      const maxHeadY = bottomLimit - radius * 3.30;
+      const headY = maxHeadY < minHeadY ? desiredHeadY : clamp(desiredHeadY, minHeadY, maxHeadY);
+      return {
+        left: x - radius * 1.7,
+        top: headY - radius,
+        right: x + radius * 1.7,
+        bottom: headY + radius * 3.30,
+        name: "Avatar",
+        x,
+        headY,
+        radius
+      };
+    }
+
     function applyPreset() {
       const [w, h, d] = ui.preset.value.split(",").map(Number);
       ui.width.value = w;
@@ -245,7 +274,7 @@
 
       boxes.brand = { left: 0, top: 0, right: w, bottom: landscape ? dp(76) : dp(112), name: "Top brand" };
       boxes.stats = { left: 0, top: statsTop, right: w, bottom: h, name: "Stats strip" };
-      boxes.avatar = rect(landscape ? w * 0.28 : w / 2, landscape ? h * 0.45 : h * 0.33, landscape ? dp(92) : dp(102), landscape ? dp(126) : dp(134), "Avatar");
+      boxes.avatar = menuAvatarBox();
       return boxes;
     }
 
@@ -305,33 +334,51 @@
       const landscape = isLandscape();
       ctx.fillStyle = "rgba(0, 0, 0, 0.75)";
       ctx.fillRect(0, 0, canvas.width, brand.bottom);
-      centerText("TRIPPERDEE LABS · ALASKA PASSPORT v3.27 BETA", canvas.width / 2, landscape ? dp(18) : dp(25), landscape ? dp(8.5) : dp(9.5), "#ffda79");
+      centerText("TRIPPERDEE LABS · ALASKA PASSPORT v3.41 BETA", canvas.width / 2, landscape ? dp(18) : dp(25), landscape ? dp(8.5) : dp(9.5), "#ffda79");
       centerText("YOU RUSH: ALASKA", canvas.width / 2, landscape ? dp(45) : dp(61), landscape ? dp(20) : dp(26), "#fff");
       centerText("Upload your face. Beat local chaos.", canvas.width / 2, landscape ? dp(65) : dp(88), landscape ? dp(11) : dp(13), "#d2e8ee");
     }
 
     function drawAvatar(box) {
-      const cx = (box.left + box.right) / 2;
-      const cy = (box.top + box.bottom) / 2;
+      const cx = box.x || (box.left + box.right) / 2;
+      const headY = box.headY || (box.top + box.bottom) / 2 - dp(28);
+      const radius = box.radius || dp(26);
+      const headRadius = radius * 0.82;
+      const outlineRadius = radius * 0.91;
+      const eyeRadius = Math.max(dp(1.7), radius * 0.085);
+      const bodyTop = headY + radius * 0.60;
       ctx.strokeStyle = "rgba(24, 30, 38, 0.95)";
       ctx.fillStyle = "#c7432f";
       ctx.lineWidth = dp(2);
-      ctx.fillRect(cx - dp(17), cy + dp(15), dp(34), dp(52));
+      ctx.fillRect(cx - radius * 0.58, bodyTop, radius * 1.16, radius * 2.02);
+      ctx.beginPath();
+      ctx.moveTo(cx - radius * 0.35, bodyTop + radius * 1.35);
+      ctx.lineTo(cx - radius * 1.00, bodyTop + radius * 2.60);
+      ctx.moveTo(cx + radius * 0.35, bodyTop + radius * 1.35);
+      ctx.lineTo(cx + radius * 0.98, bodyTop + radius * 2.60);
+      ctx.stroke();
       ctx.fillStyle = "#ffc552";
       ctx.beginPath();
-      ctx.roundRect(cx - dp(26), cy - dp(55), dp(52), dp(52), dp(8));
+      ctx.roundRect(cx - outlineRadius, headY - outlineRadius, outlineRadius * 2, outlineRadius * 2, dp(9));
+      ctx.fillStyle = "#1f2228";
+      ctx.fill();
+      ctx.fillStyle = "#ffc552";
+      ctx.beginPath();
+      ctx.roundRect(cx - headRadius, headY - headRadius, headRadius * 2, headRadius * 2, dp(8));
       ctx.fill();
       ctx.stroke();
       ctx.fillStyle = "#765031";
       ctx.beginPath();
-      ctx.roundRect(cx - dp(24), cy - dp(54), dp(48), dp(15), dp(7));
+      ctx.roundRect(cx - headRadius * 0.95, headY - headRadius * 0.97, headRadius * 1.9, headRadius * 0.54, dp(7));
       ctx.fill();
       ctx.fillStyle = "#1f2430";
       ctx.beginPath();
-      ctx.arc(cx - dp(10), cy - dp(30), dp(3), 0, Math.PI * 2);
-      ctx.arc(cx + dp(10), cy - dp(30), dp(3), 0, Math.PI * 2);
+      ctx.arc(cx - headRadius * 0.34, headY - headRadius * 0.09, eyeRadius, 0, Math.PI * 2);
+      ctx.arc(cx + headRadius * 0.34, headY - headRadius * 0.09, eyeRadius, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillRect(cx - dp(10), cy - dp(18), dp(20), dp(3));
+      ctx.beginPath();
+      ctx.roundRect(cx - headRadius * 0.32, headY + headRadius * 0.28, headRadius * 0.64, headRadius * 0.11, dp(4));
+      ctx.fill();
     }
 
     function drawButton(box, label, small) {

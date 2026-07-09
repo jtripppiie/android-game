@@ -5,7 +5,12 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
 
+import java.io.IOException;
+import java.io.InputStream;
+
 final class GameAssets {
+    private static final String BRANDING_LOGO_ASSET = "branding/tripperdeelabs-logo.png";
+
     private final Drawable backgroundMidnightSun;
     private final Drawable backgroundDarkWinter;
     private final Drawable treeSummer;
@@ -22,6 +27,7 @@ final class GameAssets {
     private final Bitmap polarBearRoarSprite;
     private final Bitmap salmonSwimSheet;
     private final Bitmap eagleFlySheet;
+    private final Bitmap brandingLogo;
 
     GameAssets(Context context) {
         backgroundMidnightSun = context.getDrawable(R.drawable.background_midnight_sun_art);
@@ -40,6 +46,15 @@ final class GameAssets {
         polarBearRoarSprite = BitmapFactory.decodeResource(context.getResources(), R.drawable.sprite_polar_bear_roar);
         salmonSwimSheet = BitmapFactory.decodeResource(context.getResources(), R.drawable.sheet_salmon_swim);
         eagleFlySheet = BitmapFactory.decodeResource(context.getResources(), R.drawable.sheet_eagle_fly);
+        brandingLogo = decodeOptionalAsset(context, BRANDING_LOGO_ASSET);
+    }
+
+    private Bitmap decodeOptionalAsset(Context context, String assetPath) {
+        try (InputStream input = context.getAssets().open(assetPath)) {
+            return BitmapFactory.decodeStream(input);
+        } catch (IOException exception) {
+            return null;
+        }
     }
 
     Drawable background(boolean dark, boolean winter) {
@@ -96,5 +111,9 @@ final class GameAssets {
 
     Bitmap eagleFlySheet() {
         return eagleFlySheet;
+    }
+
+    Bitmap brandingLogo() {
+        return brandingLogo;
     }
 }

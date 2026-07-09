@@ -317,6 +317,8 @@
     bg.src = "../app/src/main/res/drawable-nodpi/background_midnight_sun_art.png";
     const images = {};
     const analysisCache = new Map();
+    const SPRITE_EDGE_GUARD_PX = 14;
+    const SPRITE_TRIM_INSET_PX = 6;
 
     function currentAsset() {
       return assets[ui.sheet.value];
@@ -349,11 +351,18 @@
       const cell = frameCell(image, asset, index);
       if (asset.cropMode === "fixed") {
         const crop = asset.crops[index];
+        const left = (crop[0] === 0 ? SPRITE_EDGE_GUARD_PX : crop[0]) + SPRITE_TRIM_INSET_PX;
+        const top = crop[1] + SPRITE_TRIM_INSET_PX;
+        const right = (crop[2] >= cell.width ? cell.width - SPRITE_EDGE_GUARD_PX : crop[2]) - SPRITE_TRIM_INSET_PX;
+        const bottom = Math.min(crop[3], image.naturalHeight) - SPRITE_TRIM_INSET_PX;
+        if (right <= left || bottom <= top) {
+          return { left: cell.left, top: 0, right: cell.right, bottom: cell.bottom };
+        }
         return {
-          left: cell.left + crop[0],
-          top: crop[1],
-          right: cell.left + Math.min(crop[2], cell.width),
-          bottom: Math.min(crop[3], image.naturalHeight)
+          left: cell.left + left,
+          top,
+          right: cell.left + right,
+          bottom
         };
       }
       let crop = asset.cropMode === "main" ? analysis.mainBounds : analysis.componentUnion;

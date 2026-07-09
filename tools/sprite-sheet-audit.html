@@ -156,6 +156,8 @@
 
     const image = new Image();
     const FULL_RUNNER_FRAME_GUARD_PX = 14;
+    const SPRITE_EDGE_GUARD_PX = 14;
+    const SPRITE_TRIM_INSET_PX = 6;
     const fullRunnerSheets = new Set(["sheet_mom_run.png", "sheet_dad_run.png"]);
     const runtimeTrims = {
       "sheet_player_run_headless.png": [
@@ -298,10 +300,10 @@
       if (!trim) {
         return { left: frameIndex * frameW, top: 0, width: frameW, height: frameH };
       }
-      const left = trim[0];
-      const top = trim[1];
-      const right = Math.min(trim[2], frameW);
-      const bottom = Math.min(trim[3], frameH);
+      const left = (trim[0] === 0 ? SPRITE_EDGE_GUARD_PX : trim[0]) + SPRITE_TRIM_INSET_PX;
+      const top = trim[1] + SPRITE_TRIM_INSET_PX;
+      const right = (trim[2] >= frameW ? frameW - SPRITE_EDGE_GUARD_PX : trim[2]) - SPRITE_TRIM_INSET_PX;
+      const bottom = Math.min(trim[3], frameH) - SPRITE_TRIM_INSET_PX;
       if (right <= left || bottom <= top) {
         return { left: frameIndex * frameW, top: 0, width: frameW, height: frameH };
       }

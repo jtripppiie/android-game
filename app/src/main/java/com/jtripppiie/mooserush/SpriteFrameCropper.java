@@ -25,6 +25,51 @@ final class SpriteFrameCropper {
         return computeFrameCrops(sheet, frames, seamGuardPx, true);
     }
 
+    /**
+     * Tight bounding box of every visible pixel inside each uniform frame cell.
+     * Unlike the connected-component crops, this keeps detached content such as
+     * lifted running feet, and it never trims across a cell seam because the scan
+     * is confined to each cell. Frames are authored to stay inside their cells, so
+     * the returned rects are complete and free of neighbouring-frame bleed.
+     */
+    static Rect[] computeCellContentCrops(Bitmap sheet, int frames, int padPx) {
+        Rect[] crops = new Rect[Math.max(0, frames)];
+        if (sheet == null || frames <= 0 || sheet.getWidth() <= 0 || sheet.getHeight() <= 0) {
+            return crops;
+        }
+        int height = sheet.getHeight();
+        for (int frame = 0; frame < frames; frame++) {
+            int rawLeft = Math.round(sheet.getWidth() * (frame / (float) frames));
+            int rawRight = Math.round(sheet.getWidth() * ((frame + 1) / (float) frames));
+            int minX = rawRight;
+            int minY = height;
+            int maxX = rawLeft - 1;
+            int maxY = -1;
+            for (int y = 0; y < height; y++) {
+                for (int x = rawLeft; x < rawRight; x++) {
+                    if (!isVisible(sheet, x, y)) {
+                        continue;
+                    }
+                    if (x < minX) minX = x;
+                    if (x > maxX) maxX = x;
+                    if (y < minY) minY = y;
+                    if (y > maxY) maxY = y;
+                }
+            }
+            if (maxX < minX || maxY < minY) {
+                crops[frame] = new Rect(rawLeft, 0, rawRight, height);
+            } else {
+                crops[frame] = new Rect(
+                        Math.max(rawLeft, minX - padPx),
+                        Math.max(0, minY - padPx),
+                        Math.min(rawRight, maxX + 1 + padPx),
+                        Math.min(height, maxY + 1 + padPx)
+                );
+            }
+        }
+        return crops;
+    }
+
     private static Rect[] computeFrameCrops(Bitmap sheet, int frames, int seamGuardPx, boolean mainComponentOnly) {
         Rect[] crops = new Rect[frames];
         if (sheet == null || frames <= 0 || sheet.getWidth() <= 0 || sheet.getHeight() <= 0) {
