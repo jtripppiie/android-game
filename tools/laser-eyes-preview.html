@@ -155,7 +155,7 @@
     <div class="checks">
       <label><input id="hitbox" type="checkbox" checked> Show hitbox</label>
       <label><input id="debug" type="checkbox" checked> Show debug labels</label>
-      <label><input id="grid" type="checkbox" checked> Show numbered grid</label>
+      <label><input id="grid" type="checkbox" checked> Show 15 px grid</label>
       <label><input id="slow" type="checkbox"> Slow motion</label>
     </div>
 
@@ -451,12 +451,12 @@
     function drawCalibrationGrid() {
       if (!controls.grid.checked) return;
       ctx.save();
-      ctx.font = "10px Arial";
+      ctx.font = "10px Arial, Helvetica, sans-serif";
       ctx.textAlign = "left";
       ctx.lineWidth = 1;
       for (let x = 0; x <= canvas.width; x += 15) {
         const major = x % 60 === 0;
-        ctx.strokeStyle = major ? "rgba(255, 218, 121, 0.28)" : "rgba(255,255,255,0.075)";
+        ctx.strokeStyle = major ? "rgba(255, 218, 121, 0.26)" : "rgba(255, 255, 255, 0.075)";
         line(x, 0, x, canvas.height);
         if (major) {
           ctx.fillStyle = "rgba(255, 246, 207, 0.72)";
@@ -465,7 +465,7 @@
       }
       for (let y = 0; y <= canvas.height; y += 15) {
         const major = y % 60 === 0;
-        ctx.strokeStyle = major ? "rgba(255, 218, 121, 0.28)" : "rgba(255,255,255,0.075)";
+        ctx.strokeStyle = major ? "rgba(255, 218, 121, 0.26)" : "rgba(255, 255, 255, 0.075)";
         line(0, y, canvas.width, y);
         if (major) {
           ctx.fillStyle = "rgba(255, 246, 207, 0.72)";
