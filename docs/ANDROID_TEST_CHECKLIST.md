@@ -192,12 +192,12 @@ On the main menu:
 
 ## Current known rough edges
 
-- Boss attack patterns are placeholder-simple.
+- Boss attack patterns are functional but still need phone-feel tuning.
 - Some encounter labels and boss behavior are still simple; runtime hazards now use generated raster/sprite-sheet art with frame trim guards.
 - Photo placement is automatic; crop/position controls are not built yet.
 - Map unlock logic exists, but the map still displays every Alaska stage for easy inspection.
 - Difficulty is not balanced yet.
-- Generated tone SFX are functional placeholders; richer audio assets are still needed.
+- Procedural SFX are improved, but final authored audio assets would still help.
 - This checklist still requires a real phone pass before public submission.
 
 ## First tuning targets

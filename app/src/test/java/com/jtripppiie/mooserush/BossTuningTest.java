@@ -25,7 +25,11 @@ public class BossTuningTest {
         int summon = 2;
         int laser = 3;
 
-        assertEquals(laser, BossTuning.nextPattern(true, 3, 8, 3, lunge, snowWave, summon, laser));
+        assertEquals(lunge, BossTuning.nextPattern(true, 6, 8, 0, lunge, snowWave, summon, laser));
+        assertEquals(snowWave, BossTuning.nextPattern(true, 6, 8, 1, lunge, snowWave, summon, laser));
+        assertEquals(summon, BossTuning.nextPattern(true, 6, 8, 2, lunge, snowWave, summon, laser));
+        assertEquals(laser, BossTuning.nextPattern(true, 3, 8, 2, lunge, snowWave, summon, laser));
+        assertEquals(summon, BossTuning.nextPattern(true, 3, 8, 3, lunge, snowWave, summon, laser));
         assertEquals(summon, BossTuning.nextPattern(false, 3, 8, 2, lunge, snowWave, summon, laser));
         assertEquals(lunge, BossTuning.nextPattern(false, 8, 8, 4, lunge, snowWave, summon, laser));
         assertEquals(snowWave, BossTuning.nextPattern(false, 8, 8, 5, lunge, snowWave, summon, laser));

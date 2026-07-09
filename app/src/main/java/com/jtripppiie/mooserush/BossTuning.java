@@ -12,8 +12,16 @@ final class BossTuning {
     }
 
     static int nextPattern(boolean finalStage, int health, int maxHealth, int patternCount, int lunge, int snowWave, int summon, int laser) {
-        if (finalStage && health <= maxHealth / 2 && patternCount % 4 == 3) {
-            return laser;
+        if (finalStage) {
+            if (health <= maxHealth / 2) {
+                int phaseTwoStep = patternCount % 5;
+                if (phaseTwoStep == 2) return laser;
+                if (phaseTwoStep == 3) return summon;
+                return phaseTwoStep == 0 ? snowWave : lunge;
+            }
+            int openingStep = patternCount % 4;
+            if (openingStep == 2) return summon;
+            return openingStep == 0 ? lunge : snowWave;
         }
         if (health <= maxHealth / 2 && patternCount % 3 == 2) {
             return summon;

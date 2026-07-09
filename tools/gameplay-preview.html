@@ -321,7 +321,7 @@
       drawPlayer(canvas.width * 0.24, ground - dp(38), dp(25));
 
       if (ui.scene.value === "boss" || ui.scene.value === "warning" || ui.scene.value === "clear") {
-        drawBoss(canvas.width * 0.77, ground - dp(62), dp(44));
+        drawBoss(canvas.width * 0.77, ground, dp(44));
       }
     }
 
@@ -357,7 +357,12 @@
       if (ui.debug.checked) debugCircle(x, y, radius * 0.85, "#ff6254", label);
     }
 
-    function drawBoss(x, y, radius) {
+    function drawBoss(x, ground, radius) {
+      const y = ground - radius * 0.82;
+      ctx.fillStyle = "rgba(0, 0, 0, 0.24)";
+      ctx.beginPath();
+      ctx.ellipse(x, ground + dp(1), radius * 1.72, radius * 0.16, 0, 0, Math.PI * 2);
+      ctx.fill();
       ctx.fillStyle = "#e9f5fb";
       ctx.beginPath();
       ctx.ellipse(x, y, radius * 1.25, radius * 0.85, 0, 0, Math.PI * 2);

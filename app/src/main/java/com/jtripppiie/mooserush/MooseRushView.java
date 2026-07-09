@@ -3838,8 +3838,9 @@ public class MooseRushView extends View {
         Bitmap bossSheet = sheetForBoss(selectedStage);
         float xRadius = radius * bossHorizontalScale(selectedStage);
         float yRadius = radius * bossVerticalScale(selectedStage);
-        float shadowY = getGroundY() + dp(4);
+        float shadowY = selectedStage == 1 || selectedStage == 3 ? getGroundY() + dp(4) : getGroundY() + dp(1.5f);
         int shadowAlpha = selectedStage == 1 || selectedStage == 3 ? 64 : 132;
+        float shadowHalfHeight = selectedStage == 1 || selectedStage == 3 ? dp(9) : dp(5.5f);
 
         paint.setStyle(Paint.Style.FILL);
         drawBossTell(canvas, radius);
@@ -3868,7 +3869,7 @@ public class MooseRushView extends View {
             canvas.drawText("FIRE NOW", bossX, promptTop + dp(15), textPaint);
         }
         paint.setColor(Color.argb(shadowAlpha, 0, 0, 0));
-        canvas.drawOval(bossX - xRadius * 0.88f, shadowY - dp(9), bossX + xRadius * 0.88f, shadowY + dp(9), paint);
+        canvas.drawOval(bossX - xRadius * 0.88f, shadowY - shadowHalfHeight, bossX + xRadius * 0.88f, shadowY + shadowHalfHeight, paint);
 
         if (bossSheet != null) {
             drawAnimatedBossSheet(canvas, bossSheet, radius);
@@ -4021,7 +4022,7 @@ public class MooseRushView extends View {
             height = radius * 2.95f;
             if (bossPattern == BOSS_PATTERN_LASER && (bossState == BOSS_STATE_TELL || bossState == BOSS_STATE_ATTACK)) {
                 height = radius * 3.65f;
-                centerY = getGroundY() - height * 0.48f;
+                centerY = getGroundY() - height * 0.48f + bossGroundSink(selectedStage);
                 rotation = (float) Math.sin(phase * 12f) * 1.2f;
             } else if (bossState == BOSS_STATE_TELL) {
                 rotation = (float) Math.sin(phase * 18f) * 1.8f;
@@ -4166,7 +4167,7 @@ public class MooseRushView extends View {
         if (stage == 3) {
             return clamp(getGroundY() - dp(154), dp(112), getGroundY() - dp(118));
         }
-        return getGroundY() - bossDrawHeight(stage) * 0.5f + dp(1);
+        return getGroundY() - bossDrawHeight(stage) * 0.5f + bossGroundSink(stage);
     }
 
     private float bossDrawHeight(int stage) {
@@ -4176,6 +4177,12 @@ public class MooseRushView extends View {
         if (stage == 4) return radius * 2.95f;
         if (sheetForBoss(stage) != null) return radius * 3.3f;
         return radius * 2f;
+    }
+
+    private float bossGroundSink(int stage) {
+        if (stage == 4) return dp(5);
+        if (stage == 2) return dp(2);
+        return dp(1);
     }
 
     private void drawCharacter(Canvas canvas, float x, float y, float radius) {
@@ -4784,12 +4791,12 @@ public class MooseRushView extends View {
         } else {
             soundPool = new SoundPool(4, android.media.AudioManager.STREAM_MUSIC, 0);
         }
-        soundJump = loadGeneratedSound("jump", 660, 80);
-        soundDoubleJump = loadGeneratedSound("double_jump", 820, 80);
-        soundThrow = loadGeneratedSound("throw", 440, 70);
-        soundHit = loadGeneratedSound("hit", 560, 90);
-        soundHurt = loadGeneratedSound("hurt", 190, 140);
-        soundMedal = loadGeneratedSound("medal", 980, 160);
+        soundJump = loadGeneratedSound("jump");
+        soundDoubleJump = loadGeneratedSound("double_jump");
+        soundThrow = loadGeneratedSound("throw");
+        soundHit = loadGeneratedSound("hit");
+        soundHurt = loadGeneratedSound("hurt");
+        soundMedal = loadGeneratedSound("medal");
     }
 
     private void playSound(String event) {
@@ -4815,10 +4822,10 @@ public class MooseRushView extends View {
         }
     }
 
-    private int loadGeneratedSound(String name, int frequencyHz, int durationMs) {
+    private int loadGeneratedSound(String name) {
         try {
             File file = new File(getContext().getCacheDir(), "you_rush_" + name + ".wav");
-            writeToneWav(file, frequencyHz, durationMs);
+            writeGameSoundWav(file, name);
             return soundPool.load(file.getAbsolutePath(), 1);
         } catch (IOException exception) {
             Log.w(TAG, "Unable to prepare sound " + name, exception);
@@ -4826,8 +4833,9 @@ public class MooseRushView extends View {
         }
     }
 
-    private void writeToneWav(File file, int frequencyHz, int durationMs) throws IOException {
+    private void writeGameSoundWav(File file, String name) throws IOException {
         int sampleRate = 22050;
+        int durationMs = soundDurationMs(name);
         int sampleCount = sampleRate * durationMs / 1000;
         int dataSize = sampleCount * 2;
         try (FileOutputStream out = new FileOutputStream(file)) {
@@ -4845,12 +4853,59 @@ public class MooseRushView extends View {
             writeLittleEndianInt(out, dataSize);
 
             for (int i = 0; i < sampleCount; i++) {
-                double t = i / (double) sampleRate;
-                double envelope = 1.0 - (i / (double) sampleCount);
-                short sample = (short) (Math.sin(2.0 * Math.PI * frequencyHz * t) * envelope * 12000);
+                double progress = i / (double) Math.max(1, sampleCount - 1);
+                short sample = (short) (soundSample(name, i / (double) sampleRate, progress) * 13500);
                 writeLittleEndianShort(out, sample);
             }
         }
+    }
+
+    private int soundDurationMs(String name) {
+        if ("medal".equals(name)) return 260;
+        if ("hurt".equals(name)) return 210;
+        if ("hit".equals(name)) return 130;
+        if ("double_jump".equals(name)) return 125;
+        if ("throw".equals(name)) return 105;
+        return 105;
+    }
+
+    private double soundSample(String name, double t, double progress) {
+        double envelope = Math.sin(Math.PI * Math.min(1.0, progress)) * Math.pow(1.0 - progress, 0.65);
+        if ("jump".equals(name)) {
+            return tone(t, 420 + 410 * progress) * envelope;
+        }
+        if ("double_jump".equals(name)) {
+            return (tone(t, 620 + 520 * progress) * 0.82 + tone(t, 1240 + 360 * progress) * 0.18) * envelope;
+        }
+        if ("throw".equals(name)) {
+            double sweep = tone(t, 760 - 360 * progress);
+            double air = noise(t, 17) * Math.pow(1.0 - progress, 1.8) * 0.18;
+            return (sweep * 0.82 + air) * envelope;
+        }
+        if ("hit".equals(name)) {
+            double thud = tone(t, 210 - 70 * progress) * 0.58;
+            double crack = noise(t, 31) * Math.pow(1.0 - progress, 2.2) * 0.42;
+            return (thud + crack) * envelope;
+        }
+        if ("hurt".equals(name)) {
+            return (tone(t, 230 - 105 * progress) * 0.72 + noise(t, 43) * 0.22) * envelope;
+        }
+        if ("medal".equals(name)) {
+            double first = progress < 0.48 ? tone(t, 880) : 0.0;
+            double second = progress > 0.28 && progress < 0.78 ? tone(t, 1180) : 0.0;
+            double shine = progress > 0.56 ? tone(t, 1560) * 0.45 : 0.0;
+            return (first * 0.62 + second * 0.54 + shine) * envelope;
+        }
+        return tone(t, 440) * envelope;
+    }
+
+    private double tone(double t, double frequencyHz) {
+        return Math.sin(2.0 * Math.PI * frequencyHz * t);
+    }
+
+    private double noise(double t, int seed) {
+        double value = Math.sin((t * 12000.0 + seed) * 12.9898) * 43758.5453;
+        return (value - Math.floor(value)) * 2.0 - 1.0;
     }
 
     private void writeAscii(FileOutputStream out, String value) throws IOException {

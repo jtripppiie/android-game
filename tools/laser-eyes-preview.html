@@ -296,12 +296,12 @@
       const standLift = phase === "tell" ? progress * 18 : phase === "fire" ? 18 : (1 - progress) * 18;
       const h = 245 + standLift;
       const w = 185;
-      const bottom = ground + 4;
+      const bottom = ground + 1;
       const y = bottom - h / 2;
       ctx.save();
       ctx.fillStyle = "rgba(0,0,0,0.26)";
       ctx.beginPath();
-      ctx.ellipse(x, ground + 7, 92, 15, 0, 0, Math.PI * 2);
+      ctx.ellipse(x, ground + 2, 88, 7, 0, 0, Math.PI * 2);
       ctx.fill();
       if (polar.complete && polar.naturalWidth > 0) {
         ctx.drawImage(polar, 34, 34, polar.naturalWidth - 68, polar.naturalHeight - 68, x - w / 2, bottom - h, w, h);
