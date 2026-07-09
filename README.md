@@ -75,6 +75,10 @@ GitHub Actions also publishes the debug APK as the
 
 Local browser previews live in `tools/` and are not packaged into the app.
 
+- `index.html`: local launcher for every offline debug preview
+- `offline-debug-workbench.html`: sprite crops, alpha bounds, connected
+  components, runner foot/contact lines, runtime strips, gameplay composition,
+  and PNG snapshots
 - `menu-preview.html`: main menu layout review with 15 px grid overlay
 - `gameplay-preview.html`: HUD, overlays, controls, hitboxes, contrast, and 15
   px grid overlay
@@ -95,6 +99,7 @@ Key active docs:
 
 - [Versioning](docs/VERSIONING.md)
 - [Android test checklist](docs/ANDROID_TEST_CHECKLIST.md)
+- [Offline debug previews](docs/OFFLINE_DEBUG_PREVIEWS.md)
 - [Privacy notes](docs/PRIVACY.md)
 - [Store listing draft](docs/STORE_LISTING_DRAFT.md)
 - [Sprite sheet asset pipeline](docs/SPRITE_SHEET_ASSET_PIPELINE.md)

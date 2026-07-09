@@ -18,13 +18,11 @@ final class SpriteRenderer {
     static final int BODY_STYLE_MALE = 2;
 
     private static final int RUNNER_FRAMES = 6;
-    private static final int SPRITE_EDGE_GUARD_PX = 5;
-    private static final int RUNNER_TRIM_INSET_PX = 3;
     private static final int FULL_RUNNER_FRAME_GUARD_PX = 14;
     private static final float RUNNER_BODY_HEIGHT_RUNNING = 2.68f;
     private static final float RUNNER_BODY_HEIGHT_STANDING = 2.62f;
     private static final float RUNNER_BODY_WIDTH_SCALE = 1.18f;
-    private static final int[][] RUNNER_FRAME_TRIMS = {
+    private static final int[][] RUNNER_BODY_FRAME_CROPS = {
             {24, 198, 328, 643},
             {0, 207, 328, 638},
             {0, 221, 325, 638},
@@ -42,6 +40,8 @@ final class SpriteRenderer {
     private final Bitmap runnerBodySheet;
     private final Bitmap femaleRunnerSheet;
     private final Bitmap maleRunnerSheet;
+    private final Rect[] femaleRunnerCrops;
+    private final Rect[] maleRunnerCrops;
     private final float density;
 
     SpriteRenderer(Context context) {
@@ -49,6 +49,8 @@ final class SpriteRenderer {
         runnerBodySheet = BitmapFactory.decodeResource(context.getResources(), R.drawable.sheet_player_run_headless);
         femaleRunnerSheet = BitmapFactory.decodeResource(context.getResources(), R.drawable.sheet_mom_run);
         maleRunnerSheet = BitmapFactory.decodeResource(context.getResources(), R.drawable.sheet_dad_run);
+        femaleRunnerCrops = SpriteFrameCropper.computeMainFrameCrops(femaleRunnerSheet, RUNNER_FRAMES, FULL_RUNNER_FRAME_GUARD_PX);
+        maleRunnerCrops = SpriteFrameCropper.computeMainFrameCrops(maleRunnerSheet, RUNNER_FRAMES, FULL_RUNNER_FRAME_GUARD_PX);
         bitmapPaint.setFilterBitmap(true);
     }
 
@@ -93,7 +95,7 @@ final class SpriteRenderer {
         }
 
         int frameIndex = animated ? runnerSheetFrame(frame.spriteClock) : 0;
-        int[] source = trimmedRunnerSourceValues(frameIndex, frameWidth, runnerBodySheet.getHeight(), RUNNER_FRAME_TRIMS[frameIndex]);
+        int[] source = trimmedRunnerSourceValues(frameIndex, frameWidth, runnerBodySheet.getHeight(), RUNNER_BODY_FRAME_CROPS[frameIndex]);
         if (source.length != 4) {
             return false;
         }
@@ -118,7 +120,8 @@ final class SpriteRenderer {
         }
 
         int frameIndex = animated ? runnerSheetFrame(frame.spriteClock) : 0;
-        int[] source = fullRunnerSourceValues(sheet.getWidth(), sheet.getHeight(), frameIndex);
+        Rect[] crops = fullRunnerCrops(frame.bodyStyle);
+        int[] source = fullRunnerSourceValues(sheet.getWidth(), sheet.getHeight(), frameIndex, crops);
         sourceRect.set(source[0], source[1], source[2], source[3]);
         if (sourceRect.width() <= 0 || sourceRect.height() <= 0) {
             return false;
@@ -146,6 +149,16 @@ final class SpriteRenderer {
         return null;
     }
 
+    private Rect[] fullRunnerCrops(int bodyStyle) {
+        if (bodyStyle == BODY_STYLE_FEMALE) {
+            return femaleRunnerCrops;
+        }
+        if (bodyStyle == BODY_STYLE_MALE) {
+            return maleRunnerCrops;
+        }
+        return null;
+    }
+
     static int runnerSheetFrame(float runnerClock) {
         return Math.floorMod((int) (runnerClock * RUNNER_FRAMES), RUNNER_FRAMES);
     }
@@ -159,7 +172,15 @@ final class SpriteRenderer {
     }
 
     static int[] fullRunnerSourceValues(int sheetWidth, int sheetHeight, int frameIndex) {
+        return fullRunnerSourceValues(sheetWidth, sheetHeight, frameIndex, null);
+    }
+
+    static int[] fullRunnerSourceValues(int sheetWidth, int sheetHeight, int frameIndex, Rect[] crops) {
         int safeFrame = Math.floorMod(frameIndex, RUNNER_FRAMES);
+        if (crops != null && safeFrame < crops.length && crops[safeFrame] != null && !crops[safeFrame].isEmpty()) {
+            Rect crop = crops[safeFrame];
+            return new int[]{crop.left, crop.top, crop.right, crop.bottom};
+        }
         int left = fullRunnerFrameLeft(sheetWidth, safeFrame);
         int right = fullRunnerFrameRight(sheetWidth, safeFrame);
         if (safeFrame > 0) {
@@ -180,10 +201,10 @@ final class SpriteRenderer {
     }
 
     static int[] trimmedRunnerSourceValues(int frameIndex, int frameWidth, int sheetHeight, int[] trim) {
-        int left = (trim[0] == 0 ? SPRITE_EDGE_GUARD_PX : trim[0]) + RUNNER_TRIM_INSET_PX;
-        int top = trim[1] + RUNNER_TRIM_INSET_PX;
-        int right = (trim[2] >= frameWidth ? frameWidth - SPRITE_EDGE_GUARD_PX : trim[2]) - RUNNER_TRIM_INSET_PX;
-        int bottom = Math.min(trim[3], sheetHeight) - RUNNER_TRIM_INSET_PX;
+        int left = trim[0];
+        int top = trim[1];
+        int right = Math.min(trim[2], frameWidth);
+        int bottom = Math.min(trim[3], sheetHeight);
         if (right <= left || bottom <= top) {
             return new int[0];
         }

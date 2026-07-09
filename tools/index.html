@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>You Rush Local Debug Tools</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #081224;
+      color: #f7fbff;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        linear-gradient(rgba(8, 18, 36, 0.78), rgba(8, 18, 36, 0.94)),
+        url("../app/src/main/res/drawable-nodpi/background_midnight_sun_art.png") center / cover fixed;
+    }
+
+    main {
+      box-sizing: border-box;
+      width: min(1120px, calc(100vw - 32px));
+      margin: 0 auto;
+      padding: 28px 0 42px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 30px;
+    }
+
+    p {
+      max-width: 780px;
+      margin: 0 0 22px;
+      color: #d8e7ed;
+      line-height: 1.45;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 14px;
+    }
+
+    a {
+      display: block;
+      min-height: 124px;
+      box-sizing: border-box;
+      padding: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 8px;
+      background: rgba(16, 25, 38, 0.88);
+      color: inherit;
+      text-decoration: none;
+      box-shadow: 0 18px 48px rgba(0, 0, 0, 0.28);
+    }
+
+    a:hover,
+    a:focus-visible {
+      border-color: #ffda79;
+      outline: none;
+    }
+
+    strong {
+      display: block;
+      margin-bottom: 8px;
+      color: #fff6cf;
+      font-size: 18px;
+    }
+
+    span {
+      display: block;
+      color: #c7d6df;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>You Rush Local Debug Tools</h1>
+    <p>Offline browser tools for checking layout, sprites, hitboxes, obstacles, and boss visuals before compiling or installing the Android app.</p>
+
+    <section class="grid">
+      <a href="offline-debug-workbench.html">
+        <strong>Offline Debug Workbench</strong>
+        <span>Best first stop for sprite crops, frame components, foot/contact lines, runtime strips, and gameplay composition snapshots.</span>
+      </a>
+      <a href="sprite-sheet-audit.html">
+        <strong>Sprite Sheet Audit</strong>
+        <span>Frame-by-frame PNG inspection with checkerboard transparency, frame boxes, crop overlays, labels, and grid.</span>
+      </a>
+      <a href="gameplay-preview.html">
+        <strong>Gameplay Preview</strong>
+        <span>HUD, overlays, controls, hitboxes, contrast, device presets, and 15 px layout grid.</span>
+      </a>
+      <a href="gear-obstacle-preview.html">
+        <strong>Gear + Obstacles</strong>
+        <span>Driftwood logs, river logs, icebergs, snow piles, snowballs, bear spray, debug badges, and hitboxes.</span>
+      </a>
+      <a href="laser-eyes-preview.html">
+        <strong>Laser Eyes Preview</strong>
+        <span>Polar bear beam origin, sweep line, warning reticle, and boss framing checks.</span>
+      </a>
+      <a href="menu-preview.html">
+        <strong>Menu Preview</strong>
+        <span>Main menu layout, badge placement, buttons, and first-screen readability checks.</span>
+      </a>
+      <a href="debug-tuning-dashboard.html">
+        <strong>Debug Tuning Dashboard</strong>
+        <span>Quick reference for reporting numbered DEBUG screenshots during phone/emulator testing.</span>
+      </a>
+    </section>
+  </main>
+</body>
+</html>

@@ -18,6 +18,8 @@ Highlights:
 - Improved runner reset behavior and proportional ground-line placement.
 - Hardened runner and wildlife sprite-sheet sampling to reduce adjacent-frame
   bleed and late-frame clipping.
+- Added an offline debug workbench and local tools index for sprite crops,
+  contact-line checks, gameplay composition, and PNG visual snapshots.
 - Refreshed launcher branding across adaptive, monochrome, and legacy icons.
 - Expanded the sprite-sheet audit tool with Android runtime crop overlays.
 - Preserved detailed historical release notes under `docs/archive/`.

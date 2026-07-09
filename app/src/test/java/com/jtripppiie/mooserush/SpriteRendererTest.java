@@ -30,7 +30,7 @@ public class SpriteRendererTest {
     }
 
     @Test
-    public void runnerSheetTrimAddsGuardPixelAtFrameEdges() {
+    public void runnerSheetTrimPreservesVisibleFrameBounds() {
         int[] source = SpriteRenderer.trimmedRunnerSourceValues(
                 1,
                 328,
@@ -38,7 +38,7 @@ public class SpriteRendererTest {
                 new int[]{0, 207, 328, 638}
         );
 
-        assertArrayEquals(new int[]{336, 210, 648, 635}, source);
+        assertArrayEquals(new int[]{328, 207, 656, 638}, source);
     }
 
     @Test

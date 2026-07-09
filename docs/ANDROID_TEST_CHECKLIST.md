@@ -51,6 +51,17 @@ Confirm these screens work:
 - DEBUG sprite labels distinguish `sheet`, `roar png`, and `drawn` render paths, with `T` marking trimmed sprite-sheet frames.
 - DEBUG should make the new obstacle sprites and bear spray pickup identifiable enough to report by number.
 
+## Offline visual preview test
+
+Before installing a new APK, open `tools/index.html` and use the Offline Debug
+Workbench to check:
+
+- Default red runner feet are fully visible in every running frame.
+- Mom/dad runner frames do not show stray adjacent-frame pixels.
+- Eagle and polar bear sheets do not show edge fragments from neighboring frames.
+- Runner and boss ground/contact lines match the intended lane.
+- Log obstacles still read as logs in the gear/obstacle preview.
+
 ## Gameplay test
 
 Test these controls:

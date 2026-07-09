@@ -1,0 +1,874 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>You Rush Offline Debug Workbench</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #081224;
+      color: #f7fbff;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 360px 1fr;
+    }
+
+    aside {
+      box-sizing: border-box;
+      max-height: 100vh;
+      overflow: auto;
+      padding: 18px;
+      background: #101926;
+      border-right: 1px solid rgba(255, 255, 255, 0.14);
+    }
+
+    main {
+      min-width: 0;
+      padding: 22px;
+      overflow: auto;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 20px;
+    }
+
+    p {
+      margin: 0 0 14px;
+      color: #c7d6df;
+      font-size: 13px;
+      line-height: 1.42;
+    }
+
+    label {
+      display: block;
+      margin: 12px 0 6px;
+      color: #c7d6df;
+      font-size: 13px;
+    }
+
+    select,
+    input,
+    button {
+      box-sizing: border-box;
+      width: 100%;
+      min-height: 34px;
+      padding: 7px 9px;
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      border-radius: 6px;
+      background: #172235;
+      color: #fff;
+      font: inherit;
+    }
+
+    button {
+      margin-top: 10px;
+      cursor: pointer;
+      background: #ffda79;
+      color: #18202a;
+      font-weight: 700;
+    }
+
+    .pair {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .checks label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 9px 0;
+    }
+
+    .checks input {
+      width: auto;
+      min-height: auto;
+    }
+
+    .legend {
+      display: grid;
+      gap: 6px;
+      margin-top: 14px;
+      padding: 12px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      font-size: 12px;
+      color: #dcebef;
+    }
+
+    .key {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .swatch {
+      width: 18px;
+      height: 10px;
+      border: 2px solid currentColor;
+    }
+
+    #report {
+      margin-top: 14px;
+      padding: 12px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      color: #dcebef;
+      font-size: 12.5px;
+      line-height: 1.45;
+      white-space: pre-wrap;
+    }
+
+    canvas {
+      background: #081224;
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.42);
+    }
+
+    @media (max-width: 920px) {
+      body {
+        grid-template-columns: 1fr;
+      }
+
+      aside {
+        max-height: none;
+        border-right: 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+      }
+    }
+  </style>
+</head>
+<body>
+  <aside>
+    <h1>Offline Debug Workbench</h1>
+    <p>Loads local Android assets directly. Use it to inspect frame cuts, alpha bounds, runtime crops, ground contact, and sprite scale without rebuilding.</p>
+
+    <label for="mode">Preview mode</label>
+    <select id="mode">
+      <option value="sheet">Sheet audit</option>
+      <option value="strip">Runtime frame strip</option>
+      <option value="runner">Runner ground/contact test</option>
+      <option value="scene">Gameplay composition test</option>
+    </select>
+
+    <label for="sheet">Asset</label>
+    <select id="sheet">
+      <option value="runnerBody">Default red runner body</option>
+      <option value="mom">Mom runner</option>
+      <option value="dad">Dad runner</option>
+      <option value="eagle">Eagle fly</option>
+      <option value="polarBear">Polar bear walk</option>
+      <option value="bear">Bear walk</option>
+      <option value="wolf">Wolf run</option>
+      <option value="salmon">Salmon swim</option>
+      <option value="moose">Moose walk</option>
+    </select>
+
+    <div class="pair">
+      <div>
+        <label for="frame">Frame</label>
+        <input id="frame" type="number" min="1" max="6" value="1">
+      </div>
+      <div>
+        <label for="scale">Scale <span id="scaleLabel">1.0</span>x</label>
+        <input id="scale" type="range" min="0.5" max="3.5" step="0.1" value="1">
+      </div>
+    </div>
+
+    <label for="zoom">Sheet zoom <span id="zoomLabel">1.5</span>x</label>
+    <input id="zoom" type="range" min="0.5" max="5" step="0.25" value="1.5">
+
+    <label for="ground">Ground line <span id="groundLabel">82</span>%</label>
+    <input id="ground" type="range" min="55" max="94" step="1" value="82">
+
+    <label for="alpha">Alpha threshold <span id="alphaLabel">12</span></label>
+    <input id="alpha" type="range" min="1" max="80" step="1" value="12">
+
+    <div class="checks">
+      <label><input id="checker" type="checkbox" checked> Checkerboard</label>
+      <label><input id="grid" type="checkbox" checked> 15 px grid</label>
+      <label><input id="rawBox" type="checkbox" checked> Raw frame boxes</label>
+      <label><input id="runtimeBox" type="checkbox" checked> App source crop</label>
+      <label><input id="alphaBox" type="checkbox" checked> Alpha visible bounds</label>
+      <label><input id="components" type="checkbox" checked> Connected components</label>
+      <label><input id="contact" type="checkbox" checked> Foot/contact line</label>
+      <label><input id="labels" type="checkbox" checked> Labels and metrics</label>
+    </div>
+
+    <button id="save">Download PNG Snapshot</button>
+
+    <div class="legend">
+      <div class="key" style="color:#ffda79"><span class="swatch"></span> Raw frame cell</div>
+      <div class="key" style="color:#4ddbb8"><span class="swatch"></span> App source crop</div>
+      <div class="key" style="color:#6ac7ff"><span class="swatch"></span> Alpha visible bounds</div>
+      <div class="key" style="color:#ff6254"><span class="swatch"></span> Connected component</div>
+      <div class="key" style="color:#fff6cf"><span class="swatch"></span> Ground/contact line</div>
+    </div>
+
+    <div id="report"></div>
+  </aside>
+
+  <main>
+    <canvas id="preview" width="1280" height="760"></canvas>
+  </main>
+
+  <script>
+    const canvas = document.getElementById("preview");
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    const ui = {
+      mode: document.getElementById("mode"),
+      sheet: document.getElementById("sheet"),
+      frame: document.getElementById("frame"),
+      scale: document.getElementById("scale"),
+      scaleLabel: document.getElementById("scaleLabel"),
+      zoom: document.getElementById("zoom"),
+      zoomLabel: document.getElementById("zoomLabel"),
+      ground: document.getElementById("ground"),
+      groundLabel: document.getElementById("groundLabel"),
+      alpha: document.getElementById("alpha"),
+      alphaLabel: document.getElementById("alphaLabel"),
+      checker: document.getElementById("checker"),
+      grid: document.getElementById("grid"),
+      rawBox: document.getElementById("rawBox"),
+      runtimeBox: document.getElementById("runtimeBox"),
+      alphaBox: document.getElementById("alphaBox"),
+      components: document.getElementById("components"),
+      contact: document.getElementById("contact"),
+      labels: document.getElementById("labels"),
+      save: document.getElementById("save"),
+      report: document.getElementById("report")
+    };
+
+    const assets = {
+      runnerBody: {
+        label: "Default red runner body",
+        path: "../app/src/main/res/drawable-nodpi/sheet_player_run_headless.png",
+        frames: 6,
+        cropMode: "fixed",
+        crops: [
+          [24, 198, 328, 643],
+          [0, 207, 328, 638],
+          [0, 221, 325, 638],
+          [18, 173, 289, 624],
+          [3, 222, 328, 642],
+          [0, 218, 307, 639]
+        ]
+      },
+      mom: {
+        label: "Mom runner",
+        path: "../app/src/main/res/drawable-nodpi/sheet_mom_run.png",
+        frames: 6,
+        cropMode: "main",
+        seamGuard: 14
+      },
+      dad: {
+        label: "Dad runner",
+        path: "../app/src/main/res/drawable-nodpi/sheet_dad_run.png",
+        frames: 6,
+        cropMode: "main",
+        seamGuard: 14
+      },
+      eagle: {
+        label: "Eagle fly",
+        path: "../app/src/main/res/drawable-nodpi/sheet_eagle_fly.png",
+        frames: 6,
+        cropMode: "components"
+      },
+      polarBear: {
+        label: "Polar bear walk",
+        path: "../app/src/main/res/drawable-nodpi/sheet_polar_bear_walk.png",
+        frames: 6,
+        cropMode: "components"
+      },
+      bear: {
+        label: "Bear walk",
+        path: "../app/src/main/res/drawable-nodpi/sheet_bear_walk.png",
+        frames: 6,
+        cropMode: "components"
+      },
+      wolf: {
+        label: "Wolf run",
+        path: "../app/src/main/res/drawable-nodpi/sheet_wolf_run.png",
+        frames: 6,
+        cropMode: "components"
+      },
+      salmon: {
+        label: "Salmon swim",
+        path: "../app/src/main/res/drawable-nodpi/sheet_salmon_swim.png",
+        frames: 6,
+        cropMode: "components"
+      },
+      moose: {
+        label: "Moose walk",
+        path: "../app/src/main/res/drawable-nodpi/sheet_moose_walk.png",
+        frames: 6,
+        cropMode: "components"
+      }
+    };
+
+    const bg = new Image();
+    bg.src = "../app/src/main/res/drawable-nodpi/background_midnight_sun_art.png";
+    const images = {};
+    const analysisCache = new Map();
+
+    function currentAsset() {
+      return assets[ui.sheet.value];
+    }
+
+    function currentImage() {
+      const asset = currentAsset();
+      if (!images[asset.path]) {
+        images[asset.path] = new Image();
+        images[asset.path].src = asset.path;
+        images[asset.path].addEventListener("load", () => {
+          analysisCache.clear();
+          render();
+        });
+      }
+      return images[asset.path];
+    }
+
+    function frameCell(image, asset, index) {
+      if (asset.key === "runnerBody") {
+        const w = Math.floor(image.naturalWidth / asset.frames);
+        return { left: index * w, top: 0, right: (index + 1) * w, bottom: image.naturalHeight, width: w, height: image.naturalHeight };
+      }
+      const left = Math.round(image.naturalWidth * (index / asset.frames));
+      const right = Math.round(image.naturalWidth * ((index + 1) / asset.frames));
+      return { left, top: 0, right, bottom: image.naturalHeight, width: right - left, height: image.naturalHeight };
+    }
+
+    function runtimeCrop(image, asset, index, analysis) {
+      const cell = frameCell(image, asset, index);
+      if (asset.cropMode === "fixed") {
+        const crop = asset.crops[index];
+        return {
+          left: cell.left + crop[0],
+          top: crop[1],
+          right: cell.left + Math.min(crop[2], cell.width),
+          bottom: Math.min(crop[3], image.naturalHeight)
+        };
+      }
+      let crop = asset.cropMode === "main" ? analysis.mainBounds : analysis.componentUnion;
+      if (!crop) {
+        crop = analysis.alphaBounds || { left: cell.left, top: 0, right: cell.right, bottom: cell.bottom };
+      }
+      crop = { ...crop };
+      const seamGuard = asset.seamGuard || 0;
+      if (seamGuard > 0) {
+        if (index > 0) crop.left = Math.max(crop.left, cell.left + seamGuard);
+        if (index < asset.frames - 1) crop.right = Math.min(crop.right, cell.right - seamGuard);
+      }
+      return crop;
+    }
+
+    function analyzeFrame(image, asset, index) {
+      const threshold = Number(ui.alpha.value);
+      const key = asset.path + ":" + index + ":" + threshold;
+      if (analysisCache.has(key)) return analysisCache.get(key);
+
+      const cell = frameCell(image, asset, index);
+      const scratch = document.createElement("canvas");
+      scratch.width = cell.width;
+      scratch.height = cell.height;
+      const sctx = scratch.getContext("2d", { willReadFrequently: true });
+      sctx.drawImage(image, cell.left, 0, cell.width, cell.height, 0, 0, cell.width, cell.height);
+      const data = sctx.getImageData(0, 0, cell.width, cell.height).data;
+      const visible = new Uint8Array(cell.width * cell.height);
+      const visited = new Uint8Array(cell.width * cell.height);
+      let minX = cell.width;
+      let maxX = -1;
+      let minY = cell.height;
+      let maxY = -1;
+      let visibleCount = 0;
+      let leftEdge = 0;
+      let rightEdge = 0;
+
+      for (let y = 0; y < cell.height; y++) {
+        for (let x = 0; x < cell.width; x++) {
+          const alpha = data[(y * cell.width + x) * 4 + 3];
+          if (alpha > threshold) {
+            const idx = y * cell.width + x;
+            visible[idx] = 1;
+            visibleCount++;
+            minX = Math.min(minX, x);
+            maxX = Math.max(maxX, x);
+            minY = Math.min(minY, y);
+            maxY = Math.max(maxY, y);
+            if (x <= 2) leftEdge++;
+            if (x >= cell.width - 3) rightEdge++;
+          }
+        }
+      }
+
+      const qx = new Int32Array(cell.width * cell.height);
+      const qy = new Int32Array(cell.width * cell.height);
+      const components = [];
+      let best = null;
+
+      for (let y = 0; y < cell.height; y++) {
+        for (let x = 0; x < cell.width; x++) {
+          const start = y * cell.width + x;
+          if (visited[start] || !visible[start]) {
+            visited[start] = 1;
+            continue;
+          }
+          let head = 0;
+          let tail = 0;
+          let count = 0;
+          let cxMin = x;
+          let cxMax = x;
+          let cyMin = y;
+          let cyMax = y;
+          qx[tail] = x;
+          qy[tail] = y;
+          tail++;
+          visited[start] = 1;
+          while (head < tail) {
+            const px = qx[head];
+            const py = qy[head];
+            head++;
+            count++;
+            cxMin = Math.min(cxMin, px);
+            cxMax = Math.max(cxMax, px);
+            cyMin = Math.min(cyMin, py);
+            cyMax = Math.max(cyMax, py);
+            tail = visit(px - 1, py, cell, visible, visited, qx, qy, tail);
+            tail = visit(px + 1, py, cell, visible, visited, qx, qy, tail);
+            tail = visit(px, py - 1, cell, visible, visited, qx, qy, tail);
+            tail = visit(px, py + 1, cell, visible, visited, qx, qy, tail);
+          }
+          const component = {
+            count,
+            touchesEdge: cxMin <= 1 || cxMax >= cell.width - 2,
+            left: cell.left + Math.max(0, cxMin - 4),
+            top: Math.max(0, cyMin - 4),
+            right: cell.left + Math.min(cell.width, cxMax + 5),
+            bottom: Math.min(cell.height, cyMax + 5)
+          };
+          components.push(component);
+          if (!best || component.count > best.count) best = component;
+        }
+      }
+
+      components.sort((a, b) => b.count - a.count);
+      const bestCount = best ? best.count : 0;
+      let union = null;
+      for (const component of components) {
+        if (component.count < 80) continue;
+        if (component.touchesEdge && component.count < bestCount * 0.35) continue;
+        union = union ? rectUnion(union, component) : { ...component };
+      }
+
+      const result = {
+        cell,
+        visibleCount,
+        leftEdge,
+        rightEdge,
+        alphaBounds: visibleCount > 0 ? {
+          left: cell.left + minX,
+          top: minY,
+          right: cell.left + maxX + 1,
+          bottom: maxY + 1
+        } : null,
+        components,
+        mainBounds: best ? { ...best } : null,
+        componentUnion: union
+      };
+      analysisCache.set(key, result);
+      return result;
+    }
+
+    function visit(x, y, cell, visible, visited, qx, qy, tail) {
+      if (x < 0 || y < 0 || x >= cell.width || y >= cell.height) return tail;
+      const idx = y * cell.width + x;
+      if (visited[idx]) return tail;
+      visited[idx] = 1;
+      if (!visible[idx]) return tail;
+      qx[tail] = x;
+      qy[tail] = y;
+      return tail + 1;
+    }
+
+    function rectUnion(a, b) {
+      return {
+        left: Math.min(a.left, b.left),
+        top: Math.min(a.top, b.top),
+        right: Math.max(a.right, b.right),
+        bottom: Math.max(a.bottom, b.bottom)
+      };
+    }
+
+    function drawChecker(x, y, w, h, size) {
+      if (!ui.checker.checked) return;
+      for (let yy = y; yy < y + h; yy += size) {
+        for (let xx = x; xx < x + w; xx += size) {
+          const even = ((xx - x) / size + (yy - y) / size) % 2 === 0;
+          ctx.fillStyle = even ? "#2c3542" : "#182231";
+          ctx.fillRect(xx, yy, size, size);
+        }
+      }
+    }
+
+    function drawGrid() {
+      if (!ui.grid.checked) return;
+      ctx.save();
+      ctx.font = "10px Arial, Helvetica, sans-serif";
+      for (let x = 0; x <= canvas.width; x += 15) {
+        const major = x % 60 === 0;
+        ctx.strokeStyle = major ? "rgba(255, 218, 121, 0.24)" : "rgba(255, 255, 255, 0.07)";
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, canvas.height);
+        ctx.stroke();
+        if (major) {
+          ctx.fillStyle = "rgba(255,246,207,0.72)";
+          ctx.fillText(String(x), x + 3, 13);
+        }
+      }
+      for (let y = 0; y <= canvas.height; y += 15) {
+        const major = y % 60 === 0;
+        ctx.strokeStyle = major ? "rgba(255, 218, 121, 0.24)" : "rgba(255, 255, 255, 0.07)";
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(canvas.width, y);
+        ctx.stroke();
+        if (major) {
+          ctx.fillStyle = "rgba(255,246,207,0.72)";
+          ctx.fillText(String(y), 4, y + 12);
+        }
+      }
+      ctx.restore();
+    }
+
+    function drawSourceRect(rect, originX, originY, zoom, cellLeft, color, label) {
+      const x = originX + (rect.left - cellLeft) * zoom;
+      const y = originY + rect.top * zoom;
+      const w = (rect.right - rect.left) * zoom;
+      const h = (rect.bottom - rect.top) * zoom;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2;
+      ctx.strokeRect(x, y, w, h);
+      if (label && ui.labels.checked) {
+        ctx.fillStyle = color;
+        ctx.font = "700 12px Arial, Helvetica, sans-serif";
+        ctx.fillText(label, x + 4, Math.max(14, y - 5));
+      }
+    }
+
+    function clear(width, height) {
+      canvas.width = width;
+      canvas.height = height;
+      ctx.fillStyle = "#081224";
+      ctx.fillRect(0, 0, width, height);
+      drawGrid();
+    }
+
+    function drawSheetMode(image, asset) {
+      const zoom = Number(ui.zoom.value);
+      const frameGap = 24;
+      const sample = frameCell(image, asset, 0);
+      const tileW = sample.width * zoom;
+      const tileH = sample.height * zoom;
+      const columns = Math.max(1, Math.floor((1280 - 48) / (tileW + frameGap)));
+      const rows = Math.ceil(asset.frames / columns);
+      clear(1280, Math.max(760, 64 + rows * (tileH + 72)));
+
+      const reports = [];
+      for (let i = 0; i < asset.frames; i++) {
+        const cell = frameCell(image, asset, i);
+        const analysis = analyzeFrame(image, asset, i);
+        const crop = runtimeCrop(image, asset, i, analysis);
+        const col = i % columns;
+        const row = Math.floor(i / columns);
+        const x = 24 + col * (tileW + frameGap);
+        const y = 58 + row * (tileH + 72);
+        drawChecker(x, y, cell.width * zoom, cell.height * zoom, 12);
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(image, cell.left, 0, cell.width, cell.height, x, y, cell.width * zoom, cell.height * zoom);
+
+        if (ui.rawBox.checked) drawSourceRect(cell, x, y, zoom, cell.left, "#ffda79", "raw");
+        if (ui.alphaBox.checked && analysis.alphaBounds) drawSourceRect(analysis.alphaBounds, x, y, zoom, cell.left, "#6ac7ff", "alpha");
+        if (ui.runtimeBox.checked) drawSourceRect(crop, x, y, zoom, cell.left, "#4ddbb8", "app");
+        if (ui.components.checked) {
+          for (const component of analysis.components.slice(0, 5)) {
+            drawSourceRect(component, x, y, zoom, cell.left, "#ff6254", String(component.count));
+          }
+        }
+        if (ui.contact.checked && analysis.alphaBounds) {
+          const bottomY = y + analysis.alphaBounds.bottom * zoom;
+          ctx.strokeStyle = "#fff6cf";
+          ctx.setLineDash([8, 5]);
+          ctx.beginPath();
+          ctx.moveTo(x, bottomY);
+          ctx.lineTo(x + cell.width * zoom, bottomY);
+          ctx.stroke();
+          ctx.setLineDash([]);
+        }
+        if (ui.labels.checked) {
+          ctx.fillStyle = "#fff6cf";
+          ctx.font = "700 16px Arial, Helvetica, sans-serif";
+          ctx.fillText("F" + (i + 1), x, y - 20);
+        }
+        const cutLeft = crop.left - (analysis.alphaBounds ? analysis.alphaBounds.left : crop.left);
+        const cutRight = (analysis.alphaBounds ? analysis.alphaBounds.right : crop.right) - crop.right;
+        const cutBottom = (analysis.alphaBounds ? analysis.alphaBounds.bottom : crop.bottom) - crop.bottom;
+        reports.push("F" + (i + 1) + ": visible=" + analysis.visibleCount +
+          " edge L/R=" + analysis.leftEdge + "/" + analysis.rightEdge +
+          " appCut L/R/B=" + cutLeft + "/" + cutRight + "/" + cutBottom +
+          " crop=" + rectText(crop));
+      }
+      ui.report.textContent = asset.label + "\n" + asset.path + "\n\n" + reports.join("\n");
+    }
+
+    function drawStripMode(image, asset) {
+      clear(1500, 520);
+      const frameY = 84;
+      const tileW = 220;
+      const tileH = 330;
+      const reports = [];
+      for (let i = 0; i < asset.frames; i++) {
+        const analysis = analyzeFrame(image, asset, i);
+        const crop = runtimeCrop(image, asset, i, analysis);
+        const w = crop.right - crop.left;
+        const h = crop.bottom - crop.top;
+        const scale = Math.min((tileW - 28) / w, (tileH - 28) / h) * Number(ui.scale.value);
+        const drawW = w * scale;
+        const drawH = h * scale;
+        const x = 18 + i * 244 + (tileW - drawW) / 2;
+        const y = frameY + (tileH - drawH) / 2;
+        drawChecker(18 + i * 244, frameY, tileW, tileH, 14);
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(image, crop.left, crop.top, w, h, x, y, drawW, drawH);
+        ctx.strokeStyle = "#4ddbb8";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x, y, drawW, drawH);
+        ctx.fillStyle = "#fff6cf";
+        ctx.font = "700 17px Arial";
+        ctx.fillText("F" + (i + 1), 18 + i * 244, 52);
+        if (ui.contact.checked) {
+          ctx.strokeStyle = "#fff6cf";
+          ctx.beginPath();
+          ctx.moveTo(18 + i * 244, y + drawH);
+          ctx.lineTo(18 + i * 244 + tileW, y + drawH);
+          ctx.stroke();
+        }
+        reports.push("F" + (i + 1) + " crop " + rectText(crop) + " drawn " + Math.round(drawW) + "x" + Math.round(drawH));
+      }
+      ui.report.textContent = "Runtime frame strip\n" + asset.label + "\n\n" + reports.join("\n");
+    }
+
+    function drawRunnerMode(image, asset) {
+      clear(1280, 720);
+      drawStageBackground();
+      const frame = Math.max(0, Math.min(asset.frames - 1, Number(ui.frame.value) - 1));
+      const analysis = analyzeFrame(image, asset, frame);
+      const crop = runtimeCrop(image, asset, frame, analysis);
+      const groundY = canvas.height * Number(ui.ground.value) / 100;
+      const h = asset.cropMode === "fixed" ? 210 : 320;
+      const scale = h / (crop.bottom - crop.top) * Number(ui.scale.value);
+      const drawW = (crop.right - crop.left) * scale;
+      const drawH = (crop.bottom - crop.top) * scale;
+      const x = 380;
+      const y = groundY - drawH;
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(image, crop.left, crop.top, crop.right - crop.left, crop.bottom - crop.top, x, y, drawW, drawH);
+
+      ctx.strokeStyle = "#fff6cf";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(0, groundY);
+      ctx.lineTo(canvas.width, groundY);
+      ctx.stroke();
+      ctx.fillStyle = "rgba(0,0,0,0.34)";
+      ctx.beginPath();
+      ctx.ellipse(x + drawW * 0.5, groundY + 14, drawW * 0.38, 18, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#4ddbb8";
+      ctx.strokeRect(x, y, drawW, drawH);
+
+      ctx.fillStyle = "#fff6cf";
+      ctx.font = "700 22px Arial";
+      ctx.fillText(asset.label + " F" + (frame + 1), 28, 48);
+      ctx.font = "15px Arial";
+      ctx.fillText("Feet/contact should sit on the cream ground line. Green is the app draw rect.", 28, 78);
+      ui.report.textContent = "Runner ground/contact test\n" +
+        asset.label + " frame F" + (frame + 1) + "\n" +
+        "Ground line: " + Math.round(groundY) + " px (" + ui.ground.value + "%)\n" +
+        "Runtime crop: " + rectText(crop) + "\n" +
+        "Draw size: " + Math.round(drawW) + " x " + Math.round(drawH);
+    }
+
+    function drawSceneMode(image, asset) {
+      clear(1280, 720);
+      drawStageBackground();
+      const groundY = canvas.height * Number(ui.ground.value) / 100;
+      ctx.fillStyle = "#4f9158";
+      ctx.fillRect(0, groundY - 18, canvas.width, 28);
+      ctx.fillStyle = "#163d36";
+      ctx.fillRect(0, groundY + 10, canvas.width, canvas.height - groundY);
+      ctx.strokeStyle = "#fff6cf";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(0, groundY);
+      ctx.lineTo(canvas.width, groundY);
+      ctx.stroke();
+
+      for (let i = 0; i < Math.min(asset.frames, 6); i++) {
+        const analysis = analyzeFrame(image, asset, i);
+        const crop = runtimeCrop(image, asset, i, analysis);
+        const h = asset.cropMode === "fixed" ? 150 : 230;
+        const scale = h / (crop.bottom - crop.top) * Number(ui.scale.value);
+        const w = (crop.right - crop.left) * scale;
+        const x = 120 + i * 175;
+        const y = groundY - h;
+        ctx.drawImage(image, crop.left, crop.top, crop.right - crop.left, crop.bottom - crop.top, x, y, w, h);
+        if (ui.runtimeBox.checked) {
+          ctx.strokeStyle = "#4ddbb8";
+          ctx.strokeRect(x, y, w, h);
+        }
+        if (ui.labels.checked) {
+          ctx.fillStyle = "#fff6cf";
+          ctx.font = "700 13px Arial";
+          ctx.fillText("F" + (i + 1), x, y - 8);
+        }
+      }
+
+      drawObstacle(955, groundY - 26, 1);
+      drawObstacle(1040, groundY - 26, 0.75);
+      drawControls();
+      ui.report.textContent = "Gameplay composition test\n" +
+        "Shows all frames against a running surface, with sample log obstacles and touch buttons.\n" +
+        "Use this to catch feet floating/cutting before installing the APK.";
+    }
+
+    function drawStageBackground() {
+      if (bg.complete && bg.naturalWidth > 0) {
+        ctx.drawImage(bg, 0, 0, canvas.width, canvas.height);
+      } else {
+        const sky = ctx.createLinearGradient(0, 0, 0, canvas.height);
+        sky.addColorStop(0, "#163757");
+        sky.addColorStop(0.55, "#ffe08d");
+        sky.addColorStop(1, "#3f7d55");
+        ctx.fillStyle = sky;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
+    }
+
+    function drawObstacle(x, y, scale) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.scale(scale, scale);
+      ctx.fillStyle = "rgba(0,0,0,0.28)";
+      ctx.beginPath();
+      ctx.ellipse(72, 48, 86, 18, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#4c2c1b";
+      ctx.beginPath();
+      ctx.ellipse(76, 24, 78, 28, -0.03, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#7c4b28";
+      ctx.beginPath();
+      ctx.ellipse(80, 21, 65, 20, -0.03, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#d79a53";
+      ctx.beginPath();
+      ctx.ellipse(20, 24, 23, 25, 0.2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#51331f";
+      ctx.lineWidth = 3;
+      for (const lx of [48, 74, 101, 126]) {
+        ctx.beginPath();
+        ctx.moveTo(lx, 7);
+        ctx.lineTo(lx - 5, 43);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    function drawControls() {
+      for (const [x, label] of [[925, "JUMP"], [1038, "FIRE"]]) {
+        ctx.fillStyle = "#283a45";
+        ctx.strokeStyle = "#e8f2f4";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        roundRectPath(ctx, x, 608, 88, 88, 18);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = "#fff";
+        ctx.font = "700 18px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText(label, x + 44, 660);
+        ctx.textAlign = "left";
+      }
+    }
+
+    function rectText(rect) {
+      return [Math.round(rect.left), Math.round(rect.top), Math.round(rect.right), Math.round(rect.bottom)].join(",");
+    }
+
+    function render() {
+      const asset = currentAsset();
+      asset.key = ui.sheet.value;
+      const image = currentImage();
+      ui.scaleLabel.textContent = Number(ui.scale.value).toFixed(1);
+      ui.zoomLabel.textContent = Number(ui.zoom.value).toFixed(2);
+      ui.groundLabel.textContent = ui.ground.value;
+      ui.alphaLabel.textContent = ui.alpha.value;
+      ui.frame.max = String(asset.frames);
+      if (Number(ui.frame.value) > asset.frames) ui.frame.value = String(asset.frames);
+
+      if (!image.complete || image.naturalWidth <= 0) {
+        clear(1280, 760);
+        ctx.fillStyle = "#fff6cf";
+        ctx.font = "700 18px Arial";
+        ctx.fillText("Loading " + asset.label + "...", 28, 42);
+        return;
+      }
+
+      if (ui.mode.value === "sheet") drawSheetMode(image, asset);
+      if (ui.mode.value === "strip") drawStripMode(image, asset);
+      if (ui.mode.value === "runner") drawRunnerMode(image, asset);
+      if (ui.mode.value === "scene") drawSceneMode(image, asset);
+    }
+
+    function scheduleRender() {
+      analysisCache.clear();
+      render();
+    }
+
+    for (const element of Object.values(ui)) {
+      if (element && element.addEventListener && element !== ui.save) {
+        element.addEventListener("input", scheduleRender);
+        element.addEventListener("change", scheduleRender);
+      }
+    }
+    ui.save.addEventListener("click", () => {
+      const link = document.createElement("a");
+      link.download = "you-rush-debug-" + ui.mode.value + "-" + ui.sheet.value + ".png";
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+    });
+
+    function roundRectPath(context, x, y, w, h, r) {
+      context.beginPath();
+      context.moveTo(x + r, y);
+      context.arcTo(x + w, y, x + w, y + h, r);
+      context.arcTo(x + w, y + h, x, y + h, r);
+      context.arcTo(x, y + h, x, y, r);
+      context.arcTo(x, y, x + w, y, r);
+      context.closePath();
+    }
+
+    currentImage();
+    render();
+  </script>
+</body>
+</html>

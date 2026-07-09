@@ -203,6 +203,12 @@ public class MooseRushView extends View {
     private final ObstacleRenderer obstacleRenderer;
     private final DebugOverlayRenderer debugOverlayRenderer;
     private final VisualEffects effects;
+    private final Rect[] mooseFrameCrops;
+    private final Rect[] bearFrameCrops;
+    private final Rect[] polarBearFrameCrops;
+    private final Rect[] wolfFrameCrops;
+    private final Rect[] salmonFrameCrops;
+    private final Rect[] eagleFrameCrops;
 
     private final RectF primaryButtonBounds = new RectF();
     private final RectF secondaryButtonBounds = new RectF();
@@ -362,6 +368,12 @@ public class MooseRushView extends View {
         obstacleRenderer = new ObstacleRenderer(context, assets);
         debugOverlayRenderer = new DebugOverlayRenderer(context);
         effects = new VisualEffects(context);
+        mooseFrameCrops = SpriteFrameCropper.computeFrameCrops(assets.mooseWalkSheet(), SPRITE_SHEET_FRAMES);
+        bearFrameCrops = SpriteFrameCropper.computeFrameCrops(assets.bearWalkSheet(), SPRITE_SHEET_FRAMES);
+        polarBearFrameCrops = SpriteFrameCropper.computeFrameCrops(assets.polarBearWalkSheet(), SPRITE_SHEET_FRAMES);
+        wolfFrameCrops = SpriteFrameCropper.computeFrameCrops(assets.wolfRunSheet(), SPRITE_SHEET_FRAMES);
+        salmonFrameCrops = SpriteFrameCropper.computeFrameCrops(assets.salmonSwimSheet(), SPRITE_SHEET_FRAMES);
+        eagleFrameCrops = SpriteFrameCropper.computeFrameCrops(assets.eagleFlySheet(), SPRITE_SHEET_FRAMES);
         bestScore = prefs.getInt(PREF_BEST_SCORE, 0);
         selectedStage = clampInt(prefs.getInt(PREF_SELECTED_STAGE, 0), 0, STAGES.length - 1);
         selectedSeason = clampInt(prefs.getInt(PREF_SELECTED_SEASON, STAGES[selectedStage].season), 0, SEASONS.length - 1);
@@ -4049,11 +4061,17 @@ public class MooseRushView extends View {
         }
 
         int safeFrame = Math.floorMod(frameIndex, frames);
-        int[] trim = spriteSheetTrim(sheet, safeFrame);
-        if (trim == null) {
-            spriteSourceRect.set(safeFrame * frameWidth, 0, (safeFrame + 1) * frameWidth, sheet.getHeight());
+        Rect[] crops = spriteSheetCrops(sheet);
+        Rect crop = crops != null && safeFrame < crops.length ? crops[safeFrame] : null;
+        if (crop != null && !crop.isEmpty()) {
+            spriteSourceRect.set(crop);
         } else {
-            setTrimmedSpriteSource(spriteSourceRect, safeFrame, frameWidth, sheet.getHeight(), trim);
+            int[] trim = spriteSheetTrim(sheet, safeFrame);
+            if (trim == null) {
+                spriteSourceRect.set(safeFrame * frameWidth, 0, (safeFrame + 1) * frameWidth, sheet.getHeight());
+            } else {
+                setTrimmedSpriteSource(spriteSourceRect, safeFrame, frameWidth, sheet.getHeight(), trim);
+            }
         }
 
         float width = height * (spriteSourceRect.width() / (float) spriteSourceRect.height());
@@ -4068,6 +4086,16 @@ public class MooseRushView extends View {
         canvas.drawBitmap(sheet, spriteSourceRect, tempRect, spriteBitmapPaint);
         spriteBitmapPaint.setFilterBitmap(previousFilter);
         canvas.restoreToCount(saved);
+    }
+
+    private Rect[] spriteSheetCrops(Bitmap sheet) {
+        if (sheet == assets.mooseWalkSheet()) return mooseFrameCrops;
+        if (sheet == assets.bearWalkSheet()) return bearFrameCrops;
+        if (sheet == assets.polarBearWalkSheet()) return polarBearFrameCrops;
+        if (sheet == assets.wolfRunSheet()) return wolfFrameCrops;
+        if (sheet == assets.salmonSwimSheet()) return salmonFrameCrops;
+        if (sheet == assets.eagleFlySheet()) return eagleFrameCrops;
+        return null;
     }
 
     private int[] spriteSheetTrim(Bitmap sheet, int safeFrame) {

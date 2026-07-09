@@ -10,6 +10,9 @@ testing, and release preparation.
   release checklist.
 - [Android test checklist](ANDROID_TEST_CHECKLIST.md): phone QA checklist for
   each debug APK.
+- [Offline debug previews](OFFLINE_DEBUG_PREVIEWS.md): local HTML preview
+  workflow for sprite crops, ground/contact lines, gameplay composition, and
+  obstacle readability without reinstalling the app.
 - [Privacy notes](PRIVACY.md): current local-first privacy behavior and launch
   policy notes.
 - [Store listing draft](STORE_LISTING_DRAFT.md): draft store copy and screenshot
@@ -34,4 +37,5 @@ source of truth for the current beta.
 - Version metadata: `app/build.gradle`
 - Current build summary: root `README.md`
 - QA checklist: `docs/ANDROID_TEST_CHECKLIST.md`
+- Offline visual debugging: `docs/OFFLINE_DEBUG_PREVIEWS.md`
 - Privacy/store readiness: `docs/PRIVACY.md` and `docs/STORE_LISTING_DRAFT.md`
