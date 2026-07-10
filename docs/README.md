@@ -12,6 +12,8 @@ testing, and release preparation.
   each debug APK.
 - [Gameplay revamp contract](GAMEPLAY_REVAMP.md): encounter-beat pacing,
   high-risk FLOW behavior, and rules for future gameplay systems.
+- [Godot overhaul vertical slice](GODOT_OVERHAUL.md): next-generation movement,
+  handcrafted-level architecture, validation, and migration boundaries.
 - [Offline debug previews](OFFLINE_DEBUG_PREVIEWS.md): local HTML preview
   workflow for sprite crops, ground/contact lines, gameplay composition, and
   obstacle readability without reinstalling the app.

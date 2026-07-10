@@ -122,7 +122,8 @@ public class MooseRushView extends View {
     private static final String[] BODY_STYLE_NAMES = {
             "PHOTO RUNNER",
             "FEMALE RUNNER",
-            "MALE RUNNER"
+            "MALE RUNNER",
+            "TRAIL RUNNER 2.0"
     };
 
     private static final String[] SEASONS = {
@@ -1242,7 +1243,7 @@ public class MooseRushView extends View {
         if (state != STATE_RUNNING || bearSprayCharges <= 0 || bearSprayCooldown > 0f) {
             return;
         }
-        boolean rearSpray = chaseBearActive && chaseBearX < playerX && playerX - chaseBearX < dp(230);
+        boolean rearSpray = chaseBearActive && chaseBearX < playerX && playerX - chaseBearX < dp(310);
         bearSprayCharges--;
         runBearSprays++;
         bearSprayCooldown = SprayTuning.COOLDOWN_SECONDS;
@@ -1318,7 +1319,7 @@ public class MooseRushView extends View {
             return false;
         }
         float distance = playerX - chaseBearX;
-        if (distance < -chaseBearRadius || distance > dp(245)) {
+        if (distance < -chaseBearRadius || distance > dp(325)) {
             return false;
         }
         int awarded = addScore(22, "Chase bear sprayed");
@@ -5837,8 +5838,8 @@ public class MooseRushView extends View {
     private void drawVirtualControls(Canvas canvas) {
         float bottom = getHeight() - dp(14);
         float size = dp(48);
-        float dpadSize = dp(112);
-        dpadBounds.set(dp(14), bottom - dpadSize, dp(14) + dpadSize, bottom);
+        float dpadSize = dp(88);
+        dpadBounds.set(dp(10), bottom - dpadSize, dp(10) + dpadSize, bottom);
         leftPadBounds.set(dpadBounds.left, dpadBounds.top + dpadSize * 0.32f, dpadBounds.left + dpadSize * 0.40f, dpadBounds.bottom - dpadSize * 0.32f);
         rightPadBounds.set(dpadBounds.right - dpadSize * 0.40f, dpadBounds.top + dpadSize * 0.32f, dpadBounds.right, dpadBounds.bottom - dpadSize * 0.32f);
         aimUpPadBounds.set(dpadBounds.left + dpadSize * 0.32f, dpadBounds.top, dpadBounds.right - dpadSize * 0.32f, dpadBounds.top + dpadSize * 0.40f);
@@ -5858,15 +5859,15 @@ public class MooseRushView extends View {
         float cy = dpadBounds.centerY();
         float r = dpadBounds.width() * 0.5f;
         paint.setStyle(Paint.Style.FILL);
-        paint.setColor(Color.argb(120, 0, 0, 0));
+        paint.setColor(Color.argb(46, 0, 0, 0));
         canvas.drawCircle(cx, cy + dp(3), r, paint);
-        paint.setColor(Color.argb(178, 16, 25, 37));
+        paint.setColor(Color.argb(82, 16, 25, 37));
         canvas.drawCircle(cx, cy, r, paint);
-        paint.setColor(Color.argb(46, 255, 255, 255));
+        paint.setColor(Color.argb(24, 255, 255, 255));
         canvas.drawCircle(cx, cy - r * 0.20f, r * 0.66f, paint);
         paint.setStyle(Paint.Style.STROKE);
         paint.setStrokeWidth(dp(2));
-        paint.setColor(Color.argb(220, 255, 255, 255));
+        paint.setColor(Color.argb(126, 255, 255, 255));
         canvas.drawCircle(cx, cy, r, paint);
         paint.setStyle(Paint.Style.FILL);
 
@@ -5877,16 +5878,16 @@ public class MooseRushView extends View {
 
         float knobY = cy + aimPadY * r * 0.46f;
         float knobX = cx + (rightPressed ? r * 0.22f : leftPressed ? -r * 0.22f : 0f);
-        paint.setColor(Color.argb(215, 255, 218, 121));
-        canvas.drawCircle(knobX, knobY, dp(9), paint);
+        paint.setColor(Color.argb(170, 255, 218, 121));
+        canvas.drawCircle(knobX, knobY, dp(7), paint);
         paint.setColor(Color.rgb(24, 30, 38));
         canvas.drawCircle(knobX, knobY, dp(3), paint);
     }
 
     private void drawDpadArrow(Canvas canvas, float x, float y, float dirX, float dirY, boolean active) {
-        float buttonRadius = dp(15);
+        float buttonRadius = dp(11.5f);
         paint.setStyle(Paint.Style.FILL);
-        paint.setColor(active ? Color.argb(220, 255, 218, 121) : Color.argb(175, 255, 255, 255));
+        paint.setColor(active ? Color.argb(195, 255, 218, 121) : Color.argb(118, 255, 255, 255));
         canvas.drawCircle(x, y, buttonRadius, paint);
         paint.setColor(Color.rgb(24, 30, 38));
         Path arrow = new Path();

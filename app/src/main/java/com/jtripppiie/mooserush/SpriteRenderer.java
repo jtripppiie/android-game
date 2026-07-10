@@ -27,6 +27,7 @@ final class SpriteRenderer {
     static final int BODY_STYLE_PHOTO = 0;
     static final int BODY_STYLE_FEMALE = 1;
     static final int BODY_STYLE_MALE = 2;
+    static final int BODY_STYLE_OVERHAUL = 3;
 
     private static final int RUNNER_FRAMES = 6;
     private static final int FULL_RUNNER_FRAME_GUARD_PX = 14;
@@ -44,9 +45,11 @@ final class SpriteRenderer {
     private final Bitmap runnerBodySheet;
     private final Bitmap femaleRunnerSheet;
     private final Bitmap maleRunnerSheet;
+    private final Bitmap overhaulRunnerSheet;
     private final Rect[] runnerBodyCrops;
     private final Rect[] femaleRunnerCrops;
     private final Rect[] maleRunnerCrops;
+    private final Rect[] overhaulRunnerCrops;
     private final float density;
 
     SpriteRenderer(Context context) {
@@ -54,6 +57,7 @@ final class SpriteRenderer {
         runnerBodySheet = BitmapFactory.decodeResource(context.getResources(), R.drawable.sheet_player_run_headless);
         femaleRunnerSheet = BitmapFactory.decodeResource(context.getResources(), R.drawable.sheet_mom_run);
         maleRunnerSheet = BitmapFactory.decodeResource(context.getResources(), R.drawable.sheet_dad_run);
+        overhaulRunnerSheet = BitmapFactory.decodeResource(context.getResources(), R.drawable.sheet_runner_overhaul_candidate);
         /*
          * Crops remove empty transparent pixels around each frame. Without crop
          * rectangles, sprites can look offset, tiny, or like they have artifacts.
@@ -61,6 +65,7 @@ final class SpriteRenderer {
         runnerBodyCrops = SpriteFrameCropper.computeFrameCrops(runnerBodySheet, RUNNER_FRAMES, FULL_RUNNER_FRAME_GUARD_PX);
         femaleRunnerCrops = SpriteFrameCropper.computeMainFrameCrops(femaleRunnerSheet, RUNNER_FRAMES, FULL_RUNNER_FRAME_GUARD_PX);
         maleRunnerCrops = SpriteFrameCropper.computeMainFrameCrops(maleRunnerSheet, RUNNER_FRAMES, FULL_RUNNER_FRAME_GUARD_PX);
+        overhaulRunnerCrops = SpriteFrameCropper.computeMainFrameCrops(overhaulRunnerSheet, RUNNER_FRAMES, FULL_RUNNER_FRAME_GUARD_PX);
         bitmapPaint.setFilterBitmap(false);
     }
 
@@ -163,6 +168,9 @@ final class SpriteRenderer {
         if (bodyStyle == BODY_STYLE_MALE) {
             return maleRunnerSheet;
         }
+        if (bodyStyle == BODY_STYLE_OVERHAUL) {
+            return overhaulRunnerSheet;
+        }
         return null;
     }
 
@@ -172,6 +180,9 @@ final class SpriteRenderer {
         }
         if (bodyStyle == BODY_STYLE_MALE) {
             return maleRunnerCrops;
+        }
+        if (bodyStyle == BODY_STYLE_OVERHAUL) {
+            return overhaulRunnerCrops;
         }
         return null;
     }

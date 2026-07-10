@@ -79,3 +79,8 @@ Then run:
 ```bash
 ./gradlew testDebugUnitTest assembleDebug
 ```
+## Platformer overhaul preview
+
+`tools/platformer-overhaul-preview.html` audits the next-generation camera,
+terrain, runner scale, chase-bear visibility, and smaller translucent touch
+controls. Its numbered 15 px grid is enabled by default.

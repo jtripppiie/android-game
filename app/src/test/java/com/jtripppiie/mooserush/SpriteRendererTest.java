@@ -9,6 +9,11 @@ import org.junit.Test;
 public class SpriteRendererTest {
 
     @Test
+    public void overhaulRunnerHasStableBodyStyleId() {
+        assertEquals(3, SpriteRenderer.BODY_STYLE_OVERHAUL);
+    }
+
+    @Test
     public void runnerSheetUsesOneSixFrameCyclePerClockUnit() {
         assertEquals(0, SpriteRenderer.runnerSheetFrame(0f));
         assertEquals(1, SpriteRenderer.runnerSheetFrame(0.17f));

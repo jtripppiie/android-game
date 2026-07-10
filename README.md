@@ -9,10 +9,10 @@ wildlife encounters through stage runs and boss fights.
 ## Current Build
 
 ```text
-versionCode: 360
-versionName: 3.3.0-beta
-build badge: ALASKA PASSPORT v3.60 BETA
-APK: app/build/outputs/apk/debug/you-rush-alaska-3.3.0-beta-360-debug.apk
+versionCode: 370
+versionName: 3.4.0-beta
+build badge: ALASKA PASSPORT v3.70 BETA
+APK: app/build/outputs/apk/debug/you-rush-alaska-3.4.0-beta-370-debug.apk
 ```
 
 This is a beta package for device testing and gameplay tuning. It is not a
@@ -86,6 +86,8 @@ Local browser previews live in `tools/` and are not packaged into the app.
 - `menu-preview.html`: main menu layout review with 15 px grid overlay
 - `gameplay-preview.html`: HUD, overlays, controls, hitboxes, contrast, and 15
   px grid overlay
+- `platformer-overhaul-preview.html`: camera, terrain, new runner, chase-bear
+  visibility, translucent controls, and numbered 15 px grid overlay
 - `laser-eyes-preview.html`: polar bear boss beam origin and sweep tuning with
   15 px grid overlay
 - `sun-lasers-preview.html`: Midnight Sun twin-eye beam, glow, hitbox, sweep,
@@ -106,6 +108,7 @@ Key active docs:
 - [Versioning](docs/VERSIONING.md)
 - [Android test checklist](docs/ANDROID_TEST_CHECKLIST.md)
 - [Gameplay revamp contract](docs/GAMEPLAY_REVAMP.md)
+- [Godot overhaul vertical slice](docs/GODOT_OVERHAUL.md)
 - [Offline debug previews](docs/OFFLINE_DEBUG_PREVIEWS.md)
 - [Privacy notes](docs/PRIVACY.md)
 - [Store listing draft](docs/STORE_LISTING_DRAFT.md)

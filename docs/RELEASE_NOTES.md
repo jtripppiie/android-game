@@ -6,13 +6,34 @@ Current release details are tracked in `docs/VERSIONING.md` and the root
 ## Latest Beta
 
 ```text
-3.3.0-beta
-versionCode 360
-ALASKA PASSPORT v3.60 BETA
+3.4.0-beta
+versionCode 370
+ALASKA PASSPORT v3.70 BETA
 ```
 
 Highlights:
 
+- Added a separate Godot action-platformer vertical slice with a handcrafted
+  Chugach rescue level, momentum movement, slopes, platforms, enemies,
+  snowballs, collectibles, a required key, checkpoint, camera, and goal beacon.
+- Deepened the slice with trail dash, aerial stomp, landing feedback, contact
+  damage, knockback, invulnerability, combat combos, moving platforms,
+  aggressive wolf/bear behaviors, and two required survivor rescues.
+- Added explicit idle, run, sprint, crouch, jump, and fall animation states for
+  the next-generation runner controller.
+- Generated and integrated a versioned transparent six-frame `TRAIL RUNNER 2.0`
+  candidate without removing the existing photo, female, or male runners.
+- Reduced the shipping Android D-pad from 112dp to 88dp and substantially
+  lowered its background, outline, arrow, and knob opacity so chase threats stay
+  visible behind the control surface.
+- Extended bear spray from 142dp to 210dp, widened its far cone, and expanded
+  rear chase-bear interruption distance while keeping visuals and collision in
+  the same tuning contract.
+- Added a smaller translucent six-action touch layout to the Godot slice.
+- Added a default-on numbered 15 px platformer-overhaul preview covering camera,
+  terrain, runner scale, control footprint, and chase-bear visibility.
+- Documented the engine-migration boundary and added deterministic project and
+  sprite validation for the Godot prototype.
 - Replaced the flat obstacle stream with a repeating encounter director:
   Launch, Precision, Wildlife Rush, and Jackpot Line beats now alter reward
   trails and obstacle/hazard cadence.

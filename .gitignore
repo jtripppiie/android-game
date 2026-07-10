@@ -26,3 +26,6 @@ artifacts/
 
 # Local asset conversion workspace
 tmp/
+
+# Godot editor/import cache
+.godot/
