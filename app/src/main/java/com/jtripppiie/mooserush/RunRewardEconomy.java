@@ -56,6 +56,15 @@ final class RunRewardEconomy {
         return DAILY_BASE_REWARD + Math.min(7, Math.max(0, streakBeforeClaim)) * 4;
     }
 
+    static boolean canClaimDailyReward(boolean dailyRushMode, boolean alreadyAwarded,
+                                       int lastCompletedDay, int todayKey,
+                                       int selectedStage, int dailyStage) {
+        return dailyRushMode
+                && !alreadyAwarded
+                && lastCompletedDay != todayKey
+                && selectedStage == dailyStage;
+    }
+
     static int nextDailyStreak(int lastCompletedDay, int todayKey, int currentStreak) {
         if (lastCompletedDay == todayKey) {
             return Math.max(1, currentStreak);

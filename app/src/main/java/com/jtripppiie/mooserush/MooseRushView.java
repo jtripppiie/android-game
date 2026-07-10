@@ -347,6 +347,7 @@ public class MooseRushView extends View {
     private boolean perfectRun = true;
     private boolean runRewardsAwarded = false;
     private boolean dailyBonusAwarded = false;
+    private boolean dailyRushMode = false;
     private boolean campReached = false;
     private boolean bossPhaseTwoAnnounced = false;
     private boolean bossEnrageAnnounced = false;
@@ -745,9 +746,22 @@ public class MooseRushView extends View {
             } else if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_POINTER_UP || action == MotionEvent.ACTION_CANCEL) {
                 updateHeldControls(event);
             }
+            if (action == MotionEvent.ACTION_UP) {
+                performClick();
+            }
             return true;
         }
 
+        if (action == MotionEvent.ACTION_UP) {
+            performClick();
+        }
+
+        return true;
+    }
+
+    @Override
+    public boolean performClick() {
+        super.performClick();
         return true;
     }
 
@@ -755,6 +769,7 @@ public class MooseRushView extends View {
         if (state == STATE_MENU) {
             if (primaryButtonBounds.contains(x, y)) {
                 demoMode = false;
+                dailyRushMode = false;
                 startGame();
             } else if (secondaryButtonBounds.contains(x, y)) {
                 state = STATE_CUSTOMIZE;
@@ -794,6 +809,7 @@ public class MooseRushView extends View {
                 selectedStage = tappedStage;
                 selectedSeason = STAGES[selectedStage].season;
                 demoMode = false;
+                dailyRushMode = false;
                 backdropCacheKey = Integer.MIN_VALUE;
                 saveChoices();
                 logEvent("Selected stage: " + STAGES[selectedStage].name + ".");
@@ -860,6 +876,7 @@ public class MooseRushView extends View {
             }
             if (thirdButtonBounds.contains(x, y)) {
                 selectNextStage();
+                dailyRushMode = false;
                 startGame();
                 return true;
             }
@@ -2343,6 +2360,7 @@ public class MooseRushView extends View {
             return;
         }
         livesLostThisRun++;
+        gameState.exhaustLives();
         awardRunTokens(false);
         state = STATE_GAME_OVER;
         screenShake = Math.max(screenShake, 0.18f);
@@ -2391,7 +2409,13 @@ public class MooseRushView extends View {
 
     private int awardDailyRushIfComplete(boolean stageCleared) {
         int today = currentDailyDayKey();
-        if (dailyBonusAwarded || dailyCompletedDay == today || selectedStage != dailyStageIndex()) {
+        if (!RunRewardEconomy.canClaimDailyReward(
+                dailyRushMode,
+                dailyBonusAwarded,
+                dailyCompletedDay,
+                today,
+                selectedStage,
+                dailyStageIndex())) {
             return 0;
         }
         if (!stageCleared && gatesPassed < dailyGateGoal()) {
@@ -6070,6 +6094,7 @@ public class MooseRushView extends View {
 
     private void startDailyRush() {
         demoMode = false;
+        dailyRushMode = true;
         selectedStage = dailyStageIndex();
         selectedSeason = STAGES[selectedStage].season;
         backdropCacheKey = Integer.MIN_VALUE;
@@ -6080,6 +6105,7 @@ public class MooseRushView extends View {
 
     private void startComputerDemo() {
         demoMode = true;
+        dailyRushMode = false;
         demoTimer = 0f;
         selectedStage = 0;
         selectedSeason = STAGES[selectedStage].season;

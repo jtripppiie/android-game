@@ -6,13 +6,19 @@ Current release details are tracked in `docs/VERSIONING.md` and the root
 ## Latest Beta
 
 ```text
-3.2.31-beta
-versionCode 351
-ALASKA PASSPORT v3.51 BETA
+3.2.32-beta
+versionCode 352
+ALASKA PASSPORT v3.52 BETA
 ```
 
 Highlights:
 
+- Required runs to be explicitly launched as a Daily Rush before they can
+  grant the daily reward or advance the daily streak.
+- Set remaining lives to zero on the fatal hit so the game-over HUD and state
+  agree.
+- Added custom-view click accessibility signaling and regression tests for
+  Daily Rush eligibility and terminal-life state.
 - Made all four D-pad arrow buttons the same drawn size, replacing uneven font
   arrows with matching circular arrow controls.
 - Replaced the Android laser tell rectangle with the HTML preview's thin

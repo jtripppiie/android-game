@@ -41,6 +41,10 @@ final class GameState {
         combo = 0;
     }
 
+    void exhaustLives() {
+        lives = 0;
+    }
+
     void updateLevel() {
         level = LevelCurve.levelIndex(xp) + 1;
     }

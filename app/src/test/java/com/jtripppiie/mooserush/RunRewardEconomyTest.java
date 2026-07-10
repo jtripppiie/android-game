@@ -70,4 +70,13 @@ public class RunRewardEconomyTest {
         assertEquals(1, RunRewardEconomy.nextDailyStreak(50, 100, 9));
         assertEquals(5, RunRewardEconomy.nextDailyStreak(100, 100, 5));
     }
+
+    @Test
+    public void dailyRewardRequiresAnExplicitDailyRun() {
+        assertFalse(RunRewardEconomy.canClaimDailyReward(false, false, 99, 100, 2, 2));
+        assertTrue(RunRewardEconomy.canClaimDailyReward(true, false, 99, 100, 2, 2));
+        assertFalse(RunRewardEconomy.canClaimDailyReward(true, true, 99, 100, 2, 2));
+        assertFalse(RunRewardEconomy.canClaimDailyReward(true, false, 100, 100, 2, 2));
+        assertFalse(RunRewardEconomy.canClaimDailyReward(true, false, 99, 100, 1, 2));
+    }
 }
