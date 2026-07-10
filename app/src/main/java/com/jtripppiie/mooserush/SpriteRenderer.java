@@ -30,7 +30,6 @@ final class SpriteRenderer {
 
     private static final int RUNNER_FRAMES = 6;
     private static final int FULL_RUNNER_FRAME_GUARD_PX = 14;
-    private static final int RUNNER_BODY_CROP_PAD_PX = 2;
     private static final float RUNNER_BODY_HEIGHT_RUNNING = 2.68f;
     private static final float RUNNER_BODY_HEIGHT_STANDING = 2.62f;
     private static final float RUNNER_BODY_WIDTH_SCALE = 1.18f;
@@ -59,7 +58,7 @@ final class SpriteRenderer {
          * Crops remove empty transparent pixels around each frame. Without crop
          * rectangles, sprites can look offset, tiny, or like they have artifacts.
          */
-        runnerBodyCrops = SpriteFrameCropper.computeCellContentCrops(runnerBodySheet, RUNNER_FRAMES, RUNNER_BODY_CROP_PAD_PX);
+        runnerBodyCrops = SpriteFrameCropper.computeFrameCrops(runnerBodySheet, RUNNER_FRAMES, FULL_RUNNER_FRAME_GUARD_PX);
         femaleRunnerCrops = SpriteFrameCropper.computeMainFrameCrops(femaleRunnerSheet, RUNNER_FRAMES, FULL_RUNNER_FRAME_GUARD_PX);
         maleRunnerCrops = SpriteFrameCropper.computeMainFrameCrops(maleRunnerSheet, RUNNER_FRAMES, FULL_RUNNER_FRAME_GUARD_PX);
         bitmapPaint.setFilterBitmap(false);
@@ -227,14 +226,6 @@ final class SpriteRenderer {
      */
     static float runnerFeetDropFromHead(float radius, boolean animated) {
         return radius * RUNNER_BODY_TOP_FROM_HEAD + runnerSheetBodyHeight(radius, animated);
-    }
-
-    static int[] trimmedRunnerSourceValues(int frameIndex, int frameWidth, int sheetHeight, int[] trim) {
-        if (trim == null || trim.length != 4) {
-            return new int[0];
-        }
-        int safeFrame = Math.floorMod(frameIndex, RUNNER_FRAMES);
-        return SpriteSheetMath.trimmedSourceValues(safeFrame, frameWidth, sheetHeight, trim);
     }
 
     private void drawStandingBody(Canvas canvas, PlayerFrame frame) {

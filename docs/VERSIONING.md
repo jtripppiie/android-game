@@ -5,10 +5,10 @@ You Rush uses explicit Android version metadata.
 ## Current version
 
 ```text
-versionCode: 352
-versionName: 3.2.32-beta
+versionCode: 353
+versionName: 3.2.33-beta
 build channel: ALASKA BETA
-badge: ALASKA PASSPORT v3.52 BETA
+badge: ALASKA PASSPORT v3.53 BETA
 ```
 
 ## File
@@ -22,11 +22,11 @@ app/build.gradle
 ## Current fields
 
 ```gradle
-versionCode 352
-versionName "3.2.32-beta"
+versionCode 353
+versionName "3.2.33-beta"
 
 buildConfigField "String", "BUILD_CHANNEL", '"ALASKA BETA"'
-buildConfigField "String", "BUILD_BADGE", '"ALASKA PASSPORT v3.52 BETA"'
+buildConfigField "String", "BUILD_BADGE", '"ALASKA PASSPORT v3.53 BETA"'
 buildConfigField "boolean", "SHOW_VERSION_BADGE", "true"
 ```
 
@@ -39,6 +39,7 @@ Turn it off for a public store package.
 ## Version path
 
 ```text
+3.2.33-beta  runner artifact, truthful eye beam, and boss summon gameplay fixes
 3.2.32-beta  Daily Rush eligibility, game-over lives, and touch accessibility fixes
 3.2.31-beta  D-pad arrow sizing, preview laser tell, and tougher Midnight Sun beta
 3.2.30-beta  Android boss laser preview-port beta

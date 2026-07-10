@@ -1456,9 +1456,10 @@ public class MooseRushView extends View {
 
         if (bossActive) {
             updateBoss(dt);
+            updateHazards(dt, gateSpeed * 1.15f, false);
         } else {
             updateGates(dt, gateSpeed);
-            updateHazards(dt, gateSpeed * 1.15f);
+            updateHazards(dt, gateSpeed * 1.15f, true);
         }
 
         /*
@@ -1660,19 +1661,21 @@ public class MooseRushView extends View {
                 chaseBearX, hitY, chaseBearRadius * 0.78f);
     }
 
-    private void updateHazards(float dt, float speed) {
+    private void updateHazards(float dt, float speed, boolean allowSpawns) {
         /*
          * Hazards are the moving stage enemies. They wait until the player has
          * passed a couple gates so the run gets a short warm-up first.
          */
-        if (gatesPassed < 2) {
+        if (allowSpawns && gatesPassed < 2) {
             return;
         }
-        hazardCooldown -= dt;
-        if (hazardCooldown <= 0f) {
-            spawnHazard();
-            float tension = DifficultyCurve.tension(selectedStage, gatesPassed, STAGES[selectedStage].goalGates);
-            hazardCooldown = DifficultyCurve.hazardCooldown(RunnerTuning.nextHazardCooldown(selectedStage, gatesPassed), tension);
+        if (allowSpawns) {
+            hazardCooldown -= dt;
+            if (hazardCooldown <= 0f) {
+                spawnHazard();
+                float tension = DifficultyCurve.tension(selectedStage, gatesPassed, STAGES[selectedStage].goalGates);
+                hazardCooldown = DifficultyCurve.hazardCooldown(RunnerTuning.nextHazardCooldown(selectedStage, gatesPassed), tension);
+            }
         }
 
         Iterator<Hazard> iterator = hazards.iterator();
@@ -1864,8 +1867,12 @@ public class MooseRushView extends View {
 
     private boolean bossAttackHitsPlayer(BossAttack attack) {
         if (attack.type == ATTACK_LASER) {
-            laserAttackRect(attack, tempRect);
-            return circleHitsRect(playerX, playerY, playerRadius * CollisionTuning.PLAYER_BOSS_LASER_RADIUS_SCALE, tempRect);
+            return GameMath.circleHitsSegment(
+                    playerX, playerY,
+                    playerRadius * CollisionTuning.PLAYER_BOSS_LASER_RADIUS_SCALE,
+                    bossLaserEyeX(), bossLaserEyeY(),
+                    laserAttackEndX(attack), attack.y,
+                    attack.radius);
         }
         return circleHitsCircle(playerX, playerY, playerRadius * CollisionTuning.PLAYER_BOSS_ATTACK_RADIUS_SCALE, attack.x, attack.y, attack.radius);
     }
@@ -2218,10 +2225,12 @@ public class MooseRushView extends View {
 
     private void spawnBossLaser() {
         float beamX = bossLaserEyeX();
-        float beamY = bossLaserEyeY();
-        bossAttacks.add(new BossAttack(beamX, beamY, dp(4.2f), 0f, 0f, ATTACK_LASER, "Eye beam"));
-        screenShake = Math.max(screenShake, 0.14f);
-        effects.spawnSparkBurst(beamX, beamY, 18, Color.rgb(132, 213, 232));
+        float targetY = clamp(bossTellY, getGroundY() - dp(128), getGroundY() - dp(38));
+        BossAttack laser = new BossAttack(beamX, targetY, dp(3.2f), 0f, 0f, ATTACK_LASER, "Eye beam");
+        laser.spin = getWidth() + dp(80);
+        bossAttacks.add(laser);
+        screenShake = Math.max(screenShake, 0.10f);
+        effects.spawnSparkBurst(beamX, bossLaserEyeY(), 12, Color.rgb(255, 98, 84));
         playSound("throw");
     }
 
@@ -2241,11 +2250,6 @@ public class MooseRushView extends View {
                 }
             } else if (attack.type == ATTACK_LASER) {
                 attack.x = bossLaserEyeX();
-                float targetY = clamp(playerY, getGroundY() - dp(128), getGroundY() - dp(38));
-                float sweep = (float) Math.sin(attack.age * 5.4f) * dp(12);
-                attack.vy += (targetY + sweep - attack.y) * dt * 18f;
-                attack.vy *= Math.max(0f, 1f - dt * 7f);
-                attack.y += attack.vy * dt;
                 attack.spin = Math.min(getWidth() + dp(80), attack.spin + dp(760) * dt);
                 if (random.nextFloat() < 0.62f) {
                     effects.spawnParticle(attack.x - random.nextFloat() * Math.max(dp(30), attack.spin), attack.y, -dp(55), (random.nextFloat() - 0.5f) * dp(18), dp(2.2f), Color.argb(170, 255, 98, 84), 0.18f);
@@ -4449,21 +4453,16 @@ public class MooseRushView extends View {
 
     private void drawBossAttack(Canvas canvas, BossAttack attack) {
         if (attack.type == ATTACK_LASER) {
-            laserAttackRect(attack, tempRect);
             float eyeX = bossLaserEyeX();
             float eyeY = bossLaserEyeY();
             float progress = Math.min(1f, attack.age / 1.12f);
-            float targetY = tempRect.centerY();
-            float endY = eyeY + (targetY - eyeY) * Math.min(1f, progress * 1.18f);
-            float endX = tempRect.left;
+            float endY = attack.y;
+            float endX = laserAttackEndX(attack);
             float pulse = 0.72f + (float) Math.sin(attack.age * 26f) * 0.28f;
             float alpha = Math.min(1f, 0.68f + progress * 0.32f);
             float beamHeight = dp(3.4f);
 
             drawBeamCore(canvas, eyeX, eyeY, endX, endY, beamHeight, alpha, 1.05f, pulse);
-            if (selectedStage == 4) {
-                drawBeamCore(canvas, eyeX, eyeY, endX, endY + dp(3), beamHeight * 0.55f, alpha * 0.55f, 1.0f, pulse);
-            }
             drawBossLaserEyeEmitter(canvas, eyeX, eyeY, pulse);
             paint.setStyle(Paint.Style.FILL);
             return;
@@ -4528,9 +4527,15 @@ public class MooseRushView extends View {
     }
 
     private void laserAttackRect(BossAttack attack, RectF out) {
-        float right = attack.x;
-        float left = Math.max(-dp(20), right - Math.max(dp(34), attack.spin));
-        out.set(left, attack.y - attack.radius, right, attack.y + attack.radius);
+        float eyeX = bossLaserEyeX();
+        float eyeY = bossLaserEyeY();
+        float endX = laserAttackEndX(attack);
+        out.set(Math.min(eyeX, endX), Math.min(eyeY, attack.y) - attack.radius,
+                Math.max(eyeX, endX), Math.max(eyeY, attack.y) + attack.radius);
+    }
+
+    private float laserAttackEndX(BossAttack attack) {
+        return Math.max(-dp(20), attack.x - Math.max(dp(34), attack.spin));
     }
 
     private float bossLaserEyeX() {
@@ -4545,7 +4550,9 @@ public class MooseRushView extends View {
             return bossY - bossRadius() * 0.36f;
         }
         if (selectedStage == 4) {
-            return getGroundY() - bossRadius() * 3.72f;
+            float spriteHeight = bossRadius() * 3.65f;
+            float spriteCenterY = getGroundY() - spriteHeight * 0.48f + bossGroundSink(selectedStage);
+            return spriteCenterY - spriteHeight * 0.36f;
         }
         return bossY - bossRadius() * 0.28f;
     }
@@ -4664,7 +4671,6 @@ public class MooseRushView extends View {
             float eyeY = centerY - radius * 0.12f;
             float chargePulse = 0.45f + 0.55f * (float) Math.sin(bossTimer * 28f);
             drawBossLaserEyeEmitter(canvas, bossX - radius * 0.28f, eyeY, chargePulse);
-            drawBossLaserEyeEmitter(canvas, bossX + radius * 0.28f, eyeY, chargePulse * 0.82f);
         }
 
         float badgeWidth = dp(94);
@@ -4708,16 +4714,13 @@ public class MooseRushView extends View {
         } else if (bossPattern == BOSS_PATTERN_LASER) {
             float beamX = bossLaserEyeX();
             float beamY = bossLaserEyeY();
-            float length = dp(130 + 250 * pct);
-            float endX = Math.max(dp(92), beamX - length);
-            float endY = beamY + dp(6);
+            float endX = beamX + (-dp(20) - beamX) * pct;
+            float targetY = clamp(bossTellY, getGroundY() - dp(128), getGroundY() - dp(38));
+            float endY = beamY + (targetY - beamY) * pct;
             float pulse = 0.72f + (float) Math.sin(bossStateTimer * 26f) * 0.28f;
             float alpha = pct * 0.62f;
             float beamHeight = dp(3.4f);
             drawBeamCore(canvas, beamX, beamY, endX, endY, beamHeight, alpha, 1.05f, pulse);
-            if (selectedStage == 4) {
-                drawBeamCore(canvas, beamX, beamY + dp(3), endX, endY + dp(3), beamHeight * 0.55f, alpha * 0.55f, 1.0f, pulse);
-            }
             drawBossLaserEyeEmitter(canvas, beamX, beamY, pct);
         } else {
             paint.setStyle(Paint.Style.FILL);
@@ -5502,8 +5505,11 @@ public class MooseRushView extends View {
                 continue;
             }
             if (attack.type == ATTACK_LASER) {
-                laserAttackRect(attack, tempRect);
-                drawDebugRect(canvas, tempRect, Color.rgb(255, 98, 84));
+                paint.setStyle(Paint.Style.STROKE);
+                paint.setStrokeWidth(attack.radius * 2f);
+                paint.setColor(Color.rgb(255, 98, 84));
+                canvas.drawLine(bossLaserEyeX(), bossLaserEyeY(), laserAttackEndX(attack), attack.y, paint);
+                paint.setStyle(Paint.Style.FILL);
             } else {
                 drawDebugCircle(canvas, attack.x, attack.y, attack.radius, Color.rgb(210, 232, 238));
             }

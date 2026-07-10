@@ -6,13 +6,23 @@ Current release details are tracked in `docs/VERSIONING.md` and the root
 ## Latest Beta
 
 ```text
-3.2.32-beta
-versionCode 352
-ALASKA PASSPORT v3.52 BETA
+3.2.33-beta
+versionCode 353
+ALASKA PASSPORT v3.53 BETA
 ```
 
 Highlights:
 
+- Removed the detached neighboring-frame boot from the default runner by using
+  component-aware, seam-guarded runtime crops.
+- Rebuilt eye-beam gameplay around one shared diagonal segment for rendering,
+  collision, and DEBUG visualization; the attack now locks to its telegraphed
+  lane and the Polar Bear emitter follows the rendered laser pose.
+- Removed the fake offset duplicate Polar Bear beam so every visible beam comes
+  from a real emitter.
+- Kept boss-summoned wildlife moving and interactive during boss encounters
+  without re-enabling ordinary stage hazard spawning.
+- Replaced the obsolete runner-trim test with diagonal laser collision coverage.
 - Required runs to be explicitly launched as a Daily Rush before they can
   grant the daily reward or advance the daily streak.
 - Set remaining lives to zero on the fatal hit so the game-over HUD and state

@@ -80,6 +80,7 @@ Confirm these screens work:
   persist rewards, unlocks, best scores, daily streaks, badges, or mission totals.
 - Default red runner running frames do not show neighboring-frame artifacts,
   edge slivers, or flickering sprite seams.
+- Default red runner frame 2 does not show a detached boot at the far-left edge.
 - Daily Rush starts the rotating daily stage.
 - Main menu shows Trail Passport badge progress.
 - Turning DEBUG on shows numbered badges on active obstacles, wildlife, pickups, throws, boss attacks, and bosses.
@@ -220,6 +221,12 @@ Check small and large screens:
 - Winter/dark stages show denser snow-covered tree layers without jumpy resets.
 - Trees should visually connect to the ground and not float above the lane.
 - Polar bear and wolf sprites animate cleanly without magenta background artifacts.
+- Eye-beam tells and active beams follow the same diagonal lane; touching empty
+  space inside the beam's rectangular bounds does not cause damage.
+- Polar Bear eye beams originate on the visible eye instead of floating above
+  the sprite, and no fake parallel duplicate beam is drawn.
+- Wildlife created by a boss summon moves into the arena and can be dodged or
+  stunned while the boss remains active.
 - Roaring bear sprites do not show edge artifacts from the original image border.
 - Player runner sprite edges do not show leftover source-frame pixels.
 - Eagle wing animation reads as deliberate flapping, not strobing.

@@ -42,4 +42,20 @@ public final class GameMath {
         float dy = cy - closestY;
         return dx * dx + dy * dy < radius * radius;
     }
+
+    public static boolean circleHitsSegment(float cx, float cy, float radius,
+                                            float x1, float y1, float x2, float y2,
+                                            float segmentRadius) {
+        float dx = x2 - x1;
+        float dy = y2 - y1;
+        float lengthSquared = dx * dx + dy * dy;
+        float t = lengthSquared <= 0f ? 0f : ((cx - x1) * dx + (cy - y1) * dy) / lengthSquared;
+        t = clamp(t, 0f, 1f);
+        float closestX = x1 + dx * t;
+        float closestY = y1 + dy * t;
+        float distanceX = cx - closestX;
+        float distanceY = cy - closestY;
+        float combinedRadius = radius + segmentRadius;
+        return distanceX * distanceX + distanceY * distanceY < combinedRadius * combinedRadius;
+    }
 }

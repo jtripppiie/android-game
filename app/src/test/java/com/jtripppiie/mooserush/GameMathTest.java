@@ -52,4 +52,19 @@ public class GameMathTest {
     public void circleFarFromRectMisses() {
         assertFalse(GameMath.circleHitsRect(50f, 50f, 2f, 0f, 0f, 10f, 10f));
     }
+
+    @Test
+    public void circleOnDiagonalLaserSegmentHits() {
+        assertTrue(GameMath.circleHitsSegment(5f, 5f, 1f, 0f, 0f, 10f, 10f, 1f));
+    }
+
+    @Test
+    public void circleInsideOldBoundingBoxButAwayFromLaserMisses() {
+        assertFalse(GameMath.circleHitsSegment(2f, 8f, 0.5f, 0f, 0f, 10f, 10f, 0.5f));
+    }
+
+    @Test
+    public void circleHitsLaserEndCap() {
+        assertTrue(GameMath.circleHitsSegment(11f, 0f, 0.6f, 0f, 0f, 10f, 0f, 0.6f));
+    }
 }

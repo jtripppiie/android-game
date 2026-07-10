@@ -30,18 +30,6 @@ public class SpriteRendererTest {
     }
 
     @Test
-    public void runnerSheetTrimGuardsVisibleFrameBounds() {
-        int[] source = SpriteRenderer.trimmedRunnerSourceValues(
-                1,
-                328,
-                798,
-                new int[]{0, 207, 328, 638}
-        );
-
-        assertArrayEquals(new int[]{348, 213, 636, 632}, source);
-    }
-
-    @Test
     public void fullRunnerFramesDistributeOddSheetWidth() {
         assertEquals(0, SpriteRenderer.fullRunnerFrameLeft(2027, 0));
         assertEquals(338, SpriteRenderer.fullRunnerFrameRight(2027, 0));
