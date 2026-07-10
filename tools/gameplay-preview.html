@@ -211,7 +211,7 @@
       tokens: 551,
       combo: 4,
       multiplier: 2,
-      gates: 5,
+      gates: 2,
       goal: 10,
       lives: 3,
       stars: 6,
@@ -462,11 +462,13 @@
 
       const objective = ui.scene.value === "boss"
         ? `FIRE BOSS ${state.bossHealth}/${state.bossMax}  RECOVER`
-        : `Vault SNOWBANKS ${state.gates}/${state.goal}`;
+        : `WILDLIFE RUSH · VAULT SNOWBANKS ${state.gates}/${state.goal}`;
       textFit(objective, canvas.width / 2, dp(44), progressRight - progressLeft - dp(12), dp(11), dp(8.5), "#ffda79");
       textFit(`COMBO ${state.combo}   SCORE x${state.multiplier}`, canvas.width / 2, dp(58), progressRight - progressLeft - dp(12), dp(11), dp(8.5), "#ffffff");
       roundRect(rect("Aurora meter", progressLeft, dp(61), progressRight, dp(65)), dp(3), "rgba(4,12,20,0.74)", "rgba(255,246,207,0.67)");
       roundRect({ left: progressLeft, top: dp(61), right: progressLeft + (progressRight - progressLeft) * 0.45, bottom: dp(65) }, dp(3), "#84d5e8", null);
+      roundRect(rect("Flow meter", progressLeft, dp(66.5), progressRight, dp(70.5)), dp(3), "rgba(4,12,20,0.74)", "rgba(255,246,207,0.55)");
+      roundRect({ left: progressLeft, top: dp(66.5), right: progressLeft + (progressRight - progressLeft) * 0.72, bottom: dp(70.5) }, dp(3), "#4ddbb8", null);
 
       text(state.stage, canvas.width - dp(20), dp(22), dp(10), "#d2e8ee", "right");
       textFit(`BEST ${state.best}   LV ${state.level}   T ${state.tokens}`, canvas.width - dp(20), dp(45), canvas.width * 0.29, dp(11), dp(8.5), "#ffffff", "right");
@@ -527,7 +529,7 @@
         return;
       }
       if (ui.scene.value === "run") {
-        const label = "CLEAN VAULT +50";
+        const label = "FLOW x4  SPEED + SCORE";
         const w = Math.min(canvas.width - dp(86), Math.max(dp(190), label.length * dp(10)));
         const box = rect("Run callout", (canvas.width - w) / 2, dp(78), (canvas.width + w) / 2, dp(110));
         roundRect(box, dp(9), "rgba(8,18,30,0.74)", "rgba(255,218,121,0.86)");

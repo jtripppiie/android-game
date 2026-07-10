@@ -6,13 +6,28 @@ Current release details are tracked in `docs/VERSIONING.md` and the root
 ## Latest Beta
 
 ```text
-3.2.34-beta
-versionCode 354
-ALASKA PASSPORT v3.54 BETA
+3.3.0-beta
+versionCode 360
+ALASKA PASSPORT v3.60 BETA
 ```
 
 Highlights:
 
+- Replaced the flat obstacle stream with a repeating encounter director:
+  Launch, Precision, Wildlife Rush, and Jackpot Line beats now alter reward
+  trails and obstacle/hazard cadence.
+- Turned FLOW into a real high-risk momentum state. It now speeds up the world,
+  movement, firing, and encounter density while empowering snowballs and
+  preserving its score/pickup bonuses.
+- Added skill-based FLOW extensions for close wildlife near misses.
+- Added curved multi-star reward trails with beat-specific counts, making jump
+  height and path choice more readable and satisfying.
+- Added hold-to-fire snowballs, with a faster repeat rate during FLOW, so combat
+  feels continuous instead of requiring repetitive taps.
+- Brought wildlife into the run after the first gate instead of delaying stage
+  identity behind a long warm-up.
+- Updated the gameplay calibration preview and HUD to expose encounter names
+  and FLOW state while preserving its default-on numbered 15 px grid.
 - Reduced the visible runner scale, accelerated its six-frame running cadence,
   increased lateral response, and expanded coyote/jump-buffer forgiveness.
 - Raised the opening Midnight Sun stage pace so the first run reaches its

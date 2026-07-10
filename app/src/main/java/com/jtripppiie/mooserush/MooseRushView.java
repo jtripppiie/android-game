@@ -1212,10 +1212,10 @@ public class MooseRushView extends View {
         float startY = playerY + playerRadius * 0.02f;
         float targetY = aimedThrowTargetY(startX, startY);
         float verticalArc = clamp((targetY - startY) * 1.25f, -dp(210), dp(190));
-        boolean empowered = auroraFocusTimer > 0f || bossWeakWindowActive();
+        boolean empowered = auroraFocusTimer > 0f || flowActive() || bossWeakWindowActive();
         shots.add(new Shot(startX, startY, dp(empowered ? 540 : 500), verticalArc, gameplayDp(empowered ? 7.2f : 5.8f), empowered));
         effects.spawnSparkBurst(playerX + playerRadius * 1.05f, playerY, empowered ? 8 : 5, empowered ? Color.rgb(255, 218, 121) : Color.WHITE);
-        shotCooldown = auroraFocusTimer > 0f ? 0.18f : 0.30f;
+        shotCooldown = auroraFocusTimer > 0f ? 0.18f : flowActive() ? 0.21f : 0.30f;
         playSound("throw");
         logEvent(empowered ? "Powered snowball fired." : "Snowball fired.");
     }
@@ -1391,13 +1391,14 @@ public class MooseRushView extends View {
         if (auroraFocusTimer > 0f) {
             gravity *= 0.88f;
         }
-        float horizontalSpeed = dp(242);
+        float horizontalSpeed = dp(242) * RushDirector.horizontalSpeedMultiplier(flowActive());
         boolean wasGrounded = grounded;
 
         spriteClock += dt * (5.5f + Math.min(4.5f, gatesPassed * 0.28f));
         runnerClock += dt * (grounded ? 1.52f + Math.min(0.38f, gatesPassed * 0.020f) : 0.68f);
         updateVisualEffects(dt);
         shotCooldown = Math.max(0f, shotCooldown - dt);
+        updateHeldFire(dt);
         updateBearSpray(dt);
         damageFlash = Math.max(0f, damageFlash - dt);
         updateAuroraRush(dt);
@@ -1547,7 +1548,8 @@ public class MooseRushView extends View {
         if (spawnCooldown <= 0f) {
             spawnGate();
             float tension = DifficultyCurve.tension(selectedStage, gatesPassed, STAGES[selectedStage].goalGates);
-            spawnCooldown = DifficultyCurve.gateCooldown(RunnerTuning.nextGateCooldown(STAGES[selectedStage].spawnSeconds, gatesPassed), tension);
+            spawnCooldown = DifficultyCurve.gateCooldown(RunnerTuning.nextGateCooldown(STAGES[selectedStage].spawnSeconds, gatesPassed), tension)
+                    * RushDirector.gateCooldownMultiplier(gatesPassed, flowActive());
         }
 
         Iterator<Gate> iterator = gates.iterator();
@@ -1568,6 +1570,11 @@ public class MooseRushView extends View {
                     cleanVaultStreak = 0;
                 }
                 showComboCallout();
+                if (!bossActive) {
+                    effects.spawnScorePopup(RushDirector.beatLabel(gatesPassed), getWidth() * 0.58f,
+                            dp(92), RushDirector.beatFor(gatesPassed) == RushDirector.BEAT_WILDLIFE
+                                    ? Color.rgb(255, 98, 84) : Color.rgb(255, 218, 121));
+                }
                 logEvent(stageActionVerb(selectedStage) + " " + STAGES[selectedStage].obstacleName + " " + gatesPassed + "/" + STAGES[selectedStage].goalGates + ".");
             }
 
@@ -1693,7 +1700,7 @@ public class MooseRushView extends View {
          * Hazards are the moving stage enemies. They wait until the player has
          * passed a couple gates so the run gets a short warm-up first.
          */
-        if (allowSpawns && gatesPassed < 2) {
+        if (allowSpawns && gatesPassed < 1) {
             return;
         }
         if (allowSpawns) {
@@ -1701,7 +1708,8 @@ public class MooseRushView extends View {
             if (hazardCooldown <= 0f) {
                 spawnHazard();
                 float tension = DifficultyCurve.tension(selectedStage, gatesPassed, STAGES[selectedStage].goalGates);
-                hazardCooldown = DifficultyCurve.hazardCooldown(RunnerTuning.nextHazardCooldown(selectedStage, gatesPassed), tension);
+                hazardCooldown = DifficultyCurve.hazardCooldown(RunnerTuning.nextHazardCooldown(selectedStage, gatesPassed), tension)
+                        * RushDirector.hazardCooldownMultiplier(gatesPassed, flowActive());
             }
         }
 
@@ -1799,6 +1807,11 @@ public class MooseRushView extends View {
             effects.spawnScorePopup("NEAR +" + awarded, playerX + dp(20), playerY - playerRadius * 1.6f, Color.rgb(132, 213, 232));
             effects.spawnSparkBurst(playerX, playerY, 7, Color.rgb(132, 213, 232));
             addAuroraMeter(16f, "Near miss");
+            if (flowActive()) {
+                flowTimer = Math.min(FLOW_TIMER_SECONDS + 2.0f, flowTimer + 0.75f);
+                effects.spawnScorePopup("FLOW EXTEND", playerX, playerY - playerRadius * 2.35f, Color.rgb(77, 219, 184));
+                screenShake = Math.max(screenShake, 0.055f);
+            }
             showComboCallout();
         }
     }
@@ -2560,6 +2573,19 @@ public class MooseRushView extends View {
         runCalloutTimer = Math.max(runCalloutTimer, seconds);
     }
 
+    private void updateHeldFire(float dt) {
+        if (!firePressed || state != STATE_RUNNING) {
+            fireHoldTimer = 0f;
+            return;
+        }
+        fireHoldTimer += dt;
+        float repeatDelay = flowActive() ? 0.16f : 0.24f;
+        if (fireHoldTimer >= repeatDelay && shotCooldown <= 0f) {
+            fireHoldTimer = 0f;
+            fireSnowball();
+        }
+    }
+
     private void updateAuroraRush(float dt) {
         if (auroraRushTimer <= 0f) {
             return;
@@ -2607,14 +2633,14 @@ public class MooseRushView extends View {
             effects.spawnScorePopup("FLOW +" + awarded, x, y - dp(42), Color.rgb(77, 219, 184));
         }
         screenShake = Math.max(screenShake, 0.045f);
-        showRunCallout("FLOW x" + cleanVaultStreak + "  PICKUPS PULL IN", 1.20f);
+        showRunCallout("FLOW x" + cleanVaultStreak + "  SPEED + SCORE", 1.20f);
         logEvent("Flow streak x" + cleanVaultStreak + ".");
     }
 
     private float worldSpeedMultiplier() {
         float multiplier = auroraFocusTimer > 0f ? 0.78f : 1f;
         if (flowActive()) {
-            multiplier *= 0.94f;
+            multiplier *= RushDirector.worldSpeedMultiplier(true);
         }
         if (chaseBearActive) {
             multiplier *= CHASE_BEAR_SPEED_BOOST;
@@ -2762,9 +2788,15 @@ public class MooseRushView extends View {
         float gateWidth = gameplayDp(34) + random.nextFloat() * gameplayDp(18);
         float hurdleHeight = RunnerTuning.gateHeight(getResources().getDisplayMetrics().density, selectedStage, gatesPassed, random.nextFloat());
         gates.add(new Gate(getWidth() + gateWidth, hurdleHeight, gateWidth));
-        if (random.nextFloat() < 0.72f) {
-            float starY = getGroundY() - hurdleHeight - gameplayDp(34 + random.nextFloat() * 18);
-            stars.add(new Star(getWidth() + gateWidth + gameplayDp(46), Math.max(dp(86), starY), gameplayDp(8)));
+        int starCount = RushDirector.starTrailCount(gatesPassed);
+        if (random.nextFloat() < 0.88f) {
+            float baseStarY = getGroundY() - hurdleHeight - gameplayDp(30 + random.nextFloat() * 12);
+            for (int i = 0; i < starCount; i++) {
+                float arc = (float) Math.sin((i + 1f) / (starCount + 1f) * Math.PI);
+                float starY = baseStarY - gameplayDp(arc * (starCount >= 3 ? 22f : 12f));
+                float starX = getWidth() + gateWidth + gameplayDp(38 + i * 30);
+                stars.add(new Star(starX, Math.max(dp(78), starY), gameplayDp(8)));
+            }
         }
         if (!gameState.shieldActive && gatesPassed >= 1 && random.nextFloat() < powerUpSpawnChance()) {
             float shieldY = getGroundY() - hurdleHeight - gameplayDp(58 + random.nextFloat() * 16);
@@ -5180,7 +5212,8 @@ public class MooseRushView extends View {
         textPaint.setColor(Color.rgb(255, 218, 121));
         String objective = bossActive
                 ? "FIRE BOSS " + Math.max(0, bossHealth) + "/" + bossMaxHealth + "  " + bossPatternLabel()
-                : stageActionVerb(selectedStage) + " " + obstacleHudName(selectedStage) + " " + gatesPassed + "/" + STAGES[selectedStage].goalGates;
+                : RushDirector.beatLabel(gatesPassed) + "  ·  " + stageActionVerb(selectedStage) + " "
+                + obstacleHudName(selectedStage) + " " + gatesPassed + "/" + STAGES[selectedStage].goalGates;
         drawTextFit(canvas, objective, getWidth() / 2f, dp(44), progressRight - progressLeft - dp(12), dp(11), dp(8.5f), Paint.Align.CENTER);
         textPaint.setColor(Color.WHITE);
         String comboPrefix = auroraRushTimer > 0f ? "AURORA " : flowActive() ? "FLOW " : "";

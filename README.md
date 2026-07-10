@@ -9,10 +9,10 @@ wildlife encounters through stage runs and boss fights.
 ## Current Build
 
 ```text
-versionCode: 354
-versionName: 3.2.34-beta
-build badge: ALASKA PASSPORT v3.54 BETA
-APK: app/build/outputs/apk/debug/you-rush-alaska-3.2.34-beta-354-debug.apk
+versionCode: 360
+versionName: 3.3.0-beta
+build badge: ALASKA PASSPORT v3.60 BETA
+APK: app/build/outputs/apk/debug/you-rush-alaska-3.3.0-beta-360-debug.apk
 ```
 
 This is a beta package for device testing and gameplay tuning. It is not a
@@ -29,7 +29,10 @@ signed public-store release.
 - Bear spray is a scarce pickup with its own SPRAY button to stun close wildlife
   and interrupt close boss lunges.
 - Clean vault streaks trigger FLOW, a short momentum state with bonus scoring,
-  pickup pull, HUD feedback, and a runner aura.
+  faster world movement, faster controls and snowballs, denser encounters,
+  pickup pull, HUD feedback, and a runner aura. Near misses extend FLOW.
+- Runs cycle through authored encounter beats—Launch, Precision, Wildlife Rush,
+  and Jackpot Line—with distinct pacing and curved multi-star trails.
 - Customize lets players choose a photo/default body style, including female
   and male runner bodies.
 - Progression includes stage unlocks, XP, Trail Tokens, Daily Rush, Trail
@@ -102,6 +105,7 @@ Key active docs:
 
 - [Versioning](docs/VERSIONING.md)
 - [Android test checklist](docs/ANDROID_TEST_CHECKLIST.md)
+- [Gameplay revamp contract](docs/GAMEPLAY_REVAMP.md)
 - [Offline debug previews](docs/OFFLINE_DEBUG_PREVIEWS.md)
 - [Privacy notes](docs/PRIVACY.md)
 - [Store listing draft](docs/STORE_LISTING_DRAFT.md)

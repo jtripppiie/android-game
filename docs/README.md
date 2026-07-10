@@ -10,6 +10,8 @@ testing, and release preparation.
   release checklist.
 - [Android test checklist](ANDROID_TEST_CHECKLIST.md): phone QA checklist for
   each debug APK.
+- [Gameplay revamp contract](GAMEPLAY_REVAMP.md): encounter-beat pacing,
+  high-risk FLOW behavior, and rules for future gameplay systems.
 - [Offline debug previews](OFFLINE_DEBUG_PREVIEWS.md): local HTML preview
   workflow for sprite crops, ground/contact lines, gameplay composition, and
   obstacle readability without reinstalling the app.
