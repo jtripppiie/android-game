@@ -990,7 +990,7 @@ public class MooseRushView extends View {
                 }
                 float px = event.getX(i);
                 float py = event.getY(i);
-                if (dpadBounds.contains(px, py)) {
+                if (dpadTouchContains(px, py)) {
                     updateDpadControl(px, py);
                 } else if (leftPadBounds.contains(px, py)) {
                     leftPressed = true;
@@ -1035,15 +1035,17 @@ public class MooseRushView extends View {
         float half = Math.max(1f, Math.min(dpadBounds.width(), dpadBounds.height()) * 0.5f);
         float dx = clamp((x - dpadBounds.centerX()) / half, -1f, 1f);
         float dy = clamp((y - dpadBounds.centerY()) / half, -1f, 1f);
-        if (dx < -0.24f) {
+        // Small dead zones so a light touch or drag registers immediately. Larger
+        // zones made the pad feel laggy and dropped quick direction changes.
+        if (dx < -0.12f) {
             leftPressed = true;
-        } else if (dx > 0.24f) {
+        } else if (dx > 0.12f) {
             rightPressed = true;
         }
-        if (dy < -0.18f) {
+        if (dy < -0.14f) {
             aimUpPressed = true;
             aimPadY = Math.min(aimPadY, dy);
-        } else if (dy > 0.18f) {
+        } else if (dy > 0.14f) {
             aimDownPressed = true;
             aimPadY = Math.max(aimPadY, dy);
         }
@@ -1051,13 +1053,25 @@ public class MooseRushView extends View {
 
     private boolean isControlTouch(float x, float y) {
         return leftPadBounds.contains(x, y)
-                || dpadBounds.contains(x, y)
+                || dpadTouchContains(x, y)
                 || rightPadBounds.contains(x, y)
                 || jumpPadBounds.contains(x, y)
                 || firePadBounds.contains(x, y)
                 || sprayPadBounds.contains(x, y)
                 || aimUpPadBounds.contains(x, y)
                 || aimDownPadBounds.contains(x, y);
+    }
+
+    /**
+     * D-pad hit test with a forgiving margin. A finger that drifts a little
+     * outside the drawn pad while dragging still keeps steering, which stops the
+     * runner from stalling mid-swipe. The pad sits alone in the bottom-left
+     * corner, so the margin cannot overlap the action buttons on the right.
+     */
+    private boolean dpadTouchContains(float x, float y) {
+        float margin = dp(20);
+        return x >= dpadBounds.left - margin && x <= dpadBounds.right + margin
+                && y >= dpadBounds.top - margin && y <= dpadBounds.bottom + margin;
     }
 
     private void startGame() {
@@ -1392,7 +1406,7 @@ public class MooseRushView extends View {
         if (auroraFocusTimer > 0f) {
             gravity *= 0.88f;
         }
-        float horizontalSpeed = dp(242) * RushDirector.horizontalSpeedMultiplier(flowActive());
+        float horizontalSpeed = dp(300) * RushDirector.horizontalSpeedMultiplier(flowActive());
         boolean wasGrounded = grounded;
 
         spriteClock += dt * (5.5f + Math.min(4.5f, gatesPassed * 0.28f));
@@ -4287,6 +4301,11 @@ public class MooseRushView extends View {
         float centerY = hazard.y;
         float height = yRadius * 2.35f;
         float rotation = 0f;
+        // Ground creatures must plant their feet on the ground line. We anchor
+        // their sprite bottom to the ground instead of centering on hazard.y so
+        // no tuning mismatch can leave them hovering. Flying creatures keep the
+        // free centering below.
+        boolean groundAnchored = false;
 
         if ("SALMON".equals(label)) {
             centerY += (float) Math.sin(phase * 7.0f) * dp(3.0f);
@@ -4297,23 +4316,35 @@ public class MooseRushView extends View {
             height = yRadius * 2.55f;
             rotation = (float) Math.sin(phase * 1.4f) * 2.2f;
         } else if ("BEAR".equals(label)) {
-            centerY += (float) Math.sin(phase * 1.55f) * dp(0.35f);
             height = yRadius * 2.45f;
+            groundAnchored = true;
         } else if ("POLAR".equals(label)) {
-            centerY += (float) Math.sin(phase * 1.45f) * dp(0.30f);
             height = yRadius * 2.35f;
+            groundAnchored = true;
         } else if ("WOLF".equals(label)) {
-            centerY += (float) Math.sin(phase * 10.0f) * dp(1.6f);
             height = yRadius * 2.30f;
+            rotation = (float) Math.sin(phase * 10.0f) * 2.0f;
+            groundAnchored = true;
         } else if ("MOOSE".equals(label)) {
-            centerY += (float) Math.sin(phase * 7.0f) * dp(1.0f);
             height = yRadius * 2.45f;
+            groundAnchored = true;
+        } else {
+            groundAnchored = true;
         }
 
         if (hazard.roaring) {
             centerY = getGroundY() - yRadius * 1.50f;
             height = yRadius * ("POLAR".equals(label) ? 3.35f : 3.22f);
             rotation = (float) Math.sin(phase * 18.0f) * 3.5f;
+        } else if (groundAnchored) {
+            /*
+             * Feet on the ground: bottom sits at the ground line. Any lift the
+             * animation gave hazard.y (a wolf pounce, a small bob) is carried
+             * over as an offset so jumps still read as airborne.
+             */
+            float groundBottom = getGroundY() + dp(1);
+            float lift = hazard.y - hazard.baseY;
+            centerY = groundBottom + lift - height * 0.5f;
         }
 
         drawSpriteSheetFrame(canvas, sheet, SPRITE_SHEET_FRAMES, frame, hazard.x, centerY, height, rotation);
@@ -4556,45 +4587,50 @@ public class MooseRushView extends View {
     }
 
     private void drawBeamCore(Canvas canvas, float x1, float y1, float x2, float y2, float height, float alpha, float intensity, float pulse) {
-        int outerAlpha = Math.round(46 * alpha * intensity);
-        int coreStartAlpha = Math.round(235 * alpha);
-        int coreMidAlpha = Math.round(210 * alpha);
-        int coreEndAlpha = Math.round(46 * alpha);
-        int whiteAlpha = Math.round(198 * alpha);
-
+        /*
+         * The beam is built from four stacked strokes, thickest and softest at
+         * the back to thinnest and hottest at the front:
+         *   1-2. additive warm halo so it glows against the dark eclipse
+         *   3.   a warm red-orange body that fades toward the far end, so the
+         *        eye reads as the hot source
+         *   4.   a bright, gently flickering white-hot core
+         * Keeping the whole beam in one warm palette (no clashing cyan) makes it
+         * read instantly as a dangerous energy ray.
+         */
         paint.setStyle(Paint.Style.STROKE);
         paint.setStrokeCap(Paint.Cap.ROUND);
         paint.setShader(null);
         paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.ADD));
-        paint.setStrokeWidth(height * 4.2f * intensity);
-        paint.setColor(Color.argb(Math.round(30 * alpha * intensity), 255, 72, 66));
+
+        paint.setStrokeWidth(height * 4.6f * intensity);
+        paint.setColor(Color.argb(Math.round(32 * alpha * intensity), 255, 96, 60));
         canvas.drawLine(x1, y1, x2, y2, paint);
 
-        paint.setStrokeWidth(height * 2.2f * intensity);
-        paint.setColor(Color.argb(outerAlpha, 255, 98, 84));
+        paint.setStrokeWidth(height * 2.7f * intensity);
+        paint.setColor(Color.argb(Math.round(70 * alpha * intensity), 255, 122, 68));
         canvas.drawLine(x1, y1, x2, y2, paint);
-        paint.setXfermode(null);
 
         LinearGradient gradient = new LinearGradient(
                 x1, y1, x2, y2,
                 new int[]{
-                        Color.argb(coreStartAlpha, 255, 246, 207),
-                        Color.argb(coreMidAlpha, 255, 98, 84),
-                        Color.argb(coreEndAlpha, 132, 213, 232)
+                        Color.argb(Math.round(255 * alpha), 255, 214, 140),
+                        Color.argb(Math.round(238 * alpha), 255, 96, 66),
+                        Color.argb(Math.round(150 * alpha), 236, 62, 54)
                 },
-                new float[]{0f, 0.25f, 1f},
+                new float[]{0f, 0.35f, 1f},
                 Shader.TileMode.CLAMP
         );
         paint.setShader(gradient);
-        paint.setStrokeWidth(height * (0.9f + pulse * 0.16f) * intensity);
+        paint.setStrokeWidth(height * (1.5f + pulse * 0.25f) * intensity);
+        canvas.drawLine(x1, y1, x2, y2, paint);
+        paint.setShader(null);
+
+        paint.setStrokeWidth(Math.max(dp(1.1f), height * (0.42f + pulse * 0.12f)));
+        paint.setColor(Color.argb(Math.round(235 * alpha), 255, 252, 236));
         canvas.drawLine(x1, y1, x2, y2, paint);
 
-        paint.setShader(null);
-        paint.setStrokeWidth(Math.max(dp(1f), height * 0.22f));
-        paint.setColor(Color.argb(whiteAlpha, 255, 255, 255));
-        canvas.drawLine(x1, y1, x2, y2, paint);
-        paint.setStrokeCap(Paint.Cap.BUTT);
         paint.setXfermode(null);
+        paint.setStrokeCap(Paint.Cap.BUTT);
         paint.setStyle(Paint.Style.FILL);
     }
 
@@ -4642,16 +4678,18 @@ public class MooseRushView extends View {
     }
 
     private void drawBossLaserEyeEmitter(Canvas canvas, float x, float y, float pulse) {
-        float glowRadius = dp(3.6f + 1.1f * pulse);
+        // A charging orb at the eye: additive warm glow, a molten inner core, and
+        // a white-hot pinpoint so the beam clearly originates from the boss.
+        paint.setShader(null);
         paint.setStyle(Paint.Style.FILL);
-        paint.setColor(Color.argb(Math.round(62 + 62 * pulse), 255, 98, 84));
-        canvas.drawCircle(x, y, glowRadius, paint);
-        paint.setColor(Color.rgb(255, 246, 207));
-        canvas.drawCircle(x, y, dp(1.35f), paint);
-        paint.setStyle(Paint.Style.STROKE);
-        paint.setStrokeWidth(dp(0.9f));
-        paint.setColor(Color.argb(190, 255, 166, 84));
-        canvas.drawCircle(x, y, glowRadius * 0.72f, paint);
+        paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.ADD));
+        paint.setColor(Color.argb(Math.round(66 + 60 * pulse), 255, 110, 70));
+        canvas.drawCircle(x, y, dp(6.4f + 2.2f * pulse), paint);
+        paint.setColor(Color.argb(Math.round(150 + 80 * pulse), 255, 172, 92));
+        canvas.drawCircle(x, y, dp(3.3f + 0.8f * pulse), paint);
+        paint.setColor(Color.rgb(255, 252, 236));
+        canvas.drawCircle(x, y, dp(1.5f), paint);
+        paint.setXfermode(null);
         paint.setStyle(Paint.Style.FILL);
     }
 
@@ -5838,7 +5876,7 @@ public class MooseRushView extends View {
     private void drawVirtualControls(Canvas canvas) {
         float bottom = getHeight() - dp(14);
         float size = dp(48);
-        float dpadSize = dp(88);
+        float dpadSize = dp(100);
         dpadBounds.set(dp(10), bottom - dpadSize, dp(10) + dpadSize, bottom);
         leftPadBounds.set(dpadBounds.left, dpadBounds.top + dpadSize * 0.32f, dpadBounds.left + dpadSize * 0.40f, dpadBounds.bottom - dpadSize * 0.32f);
         rightPadBounds.set(dpadBounds.right - dpadSize * 0.40f, dpadBounds.top + dpadSize * 0.32f, dpadBounds.right, dpadBounds.bottom - dpadSize * 0.32f);

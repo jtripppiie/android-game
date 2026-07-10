@@ -31,6 +31,7 @@ final class SpriteRenderer {
 
     private static final int RUNNER_FRAMES = 6;
     private static final int FULL_RUNNER_FRAME_GUARD_PX = 14;
+    private static final int RUNNER_CELL_CROP_PAD_PX = 2;
     private static final float RUNNER_BODY_HEIGHT_RUNNING = 2.68f;
     private static final float RUNNER_BODY_HEIGHT_STANDING = 2.62f;
     private static final float RUNNER_BODY_WIDTH_SCALE = 1.18f;
@@ -61,11 +62,19 @@ final class SpriteRenderer {
         /*
          * Crops remove empty transparent pixels around each frame. Without crop
          * rectangles, sprites can look offset, tiny, or like they have artifacts.
+         *
+         * Full-body runner sheets use cell-content crops (every visible pixel in
+         * the frame cell) instead of a single connected component. A running pose
+         * lifts a foot or throws out a hand that is separated from the torso by a
+         * transparent gap; the connected-component crop would treat those detached
+         * limbs as noise and shave them off, which is what made the runner look
+         * clipped. Cell-content crops keep the whole silhouette and still never
+         * bleed across a cell seam.
          */
         runnerBodyCrops = SpriteFrameCropper.computeFrameCrops(runnerBodySheet, RUNNER_FRAMES, FULL_RUNNER_FRAME_GUARD_PX);
-        femaleRunnerCrops = SpriteFrameCropper.computeMainFrameCrops(femaleRunnerSheet, RUNNER_FRAMES, FULL_RUNNER_FRAME_GUARD_PX);
-        maleRunnerCrops = SpriteFrameCropper.computeMainFrameCrops(maleRunnerSheet, RUNNER_FRAMES, FULL_RUNNER_FRAME_GUARD_PX);
-        overhaulRunnerCrops = SpriteFrameCropper.computeMainFrameCrops(overhaulRunnerSheet, RUNNER_FRAMES, FULL_RUNNER_FRAME_GUARD_PX);
+        femaleRunnerCrops = SpriteFrameCropper.computeCellContentCrops(femaleRunnerSheet, RUNNER_FRAMES, RUNNER_CELL_CROP_PAD_PX);
+        maleRunnerCrops = SpriteFrameCropper.computeCellContentCrops(maleRunnerSheet, RUNNER_FRAMES, RUNNER_CELL_CROP_PAD_PX);
+        overhaulRunnerCrops = SpriteFrameCropper.computeCellContentCrops(overhaulRunnerSheet, RUNNER_FRAMES, RUNNER_CELL_CROP_PAD_PX);
         bitmapPaint.setFilterBitmap(false);
     }
 

@@ -24,13 +24,13 @@ android {
         // targetSdk tells Android which modern behavior rules we expect.
         targetSdk 35
         // versionCode must increase for every installable release build.
-        versionCode 370
+        versionCode 371
         // versionName is the human-readable version shown to testers.
-        versionName "3.4.0-beta"
+        versionName "3.4.1-beta"
 
         // These constants appear in BuildConfig and can be shown inside the app.
         buildConfigField "String", "BUILD_CHANNEL", '"ALASKA BETA"'
-        buildConfigField "String", "BUILD_BADGE", '"ALASKA PASSPORT v3.70 BETA"'
+        buildConfigField "String", "BUILD_BADGE", '"ALASKA PASSPORT v3.71 BETA"'
         buildConfigField "boolean", "SHOW_VERSION_BADGE", "true"
     }
 

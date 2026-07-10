@@ -6,6 +6,31 @@ Current release details are tracked in `docs/VERSIONING.md` and the root
 ## Latest Beta
 
 ```text
+3.4.1-beta
+versionCode 371
+ALASKA PASSPORT v3.71 BETA
+```
+
+Launch-polish highlights:
+
+- Fixed full-body runner clipping. The female, male, and overhaul runner sheets
+  now use cell-content crops that keep detached limbs (a lifted foot, an
+  outstretched hand) instead of connected-component crops that shaved them off.
+- Grounded all charging wildlife. Bears, polar bears, moose, wolves, and the
+  default ground creature are now anchored by their feet to the ground line, so
+  no size/tuning mismatch can leave them hovering. Wolf pounces and flying
+  eagles/salmon keep their intended airborne motion; collision is unchanged.
+- Made the touch D-pad responsive. Reduced its dead zones, enlarged the pad, and
+  added a forgiving drag-capture margin so a finger that drifts just outside the
+  pad keeps steering. Horizontal runner speed was raised so lane changes feel
+  immediate.
+- Reworked the Midnight Sun eye beam. Replaced the noisy red-plus-cyan gradient
+  with a cohesive warm energy ray (additive halo, fading red-orange body, and a
+  flickering white-hot core) plus a charging orb emitter at the eye.
+
+## Previous Beta
+
+```text
 3.4.0-beta
 versionCode 370
 ALASKA PASSPORT v3.70 BETA
