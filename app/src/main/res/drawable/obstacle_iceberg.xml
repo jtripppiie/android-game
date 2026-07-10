@@ -3,6 +3,12 @@
     android:height="92dp"
     android:viewportWidth="150"
     android:viewportHeight="92">
+    <!--
+        Vector art lesson:
+        This iceberg uses sharp polygon paths. In pathData, M means move the pen,
+        L means draw a line, and Z closes the shape. Stroke paths add bright edge
+        lines without filling the inside.
+    -->
     <path
         android:fillColor="#000000"
         android:fillAlpha="0.18"

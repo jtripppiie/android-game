@@ -5,16 +5,16 @@ Use this after GitHub Actions produces the debug APK artifact.
 Current packaged beta:
 
 ```text
-versionCode: 341
-versionName: 3.2.21-beta
-build badge: ALASKA PASSPORT v3.41 BETA
+versionCode: 351
+versionName: 3.2.31-beta
+build badge: ALASKA PASSPORT v3.51 BETA
 ```
 
 ## Install test
 
 1. Download `you-rush-alaska-debug-apk` from the latest successful workflow run.
 2. Extract the ZIP if GitHub downloaded it as a ZIP.
-3. Install `you-rush-alaska-3.2.21-beta-341-debug.apk` on an Android phone.
+3. Install `you-rush-alaska-3.2.31-beta-351-debug.apk` on an Android phone.
 4. Allow installation from the browser/files app if Android prompts you.
 5. Open **You Rush**.
 6. Confirm the debug/version badge is visible and matches the packaged beta.
@@ -41,6 +41,43 @@ Confirm these screens work:
   runner, then persists after closing and reopening the app.
 - Back buttons return to menu.
 - Play starts the selected stage.
+- Runner appears readable in gameplay without the fallback/photo head feeling
+  oversized against the body.
+- A log followed by a wolf can be cleared with a timed jump plus double jump.
+- Midnight Sun Run uses WOLF as the running hazard and a clearly labeled
+  Midnight Sun boss with face/ray art, laser tells, and a short dark eclipse
+  after the boss is defeated.
+- Midnight Sun laser tells/attacks visibly charge from the sun's eyes, and the
+  active beam starts on the eye instead of appearing behind the face art.
+- Active Midnight Sun lasers draw as an eye-origin beam aimed toward the runner
+  lane, not as a big red rectangle at runner height.
+- Boss lasers match the laser-eyes HTML preview style: thin gradient beam,
+  visible eye origin, eased sweep toward the runner lane, and no thick red bar.
+- Boss laser tells also use the thin eye-origin preview beam, not a wide
+  rectangular warning lane.
+- Midnight Sun takes several snowball hits to defeat; it should not clear after
+  only a few normal shots, and now has 14 boss health.
+- Bear Country snowbank piles appear low at runner leg/feet level, not as tall
+  mound walls.
+- The on-screen controls include a separate SPRAY button, and bear spray works
+  from that button instead of requiring hold-FIRE.
+- The left on-screen control is a D-pad; sliding the thumb left/right moves the
+  runner, and sliding high/low while tapping FIRE changes snowball aim,
+  including diagonal throws.
+- The D-pad up/down arrow buttons are the same visible size as left/right.
+- Polar Bear Boss lasts long enough to reach later attack patterns, including
+  eye-beam/laser pressure, instead of dying after a few hits.
+- Moose Pass moose hazards and boss art read larger than before.
+- Dark Winter iceberg obstacles sit lower, closer to runner height, instead of
+  tall spike-wall height.
+- Eagle Boss attacks do not show eye-beam/laser-style attacks.
+- Left-side bear chases start threatening, then slow down and visibly fall
+  farther behind in dust as the runner survives.
+- Some wolves pounce upward near the runner and can threaten a mistimed jump.
+- Computer Run starts from the main menu, auto-starts the ready screen, jumps
+  and fires during play, and advances to the next stage after clears.
+- Computer Run is invincible and dry: hits do not end the run, and clears do not
+  persist rewards, unlocks, best scores, daily streaks, badges, or mission totals.
 - Default red runner running frames do not show neighboring-frame artifacts,
   edge slivers, or flickering sprite seams.
 - Daily Rush starts the rotating daily stage.

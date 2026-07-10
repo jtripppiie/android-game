@@ -3,6 +3,14 @@
     android:height="48dp"
     android:viewportWidth="96"
     android:viewportHeight="48">
+    <!--
+        Vector art lesson:
+        width/height are the size Android lays out in dp.
+        viewportWidth/viewportHeight are the coordinate grid we draw on.
+        Each path is one colored shape. Later paths draw on top of earlier ones.
+        The group rotation gives the log a tiny tilt; set it closer to 0 to make
+        the log look straighter.
+    -->
 
     <group
         android:pivotX="48"

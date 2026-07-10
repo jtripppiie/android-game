@@ -9,10 +9,10 @@ wildlife encounters through stage runs and boss fights.
 ## Current Build
 
 ```text
-versionCode: 341
-versionName: 3.2.21-beta
-build badge: ALASKA PASSPORT v3.41 BETA
-APK: app/build/outputs/apk/debug/you-rush-alaska-3.2.21-beta-341-debug.apk
+versionCode: 351
+versionName: 3.2.31-beta
+build badge: ALASKA PASSPORT v3.51 BETA
+APK: app/build/outputs/apk/debug/you-rush-alaska-3.2.31-beta-351-debug.apk
 ```
 
 This is a beta package for device testing and gameplay tuning. It is not a
@@ -22,11 +22,12 @@ signed public-store release.
 
 - Five Alaska stages with distinct obstacles, hazards, bosses, and seasonal
   presentation.
-- Platform-runner controls: move left/right, jump, double jump, and fire.
+- Platform-runner controls: left-thumb D-pad movement/aim, jump, double jump,
+  fire, and spray.
 - Snowballs can damage bosses, clear specific threats, and destroy Salmon Rush
   river logs.
-- Bear spray is a scarce pickup that uses hold-FIRE to stun close wildlife and
-  interrupt close boss lunges.
+- Bear spray is a scarce pickup with its own SPRAY button to stun close wildlife
+  and interrupt close boss lunges.
 - Clean vault streaks trigger FLOW, a short momentum state with bonus scoring,
   pickup pull, HUD feedback, and a runner aura.
 - Customize lets players choose a photo/default body style, including female
@@ -37,10 +38,10 @@ signed public-store release.
 
 ## Controls
 
-- `LEFT`: move left
-- `RIGHT`: move right
+- `D-PAD`: move left/right and aim snowballs high, low, or diagonally
 - `JUMP`: jump, with one air jump available
-- `FIRE`: tap for snowball, hold with SPRAY charges for bear spray
+- `FIRE`: tap for snowball
+- `SPRAY`: use bear spray charges
 - `PAUSE`: pause, resume, return to map, or edit the runner sprite
 
 ## Build And Test

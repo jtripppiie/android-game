@@ -6,6 +6,13 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.drawable.Drawable;
 
+/*
+ * ObstacleRenderer draws the big gate-style obstacles.
+ *
+ * MooseRushView decides where an obstacle is. This class decides how that
+ * obstacle looks: which sprite to use, how large to draw it, and where to place
+ * its shadow/nameplate.
+ */
 final class ObstacleRenderer {
     private final GameAssets assets;
     private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -23,8 +30,14 @@ final class ObstacleRenderer {
             return false;
         }
 
-        float spriteHeight = height + dp(stage == 2 ? 30 : stage == 3 ? 24 : 18);
-        float spriteWidth = Math.max(width + dp(stage == 2 ? 54 : 42), spriteHeight * (stage == 2 ? 1.85f : 1.65f));
+        /*
+         * The collision gate is smaller than the visible sprite. That lets the
+         * obstacle look chunky while keeping the actual jump fair.
+         */
+        float spriteHeight = stage == 4
+                ? Math.min(height + dp(4), dp(30))
+                : stage == 3 ? Math.min(height + dp(8), dp(54)) : height + dp(stage == 2 ? 30 : 18);
+        float spriteWidth = Math.max(width + dp(stage == 2 ? 54 : stage == 4 ? 72 : stage == 3 ? 50 : 42), spriteHeight * (stage == 2 ? 1.85f : stage == 4 ? 2.65f : stage == 3 ? 1.95f : 1.65f));
         float left = x + width * 0.5f - spriteWidth * 0.5f;
         float right = left + spriteWidth;
         float top = ground - spriteHeight;
@@ -38,6 +51,7 @@ final class ObstacleRenderer {
     }
 
     private Drawable obstacleSpriteForStage(int stage) {
+        // Stages 0 and 1 use hand-drawn/other obstacle paths in MooseRushView.
         if (stage == 2) {
             return assets.obstacleAntlerBarricade();
         }
@@ -51,6 +65,7 @@ final class ObstacleRenderer {
     }
 
     private void drawNameplate(Canvas canvas, float x, float obstacleWidth, float top, String label) {
+        // Nameplates help debugging and make it clear what obstacle is coming.
         float plateWidth = Math.min(dp(128), Math.max(dp(54), label.length() * dp(5.8f)));
         float left = x + obstacleWidth / 2f - plateWidth / 2f;
         float plateTop = Math.max(dp(82), top - dp(22));

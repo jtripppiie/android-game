@@ -65,10 +65,10 @@
       "id": "midnight_sun_run",
       "name": "Midnight Sun Run",
       "season": "midnight_sun",
-      "hazard": "SUN",
-      "boss": "Sunburn Sprite",
+      "hazard": "WOLF",
+      "boss": "Midnight Sun",
       "goalGates": 5,
-      "bossHealth": 2,
+      "bossHealth": 14,
       "runtimeBackground": "background_midnight_sun_art",
       "runtimeGate": "canvas_antler_gate"
     },

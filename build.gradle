@@ -1,3 +1,6 @@
+// Root build file lesson:
+// The Android Gradle Plugin version is declared here once. The app/build.gradle
+// file applies it for the actual game module.
 plugins {
     id "com.android.application" version "8.7.3" apply false
 }

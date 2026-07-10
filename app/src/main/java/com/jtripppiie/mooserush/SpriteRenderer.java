@@ -12,6 +12,17 @@ import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.Shader;
 
+/*
+ * SpriteRenderer owns runner drawing.
+ *
+ * The game has three runner styles:
+ * - photo head plus a running body sheet
+ * - full female runner sheet
+ * - full male runner sheet
+ *
+ * A sprite sheet is one image containing several animation frames. We crop one
+ * frame at a time, draw it, then switch frames as runnerClock advances.
+ */
 final class SpriteRenderer {
     static final int BODY_STYLE_PHOTO = 0;
     static final int BODY_STYLE_FEMALE = 1;
@@ -44,6 +55,10 @@ final class SpriteRenderer {
         runnerBodySheet = BitmapFactory.decodeResource(context.getResources(), R.drawable.sheet_player_run_headless);
         femaleRunnerSheet = BitmapFactory.decodeResource(context.getResources(), R.drawable.sheet_mom_run);
         maleRunnerSheet = BitmapFactory.decodeResource(context.getResources(), R.drawable.sheet_dad_run);
+        /*
+         * Crops remove empty transparent pixels around each frame. Without crop
+         * rectangles, sprites can look offset, tiny, or like they have artifacts.
+         */
         runnerBodyCrops = SpriteFrameCropper.computeCellContentCrops(runnerBodySheet, RUNNER_FRAMES, RUNNER_BODY_CROP_PAD_PX);
         femaleRunnerCrops = SpriteFrameCropper.computeMainFrameCrops(femaleRunnerSheet, RUNNER_FRAMES, FULL_RUNNER_FRAME_GUARD_PX);
         maleRunnerCrops = SpriteFrameCropper.computeMainFrameCrops(maleRunnerSheet, RUNNER_FRAMES, FULL_RUNNER_FRAME_GUARD_PX);
@@ -51,6 +66,7 @@ final class SpriteRenderer {
     }
 
     void drawRunner(Canvas canvas, PlayerFrame frame) {
+        // bob is a sine wave that makes running feel springy.
         float bob = (float) Math.sin(frame.spriteClock * Math.PI * 2f) * dp(4.0f);
         float headY = frame.y + bob;
         boolean fullBody = drawFullRunnerSheet(canvas, frame, headY, true);
@@ -81,6 +97,7 @@ final class SpriteRenderer {
     }
 
     private boolean drawRunnerSheetBody(Canvas canvas, PlayerFrame frame, float headY, boolean animated) {
+        // Return false if the sprite sheet is unavailable so fallback art draws.
         if (runnerBodySheet == null || runnerBodySheet.getWidth() <= 0 || runnerBodySheet.getHeight() <= 0) {
             return false;
         }
@@ -161,6 +178,7 @@ final class SpriteRenderer {
     }
 
     static int runnerSheetFrame(float runnerClock) {
+        // Convert time into frame number: 0, 1, 2, 3, 4, 5, then repeat.
         return Math.floorMod((int) (runnerClock * RUNNER_FRAMES), RUNNER_FRAMES);
     }
 
@@ -408,9 +426,9 @@ final class SpriteRenderer {
     }
 
     private void drawDefaultPlayerHead(Canvas canvas, float x, float headY, float radius) {
-        float headRadius = radius * 0.82f;
-        float outlineRadius = radius * 0.91f;
-        float eyeRadius = Math.max(dp(1.7f), radius * 0.085f);
+        float headRadius = radius * 0.74f;
+        float outlineRadius = radius * 0.82f;
+        float eyeRadius = Math.max(dp(1.55f), radius * 0.078f);
         paint.setShader(null);
         paint.setStyle(Paint.Style.FILL);
         paint.setColor(Color.rgb(31, 34, 38));
@@ -429,7 +447,7 @@ final class SpriteRenderer {
     }
 
     private void drawPlayerPhoto(Canvas canvas, float x, float headY, float radius, Bitmap playerPhoto) {
-        float faceRadius = radius * 0.92f;
+        float faceRadius = radius * 0.84f;
         float diameter = faceRadius * 2f;
         BitmapShader shader = new BitmapShader(playerPhoto, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP);
         float scale = Math.max(diameter / playerPhoto.getWidth(), diameter / playerPhoto.getHeight());
@@ -443,14 +461,14 @@ final class SpriteRenderer {
         paint.setStyle(Paint.Style.FILL);
         paint.setShader(null);
         paint.setColor(Color.rgb(31, 34, 38));
-        canvas.drawCircle(x, headY, radius * 1.11f, paint);
+        canvas.drawCircle(x, headY, radius * 1.00f, paint);
 
         paint.setColor(Color.rgb(226, 64, 72));
-        tempRect.set(x - radius * 1.03f, headY - radius * 1.06f, x + radius * 1.03f, headY - radius * 0.43f);
+        tempRect.set(x - radius * 0.93f, headY - radius * 0.96f, x + radius * 0.93f, headY - radius * 0.39f);
         canvas.drawRoundRect(tempRect, dp(9), dp(9), paint);
 
         paint.setColor(Color.rgb(255, 218, 121));
-        canvas.drawCircle(x + radius * 0.72f, headY - radius * 0.50f, radius * 0.18f, paint);
+        canvas.drawCircle(x + radius * 0.65f, headY - radius * 0.45f, radius * 0.16f, paint);
 
         paint.setShader(shader);
         tempRect.set(x - faceRadius, headY - faceRadius, x + faceRadius, headY + faceRadius);
@@ -464,7 +482,7 @@ final class SpriteRenderer {
         paint.setStyle(Paint.Style.FILL);
 
         paint.setColor(Color.argb(78, 255, 255, 255));
-        canvas.drawCircle(x - radius * 0.28f, headY - radius * 0.32f, radius * 0.22f, paint);
+        canvas.drawCircle(x - radius * 0.25f, headY - radius * 0.29f, radius * 0.20f, paint);
     }
 
     private int darkerColor(int color) {

@@ -5,10 +5,12 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.LinearGradient;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Rect;
 import android.graphics.RectF;
+import android.graphics.Shader;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.media.AudioAttributes;
@@ -27,6 +29,25 @@ import java.util.List;
 import java.util.Random;
 
 public class MooseRushView extends View {
+    /*
+     * KID-FRIENDLY GAME DEV MAP
+     *
+     * This whole game lives inside one custom Android View. A View is like a
+     * blank piece of paper Android gives us. Every frame we:
+     *
+     * 1. measure how much time passed since the last frame (dt)
+     * 2. update the game world using that time
+     * 3. draw the new world to the Canvas
+     * 4. ask Android for another frame
+     *
+     * A beginner can learn a lot by following this path:
+     * onDraw() -> updateGame() -> drawWorld() -> drawHud()
+     *
+     * Most objects in the game follow the same simple rule:
+     * x means left/right, y means up/down, and each frame changes them a tiny
+     * bit. If an object moves left, we subtract from x. If the runner jumps, we
+     * subtract from y first, then gravity adds y back down toward the ground.
+     */
     public interface PhotoRequestListener {
         void onPhotoRequested();
 
@@ -35,6 +56,10 @@ public class MooseRushView extends View {
 
     private static final String TAG = "YouRushGame";
 
+    /*
+     * Game screens are stored as numbers so the drawing code can quickly ask,
+     * "What screen are we on?" STATE_RUNNING means the actual game is live.
+     */
     private static final int STATE_SPLASH = 0;
     private static final int STATE_MENU = 1;
     private static final int STATE_MAP = 2;
@@ -104,17 +129,28 @@ public class MooseRushView extends View {
             "Darkness"
     };
 
+    /*
+     * StageConfig is our level recipe. Each row answers:
+     * - What is this stage called?
+     * - Which season colors/background should it use?
+     * - What hazard runs at the player?
+     * - How many gates before the boss appears?
+     * - How fast and how often should obstacles spawn?
+     *
+     * Changing these numbers is one of the safest ways to design new levels.
+     */
     private static final StageConfig[] STAGES = {
-            new StageConfig("Midnight Sun Run", "Vault driftwood logs before the sun boss.", SEASON_MIDNIGHT_SUN, "Sunburn Sprite", "SUN", "DRIFTWOOD LOGS", 5, 2, 150, 2.35f, 0),
+            new StageConfig("Midnight Sun Run", "Vault driftwood logs before the eclipse.", SEASON_MIDNIGHT_SUN, "Midnight Sun", "WOLF", "DRIFTWOOD LOGS", 5, 14, 150, 2.35f, 0),
             new StageConfig("Salmon Rush", "Vault slick river logs while salmon arc in.", SEASON_SUMMER, "Salmon Boss", "SALMON", "RIVER LOGS", 7, 3, 165, 2.15f, 1),
             new StageConfig("Moose Pass", "Vault antler barricades and dodge real moose.", SEASON_SUMMER, "Moose Boss", "MOOSE", "ANTLER BARRICADES", 8, 4, 178, 2.05f, 2),
             new StageConfig("Dark Winter", "Leap jagged icebergs through low light.", SEASON_DARKNESS, "Eagle Boss", "EAGLE", "ICEBERGS", 9, 4, 188, 1.95f, 3),
-            new StageConfig("Bear Country", "Survive snowbank barricades and winter wildlife.", SEASON_WINTER, "Polar Bear Boss", "BEAR", "SNOWBANKS", 10, 6, 198, 1.85f, 4)
+            new StageConfig("Bear Country", "Survive snowbank barricades and winter wildlife.", SEASON_WINTER, "Polar Bear Boss", "BEAR", "SNOWBANKS", 10, 12, 198, 1.85f, 4)
     };
     private static final int SPRITE_SHEET_FRAMES = 6;
     private static final float PLAYER_START_X_FRACTION = 0.265f;
     private static final float PLAYER_HEAD_DRAW_OFFSET = 2.18f;
-    private static final float PLAYER_SPRITE_VISUAL_SCALE = 1.2f;
+    private static final float PLAYER_SPRITE_VISUAL_SCALE = 1.30f;
+    private static final float HAZARD_GATE_CLEARANCE_DP = 138f;
     private static final float PLAYFIELD_BOTTOM_MARGIN_DP = 52f;
     private static final float GROUND_LINE_HEIGHT_FRACTION = 0.82f;
     private static final float JUMP_CEILING_TOP_MARGIN_DP = 40f;
@@ -193,6 +229,11 @@ public class MooseRushView extends View {
     private final Paint textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint spriteBitmapPaint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.DITHER_FLAG);
     private final Random random = new Random();
+    /*
+     * These lists are the moving things currently alive in the level.
+     * Spawning adds objects to a list. Updating moves them. Drawing shows them.
+     * When an object scrolls off screen, we remove it so the game stays fast.
+     */
     private final List<Gate> gates = new ArrayList<>();
     private final List<Hazard> hazards = new ArrayList<>();
     private final List<Star> stars = new ArrayList<>();
@@ -225,11 +266,16 @@ public class MooseRushView extends View {
     private final RectF bodyStyleButtonBounds = new RectF();
     private final RectF debugButtonBounds = new RectF();
     private final RectF muteButtonBounds = new RectF();
+    private final RectF demoButtonBounds = new RectF();
     private final RectF dailyButtonBounds = new RectF();
+    private final RectF dpadBounds = new RectF();
     private final RectF leftPadBounds = new RectF();
     private final RectF rightPadBounds = new RectF();
     private final RectF jumpPadBounds = new RectF();
     private final RectF firePadBounds = new RectF();
+    private final RectF sprayPadBounds = new RectF();
+    private final RectF aimUpPadBounds = new RectF();
+    private final RectF aimDownPadBounds = new RectF();
     private final RectF pauseButtonBounds = new RectF();
     private final RectF tempRect = new RectF();
     private final Rect spriteSourceRect = new Rect();
@@ -289,6 +335,9 @@ public class MooseRushView extends View {
     private boolean rightPressed = false;
     private boolean jumpPressed = false;
     private boolean firePressed = false;
+    private boolean sprayPressed = false;
+    private boolean aimUpPressed = false;
+    private boolean aimDownPressed = false;
     private boolean jumpWasPressed = false;
     private boolean fireWasPressed = false;
     private boolean grounded = false;
@@ -303,6 +352,7 @@ public class MooseRushView extends View {
     private boolean bossEnrageAnnounced = false;
     private boolean runNewBest = false;
     private boolean chaseBearActive = false;
+    private boolean demoMode = false;
     private int jumpsUsed = 0;
 
     private long lastFrameNanos = 0L;
@@ -327,6 +377,8 @@ public class MooseRushView extends View {
     private float readyTimer = 0f;
     private float runCalloutTimer = 0f;
     private float bossWarningTimer = 0f;
+    private float eclipseTimer = 0f;
+    private float demoTimer = 0f;
     private float coyoteTimer = 0f;
     private float jumpBufferTimer = 0f;
     private float auroraMeter = 0f;
@@ -337,6 +389,7 @@ public class MooseRushView extends View {
     private float routeMilestoneTimer = 0f;
     private float scoutTimer = 0f;
     private float fireHoldTimer = 0f;
+    private float aimPadY = 0f;
     private float bearSprayCooldown = 0f;
     private float bearSprayTimer = 0f;
     private float bearSprayOriginX = 0f;
@@ -476,6 +529,13 @@ public class MooseRushView extends View {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
+        /*
+         * dt means "delta time": the number of seconds since the last frame.
+         *
+         * We multiply movement by dt so the game speed feels the same on fast
+         * and slow devices. Without dt, a phone drawing 120 frames per second
+         * would move everything twice as fast as a phone drawing 60 frames.
+         */
         long now = System.nanoTime();
         float dt = 0f;
         if (lastFrameNanos != 0L) {
@@ -484,6 +544,11 @@ public class MooseRushView extends View {
         lastFrameNanos = now;
 
         if (!paused) {
+            /*
+             * Update first, draw second. This is the classic game loop:
+             * input/control -> physics/world changes -> render the result.
+             */
+            updateComputerDemo(dt);
             if (state == STATE_RUNNING) {
                 updateGame(dt);
             } else {
@@ -520,8 +585,119 @@ public class MooseRushView extends View {
         }
 
         if (!paused) {
+            /*
+             * This asks Android to call onDraw() again on the next animation
+             * frame. That one line is what keeps the game alive and moving.
+             */
             postInvalidateOnAnimation();
         }
+    }
+
+    private void updateComputerDemo(float dt) {
+        if (!demoMode) {
+            return;
+        }
+        /*
+         * Computer Run is an auto-player for showing the game to someone.
+         * It should demonstrate stages without changing saved progress, so
+         * scoring rewards, unlocks, and deaths are skipped elsewhere when
+         * demoMode is true.
+         */
+        demoTimer += dt;
+        if (state == STATE_READY && demoTimer > 0.85f) {
+            state = STATE_RUNNING;
+            readyTimer = 0f;
+            demoTimer = 0f;
+            lastFrameNanos = 0L;
+            showRunCallout("COMPUTER RUN", 1.15f);
+            logEvent("Computer Run auto-started.");
+            return;
+        }
+        if (state == STATE_STAGE_CLEAR && stageClearTimer > 2.15f) {
+            if (selectedStage < STAGES.length - 1) {
+                selectedStage++;
+            } else {
+                selectedStage = 0;
+            }
+            selectedSeason = STAGES[selectedStage].season;
+            backdropCacheKey = Integer.MIN_VALUE;
+            if (!demoMode) {
+                saveChoices();
+            }
+            demoTimer = 0f;
+            logEvent("Computer Run advancing to " + STAGES[selectedStage].name + ".");
+            startGame();
+            return;
+        }
+        if (state == STATE_GAME_OVER && demoTimer > 1.25f) {
+            demoTimer = 0f;
+            logEvent("Computer Run retrying " + STAGES[selectedStage].name + ".");
+            startGame();
+            return;
+        }
+        if (state != STATE_RUNNING) {
+            return;
+        }
+
+        /*
+         * The demo "thinks" with simple rules instead of real AI:
+         * stay near the normal runner lane, back away during some boss tells,
+         * jump when danger is close, and fire when there is a target.
+         */
+        float targetX = playerStartX();
+        if (bossActive) {
+            targetX = getWidth() * 0.27f;
+            if (bossPattern == BOSS_PATTERN_LUNGE && bossState == BOSS_STATE_TELL) {
+                targetX = Math.max(dp(74), playerX - dp(90));
+            }
+        }
+        leftPressed = playerX > targetX + dp(10);
+        rightPressed = playerX < targetX - dp(10);
+
+        boolean shouldJump = demoShouldJump();
+        jumpPressed = shouldJump;
+        if (shouldJump) {
+            requestJump();
+        }
+
+        boolean shouldFire = bossActive || nearestBossAttackTarget(playerX, Float.MAX_VALUE) != null || nearestDestructibleGate(playerX, Float.MAX_VALUE) != null;
+        firePressed = shouldFire;
+        if (shouldFire) {
+            fireSnowball();
+        }
+    }
+
+    private boolean demoShouldJump() {
+        /*
+         * This method is the demo player's eyes. It scans each danger list and
+         * returns true when something is close enough that a jump would help.
+         */
+        if (!grounded && jumpsUsed >= 2) {
+            return false;
+        }
+        for (Gate gate : gates) {
+            float distance = gate.x - playerX;
+            if (distance > dp(34) && distance < dp(148)) {
+                return true;
+            }
+        }
+        for (Hazard hazard : hazards) {
+            float distance = hazard.x - playerX;
+            if (distance > dp(24) && distance < dp(135) && hazard.y > getGroundY() - dp(92)) {
+                return true;
+            }
+        }
+        for (BossAttack attack : bossAttacks) {
+            if (attack.type == ATTACK_LASER) {
+                laserAttackRect(attack, tempRect);
+                if (tempRect.left < playerX + dp(72) && tempRect.right > playerX - dp(20)) {
+                    return true;
+                }
+            } else if (attack.x > playerX && attack.x < playerX + dp(142) && attack.y > getGroundY() - dp(98)) {
+                return true;
+            }
+        }
+        return bossActive && bossPattern == BOSS_PATTERN_LASER && bossState == BOSS_STATE_TELL;
     }
 
     private void updatePassive(float dt) {
@@ -578,6 +754,7 @@ public class MooseRushView extends View {
     private boolean handleTap(float x, float y) {
         if (state == STATE_MENU) {
             if (primaryButtonBounds.contains(x, y)) {
+                demoMode = false;
                 startGame();
             } else if (secondaryButtonBounds.contains(x, y)) {
                 state = STATE_CUSTOMIZE;
@@ -587,6 +764,8 @@ public class MooseRushView extends View {
                 logEvent("Opened Alaska map.");
             } else if (dailyButtonBounds.contains(x, y)) {
                 startDailyRush();
+            } else if (demoButtonBounds.contains(x, y)) {
+                startComputerDemo();
             } else if (debugButtonBounds.contains(x, y)) {
                 debugOverlay = !debugOverlay;
                 prefs.edit().putBoolean(PREF_DEBUG_OVERLAY, debugOverlay).apply();
@@ -614,6 +793,7 @@ public class MooseRushView extends View {
                 }
                 selectedStage = tappedStage;
                 selectedSeason = STAGES[selectedStage].season;
+                demoMode = false;
                 backdropCacheKey = Integer.MIN_VALUE;
                 saveChoices();
                 logEvent("Selected stage: " + STAGES[selectedStage].name + ".");
@@ -747,10 +927,15 @@ public class MooseRushView extends View {
     private void updateHeldControls(MotionEvent event) {
         boolean wasJumpPressed = jumpPressed;
         boolean wasFirePressed = firePressed;
+        boolean wasSprayPressed = sprayPressed;
         leftPressed = false;
         rightPressed = false;
         jumpPressed = false;
         firePressed = false;
+        sprayPressed = false;
+        aimUpPressed = false;
+        aimDownPressed = false;
+        aimPadY = 0f;
 
         int actionMasked = event.getActionMasked();
         int pointerUpIndex = actionMasked == MotionEvent.ACTION_POINTER_UP ? event.getActionIndex() : -1;
@@ -763,7 +948,9 @@ public class MooseRushView extends View {
                 }
                 float px = event.getX(i);
                 float py = event.getY(i);
-                if (leftPadBounds.contains(px, py)) {
+                if (dpadBounds.contains(px, py)) {
+                    updateDpadControl(px, py);
+                } else if (leftPadBounds.contains(px, py)) {
                     leftPressed = true;
                 } else if (rightPadBounds.contains(px, py)) {
                     rightPressed = true;
@@ -771,6 +958,12 @@ public class MooseRushView extends View {
                     jumpPressed = true;
                 } else if (firePadBounds.contains(px, py)) {
                     firePressed = true;
+                } else if (sprayPadBounds.contains(px, py)) {
+                    sprayPressed = true;
+                } else if (aimUpPadBounds.contains(px, py)) {
+                    aimUpPressed = true;
+                } else if (aimDownPadBounds.contains(px, py)) {
+                    aimDownPressed = true;
                 }
             }
         }
@@ -786,6 +979,9 @@ public class MooseRushView extends View {
             fireHoldTimer = 0f;
             fireSnowball();
         }
+        if (sprayPressed && !wasSprayPressed) {
+            useBearSpray();
+        }
         if (!firePressed) {
             fireHoldTimer = 0f;
         }
@@ -793,15 +989,43 @@ public class MooseRushView extends View {
         fireWasPressed = firePressed;
     }
 
+    private void updateDpadControl(float x, float y) {
+        float half = Math.max(1f, Math.min(dpadBounds.width(), dpadBounds.height()) * 0.5f);
+        float dx = clamp((x - dpadBounds.centerX()) / half, -1f, 1f);
+        float dy = clamp((y - dpadBounds.centerY()) / half, -1f, 1f);
+        if (dx < -0.24f) {
+            leftPressed = true;
+        } else if (dx > 0.24f) {
+            rightPressed = true;
+        }
+        if (dy < -0.18f) {
+            aimUpPressed = true;
+            aimPadY = Math.min(aimPadY, dy);
+        } else if (dy > 0.18f) {
+            aimDownPressed = true;
+            aimPadY = Math.max(aimPadY, dy);
+        }
+    }
+
     private boolean isControlTouch(float x, float y) {
         return leftPadBounds.contains(x, y)
+                || dpadBounds.contains(x, y)
                 || rightPadBounds.contains(x, y)
                 || jumpPadBounds.contains(x, y)
-                || firePadBounds.contains(x, y);
+                || firePadBounds.contains(x, y)
+                || sprayPadBounds.contains(x, y)
+                || aimUpPadBounds.contains(x, y)
+                || aimDownPadBounds.contains(x, y);
     }
 
     private void startGame() {
         StageConfig stage = STAGES[selectedStage];
+        /*
+         * Starting a run is mostly cleaning the table:
+         * remove old obstacles, reset timers, reset score, and place the
+         * runner back at the beginning. If a bug carries over between runs,
+         * this is one of the first places to check.
+         */
         gates.clear();
         hazards.clear();
         stars.clear();
@@ -943,7 +1167,7 @@ public class MooseRushView extends View {
         }
         float startX = playerX + playerRadius * 0.9f;
         float startY = playerY + playerRadius * 0.02f;
-        float targetY = throwTargetY(startX, startY);
+        float targetY = aimedThrowTargetY(startX, startY);
         float verticalArc = clamp((targetY - startY) * 1.25f, -dp(210), dp(190));
         boolean empowered = auroraFocusTimer > 0f || bossWeakWindowActive();
         shots.add(new Shot(startX, startY, dp(empowered ? 540 : 500), verticalArc, gameplayDp(empowered ? 7.2f : 5.8f), empowered));
@@ -953,21 +1177,26 @@ public class MooseRushView extends View {
         logEvent(empowered ? "Powered snowball fired." : "Snowball fired.");
     }
 
+    private float aimedThrowTargetY(float startX, float startY) {
+        if (Math.abs(aimPadY) > 0.12f) {
+            return startY + dp(128) * aimPadY;
+        }
+        if (aimUpPressed && !aimDownPressed) {
+            return startY - dp(128);
+        }
+        if (aimDownPressed && !aimUpPressed) {
+            return startY + dp(84);
+        }
+        return throwTargetY(startX, startY);
+    }
+
     private void updateBearSpray(float dt) {
         bearSprayCooldown = Math.max(0f, bearSprayCooldown - dt);
         bearSprayTimer = Math.max(0f, bearSprayTimer - dt);
-        if (!firePressed || bearSprayCharges <= 0 || bearSprayCooldown > 0f || state != STATE_RUNNING) {
-            return;
-        }
-        fireHoldTimer += dt;
-        if (fireHoldTimer >= SprayTuning.HOLD_SECONDS) {
-            useBearSpray();
-            fireHoldTimer = -999f;
-        }
     }
 
     private void useBearSpray() {
-        if (bearSprayCharges <= 0 || bearSprayCooldown > 0f) {
+        if (state != STATE_RUNNING || bearSprayCharges <= 0 || bearSprayCooldown > 0f) {
             return;
         }
         boolean rearSpray = chaseBearActive && chaseBearX < playerX && playerX - chaseBearX < dp(230);
@@ -1107,6 +1336,11 @@ public class MooseRushView extends View {
         }
 
         StageConfig stage = STAGES[selectedStage];
+        /*
+         * Difficulty is a curve, not a switch. As the runner passes more gates,
+         * tension rises. Tension then makes scrolling and spawning feel faster.
+         * This keeps early seconds readable and later seconds exciting.
+         */
         float tension = DifficultyCurve.tension(selectedStage, gatesPassed, stage.goalGates);
         float gateSpeed = dp(RunnerTuning.scrollSpeedDp(stage.baseSpeed, gatesPassed)) * DifficultyCurve.speedMultiplier(tension);
         gateSpeed *= worldSpeedMultiplier();
@@ -1129,9 +1363,20 @@ public class MooseRushView extends View {
         updateChaseBear(dt, gateSpeed);
         respawnGraceTimer = Math.max(0f, respawnGraceTimer - dt);
         jumpBufferTimer = Math.max(0f, jumpBufferTimer - dt);
+        /*
+         * Coyote time and jump buffering make the controls feel fair:
+         * - coyote time lets you jump a split-second after leaving the ground
+         * - jump buffering remembers a jump pressed just before landing
+         *
+         * These tiny forgiveness windows are common in polished platformers.
+         */
         coyoteTimer = grounded ? RunnerTuning.COYOTE_SECONDS : Math.max(0f, coyoteTimer - dt);
         tryConsumeJumpBuffer();
 
+        /*
+         * Horizontal movement is direct: pressing left/right changes x.
+         * clamp() keeps the runner inside the screen instead of wandering away.
+         */
         if (leftPressed) {
             playerX -= horizontalSpeed * dt;
         }
@@ -1140,6 +1385,11 @@ public class MooseRushView extends View {
         }
         playerX = clamp(playerX, playerRadius + dp(6), getWidth() - playerRadius - dp(6));
 
+        /*
+         * Vertical movement is physics-style:
+         * velocity changes because of gravity, then position changes because
+         * of velocity. Negative velocity moves up; positive velocity falls down.
+         */
         playerVelocityY += gravity * dt;
         playerY += playerVelocityY * dt;
         groundScroll = (groundScroll + gateSpeed * dt) % dp(48);
@@ -1147,6 +1397,10 @@ public class MooseRushView extends View {
 
         float restY = getGroundY() - playerRadius;
         if (playerY >= restY) {
+            /*
+             * Landing means the runner touched the ground line. We snap exactly
+             * to the ground so tiny math errors do not make the runner sink.
+             */
             playerY = restY;
             playerVelocityY = 0f;
             grounded = true;
@@ -1176,6 +1430,10 @@ public class MooseRushView extends View {
         updateCampCheckpoint();
 
         if (!bossDefeated && !bossActive && gatesPassed >= stage.goalGates) {
+            /*
+             * The running section ends after enough gates. Then we stop spawning
+             * normal obstacles and bring in the boss phase.
+             */
             startBossPhase();
         }
 
@@ -1186,7 +1444,12 @@ public class MooseRushView extends View {
             updateHazards(dt, gateSpeed * 1.15f);
         }
 
-        if (respawnGraceTimer <= 0f) {
+        /*
+         * Collision checks are grouped after movement so we test the latest
+         * positions. Computer Run skips this block because it is a dry run: it
+         * should show the full game without losing lives or changing saves.
+         */
+        if (!demoMode && respawnGraceTimer <= 0f) {
             if (bossActive
                     && bossStunTimer <= 0f
                     && circleHitsCircle(playerX, playerY, playerRadius * CollisionTuning.PLAYER_BOSS_CONTACT_RADIUS_SCALE, bossX, bossHurtCenterY(), bossContactRadius())) {
@@ -1232,6 +1495,10 @@ public class MooseRushView extends View {
     }
 
     private void updateGates(float dt, float gateSpeed) {
+        /*
+         * A spawn cooldown is a countdown timer. When it reaches zero, we create
+         * a new obstacle and reset the countdown for the next one.
+         */
         spawnCooldown -= dt;
         if (spawnCooldown <= 0f) {
             spawnGate();
@@ -1317,16 +1584,17 @@ public class MooseRushView extends View {
         chaseBearPhase += dt;
         chaseBearY = getGroundY() - chaseBearRadius + (float) Math.sin(chaseBearPhase * 5.6f) * dp(0.6f);
 
-        float desiredX = playerX - dp(82);
-        float chaseSpeed = Math.max(dp(92), gateSpeed * 0.24f + dp(72 + selectedStage * 4));
+        float escapeProgress = 1f - chaseBearTimer / CHASE_BEAR_SECONDS;
+        float desiredX = playerX - dp(82 + 164 * escapeProgress);
+        float chaseSpeed = Math.max(dp(54), (gateSpeed * 0.24f + dp(72 + selectedStage * 4)) * (1f - 0.56f * escapeProgress));
         if (chaseBearX < desiredX) {
             chaseBearX = Math.min(desiredX, chaseBearX + chaseSpeed * dt);
         } else {
-            chaseBearX = Math.max(desiredX, chaseBearX - dp(34) * dt);
+            chaseBearX = Math.max(desiredX, chaseBearX - dp(44 + 70 * escapeProgress) * dt);
         }
 
-        if (random.nextFloat() < 0.34f) {
-            effects.spawnParticle(chaseBearX - chaseBearRadius * 0.6f, getGroundY(), -dp(42 + random.nextFloat() * 42), -dp(10 + random.nextFloat() * 18), dp(2.2f), Color.argb(150, 170, 130, 90), 0.22f);
+        if (random.nextFloat() < 0.34f + 0.28f * escapeProgress) {
+            effects.spawnParticle(chaseBearX - chaseBearRadius * (0.6f + escapeProgress), getGroundY(), -dp(42 + random.nextFloat() * (42 + 58 * escapeProgress)), -dp(10 + random.nextFloat() * 18), dp(2.2f + 1.2f * escapeProgress), Color.argb(Math.round(150 - 42 * escapeProgress), 170, 130, 90), 0.22f + 0.12f * escapeProgress);
         }
         if (chaseBearTimer <= 0f) {
             int awarded = addScore(14, "Chase survived");
@@ -1376,6 +1644,10 @@ public class MooseRushView extends View {
     }
 
     private void updateHazards(float dt, float speed) {
+        /*
+         * Hazards are the moving stage enemies. They wait until the player has
+         * passed a couple gates so the run gets a short warm-up first.
+         */
         if (gatesPassed < 2) {
             return;
         }
@@ -1393,7 +1665,11 @@ public class MooseRushView extends View {
             updateHazardRoar(hazard, dt);
             hazard.x -= speed * hazard.speedMultiplier * dt;
             if (!hazard.roaring) {
-                hazard.y = hazard.baseY + hazardBobOffset(hazard);
+                /*
+                 * baseY is the normal lane position. Bobbing and pouncing add a
+                 * small animation offset without permanently moving the lane.
+                 */
+                hazard.y = hazard.baseY + hazardBobOffset(hazard) + wolfPounceOffset(hazard);
             }
             maybeAwardNearMiss(hazard);
             if (!hazard.passed && hazard.x + hazard.radius < playerX) {
@@ -1411,6 +1687,10 @@ public class MooseRushView extends View {
     }
 
     private float hazardBobOffset(Hazard hazard) {
+        /*
+         * Bobbing is just a sine wave. Sine smoothly goes up and down between
+         * -1 and 1, which makes sprites feel alive instead of frozen.
+         */
         float phase = hazardVisualPhase(hazard);
         if ("BEAR".equals(hazard.label) || "POLAR".equals(hazard.label)) {
             return (float) Math.sin(phase * 1.05f) * dp(0.18f);
@@ -1431,6 +1711,20 @@ public class MooseRushView extends View {
             return (float) Math.sin(phase * 6.8f) * dp(0.8f);
         }
         return (float) Math.sin(phase * 1.6f) * dp(0.36f);
+    }
+
+    private float wolfPounceOffset(Hazard hazard) {
+        if (!hazard.pouncingWolf || hazard.roaring) {
+            return 0f;
+        }
+        float distance = hazard.x - playerX;
+        if (distance < dp(18) || distance > dp(154)) {
+            return 0f;
+        }
+        float progress = 1f - (distance - dp(18)) / dp(136);
+        float arc = (float) Math.sin(progress * Math.PI);
+        float airborneAllowance = grounded ? 1f : 0.72f;
+        return -arc * dp(38) * airborneAllowance;
     }
 
     private float hazardVisualPhase(Hazard hazard) {
@@ -1705,13 +1999,21 @@ public class MooseRushView extends View {
     }
 
     private void updateBoss(float dt) {
+        /*
+         * The boss is a small state machine. A state machine means the boss can
+         * be in exactly one mode at a time:
+         * ENTER -> TELL -> ATTACK -> RECOVER -> TELL again.
+         *
+         * "Tell" is the warning before the attack. Good action games show tells
+         * so the player has a fair chance to react.
+         */
         bossTimer += dt;
         bossStateTimer += dt;
         bossPatternTimer += dt;
         bossStunTimer = Math.max(0f, bossStunTimer - dt);
         StageConfig stage = STAGES[selectedStage];
         boolean enraged = bossEnraged();
-        float stateSpeed = BossTuning.stateSpeed(selectedStage == 4, bossHealth, bossMaxHealth, enraged);
+        float stateSpeed = BossTuning.stateSpeed(usesLaserBossTuning(), bossHealth, bossMaxHealth, enraged);
         if (!bossPhaseTwoAnnounced && bossMaxHealth > 1 && bossHealth <= bossMaxHealth / 2) {
             bossPhaseTwoAnnounced = true;
             showRunCallout("BOSS PHASE TWO", 1.25f);
@@ -1732,6 +2034,10 @@ public class MooseRushView extends View {
             enterBossTell(BOSS_PATTERN_LUNGE);
         }
 
+        /*
+         * Timers decide when the boss changes state. Enraged bosses use a faster
+         * stateSpeed, so their tells and recoveries become shorter.
+         */
         if (bossState == BOSS_STATE_TELL && bossStateTimer >= bossTellDuration() / stateSpeed) {
             beginBossAttack();
         } else if (bossState == BOSS_STATE_ATTACK && bossStateTimer >= bossAttackDuration() / stateSpeed) {
@@ -1759,7 +2065,12 @@ public class MooseRushView extends View {
         bossVelocityY *= Math.max(0f, 1f - dt * 9f);
         bossY += bossVelocityY * dt;
 
-        if (bossTimer > BossTuning.BOSS_SURVIVAL_SECONDS) {
+        /*
+         * In normal play, the boss has a survival timer so the player must fight
+         * instead of waiting forever. Demo mode skips this so the computer can
+         * keep presenting the game even if it plays imperfectly.
+         */
+        if (!demoMode && bossTimer > BossTuning.BOSS_SURVIVAL_SECONDS) {
             endGame(stage.bossName + " outlasted you.");
         }
     }
@@ -1808,7 +2119,10 @@ public class MooseRushView extends View {
     }
 
     private int nextBossPattern() {
-        return BossTuning.nextPattern(selectedStage == 4, bossHealth, bossMaxHealth, bossPatternCount, BOSS_PATTERN_LUNGE, BOSS_PATTERN_SNOW_WAVE, BOSS_PATTERN_SUMMON, BOSS_PATTERN_LASER);
+        if (selectedStage == 3) {
+            return bossPatternCount % 3 == 2 ? BOSS_PATTERN_SUMMON : BOSS_PATTERN_LUNGE;
+        }
+        return BossTuning.nextPattern(usesLaserBossTuning(), bossHealth, bossMaxHealth, bossPatternCount, BOSS_PATTERN_LUNGE, BOSS_PATTERN_SNOW_WAVE, BOSS_PATTERN_SUMMON, BOSS_PATTERN_LASER);
     }
 
     private boolean bossEnraged() {
@@ -1840,15 +2154,19 @@ public class MooseRushView extends View {
     }
 
     private float bossTellDuration() {
-        return BossTuning.tellDuration(selectedStage == 4, bossEnraged());
+        return BossTuning.tellDuration(usesLaserBossTuning(), bossEnraged());
     }
 
     private float bossAttackDuration() {
-        return BossTuning.attackDuration(selectedStage == 4, bossEnraged(), bossPattern == BOSS_PATTERN_LUNGE, bossPattern == BOSS_PATTERN_LASER);
+        return BossTuning.attackDuration(usesLaserBossTuning(), bossEnraged(), bossPattern == BOSS_PATTERN_LUNGE, bossPattern == BOSS_PATTERN_LASER);
     }
 
     private float bossRecoverDuration() {
-        return BossTuning.recoverDuration(selectedStage == 4, bossEnraged());
+        return BossTuning.recoverDuration(usesLaserBossTuning(), bossEnraged());
+    }
+
+    private boolean usesLaserBossTuning() {
+        return selectedStage == 0 || selectedStage == 4;
     }
 
     private void spawnBossSnowWave() {
@@ -1927,6 +2245,11 @@ public class MooseRushView extends View {
 
     private void completeStage() {
         StageConfig stage = STAGES[selectedStage];
+        /*
+         * Completing a stage is a good example of separating "show feedback" and
+         * "save progress." We always show sparks, points, and clear text. We
+         * only write rewards/unlocks to storage when this is not Computer Run.
+         */
         bossActive = false;
         bossDefeated = true;
         int clearBonus = stageClearBonus(selectedStage, gameState.bestCombo, gameState.stars);
@@ -1935,27 +2258,36 @@ public class MooseRushView extends View {
         effects.spawnSparkBurst(getWidth() / 2f, getHeight() * 0.38f, 26, Color.rgb(255, 218, 121));
         showRunCallout("STAGE CLEAR", 2.0f);
         worldFlash = Math.max(worldFlash, 0.24f);
+        if (selectedStage == 0) {
+            eclipseTimer = Math.max(eclipseTimer, 4.2f);
+            showRunCallout("ECLIPSE! STAGE CLEAR", 2.2f);
+        }
         playSound("medal");
-        if (score > bestScore) {
+        if (!demoMode && score > bestScore) {
             bestScore = score;
             runNewBest = true;
         }
-        if (selectedStage < STAGES.length - 1 && unlockedStage < selectedStage + 1) {
+        if (!demoMode && selectedStage < STAGES.length - 1 && unlockedStage < selectedStage + 1) {
             unlockedStage = selectedStage + 1;
         }
-        awardExpeditionBonusIfEarned();
-        awardRunTokens(true);
-        prefs.edit()
-                .putInt(PREF_BEST_SCORE, bestScore)
-                .putInt(PREF_UNLOCKED_STAGE, unlockedStage)
-                .putInt(PREF_XP, gameState.xp)
-                .putInt(PREF_TRAIL_TOKENS, trailTokens)
-                .putInt(PREF_TOTAL_MISSIONS, totalMissionsCompleted)
-                .putInt(PREF_TRAIL_BADGES, trailBadgeMask)
-                .putInt(PREF_DAILY_COMPLETED_DAY, dailyCompletedDay)
-                .putInt(PREF_DAILY_STREAK, dailyStreak)
-                .putInt(PREF_EXPEDITION_LOGS, expeditionLogs)
-                .apply();
+        if (!demoMode) {
+            awardExpeditionBonusIfEarned();
+            awardRunTokens(true);
+            prefs.edit()
+                    .putInt(PREF_BEST_SCORE, bestScore)
+                    .putInt(PREF_UNLOCKED_STAGE, unlockedStage)
+                    .putInt(PREF_XP, gameState.xp)
+                    .putInt(PREF_TRAIL_TOKENS, trailTokens)
+                    .putInt(PREF_TOTAL_MISSIONS, totalMissionsCompleted)
+                    .putInt(PREF_TRAIL_BADGES, trailBadgeMask)
+                    .putInt(PREF_DAILY_COMPLETED_DAY, dailyCompletedDay)
+                    .putInt(PREF_DAILY_STREAK, dailyStreak)
+                    .putInt(PREF_EXPEDITION_LOGS, expeditionLogs)
+                    .apply();
+        } else {
+            runTokensEarned = 0;
+            dailyTokensEarned = 0;
+        }
         state = STATE_STAGE_CLEAR;
         stageClearTimer = 0f;
         logEvent("Stage cleared: " + stage.name + ". Score " + score + ".");
@@ -1981,6 +2313,18 @@ public class MooseRushView extends View {
     }
 
     private void endGame(String reason) {
+        /*
+         * endGame() is called whenever the runner would be defeated. Demo mode
+         * turns that defeat into a reset because Computer Run is for watching and
+         * testing, not for changing save data.
+         */
+        if (demoMode) {
+            perfectRun = false;
+            resetAfterHit();
+            showRunCallout("COMPUTER RUN: INVINCIBLE", 0.85f);
+            logEvent("Computer Run ignored hit: " + reason);
+            return;
+        }
         gameState.breakCombo();
         perfectRun = false;
         if (gameState.shieldActive) {
@@ -2333,6 +2677,10 @@ public class MooseRushView extends View {
     }
 
     private void completeMission(String label) {
+        if (demoMode) {
+            effects.spawnScorePopup(label, getWidth() / 2f, getHeight() * 0.34f, Color.rgb(132, 213, 232));
+            return;
+        }
         missionsCompleted++;
         int awarded = addScore(35 + selectedStage * 5, "Mission " + label);
         effects.spawnScorePopup(label + " +" + awarded, getWidth() / 2f, getHeight() * 0.34f, Color.rgb(132, 213, 232));
@@ -2540,7 +2888,7 @@ public class MooseRushView extends View {
             effects.spawnScorePopup("SPRAY x" + bearSprayCharges, powerUp.x, powerUp.y - dp(12), Color.rgb(255, 166, 84));
             effects.spawnSparkBurst(powerUp.x, powerUp.y, 14, Color.rgb(255, 166, 84));
             addAuroraMeter(10f, "Bear spray pickup");
-            showRunCallout("HOLD FIRE: BEAR SPRAY", 1.25f);
+            showRunCallout("SPRAY BUTTON READY", 1.25f);
             playSound("medal");
             checkMissionProgress();
         }
@@ -2551,6 +2899,7 @@ public class MooseRushView extends View {
         worldFlash = Math.max(0f, worldFlash - dt);
         runCalloutTimer = Math.max(0f, runCalloutTimer - dt);
         bossWarningTimer = Math.max(0f, bossWarningTimer - dt);
+        eclipseTimer = Math.max(0f, eclipseTimer - dt);
         scoutTimer = Math.max(0f, scoutTimer - dt);
         routeMilestoneTimer = Math.max(0f, routeMilestoneTimer - dt);
         effects.update(dt);
@@ -2561,11 +2910,21 @@ public class MooseRushView extends View {
         float radius = gameplayDp(hazardRadiusDp(label));
         float y = hazardSpawnY(label, radius);
         float speed = hazardSpeedMultiplier(label);
-        hazards.add(new Hazard(getWidth() + dp(50), y, radius, speed, random.nextFloat() * 4f, label, null));
+        hazards.add(new Hazard(hazardSpawnX(), y, radius, speed, random.nextFloat() * 4f, label, null));
         if (shouldForecastHazard(label)) {
             showRunCallout("WATCH: " + label, 0.92f);
             effects.spawnScorePopup("!", getWidth() - dp(58), Math.max(dp(96), y - radius * 1.8f), Color.rgb(255, 218, 121));
         }
+    }
+
+    private float hazardSpawnX() {
+        float x = getWidth() + dp(50);
+        for (Gate gate : gates) {
+            if (gate.x > playerX) {
+                x = Math.max(x, gate.x + gate.width + dp(HAZARD_GATE_CLEARANCE_DP));
+            }
+        }
+        return x;
     }
 
     private boolean shouldForecastHazard(String label) {
@@ -2610,7 +2969,7 @@ public class MooseRushView extends View {
     private float hazardRadiusDp(String label) {
         if ("POLAR".equals(label)) return 24f;
         if ("BEAR".equals(label)) return 23f;
-        if ("MOOSE".equals(label)) return 22f;
+        if ("MOOSE".equals(label)) return 26f;
         if ("WOLF".equals(label)) return 18f;
         if ("EAGLE".equals(label) || "DARK".equals(label)) return 18f;
         if ("SALMON".equals(label)) return 17f;
@@ -2645,9 +3004,6 @@ public class MooseRushView extends View {
         }
         if ("THIN ICE".equals(label)) {
             return getGroundY() - radius * 0.54f;
-        }
-        if ("SUN".equals(label) && random.nextFloat() < 0.30f) {
-            return getGroundY() - dp(110) - random.nextFloat() * dp(48);
         }
         return lowBand;
     }
@@ -2779,6 +3135,7 @@ public class MooseRushView extends View {
             setButton(primaryButtonBounds, x, primaryY, wideButtonWidth, mainButtonHeight);
             setButton(secondaryButtonBounds, x, secondaryY, wideButtonWidth, mainButtonHeight);
             setButton(thirdButtonBounds, x, thirdY, wideButtonWidth, mainButtonHeight);
+            setButton(demoButtonBounds, getWidth() - dp(270), statsPanelTop + dp(21), dp(98), smallButtonHeight);
             setButton(debugButtonBounds, getWidth() - dp(165), statsPanelTop + dp(21), dp(98), smallButtonHeight);
             setButton(muteButtonBounds, getWidth() - dp(60), statsPanelTop + dp(21), dp(98), smallButtonHeight);
         } else {
@@ -2786,8 +3143,9 @@ public class MooseRushView extends View {
             setButton(secondaryButtonBounds, x, y + dp(54), dp(230), dp(44));
             setButton(thirdButtonBounds, x, y + dp(108), dp(230), dp(44));
             setButton(dailyButtonBounds, x, y - dp(58), dp(230), dp(42));
-            setButton(debugButtonBounds, x - dp(58), y + dp(160), dp(104), dp(36));
-            setButton(muteButtonBounds, x + dp(58), y + dp(160), dp(104), dp(36));
+            setButton(demoButtonBounds, x, y + dp(154), dp(230), dp(34));
+            setButton(debugButtonBounds, x - dp(58), y + dp(196), dp(104), dp(34));
+            setButton(muteButtonBounds, x + dp(58), y + dp(196), dp(104), dp(34));
         }
 
         drawDailyRushButton(canvas, dailyButtonBounds);
@@ -2795,6 +3153,7 @@ public class MooseRushView extends View {
         drawButton(canvas, secondaryButtonBounds, playerPhoto == null ? "Create Your Sprite" : "Edit Your Sprite");
         drawButton(canvas, thirdButtonBounds, "ALASKA MAP");
         drawMenuStats(canvas);
+        drawSmallButton(canvas, demoButtonBounds, demoMode ? "DEMO: ON" : "COMPUTER RUN");
         drawSmallButton(canvas, debugButtonBounds, "DEBUG: " + (debugOverlay ? "ON" : "OFF"));
         drawSmallButton(canvas, muteButtonBounds, gameState.muted ? "MUTED" : "AUDIO");
     }
@@ -2987,10 +3346,17 @@ public class MooseRushView extends View {
             drawShot(canvas, shot);
         }
         for (BossAttack attack : bossAttacks) {
-            drawBossAttack(canvas, attack);
+            if (attack.type != ATTACK_LASER) {
+                drawBossAttack(canvas, attack);
+            }
         }
         if (bossActive) {
             drawBoss(canvas);
+        }
+        for (BossAttack attack : bossAttacks) {
+            if (attack.type == ATTACK_LASER) {
+                drawBossAttack(canvas, attack);
+            }
         }
         drawDebugObjectNumbers(canvas);
 
@@ -3009,8 +3375,23 @@ public class MooseRushView extends View {
         drawCharacter(canvas, playerX, headDrawY, visualRadius);
         drawBearSprayEffect(canvas);
         effects.drawScorePopups(canvas);
+        drawEclipseOverlay(canvas);
         drawWorldFlash(canvas);
         canvas.restoreToCount(saved);
+    }
+
+    private void drawEclipseOverlay(Canvas canvas) {
+        if (eclipseTimer <= 0f) {
+            return;
+        }
+        float pct = Math.min(1f, eclipseTimer / 4.2f);
+        paint.setStyle(Paint.Style.FILL);
+        paint.setColor(Color.argb(Math.round(188 * pct), 4, 8, 18));
+        canvas.drawRect(0, 0, getWidth(), getHeight(), paint);
+        paint.setColor(Color.argb(Math.round(145 * pct), 77, 219, 184));
+        canvas.drawCircle(getWidth() * 0.50f, dp(62), dp(24 + 10 * pct), paint);
+        paint.setColor(Color.argb(Math.round(230 * pct), 8, 18, 30));
+        canvas.drawCircle(getWidth() * 0.50f + dp(7), dp(59), dp(24 + 10 * pct), paint);
     }
 
     private void drawScoutWarnings(Canvas canvas) {
@@ -3067,7 +3448,23 @@ public class MooseRushView extends View {
             drawStaticBackdrop(canvas, dark, winter);
         }
 
+        drawMidnightSunBossSkyCorrection(canvas, dark, winter);
         drawParallaxScenery(canvas, dark, winter);
+    }
+
+    private void drawMidnightSunBossSkyCorrection(Canvas canvas, boolean dark, boolean winter) {
+        if (!bossActive || selectedStage != 0 || dark || winter) {
+            return;
+        }
+        float oldSunX = getWidth() * 0.555f;
+        float oldSunY = getHeight() * 0.205f;
+        paint.setStyle(Paint.Style.FILL);
+        paint.setColor(Color.argb(112, 246, 204, 122));
+        canvas.drawCircle(oldSunX, oldSunY, dp(27), paint);
+        paint.setColor(Color.argb(86, 170, 215, 206));
+        canvas.drawOval(oldSunX - dp(58), oldSunY - dp(22), oldSunX + dp(72), oldSunY + dp(26), paint);
+        paint.setColor(Color.argb(118, 255, 246, 207));
+        canvas.drawCircle(getWidth() * 0.82f, dp(42), dp(10), paint);
     }
 
     private void ensureBackdropCache(boolean dark, boolean winter) {
@@ -3529,13 +3926,24 @@ public class MooseRushView extends View {
     }
 
     private void drawHazard(Canvas canvas, Hazard hazard) {
+        /*
+         * Drawing code is a decision tree. We try the nicest art first:
+         * animated sprite sheet, then drawable art, then special hand-drawn
+         * shapes, and finally a simple circle fallback. That fallback helps the
+         * game keep working even if an art asset is missing.
+         */
         Bitmap sheet = sheetForHazard(hazard.label);
         float xRadius = hazard.radius * hazardHorizontalScale(hazard.label);
         float yRadius = hazard.radius * hazardVerticalScale(hazard.label);
+        /*
+         * A jumping wolf should look airborne, but its shadow should stay on
+         * the ground. Drawing the shadow at baseY sells the jump.
+         */
+        float shadowY = "WOLF".equals(hazard.label) ? hazard.baseY : hazard.y;
 
         paint.setStyle(Paint.Style.FILL);
         paint.setColor(Color.argb(85, 0, 0, 0));
-        canvas.drawOval(hazard.x - xRadius * 0.72f, hazard.y + yRadius * 0.66f, hazard.x + xRadius * 0.72f, hazard.y + yRadius * 0.88f, paint);
+        canvas.drawOval(hazard.x - xRadius * 0.72f, shadowY + yRadius * 0.66f, hazard.x + xRadius * 0.72f, shadowY + yRadius * 0.88f, paint);
 
         drawHazardMotionAccent(canvas, hazard, xRadius, yRadius);
 
@@ -4018,23 +4426,21 @@ public class MooseRushView extends View {
     private void drawBossAttack(Canvas canvas, BossAttack attack) {
         if (attack.type == ATTACK_LASER) {
             laserAttackRect(attack, tempRect);
-            float pulse = 0.5f + 0.5f * (float) Math.sin(attack.age * 42f);
-            float left = tempRect.left;
-            float eyeY = attack.y;
-            float endY = tempRect.centerY();
-            paint.setStyle(Paint.Style.STROKE);
-            paint.setStrokeCap(Paint.Cap.ROUND);
-            paint.setStrokeWidth(dp(7.5f + 1.2f * pulse));
-            paint.setColor(Color.argb(Math.round(40 + 42 * pulse), 255, 98, 84));
-            canvas.drawLine(attack.x, eyeY, left, endY, paint);
-            paint.setStrokeWidth(dp(2.7f + 0.55f * pulse));
-            paint.setColor(Color.argb(Math.round(172 + 48 * pulse), 255, 98, 84));
-            canvas.drawLine(attack.x, eyeY, left, endY, paint);
-            paint.setStrokeWidth(dp(0.95f));
-            paint.setColor(Color.argb(230, 255, 246, 207));
-            canvas.drawLine(attack.x, eyeY, left, endY, paint);
-            paint.setStrokeCap(Paint.Cap.BUTT);
-            drawBossLaserEyeEmitter(canvas, attack.x, attack.y, pulse);
+            float eyeX = bossLaserEyeX();
+            float eyeY = bossLaserEyeY();
+            float progress = Math.min(1f, attack.age / 1.12f);
+            float targetY = tempRect.centerY();
+            float endY = eyeY + (targetY - eyeY) * Math.min(1f, progress * 1.18f);
+            float endX = tempRect.left;
+            float pulse = 0.72f + (float) Math.sin(attack.age * 26f) * 0.28f;
+            float alpha = Math.min(1f, 0.68f + progress * 0.32f);
+            float beamHeight = dp(3.4f);
+
+            drawBeamCore(canvas, eyeX, eyeY, endX, endY, beamHeight, alpha, 1.05f, pulse);
+            if (selectedStage == 4) {
+                drawBeamCore(canvas, eyeX, eyeY, endX, endY + dp(3), beamHeight * 0.55f, alpha * 0.55f, 1.0f, pulse);
+            }
+            drawBossLaserEyeEmitter(canvas, eyeX, eyeY, pulse);
             paint.setStyle(Paint.Style.FILL);
             return;
         }
@@ -4061,6 +4467,42 @@ public class MooseRushView extends View {
         canvas.restoreToCount(saved);
     }
 
+    private void drawBeamCore(Canvas canvas, float x1, float y1, float x2, float y2, float height, float alpha, float intensity, float pulse) {
+        int outerAlpha = Math.round(46 * alpha * intensity);
+        int coreStartAlpha = Math.round(235 * alpha);
+        int coreMidAlpha = Math.round(210 * alpha);
+        int coreEndAlpha = Math.round(46 * alpha);
+        int whiteAlpha = Math.round(198 * alpha);
+
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setStrokeCap(Paint.Cap.ROUND);
+        paint.setShader(null);
+        paint.setStrokeWidth(height * 2.2f * intensity);
+        paint.setColor(Color.argb(outerAlpha, 255, 98, 84));
+        canvas.drawLine(x1, y1, x2, y2, paint);
+
+        LinearGradient gradient = new LinearGradient(
+                x1, y1, x2, y2,
+                new int[]{
+                        Color.argb(coreStartAlpha, 255, 246, 207),
+                        Color.argb(coreMidAlpha, 255, 98, 84),
+                        Color.argb(coreEndAlpha, 132, 213, 232)
+                },
+                new float[]{0f, 0.25f, 1f},
+                Shader.TileMode.CLAMP
+        );
+        paint.setShader(gradient);
+        paint.setStrokeWidth(height * (0.9f + pulse * 0.16f) * intensity);
+        canvas.drawLine(x1, y1, x2, y2, paint);
+
+        paint.setShader(null);
+        paint.setStrokeWidth(Math.max(dp(1f), height * 0.22f));
+        paint.setColor(Color.argb(whiteAlpha, 255, 255, 255));
+        canvas.drawLine(x1, y1, x2, y2, paint);
+        paint.setStrokeCap(Paint.Cap.BUTT);
+        paint.setStyle(Paint.Style.FILL);
+    }
+
     private void laserAttackRect(BossAttack attack, RectF out) {
         float right = attack.x;
         float left = Math.max(-dp(20), right - Math.max(dp(34), attack.spin));
@@ -4068,10 +4510,16 @@ public class MooseRushView extends View {
     }
 
     private float bossLaserEyeX() {
+        if (selectedStage == 0) {
+            return bossX - bossRadius() * 0.28f;
+        }
         return bossX - bossRadius() * (selectedStage == 4 ? 0.765f : 0.62f);
     }
 
     private float bossLaserEyeY() {
+        if (selectedStage == 0) {
+            return bossY - bossRadius() * 0.36f;
+        }
         if (selectedStage == 4) {
             return getGroundY() - bossRadius() * 3.72f;
         }
@@ -4142,6 +4590,8 @@ public class MooseRushView extends View {
 
         if (bossSheet != null) {
             drawAnimatedBossSheet(canvas, bossSheet, radius);
+        } else if (selectedStage == 0) {
+            drawMidnightSunBoss(canvas, radius, xRadius, yRadius);
         } else {
             paint.setStyle(Paint.Style.FILL);
             paint.setColor(Color.rgb(255, 218, 121));
@@ -4149,6 +4599,58 @@ public class MooseRushView extends View {
         }
 
         drawBossHealthBar(canvas);
+    }
+
+    private void drawMidnightSunBoss(Canvas canvas, float radius, float xRadius, float yRadius) {
+        float pulse = 0.5f + 0.5f * (float) Math.sin(bossTimer * 6.0f);
+        float centerY = bossY - radius * 0.24f;
+        paint.setStyle(Paint.Style.FILL);
+        paint.setColor(Color.argb(68 + Math.round(42 * pulse), 255, 166, 84));
+        canvas.drawCircle(bossX, centerY, radius * 1.55f, paint);
+        paint.setColor(Color.argb(90, 255, 218, 121));
+        for (int i = 0; i < 12; i++) {
+            float angle = (float) (i * Math.PI * 2.0 / 12.0 + bossTimer * 0.35f);
+            float inner = radius * 1.02f;
+            float outer = radius * (1.34f + 0.12f * (float) Math.sin(bossTimer * 4.5f + i));
+            float x1 = bossX + (float) Math.cos(angle - 0.10f) * inner;
+            float y1 = centerY + (float) Math.sin(angle - 0.10f) * inner;
+            float x2 = bossX + (float) Math.cos(angle) * outer;
+            float y2 = centerY + (float) Math.sin(angle) * outer;
+            float x3 = bossX + (float) Math.cos(angle + 0.10f) * inner;
+            float y3 = centerY + (float) Math.sin(angle + 0.10f) * inner;
+            PathCompat.triangle(canvas, paint, x1, y1, x2, y2, x3, y3);
+        }
+
+        paint.setColor(Color.rgb(255, 218, 121));
+        canvas.drawCircle(bossX, centerY, radius * 0.98f, paint);
+        paint.setColor(Color.rgb(255, 166, 84));
+        canvas.drawCircle(bossX, centerY, radius * 0.76f, paint);
+        paint.setColor(Color.rgb(82, 18, 24));
+        canvas.drawCircle(bossX - radius * 0.28f, centerY - radius * 0.12f, Math.max(dp(2.2f), radius * 0.08f), paint);
+        canvas.drawCircle(bossX + radius * 0.28f, centerY - radius * 0.12f, Math.max(dp(2.2f), radius * 0.08f), paint);
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setStrokeCap(Paint.Cap.ROUND);
+        paint.setStrokeWidth(dp(2.0f));
+        paint.setColor(Color.rgb(82, 18, 24));
+        canvas.drawLine(bossX - radius * 0.24f, centerY + radius * 0.34f, bossX + radius * 0.24f, centerY + radius * 0.34f, paint);
+        paint.setStrokeCap(Paint.Cap.BUTT);
+        paint.setStyle(Paint.Style.FILL);
+
+        if (bossPattern == BOSS_PATTERN_LASER && (bossState == BOSS_STATE_TELL || bossState == BOSS_STATE_ATTACK)) {
+            float eyeY = centerY - radius * 0.12f;
+            float chargePulse = 0.45f + 0.55f * (float) Math.sin(bossTimer * 28f);
+            drawBossLaserEyeEmitter(canvas, bossX - radius * 0.28f, eyeY, chargePulse);
+            drawBossLaserEyeEmitter(canvas, bossX + radius * 0.28f, eyeY, chargePulse * 0.82f);
+        }
+
+        float badgeWidth = dp(94);
+        float badgeTop = Math.max(dp(86), centerY - radius * 1.62f);
+        paint.setColor(Color.argb(218, 82, 18, 24));
+        canvas.drawRoundRect(bossX - badgeWidth / 2f, badgeTop, bossX + badgeWidth / 2f, badgeTop + dp(18), dp(6), dp(6), paint);
+        textPaint.setTextAlign(Paint.Align.CENTER);
+        textPaint.setTextSize(dp(8.5f));
+        textPaint.setColor(Color.rgb(255, 246, 207));
+        canvas.drawText("MIDNIGHT SUN", bossX, badgeTop + dp(12.5f), textPaint);
     }
 
     private void drawBossTell(Canvas canvas, float radius) {
@@ -4182,13 +4684,16 @@ public class MooseRushView extends View {
         } else if (bossPattern == BOSS_PATTERN_LASER) {
             float beamX = bossLaserEyeX();
             float beamY = bossLaserEyeY();
-            paint.setStyle(Paint.Style.FILL);
-            paint.setColor(Color.argb(Math.round(34 + 52 * pct), 77, 219, 184));
-            canvas.drawRoundRect(dp(18), beamY - dp(9), beamX, beamY + dp(9), dp(8), dp(8), paint);
-            paint.setStyle(Paint.Style.STROKE);
-            paint.setStrokeWidth(dp(2.4f));
-            paint.setColor(Color.argb(Math.round((125 + 120 * pct) * alphaPulse), 255, 246, 207));
-            canvas.drawRoundRect(dp(18), beamY - dp(9), beamX, beamY + dp(9), dp(8), dp(8), paint);
+            float length = dp(130 + 250 * pct);
+            float endX = Math.max(dp(92), beamX - length);
+            float endY = beamY + dp(6);
+            float pulse = 0.72f + (float) Math.sin(bossStateTimer * 26f) * 0.28f;
+            float alpha = pct * 0.62f;
+            float beamHeight = dp(3.4f);
+            drawBeamCore(canvas, beamX, beamY, endX, endY, beamHeight, alpha, 1.05f, pulse);
+            if (selectedStage == 4) {
+                drawBeamCore(canvas, beamX, beamY + dp(3), endX, endY + dp(3), beamHeight * 0.55f, alpha * 0.55f, 1.0f, pulse);
+            }
             drawBossLaserEyeEmitter(canvas, beamX, beamY, pct);
         } else {
             paint.setStyle(Paint.Style.FILL);
@@ -4249,7 +4754,7 @@ public class MooseRushView extends View {
 
     private float bossHorizontalScale(int stage) {
         if (stage == 1) return 1.60f;
-        if (stage == 2) return 1.72f;
+        if (stage == 2) return 1.92f;
         if (stage == 3) return 1.72f;
         if (stage == 4) return 1.74f;
         return 1.30f;
@@ -4257,7 +4762,7 @@ public class MooseRushView extends View {
 
     private float bossVerticalScale(int stage) {
         if (stage == 1) return 1.02f;
-        if (stage == 2) return 1.08f;
+        if (stage == 2) return 1.20f;
         if (stage == 3) return 1.10f;
         if (stage == 4) return 1.04f;
         return 1.30f;
@@ -4411,6 +4916,7 @@ public class MooseRushView extends View {
     private float bossRadiusForStage(int stage) {
         if (stage == 4) return gameplayDp(38);
         if (stage == 2) return gameplayDp(34);
+        if (stage == 0) return gameplayDp(32);
         return gameplayDp(30);
     }
 
@@ -4446,6 +4952,9 @@ public class MooseRushView extends View {
     }
 
     private float bossLaneCenterY(int stage) {
+        if (stage == 0) {
+            return clamp(getGroundY() - dp(118), dp(112), getGroundY() - dp(86));
+        }
         if (stage == 1) {
             return clamp(getGroundY() - dp(92), dp(116), getGroundY() - dp(72));
         }
@@ -4523,7 +5032,7 @@ public class MooseRushView extends View {
         textPaint.setTextSize(dp(10));
         textPaint.setColor(Color.rgb(210, 232, 238));
         canvas.drawText(stageRuleLine(stage), getWidth() / 2f, top + dp(162), textPaint);
-        canvas.drawText("Tap FIRE for snowballs; hold FIRE with SPRAY to stun close wildlife.", getWidth() / 2f, top + dp(176), textPaint);
+        canvas.drawText("Tap FIRE for snowballs; tap SPRAY to stun close wildlife.", getWidth() / 2f, top + dp(176), textPaint);
 
         textPaint.setTextSize(dp(11));
         textPaint.setColor(Color.rgb(255, 218, 121));
@@ -5214,15 +5723,70 @@ public class MooseRushView extends View {
     private void drawVirtualControls(Canvas canvas) {
         float bottom = getHeight() - dp(14);
         float size = dp(48);
-        leftPadBounds.set(dp(16), bottom - size, dp(16) + size, bottom);
-        rightPadBounds.set(dp(74), bottom - size, dp(74) + size, bottom);
+        float dpadSize = dp(112);
+        dpadBounds.set(dp(14), bottom - dpadSize, dp(14) + dpadSize, bottom);
+        leftPadBounds.set(dpadBounds.left, dpadBounds.top + dpadSize * 0.32f, dpadBounds.left + dpadSize * 0.40f, dpadBounds.bottom - dpadSize * 0.32f);
+        rightPadBounds.set(dpadBounds.right - dpadSize * 0.40f, dpadBounds.top + dpadSize * 0.32f, dpadBounds.right, dpadBounds.bottom - dpadSize * 0.32f);
+        aimUpPadBounds.set(dpadBounds.left + dpadSize * 0.32f, dpadBounds.top, dpadBounds.right - dpadSize * 0.32f, dpadBounds.top + dpadSize * 0.40f);
+        aimDownPadBounds.set(dpadBounds.left + dpadSize * 0.32f, dpadBounds.bottom - dpadSize * 0.40f, dpadBounds.right - dpadSize * 0.32f, dpadBounds.bottom);
+        sprayPadBounds.set(getWidth() - dp(190), bottom - size, getWidth() - dp(190) + size, bottom);
         jumpPadBounds.set(getWidth() - dp(132), bottom - size, getWidth() - dp(132) + size, bottom);
         firePadBounds.set(getWidth() - dp(74), bottom - size, getWidth() - dp(74) + size, bottom);
 
-        drawControlButton(canvas, leftPadBounds, "◀", leftPressed);
-        drawControlButton(canvas, rightPadBounds, "▶", rightPressed);
+        drawDpad(canvas);
+        drawControlButton(canvas, sprayPadBounds, "SPRAY", sprayPressed || bearSprayCooldown > 0f);
         drawControlButton(canvas, jumpPadBounds, "JUMP", jumpPressed);
-        drawControlButton(canvas, firePadBounds, bearSprayCharges > 0 ? "FIRE+" : "FIRE", firePressed || shotCooldown > 0f || bearSprayCooldown > 0f);
+        drawControlButton(canvas, firePadBounds, "FIRE", firePressed || shotCooldown > 0f);
+    }
+
+    private void drawDpad(Canvas canvas) {
+        float cx = dpadBounds.centerX();
+        float cy = dpadBounds.centerY();
+        float r = dpadBounds.width() * 0.5f;
+        paint.setStyle(Paint.Style.FILL);
+        paint.setColor(Color.argb(120, 0, 0, 0));
+        canvas.drawCircle(cx, cy + dp(3), r, paint);
+        paint.setColor(Color.argb(178, 16, 25, 37));
+        canvas.drawCircle(cx, cy, r, paint);
+        paint.setColor(Color.argb(46, 255, 255, 255));
+        canvas.drawCircle(cx, cy - r * 0.20f, r * 0.66f, paint);
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setStrokeWidth(dp(2));
+        paint.setColor(Color.argb(220, 255, 255, 255));
+        canvas.drawCircle(cx, cy, r, paint);
+        paint.setStyle(Paint.Style.FILL);
+
+        drawDpadArrow(canvas, cx, cy - r * 0.56f, 0f, -1f, aimUpPressed);
+        drawDpadArrow(canvas, cx, cy + r * 0.56f, 0f, 1f, aimDownPressed);
+        drawDpadArrow(canvas, cx - r * 0.56f, cy, -1f, 0f, leftPressed);
+        drawDpadArrow(canvas, cx + r * 0.56f, cy, 1f, 0f, rightPressed);
+
+        float knobY = cy + aimPadY * r * 0.46f;
+        float knobX = cx + (rightPressed ? r * 0.22f : leftPressed ? -r * 0.22f : 0f);
+        paint.setColor(Color.argb(215, 255, 218, 121));
+        canvas.drawCircle(knobX, knobY, dp(9), paint);
+        paint.setColor(Color.rgb(24, 30, 38));
+        canvas.drawCircle(knobX, knobY, dp(3), paint);
+    }
+
+    private void drawDpadArrow(Canvas canvas, float x, float y, float dirX, float dirY, boolean active) {
+        float buttonRadius = dp(15);
+        paint.setStyle(Paint.Style.FILL);
+        paint.setColor(active ? Color.argb(220, 255, 218, 121) : Color.argb(175, 255, 255, 255));
+        canvas.drawCircle(x, y, buttonRadius, paint);
+        paint.setColor(Color.rgb(24, 30, 38));
+        Path arrow = new Path();
+        float tipX = x + dirX * dp(7);
+        float tipY = y + dirY * dp(7);
+        float backX = x - dirX * dp(5);
+        float backY = y - dirY * dp(5);
+        float sideX = -dirY * dp(5);
+        float sideY = dirX * dp(5);
+        arrow.moveTo(tipX, tipY);
+        arrow.lineTo(backX + sideX, backY + sideY);
+        arrow.lineTo(backX - sideX, backY - sideY);
+        arrow.close();
+        canvas.drawPath(arrow, paint);
     }
 
     private void drawControlButton(Canvas canvas, RectF bounds, String label, boolean active) {
@@ -5270,7 +5834,7 @@ public class MooseRushView extends View {
         textPaint.setTextSize(dp(12));
         canvas.drawText("Goal: " + STAGES[selectedStage].name, getWidth() / 2f, top + dp(76), textPaint);
         textPaint.setColor(Color.rgb(210, 232, 238));
-        drawTextFit(canvas, stageActionVerb(selectedStage) + " " + STAGES[selectedStage].obstacleName + " · tap FIRE snowballs · hold FIRE spray", getWidth() / 2f, top + dp(98), panelWidth - dp(36), dp(12), dp(8.5f), Paint.Align.CENTER);
+        drawTextFit(canvas, stageActionVerb(selectedStage) + " " + STAGES[selectedStage].obstacleName + " · tap FIRE snowballs · tap SPRAY for bears", getWidth() / 2f, top + dp(98), panelWidth - dp(36), dp(12), dp(8.5f), Paint.Align.CENTER);
         canvas.drawText("Boss weak window: RECOVER", getWidth() / 2f, top + dp(118), textPaint);
 
         setButton(primaryButtonBounds, top + dp(151), dp(214), dp(38));
@@ -5505,11 +6069,22 @@ public class MooseRushView extends View {
     }
 
     private void startDailyRush() {
+        demoMode = false;
         selectedStage = dailyStageIndex();
         selectedSeason = STAGES[selectedStage].season;
         backdropCacheKey = Integer.MIN_VALUE;
         saveChoices();
         logEvent("Daily Rush selected: " + STAGES[selectedStage].name + ".");
+        startGame();
+    }
+
+    private void startComputerDemo() {
+        demoMode = true;
+        demoTimer = 0f;
+        selectedStage = 0;
+        selectedSeason = STAGES[selectedStage].season;
+        backdropCacheKey = Integer.MIN_VALUE;
+        logEvent("Computer Run demo started.");
         startGame();
     }
 
@@ -5693,9 +6268,9 @@ public class MooseRushView extends View {
 
     private String stageRuleLine(StageConfig stage) {
         if (selectedStage == 0 || selectedStage == 1) {
-            return "VAULT " + stage.obstacleName + ". Tap FIRE blasts logs; hold FIRE uses SPRAY.";
+            return "VAULT " + stage.obstacleName + ". Tap FIRE blasts logs; SPRAY stuns wildlife.";
         }
-        return stageActionVerb(selectedStage) + " " + stage.obstacleName + ". Tap FIRE throws; hold FIRE sprays.";
+        return stageActionVerb(selectedStage) + " " + stage.obstacleName + ". Tap FIRE throws; SPRAY stuns.";
     }
 
     private String obstacleHudName(int stageIndex) {
@@ -5854,24 +6429,53 @@ public class MooseRushView extends View {
     }
 
     private float dp(float value) {
+        /*
+         * Android screens have different densities. dp() converts a design size
+         * into real pixels so a 20dp object looks about the same physical size
+         * on different phones.
+         */
         return value * getResources().getDisplayMetrics().density;
     }
 
     private float gameplayDp(float value) {
+        /*
+         * Gameplay uses a slightly smaller scale than UI. That gives the runner
+         * and obstacles more room to move on small screens.
+         */
         return dp(value * 0.82f);
     }
 
+    /*
+     * The small classes below are data containers. They do not draw or update
+     * themselves; MooseRushView owns the game loop and changes their fields.
+     *
+     * This is a friendly first architecture for a small game:
+     * - data objects store what exists
+     * - update methods change the data
+     * - draw methods turn the data into pictures
+     */
     private static class StageConfig {
+        // Human-readable title shown in menus.
         final String name;
+        // Short description shown near the stage.
         final String line;
+        // Which background/weather palette this stage uses.
         final int season;
+        // Boss name used in UI messages and defeat text.
         final String bossName;
+        // Main moving hazard label, used to pick sprites and behavior.
         final String hazardLabel;
+        // Gate/obstacle name used in UI messages.
         final String obstacleName;
+        // How many gates the player clears before the boss starts.
         final int goalGates;
+        // Boss health is also how many good hits the stage asks for.
         final int bossHealth;
+        // Base scroll speed in dp-ish tuning units.
         final int baseSpeed;
+        // Starting time between gate spawns.
         final float spawnSeconds;
+        // Art/behavior flavor for the boss.
         final int bossType;
 
         StageConfig(String name, String line, int season, String bossName, String hazardLabel, String obstacleName, int goalGates, int bossHealth, int baseSpeed, float spawnSeconds, int bossType) {
@@ -5890,9 +6494,12 @@ public class MooseRushView extends View {
     }
 
     private static class Gate {
+        // x moves left every frame until the gate leaves the screen.
         float x;
+        // height and width define the rectangle the player must jump over.
         final float height;
         final float width;
+        // passed prevents awarding score more than once for the same gate.
         boolean passed = false;
 
         Gate(float x, float height, float width) {
@@ -5903,19 +6510,28 @@ public class MooseRushView extends View {
     }
 
     private static class Hazard {
+        // Current center position of the hazard.
         float x;
         float y;
+        // Original ground/lane y; animation offsets are added on top.
         final float baseY;
+        // Main size used for drawing and hit checks.
         final float radius;
+        // Speed starts here so temporary effects can change speedMultiplier.
         final float baseSpeedMultiplier;
         float speedMultiplier;
+        // Random-ish offset so multiple hazards do not animate in sync.
         final float phase;
+        // Label chooses art and special behavior.
         final String label;
         final Drawable drawable;
+        // Gameplay bookkeeping flags.
         boolean passed = false;
         boolean nearMissAwarded = false;
         boolean roaring = false;
         boolean roarUsed = false;
+        // Some wolves pounce; the phase makes that choice deterministic.
+        final boolean pouncingWolf;
         float roarTimer = 0f;
         float age = 0f;
 
@@ -5929,6 +6545,7 @@ public class MooseRushView extends View {
             this.phase = phase;
             this.label = label;
             this.drawable = drawable;
+            this.pouncingWolf = "WOLF".equals(label) && ((int) (phase * 1000f) & 1) == 0;
         }
     }
 

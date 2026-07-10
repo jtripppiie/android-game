@@ -3,6 +3,12 @@
     android:height="88dp"
     android:viewportWidth="160"
     android:viewportHeight="88">
+    <!--
+        Vector art lesson:
+        This snowbank is built from layered paths. The first path is a shadow,
+        the middle paths are snow volume, and the final highlights make it feel
+        icy. Changing fillColor changes paint; changing pathData changes shape.
+    -->
     <path
         android:fillColor="#000000"
         android:fillAlpha="0.18"

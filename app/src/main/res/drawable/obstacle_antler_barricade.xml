@@ -3,6 +3,12 @@
     android:height="94dp"
     android:viewportWidth="170"
     android:viewportHeight="94">
+    <!--
+        Vector art lesson:
+        This barricade is mostly strokes instead of filled shapes. Strokes are
+        good for branches, antlers, rails, and lines. strokeLineCap="round" makes
+        the ends soft instead of square.
+    -->
     <path
         android:fillColor="#000000"
         android:fillAlpha="0.18"

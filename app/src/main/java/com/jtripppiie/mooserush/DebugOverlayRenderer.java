@@ -6,6 +6,13 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
 
+/*
+ * DebugOverlayRenderer draws learning/debug helpers on top of the game.
+ *
+ * Hitboxes are invisible during normal play. The overlay makes them visible so
+ * a developer can answer, "Did I lose because the art touched me, or because
+ * the collision shape touched me?"
+ */
 final class DebugOverlayRenderer {
     private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -26,6 +33,7 @@ final class DebugOverlayRenderer {
     }
 
     void drawCircle(Canvas canvas, float x, float y, float radius, int color) {
+        // Circle overlays are used for player, hazards, pickups, and attacks.
         paint.setStyle(Paint.Style.FILL);
         paint.setColor(Color.argb(36, Color.red(color), Color.green(color), Color.blue(color)));
         canvas.drawCircle(x, y, radius, paint);
@@ -37,6 +45,7 @@ final class DebugOverlayRenderer {
     }
 
     void drawRect(Canvas canvas, RectF rect, int color) {
+        // Rect overlays are used for gates, lasers, and other box-shaped danger.
         paint.setStyle(Paint.Style.FILL);
         paint.setColor(Color.argb(32, Color.red(color), Color.green(color), Color.blue(color)));
         canvas.drawRect(rect, paint);
@@ -48,6 +57,7 @@ final class DebugOverlayRenderer {
     }
 
     void drawObjectBadge(Canvas canvas, float viewWidth, float viewHeight, int number, String type, String detail, float x, float y, int accentColor) {
+        // Badges are clamped so labels stay on screen even near the edges.
         String label = number > 0 ? number + type : type;
         float clampedX = clamp(x, dp(18), viewWidth - dp(18));
         float clampedY = clamp(y, dp(54), viewHeight - dp(18));

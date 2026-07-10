@@ -2,33 +2,47 @@ plugins {
     id "com.android.application"
 }
 
+// App module build file lesson:
+// This is where Android build settings live: package name, SDK versions,
+// release version numbers, generated BuildConfig constants, and APK naming.
 android {
+    // namespace is the Java/Kotlin package Android uses for generated R values.
     namespace "com.jtripppiie.mooserush"
+    // compileSdk is the Android API level used to compile the app.
     compileSdk 35
 
     buildFeatures {
+        // BuildConfig lets Java read constants such as BUILD_BADGE.
         buildConfig true
     }
 
     defaultConfig {
+        // applicationId is the real app id installed on a device.
         applicationId "com.jtripppiie.mooserush"
+        // minSdk is the oldest Android version this app supports.
         minSdk 23
+        // targetSdk tells Android which modern behavior rules we expect.
         targetSdk 35
-        versionCode 341
-        versionName "3.2.21-beta"
+        // versionCode must increase for every installable release build.
+        versionCode 351
+        // versionName is the human-readable version shown to testers.
+        versionName "3.2.31-beta"
 
+        // These constants appear in BuildConfig and can be shown inside the app.
         buildConfigField "String", "BUILD_CHANNEL", '"ALASKA BETA"'
-        buildConfigField "String", "BUILD_BADGE", '"ALASKA PASSPORT v3.41 BETA"'
+        buildConfigField "String", "BUILD_BADGE", '"ALASKA PASSPORT v3.51 BETA"'
         buildConfigField "boolean", "SHOW_VERSION_BADGE", "true"
     }
 
     applicationVariants.configureEach { variant ->
         variant.outputs.configureEach {
+            // Give every debug APK a name that includes versionName/versionCode.
             outputFileName = "you-rush-alaska-${variant.versionName}-${variant.versionCode}-${variant.name}.apk"
         }
     }
 }
 
 dependencies {
+    // Unit tests use JUnit.
     testImplementation "junit:junit:4.13.2"
 }

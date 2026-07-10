@@ -4,8 +4,17 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Rect;
 
+/*
+ * SpriteFrameCropper finds the useful pixels inside a sprite sheet frame.
+ *
+ * Why this matters: many generated sprite sheets have empty transparent padding
+ * or accidental neighboring-frame pixels. Tight crops make the runner and stage
+ * creatures look centered and prevent little visual artifacts from flashing.
+ */
 final class SpriteFrameCropper {
+    // Pixels with alpha above this count as visible art.
     private static final int ALPHA_THRESHOLD = 12;
+    // Add a little room around detected art so feet/hands are not shaved off.
     private static final int CROP_PAD_PX = 4;
     private static final int MIN_COMPONENT_PIXELS = 80;
     private static final int MAX_COMPONENTS = 96;
@@ -71,6 +80,10 @@ final class SpriteFrameCropper {
     }
 
     private static Rect[] computeFrameCrops(Bitmap sheet, int frames, int seamGuardPx, boolean mainComponentOnly) {
+        /*
+         * Divide the sheet into equal frame cells, crop each cell, then clamp the
+         * crop away from seams so one frame does not steal pixels from another.
+         */
         Rect[] crops = new Rect[frames];
         if (sheet == null || frames <= 0 || sheet.getWidth() <= 0 || sheet.getHeight() <= 0) {
             return crops;
@@ -106,6 +119,11 @@ final class SpriteFrameCropper {
     }
 
     private static Rect componentBounds(Bitmap sheet, int rawLeft, int rawRight, boolean mainComponentOnly) {
+        /*
+         * Connected-component search means:
+         * find blobs of visible pixels that touch each other, measure each blob,
+         * and keep the useful one. This is how we can ignore tiny artifacts.
+         */
         int width = rawRight - rawLeft;
         int height = sheet.getHeight();
         if (width <= 0 || height <= 0) {

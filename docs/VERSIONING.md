@@ -5,10 +5,10 @@ You Rush uses explicit Android version metadata.
 ## Current version
 
 ```text
-versionCode: 341
-versionName: 3.2.21-beta
+versionCode: 351
+versionName: 3.2.31-beta
 build channel: ALASKA BETA
-badge: ALASKA PASSPORT v3.41 BETA
+badge: ALASKA PASSPORT v3.51 BETA
 ```
 
 ## File
@@ -22,11 +22,11 @@ app/build.gradle
 ## Current fields
 
 ```gradle
-versionCode 341
-versionName "3.2.21-beta"
+versionCode 351
+versionName "3.2.31-beta"
 
 buildConfigField "String", "BUILD_CHANNEL", '"ALASKA BETA"'
-buildConfigField "String", "BUILD_BADGE", '"ALASKA PASSPORT v3.41 BETA"'
+buildConfigField "String", "BUILD_BADGE", '"ALASKA PASSPORT v3.51 BETA"'
 buildConfigField "boolean", "SHOW_VERSION_BADGE", "true"
 ```
 
@@ -39,6 +39,16 @@ Turn it off for a public store package.
 ## Version path
 
 ```text
+3.2.31-beta  D-pad arrow sizing, preview laser tell, and tougher Midnight Sun beta
+3.2.30-beta  Android boss laser preview-port beta
+3.2.29-beta  lower runner-level snow pile beta
+3.2.28-beta  left-thumb D-pad snowball aim and polar bear durability beta
+3.2.27-beta  laser aim line, snowball aim pad, boss durability, spray button, wildlife scale, and low obstacle beta
+3.2.26-beta  Midnight Sun laser eye-origin rendering beta
+3.2.25-beta  double-jump clearance and runner sprite proportion beta
+3.2.24-beta  invincible dry-run Computer Run beta
+3.2.23-beta  larger runner and wolf pounce beta
+3.2.22-beta  Midnight Sun laser boss and Computer Run beta
 3.2.21-beta  menu runner preview framing and default head polish beta
 3.2.20-beta  default runner sprite-bleed guard beta
 3.2.19-beta  grounded river-log placement beta

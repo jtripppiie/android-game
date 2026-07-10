@@ -1,4 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!--
+        Android manifest lesson:
+        The manifest tells Android how to launch the app. Code draws the game,
+        but this file names the app icon, app label, theme, and first Activity.
+    -->
     <application
         android:allowBackup="false"
         android:fullBackupContent="false"
@@ -8,11 +13,17 @@
         android:resizeableActivity="false"
         android:supportsRtl="true"
         android:theme="@android:style/Theme.Material.NoActionBar">
+        <!--
+            MainActivity is the only screen Android launches. It creates the
+            custom game View. configChanges keeps rotation/size changes from
+            restarting the Activity, and landscape locks the arcade layout wide.
+        -->
         <activity
             android:name=".MainActivity"
             android:configChanges="keyboardHidden|orientation|screenSize"
             android:exported="true"
             android:screenOrientation="landscape">
+            <!-- MAIN + LAUNCHER means "show this app in the launcher." -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

@@ -8,7 +8,15 @@ import android.graphics.drawable.Drawable;
 import java.io.IOException;
 import java.io.InputStream;
 
+/*
+ * GameAssets is the game's art shelf.
+ *
+ * Android stores images in res/drawable* and app/src/main/assets. Loading them
+ * once here keeps the main game code cleaner. Other classes ask GameAssets for
+ * the picture they need instead of knowing file names.
+ */
 final class GameAssets {
+    // This file lives in app/src/main/assets/branding, not res/drawable.
     private static final String BRANDING_LOGO_ASSET = "branding/tripperdeelabs-logo.png";
 
     private final Drawable backgroundMidnightSun;
@@ -30,6 +38,11 @@ final class GameAssets {
     private final Bitmap brandingLogo;
 
     GameAssets(Context context) {
+        /*
+         * getDrawable loads XML/vector or bitmap drawables from res.
+         * BitmapFactory.decodeResource loads sprite sheets when we need to pick
+         * individual animation frames by pixel rectangle.
+         */
         backgroundMidnightSun = context.getDrawable(R.drawable.background_midnight_sun_art);
         backgroundDarkWinter = context.getDrawable(R.drawable.background_dark_winter_art);
         treeSummer = context.getDrawable(R.drawable.sprite_tree_summer);
@@ -50,6 +63,10 @@ final class GameAssets {
     }
 
     private Bitmap decodeOptionalAsset(Context context, String assetPath) {
+        /*
+         * Optional assets can fail safely. If the logo is missing, the splash
+         * screen can still draw its fallback instead of crashing at launch.
+         */
         try (InputStream input = context.getAssets().open(assetPath)) {
             return BitmapFactory.decodeStream(input);
         } catch (IOException exception) {
