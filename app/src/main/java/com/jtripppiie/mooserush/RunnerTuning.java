@@ -14,9 +14,9 @@ package com.jtripppiie.mooserush;
  */
 final class RunnerTuning {
     // Forgiveness after walking off a ledge. Higher = easier late jumps.
-    static final float COYOTE_SECONDS = 0.08f;
+    static final float COYOTE_SECONDS = 0.10f;
     // Forgiveness before landing. Higher = button presses are remembered longer.
-    static final float JUMP_BUFFER_SECONDS = 0.10f;
+    static final float JUMP_BUFFER_SECONDS = 0.12f;
     // First jump strength. Higher = taller jump.
     static final float GROUND_JUMP_VELOCITY_DP = 585f;
     // Second jump strength. Usually lower so double jump helps but is not wild.

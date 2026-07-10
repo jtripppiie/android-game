@@ -16,6 +16,10 @@ final class VisualEffects {
     private final Random random = new Random();
     private final List<Particle> particles = new ArrayList<>();
     private final List<ScorePopup> scorePopups = new ArrayList<>();
+    private final ReusableObjectPool<Particle> particlePool =
+            new ReusableObjectPool<>(80, Particle::new);
+    private final ReusableObjectPool<ScorePopup> popupPool =
+            new ReusableObjectPool<>(12, ScorePopup::new);
     private final float density;
 
     VisualEffects(Context context) {
@@ -25,12 +29,12 @@ final class VisualEffects {
     }
 
     void clearAll() {
-        particles.clear();
-        scorePopups.clear();
+        particlePool.releaseAll(particles);
+        popupPool.releaseAll(scorePopups);
     }
 
     void clearParticles() {
-        particles.clear();
+        particlePool.releaseAll(particles);
     }
 
     void update(float dt) {
@@ -43,6 +47,7 @@ final class VisualEffects {
             particle.vy += dp(280) * dt;
             if (particle.age >= particle.life) {
                 particleIterator.remove();
+                particlePool.release(particle);
             }
         }
 
@@ -53,14 +58,17 @@ final class VisualEffects {
             popup.y += popup.vy * dt;
             if (popup.age >= popup.life) {
                 popupIterator.remove();
+                popupPool.release(popup);
             }
         }
     }
 
     void spawnScorePopup(String label, float x, float y, int color) {
-        scorePopups.add(new ScorePopup(label, x, y, -dp(36), color, 0.78f));
+        ScorePopup popup = popupPool.acquire();
+        popup.reset(label, x, y, -dp(36), color, 0.78f);
+        scorePopups.add(popup);
         while (scorePopups.size() > 8) {
-            scorePopups.remove(0);
+            popupPool.release(scorePopups.remove(0));
         }
     }
 
@@ -95,9 +103,11 @@ final class VisualEffects {
     }
 
     void spawnParticle(float x, float y, float vx, float vy, float radius, int color, float life) {
-        particles.add(new Particle(x, y, vx, vy, radius, color, life));
+        Particle particle = particlePool.acquire();
+        particle.reset(x, y, vx, vy, radius, color, life);
+        particles.add(particle);
         while (particles.size() > 70) {
-            particles.remove(0);
+            particlePool.release(particles.remove(0));
         }
     }
 
@@ -130,14 +140,17 @@ final class VisualEffects {
     private static class Particle {
         float x;
         float y;
-        final float vx;
+        float vx;
         float vy;
-        final float radius;
-        final int color;
-        final float life;
+        float radius;
+        int color;
+        float life;
         float age = 0f;
 
-        Particle(float x, float y, float vx, float vy, float radius, int color, float life) {
+        Particle() {
+        }
+
+        void reset(float x, float y, float vx, float vy, float radius, int color, float life) {
             this.x = x;
             this.y = y;
             this.vx = vx;
@@ -145,25 +158,30 @@ final class VisualEffects {
             this.radius = radius;
             this.color = color;
             this.life = life;
+            this.age = 0f;
         }
     }
 
     private static class ScorePopup {
-        final String label;
-        final float x;
+        String label;
+        float x;
         float y;
-        final float vy;
-        final int color;
-        final float life;
+        float vy;
+        int color;
+        float life;
         float age = 0f;
 
-        ScorePopup(String label, float x, float y, float vy, int color, float life) {
+        ScorePopup() {
+        }
+
+        void reset(String label, float x, float y, float vy, int color, float life) {
             this.label = label;
             this.x = x;
             this.y = y;
             this.vy = vy;
             this.color = color;
             this.life = life;
+            this.age = 0f;
         }
     }
 }

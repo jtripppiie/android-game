@@ -9,10 +9,10 @@ wildlife encounters through stage runs and boss fights.
 ## Current Build
 
 ```text
-versionCode: 353
-versionName: 3.2.33-beta
-build badge: ALASKA PASSPORT v3.53 BETA
-APK: app/build/outputs/apk/debug/you-rush-alaska-3.2.33-beta-353-debug.apk
+versionCode: 354
+versionName: 3.2.34-beta
+build badge: ALASKA PASSPORT v3.54 BETA
+APK: app/build/outputs/apk/debug/you-rush-alaska-3.2.34-beta-354-debug.apk
 ```
 
 This is a beta package for device testing and gameplay tuning. It is not a
@@ -85,6 +85,8 @@ Local browser previews live in `tools/` and are not packaged into the app.
   px grid overlay
 - `laser-eyes-preview.html`: polar bear boss beam origin and sweep tuning with
   15 px grid overlay
+- `sun-lasers-preview.html`: Midnight Sun twin-eye beam, glow, hitbox, sweep,
+  and runner-scale tuning with a default-on 15 px grid overlay
 - `gear-obstacle-preview.html`: logs, snow piles, icebergs, snowballs, bear
   spray, hitboxes, numbered debug badges, and 15 px grid overlay
 - `sprite-sheet-audit.html`: actual PNG sprite sheets with frame numbers,
@@ -118,8 +120,11 @@ new MooseRushView(this)
 ```
 
 Pure gameplay math and tuning helpers live in small Java classes with fast JVM
-unit coverage. Rendering, input, game state, persistence, and moment-to-moment
-gameplay currently live in `MooseRushView`.
+unit coverage. `BossStateMachine` owns pure boss transition decisions,
+`StageBossRules` owns stage-specific boss strategy routing, and
+`ReusableObjectPool` recycles high-frequency particles and score popups.
+Rendering, input, persistence, and moment-to-moment gameplay remain coordinated
+by `MooseRushView`.
 
 ## Privacy
 

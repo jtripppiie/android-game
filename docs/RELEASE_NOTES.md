@@ -6,13 +6,28 @@ Current release details are tracked in `docs/VERSIONING.md` and the root
 ## Latest Beta
 
 ```text
-3.2.33-beta
-versionCode 353
-ALASKA PASSPORT v3.53 BETA
+3.2.34-beta
+versionCode 354
+ALASKA PASSPORT v3.54 BETA
 ```
 
 Highlights:
 
+- Reduced the visible runner scale, accelerated its six-frame running cadence,
+  increased lateral response, and expanded coyote/jump-buffer forgiveness.
+- Raised the opening Midnight Sun stage pace so the first run reaches its
+  intended arcade rhythm sooner.
+- Rebuilt the Midnight Sun attack as real twin-eye beams with layered additive
+  Android glow, brighter cores, accurate eye emitters, and eclipse-aware draw
+  ordering so the attack stays luminous in the game rather than only in HTML.
+- Added a dedicated numbered 15 px Midnight Sun laser calibration preview with
+  phase, thickness, speed, hitbox, and pause controls.
+- Added bounded object pooling for particles and score popups to reduce
+  high-frequency allocations and garbage-collection pressure during effects.
+- Extracted pure boss transitions into `BossStateMachine` and stage-specific
+  attack routing into `StageBossRules`, with focused regression tests.
+- Corrected boss HUD labels so laser tells and attacks read `EYE BEAM` and
+  `BEAM DODGE` instead of being mislabeled as summons.
 - Removed the detached neighboring-frame boot from the default runner by using
   component-aware, seam-guarded runtime crops.
 - Rebuilt eye-beam gameplay around one shared diagonal segment for rendering,
