@@ -6,6 +6,52 @@ Current release details are tracked in `docs/VERSIONING.md` and the root
 ## Latest Beta
 
 ```text
+3.5.0-beta
+versionCode 373
+ALASKA PASSPORT v3.73 BETA
+```
+
+Depth + fidelity highlights:
+
+- Added an Expedition Perk draft. Before every run you pick one of three perks
+  that stay active for the stage: Trailblazer (+25% score), Avalanche Arm
+  (faster snowballs), Spring Step (higher jump), Glacier Guard (start shielded),
+  or Spray Canister (+1 bear spray). Each attempt is now a small build choice.
+- Fixed snowballs and bear spray launching from the runner's ankles. The throw
+  and spray origin is now derived from the drawn sprite's hands/chest instead of
+  the low collision center.
+- The Polar Bear Boss now rears up and fights standing on its hind legs, using
+  the dedicated standing sprite (ground-anchored) instead of the all-fours walk
+  sheet. Its eye-beam origin was realigned to the standing head.
+- Removed the confusing bear "transformation." Wildlife now keeps one consistent
+  walking stance and hitbox for the whole pass instead of briefly rearing up and
+  swelling its hitbox mid-approach.
+- Reworked the boss eye beam again: calmer flicker, the sun's twin rays now
+  converge on a single point, and a bright impact bloom marks where it lands.
+- Cleaned up a confusing bear-spray status callout.
+
+## Previous Beta
+
+```text
+3.4.2-beta
+versionCode 372
+ALASKA PASSPORT v3.72 BETA
+```
+
+Gameplay fairness highlights:
+
+- Fixed the river-log hitbox on the first two stages. The log is drawn as a low
+  obstacle, but its collision box previously used the full spawn height, so the
+  runner bonked an invisible wall well above the visible log. The collider (and
+  the clean-vault reward window) now follow the drawn log, so what you see is
+  what you jump.
+- Aligned obstacles to a single ground level. River logs now sit their base
+  exactly on the ground line, matching the icebergs, snowbanks, antler
+  barricades, and grounded wildlife instead of floating slightly above it.
+
+## Previous Beta
+
+```text
 3.4.1-beta
 versionCode 371
 ALASKA PASSPORT v3.71 BETA

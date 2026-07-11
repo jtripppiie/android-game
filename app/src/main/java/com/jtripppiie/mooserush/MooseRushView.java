@@ -164,6 +164,26 @@ public class MooseRushView extends View {
     private static final int FLOW_STREAK_THRESHOLD = 3;
     private static final float FLOW_TIMER_SECONDS = 5.5f;
     private static final float FLOW_MAGNET_RADIUS_DP = 92f;
+
+    /*
+     * Expedition perks. Before each run the player drafts one perk that stays
+     * active for that stage, turning every attempt into a small build choice.
+     * Effects are read at a few well-defined points (score, fire rate, jump,
+     * shield, spray) so the perk layer stays contained and easy to reason about.
+     */
+    private static final int PERK_NONE = -1;
+    private static final int PERK_TRAILBLAZER = 0;
+    private static final int PERK_AVALANCHE_ARM = 1;
+    private static final int PERK_SPRING_STEP = 2;
+    private static final int PERK_GLACIER_GUARD = 3;
+    private static final int PERK_SPRAY_CANISTER = 4;
+    private static final int PERK_COUNT = 5;
+    private static final String[] PERK_NAMES = {
+            "TRAILBLAZER", "AVALANCHE ARM", "SPRING STEP", "GLACIER GUARD", "SPRAY CANISTER"
+    };
+    private static final String[] PERK_DESCS = {
+            "+25% score", "Faster snowballs", "Higher jump", "Start shielded", "+1 bear spray"
+    };
     private static final float FLOW_MAGNET_SPEED_DP = 430f;
     private static final float CHASE_BEAR_SECONDS = 6.8f;
     private static final float CHASE_BEAR_SPEED_BOOST = 1.17f;
@@ -315,6 +335,9 @@ public class MooseRushView extends View {
     private int runCleanVaults = 0;
     private int cleanVaultStreak = 0;
     private int bestCleanVaultStreak = 0;
+    private int activePerk = PERK_NONE;
+    private final int[] perkChoices = {PERK_NONE, PERK_NONE, PERK_NONE};
+    private final RectF[] perkCardBounds = {new RectF(), new RectF(), new RectF()};
     private int runLogsBlasted = 0;
     private int routeMilestoneIndex = 0;
     private int expeditionLogs = 0;
@@ -912,6 +935,10 @@ public class MooseRushView extends View {
         }
 
         if (state == STATE_READY) {
+            int tappedPerk = tappedPerkCard(x, y);
+            if (tappedPerk >= 0) {
+                applyPerkSelection(perkChoices[tappedPerk]);
+            }
             state = STATE_RUNNING;
             readyTimer = 0f;
             lastFrameNanos = 0L;
@@ -1136,6 +1163,8 @@ public class MooseRushView extends View {
         runCleanVaults = 0;
         cleanVaultStreak = 0;
         bestCleanVaultStreak = 0;
+        activePerk = PERK_NONE;
+        rollPerkChoices();
         runLogsBlasted = 0;
         routeMilestoneIndex = 0;
         livesLostThisRun = 0;
@@ -1200,7 +1229,7 @@ public class MooseRushView extends View {
             return;
         }
         if (grounded || coyoteTimer > 0f) {
-            playerVelocityY = -dp(RunnerTuning.GROUND_JUMP_VELOCITY_DP);
+            playerVelocityY = -dp(RunnerTuning.GROUND_JUMP_VELOCITY_DP) * perkJumpMultiplier();
             grounded = false;
             coyoteTimer = 0f;
             jumpsUsed = 1;
@@ -1210,7 +1239,7 @@ public class MooseRushView extends View {
             haptic(HapticFeedbackConstants.KEYBOARD_TAP);
             playSound("jump");
         } else if (jumpsUsed < 2) {
-            playerVelocityY = -dp(RunnerTuning.DOUBLE_JUMP_VELOCITY_DP);
+            playerVelocityY = -dp(RunnerTuning.DOUBLE_JUMP_VELOCITY_DP) * perkJumpMultiplier();
             jumpsUsed++;
             jumpBufferTimer = 0f;
             effects.spawnSparkBurst(playerX, playerY + playerRadius * 0.2f, 6, Color.rgb(255, 218, 121));
@@ -1223,14 +1252,17 @@ public class MooseRushView extends View {
         if (shotCooldown > 0f || state != STATE_RUNNING) {
             return;
         }
-        float startX = playerX + playerRadius * 0.9f;
-        float startY = playerY + playerRadius * 0.02f;
+        float startX = runnerHandX();
+        float startY = runnerHandY();
         float targetY = aimedThrowTargetY(startX, startY);
         float verticalArc = clamp((targetY - startY) * 1.25f, -dp(210), dp(190));
         boolean empowered = auroraFocusTimer > 0f || flowActive() || bossWeakWindowActive();
         shots.add(new Shot(startX, startY, dp(empowered ? 540 : 500), verticalArc, gameplayDp(empowered ? 7.2f : 5.8f), empowered));
-        effects.spawnSparkBurst(playerX + playerRadius * 1.05f, playerY, empowered ? 8 : 5, empowered ? Color.rgb(255, 218, 121) : Color.WHITE);
+        effects.spawnSparkBurst(startX + dp(8), startY, empowered ? 8 : 5, empowered ? Color.rgb(255, 218, 121) : Color.WHITE);
         shotCooldown = auroraFocusTimer > 0f ? 0.18f : flowActive() ? 0.21f : 0.30f;
+        if (hasPerk(PERK_AVALANCHE_ARM)) {
+            shotCooldown *= 0.66f;
+        }
         playSound("throw");
         logEvent(empowered ? "Powered snowball fired." : "Snowball fired.");
     }
@@ -1283,7 +1315,7 @@ public class MooseRushView extends View {
             showRunCallout("BEAR SPRAY STUN", 0.85f);
             logEvent("Bear spray stunned wildlife x" + stunned + ".");
         } else {
-            showRunCallout("SPRAY READY SPACE", 0.80f);
+            showRunCallout("BEAR SPRAY", 0.80f);
             logEvent("Bear spray used.");
         }
     }
@@ -1350,15 +1382,28 @@ public class MooseRushView extends View {
     }
 
     private float runnerHandX() {
-        return playerX + playerRadius * 0.92f;
+        return playerX + playerVisualRadius() * 0.54f;
     }
 
     private float runnerBackX() {
-        return playerX - playerRadius * 0.92f;
+        return playerX - playerVisualRadius() * 0.54f;
     }
 
     private float runnerHandY() {
-        return playerY + playerRadius * 0.05f;
+        // Chest / throwing-hand height on the DRAWN sprite. The collision center
+        // (playerY) sits near the runner's feet, so deriving the hand from the
+        // draw geometry stops snowballs and spray from launching at the ankles.
+        return playerHeadDrawY() + playerVisualRadius() * 1.02f;
+    }
+
+    private float playerVisualRadius() {
+        return playerRadius * PLAYER_SPRITE_VISUAL_SCALE;
+    }
+
+    private float playerHeadDrawY() {
+        float feetLine = (playerY - playerRadius * PLAYER_HEAD_DRAW_OFFSET)
+                + SpriteRenderer.runnerFeetDropFromHead(playerRadius, true);
+        return feetLine - SpriteRenderer.runnerFeetDropFromHead(playerVisualRadius(), true);
     }
 
     private float throwTargetY(float startX, float startY) {
@@ -1600,7 +1645,7 @@ public class MooseRushView extends View {
     }
 
     private boolean maybeAwardCleanVault(Gate gate) {
-        float gateTop = getGroundY() - gate.height;
+        float gateTop = gateColliderTop(gate);
         float playerBottom = playerY + playerRadius * 0.78f;
         float clearance = gateTop - playerBottom;
         if (clearance < -dp(8) || clearance > dp(34) || playerVelocityY > dp(420)) {
@@ -1832,29 +1877,11 @@ public class MooseRushView extends View {
     }
 
     private void updateHazardRoar(Hazard hazard, float dt) {
-        if (!isRoaringBear(hazard.label)) {
-            return;
-        }
-        if (hazard.roaring) {
-            hazard.roarTimer -= dt;
-            if (hazard.roarTimer <= 0f) {
-                hazard.roaring = false;
-                hazard.speedMultiplier = hazard.baseSpeedMultiplier;
-            }
-            return;
-        }
-        if (hazard.roarUsed) {
-            return;
-        }
-        float triggerX = playerX + dp(170);
-        if (hazard.x < triggerX && hazard.x > playerX + dp(70)) {
-            hazard.roaring = true;
-            hazard.roarUsed = true;
-            hazard.roarTimer = 0.72f;
-            hazard.speedMultiplier = hazard.baseSpeedMultiplier * 0.58f;
-            effects.spawnScorePopup("ROAR", hazard.x, hazard.y - hazard.radius * 2.2f, Color.rgb(255, 246, 207));
-            effects.spawnDustBurst(hazard.x, getGroundY(), 10, Color.argb(185, 235, 245, 248));
-        }
+        // Bears used to briefly rear up as they approached, swelling their
+        // hitbox and slowing down, then snap back to walking. That mid-approach
+        // change read as unfair and confusing ("the bear keeps changing"), so
+        // wildlife now keeps a single consistent walking stance and hitbox for
+        // the whole pass. The roar sprite is reserved for the boss.
     }
 
     private void updateShots(float dt) {
@@ -2552,7 +2579,7 @@ public class MooseRushView extends View {
 
     private int addScore(int amount, String reason) {
         int multiplier = activeScoreMultiplier();
-        int awarded = amount * multiplier;
+        int awarded = Math.round(amount * multiplier * perkScoreMultiplier());
         score += awarded;
         runStageScore += awarded;
         gameState.addScore(awarded);
@@ -2572,6 +2599,51 @@ public class MooseRushView extends View {
             multiplier = Math.min(5, multiplier + 1);
         }
         return multiplier;
+    }
+
+    private boolean hasPerk(int perk) {
+        return activePerk == perk;
+    }
+
+    private float perkScoreMultiplier() {
+        return hasPerk(PERK_TRAILBLAZER) ? 1.25f : 1f;
+    }
+
+    private float perkJumpMultiplier() {
+        return hasPerk(PERK_SPRING_STEP) ? 1.12f : 1f;
+    }
+
+    private void rollPerkChoices() {
+        // Offer three distinct perks each run so the draft always has variety.
+        int a = random.nextInt(PERK_COUNT);
+        int b = (a + 1 + random.nextInt(PERK_COUNT - 1)) % PERK_COUNT;
+        int c = b;
+        while (c == a || c == b) {
+            c = random.nextInt(PERK_COUNT);
+        }
+        perkChoices[0] = a;
+        perkChoices[1] = b;
+        perkChoices[2] = c;
+    }
+
+    private void applyPerkSelection(int perk) {
+        activePerk = perk;
+        if (perk == PERK_GLACIER_GUARD) {
+            gameState.shieldActive = true;
+        } else if (perk == PERK_SPRAY_CANISTER) {
+            bearSprayCharges++;
+        }
+        showRunCallout("PERK: " + PERK_NAMES[perk], 1.4f);
+        logEvent("Perk drafted: " + PERK_NAMES[perk] + ".");
+    }
+
+    private int tappedPerkCard(float x, float y) {
+        for (int i = 0; i < perkCardBounds.length; i++) {
+            if (perkCardBounds[i].contains(x, y)) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     private void showComboCallout() {
@@ -2595,6 +2667,9 @@ public class MooseRushView extends View {
         }
         fireHoldTimer += dt;
         float repeatDelay = flowActive() ? 0.16f : 0.24f;
+        if (hasPerk(PERK_AVALANCHE_ARM)) {
+            repeatDelay *= 0.66f;
+        }
         if (fireHoldTimer >= repeatDelay && shotCooldown <= 0f) {
             fireHoldTimer = 0f;
             fireSnowball();
@@ -3124,9 +3199,23 @@ public class MooseRushView extends View {
     private void gateHitRect(Gate gate, RectF out) {
         out.set(
                 gate.x + dp(CollisionTuning.GATE_HIT_INSET_X_DP),
-                getGroundY() - gate.height + dp(CollisionTuning.GATE_HIT_TOP_INSET_DP),
+                gateColliderTop(gate) + dp(CollisionTuning.GATE_HIT_TOP_INSET_DP),
                 gate.x + gate.width - dp(CollisionTuning.GATE_HIT_INSET_X_DP),
                 getGroundY());
+    }
+
+    /**
+     * Top edge of the obstacle the player actually has to clear. For sprite and
+     * hurdle gates this is the spawn height. For the stage 0/1 river logs the
+     * visible art is a low log capped well below {@code gate.height}, so the
+     * collider must follow the drawn log instead of the raw spawn height, or the
+     * runner bonks an invisible wall above the log.
+     */
+    private float gateColliderTop(Gate gate) {
+        if (selectedStage == 0 || selectedStage == 1) {
+            return riverLogTop(gate);
+        }
+        return getGroundY() - gate.height;
     }
 
     private void drawSplashScreen(Canvas canvas) {
@@ -3476,10 +3565,8 @@ public class MooseRushView extends View {
         drawShieldAura(canvas);
         drawRespawnGraceAura(canvas);
         drawChaseBear(canvas);
-        float feetLine = (playerY - playerRadius * PLAYER_HEAD_DRAW_OFFSET)
-                + SpriteRenderer.runnerFeetDropFromHead(playerRadius, true);
-        float visualRadius = playerRadius * PLAYER_SPRITE_VISUAL_SCALE;
-        float headDrawY = feetLine - SpriteRenderer.runnerFeetDropFromHead(visualRadius, true);
+        float visualRadius = playerVisualRadius();
+        float headDrawY = playerHeadDrawY();
         drawCharacter(canvas, playerX, headDrawY, visualRadius);
         drawBearSprayEffect(canvas);
         effects.drawScorePopups(canvas);
@@ -3948,7 +4035,9 @@ public class MooseRushView extends View {
     }
 
     private float riverLogTop(Gate gate) {
-        return getGroundY() - riverLogHeight(gate) - dp(3);
+        // Base sits exactly on the ground line so logs read at the same level as
+        // icebergs, snowbanks, and the other grounded obstacles.
+        return getGroundY() - riverLogHeight(gate);
     }
 
     private void drawObstacleNameplate(Canvas canvas, Gate gate, float top) {
@@ -4554,7 +4643,7 @@ public class MooseRushView extends View {
             float progress = Math.min(1f, attack.age / 1.12f);
             float endY = attack.y;
             float endX = laserAttackEndX(attack);
-            float pulse = 0.72f + (float) Math.sin(attack.age * 26f) * 0.28f;
+            float pulse = 0.86f + (float) Math.sin(attack.age * 22f) * 0.14f;
             float alpha = Math.min(1f, 0.68f + progress * 0.32f);
             float beamHeight = dp(selectedStage == 0 ? 4.6f : 3.8f);
 
@@ -4638,12 +4727,29 @@ public class MooseRushView extends View {
                                     float beamHeight, float alpha, float pulse) {
         drawBeamCore(canvas, eyeX, eyeY, endX, endY, beamHeight, alpha, 1.08f, pulse);
         if (selectedStage == 0) {
+            // The sun has two eyes; the second beam converges on the SAME impact
+            // point so they read as one focused twin ray instead of a messy split.
             float rightEyeX = bossX + bossRadius() * 0.28f;
-            float split = dp(2.4f);
-            drawBeamCore(canvas, rightEyeX, eyeY, endX, endY + split,
-                    beamHeight * 0.78f, alpha * 0.82f, 1.04f, pulse);
+            drawBeamCore(canvas, rightEyeX, eyeY, endX, endY,
+                    beamHeight * 0.82f, alpha * 0.88f, 1.04f, pulse);
             drawBossLaserEyeEmitter(canvas, rightEyeX, eyeY, pulse);
         }
+        drawBeamImpact(canvas, endX, endY, beamHeight, alpha, pulse);
+    }
+
+    private void drawBeamImpact(Canvas canvas, float x, float y, float beamHeight, float alpha, float pulse) {
+        // Bright additive bloom where the beam lands, so the danger point is
+        // obvious and the ray feels like it is burning into the ground.
+        paint.setShader(null);
+        paint.setStyle(Paint.Style.FILL);
+        paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.ADD));
+        paint.setColor(Color.argb(Math.round(90 * alpha), 255, 150, 90));
+        canvas.drawCircle(x, y, beamHeight * (1.7f + pulse * 0.6f), paint);
+        paint.setColor(Color.argb(Math.round(150 * alpha), 255, 190, 120));
+        canvas.drawCircle(x, y, beamHeight * (1.0f + pulse * 0.3f), paint);
+        paint.setColor(Color.argb(Math.round(220 * alpha), 255, 252, 236));
+        canvas.drawCircle(x, y, beamHeight * 0.6f, paint);
+        paint.setXfermode(null);
     }
 
     private void laserAttackRect(BossAttack attack, RectF out) {
@@ -4662,7 +4768,11 @@ public class MooseRushView extends View {
         if (selectedStage == 0) {
             return bossX - bossRadius() * 0.28f;
         }
-        return bossX - bossRadius() * (selectedStage == 4 ? 0.765f : 0.62f);
+        if (selectedStage == 4) {
+            // Head of the standing polar bear, biased toward the player it faces.
+            return bossX - bossRadius() * 0.40f;
+        }
+        return bossX - bossRadius() * 0.62f;
     }
 
     private float bossLaserEyeY() {
@@ -4670,9 +4780,9 @@ public class MooseRushView extends View {
             return bossY - bossRadius() * 0.36f;
         }
         if (selectedStage == 4) {
-            float spriteHeight = bossRadius() * 3.65f;
-            float spriteCenterY = getGroundY() - spriteHeight * 0.48f + bossGroundSink(selectedStage);
-            return spriteCenterY - spriteHeight * 0.36f;
+            // Eye level near the top of the standing (bottom-anchored) bear sprite.
+            float bottom = getGroundY() + dp(2);
+            return bottom - polarBearBossSpriteHeight(bossRadius()) * 0.82f;
         }
         return bossY - bossRadius() * 0.28f;
     }
@@ -4741,7 +4851,9 @@ public class MooseRushView extends View {
         paint.setColor(Color.argb(shadowAlpha, 0, 0, 0));
         canvas.drawOval(bossX - xRadius * 0.88f, shadowY - shadowHalfHeight, bossX + xRadius * 0.88f, shadowY + shadowHalfHeight, paint);
 
-        if (bossSheet != null) {
+        if (selectedStage == 4 && assets.polarBearRoarSprite() != null) {
+            drawStandingPolarBearBoss(canvas, radius);
+        } else if (bossSheet != null) {
             drawAnimatedBossSheet(canvas, bossSheet, radius);
         } else if (selectedStage == 0) {
             drawMidnightSunBoss(canvas, radius, xRadius, yRadius);
@@ -4752,6 +4864,44 @@ public class MooseRushView extends View {
         }
 
         drawBossHealthBar(canvas);
+    }
+
+    /**
+     * The Polar Bear Boss reads as a boss only if it rears up on its hind legs.
+     * The walk sheet keeps it on all fours, so we draw the dedicated standing
+     * roar sprite bottom-anchored to the ground with an idle sway and an
+     * attack-lean, instead of the quadruped animation.
+     */
+    private void drawStandingPolarBearBoss(Canvas canvas, float radius) {
+        Bitmap sprite = assets.polarBearRoarSprite();
+        if (sprite == null || sprite.getWidth() <= 0 || sprite.getHeight() <= 0) {
+            drawAnimatedBossSheet(canvas, sheetForBoss(4), radius);
+            return;
+        }
+        int inset = Math.min(ROAR_SPRITE_SOURCE_INSET_PX, Math.min(sprite.getWidth(), sprite.getHeight()) / 8);
+        spriteSourceRect.set(inset, inset, sprite.getWidth() - inset, sprite.getHeight() - inset);
+        float height = polarBearBossSpriteHeight(radius);
+        float width = height * (spriteSourceRect.width() / (float) spriteSourceRect.height());
+        float bottom = getGroundY() + dp(2);
+        float sway = (float) Math.sin(bossTimer * 3.0f) * dp(1.6f);
+        float lean = 0f;
+        if (bossState == BOSS_STATE_TELL) {
+            sway = (float) Math.sin(bossTimer * 11f) * dp(2.4f);
+        } else if (bossState == BOSS_STATE_ATTACK && bossPattern == BOSS_PATTERN_LUNGE) {
+            lean = -dp(7);
+        } else if (bossState == BOSS_STATE_RECOVER) {
+            lean = dp(4);
+        }
+        float centerX = bossX + sway + lean;
+        tempRect.set(centerX - width * 0.5f, bottom - height, centerX + width * 0.5f, bottom);
+        boolean previousFilter = spriteBitmapPaint.isFilterBitmap();
+        spriteBitmapPaint.setFilterBitmap(false);
+        canvas.drawBitmap(sprite, spriteSourceRect, tempRect, spriteBitmapPaint);
+        spriteBitmapPaint.setFilterBitmap(previousFilter);
+    }
+
+    private float polarBearBossSpriteHeight(float radius) {
+        return radius * 4.05f;
     }
 
     private void drawMidnightSunBoss(Canvas canvas, float radius, float xRadius, float yRadius) {
@@ -5185,7 +5335,46 @@ public class MooseRushView extends View {
 
         textPaint.setTextSize(dp(11));
         textPaint.setColor(Color.rgb(255, 218, 121));
-        canvas.drawText("Tap to launch", getWidth() / 2f, top + dp(190), textPaint);
+        canvas.drawText("DRAFT A PERK", getWidth() / 2f, top + dp(192), textPaint);
+
+        drawPerkDraft(canvas, left, top + panelHeight + dp(12), panelWidth);
+
+        textPaint.setTextSize(dp(10));
+        textPaint.setColor(Color.rgb(210, 232, 238));
+        canvas.drawText("Pick a perk, or tap anywhere to launch", getWidth() / 2f, top + panelHeight + dp(98), textPaint);
+    }
+
+    private void drawPerkDraft(Canvas canvas, float left, float cardsTop, float width) {
+        float gap = dp(10);
+        float cardWidth = (width - gap * 2f) / 3f;
+        float cardHeight = dp(70);
+        for (int i = 0; i < perkCardBounds.length; i++) {
+            float cardLeft = left + i * (cardWidth + gap);
+            perkCardBounds[i].set(cardLeft, cardsTop, cardLeft + cardWidth, cardsTop + cardHeight);
+            int perk = perkChoices[i];
+            boolean chosen = activePerk != PERK_NONE && activePerk == perk;
+
+            paint.setStyle(Paint.Style.FILL);
+            paint.setColor(chosen ? Color.argb(238, 22, 74, 60) : Color.argb(222, 12, 24, 34));
+            canvas.drawRoundRect(perkCardBounds[i], dp(12), dp(12), paint);
+            paint.setStyle(Paint.Style.STROKE);
+            paint.setStrokeWidth(dp(2f));
+            paint.setColor(chosen ? Color.rgb(77, 219, 184) : Color.argb(200, 255, 218, 121));
+            canvas.drawRoundRect(perkCardBounds[i], dp(12), dp(12), paint);
+            paint.setStyle(Paint.Style.FILL);
+
+            if (perk < 0 || perk >= PERK_COUNT) {
+                continue;
+            }
+            textPaint.setTextAlign(Paint.Align.CENTER);
+            textPaint.setColor(Color.rgb(255, 218, 121));
+            drawTextFit(canvas, PERK_NAMES[perk], perkCardBounds[i].centerX(), cardsTop + dp(24), cardWidth - dp(10), dp(11), dp(8), Paint.Align.CENTER);
+            textPaint.setColor(Color.rgb(210, 232, 238));
+            drawTextFit(canvas, PERK_DESCS[perk], perkCardBounds[i].centerX(), cardsTop + dp(44), cardWidth - dp(10), dp(9.5f), dp(7), Paint.Align.CENTER);
+            textPaint.setTextSize(dp(8.5f));
+            textPaint.setColor(chosen ? Color.rgb(77, 219, 184) : Color.rgb(255, 246, 207));
+            canvas.drawText(chosen ? "SELECTED" : "TAP TO PICK", perkCardBounds[i].centerX(), cardsTop + dp(61), textPaint);
+        }
     }
 
     private void drawBriefingChip(Canvas canvas, float left, float top, float width, String label, String value) {
@@ -5231,6 +5420,11 @@ public class MooseRushView extends View {
         textPaint.setTextSize(dp(9));
         textPaint.setColor(Color.rgb(255, 218, 121));
         canvas.drawText("RUN +" + runStageScore, dp(82), dp(49), textPaint);
+        if (activePerk != PERK_NONE) {
+            textPaint.setTextSize(dp(8.5f));
+            textPaint.setColor(Color.rgb(77, 219, 184));
+            canvas.drawText("PERK " + PERK_NAMES[activePerk], dp(20), dp(62), textPaint);
+        }
 
         float progressLeft = getWidth() * 0.34f;
         float progressRight = getWidth() * 0.66f;

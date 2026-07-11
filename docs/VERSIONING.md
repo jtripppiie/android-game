@@ -5,10 +5,10 @@ You Rush uses explicit Android version metadata.
 ## Current version
 
 ```text
-versionCode: 371
-versionName: 3.4.1-beta
+versionCode: 373
+versionName: 3.5.0-beta
 build channel: ALASKA BETA
-badge: ALASKA PASSPORT v3.71 BETA
+badge: ALASKA PASSPORT v3.73 BETA
 ```
 
 ## File
@@ -22,11 +22,11 @@ app/build.gradle
 ## Current fields
 
 ```gradle
-versionCode 371
-versionName "3.4.1-beta"
+versionCode 373
+versionName "3.5.0-beta"
 
 buildConfigField "String", "BUILD_CHANNEL", '"ALASKA BETA"'
-buildConfigField "String", "BUILD_BADGE", '"ALASKA PASSPORT v3.71 BETA"'
+buildConfigField "String", "BUILD_BADGE", '"ALASKA PASSPORT v3.73 BETA"'
 buildConfigField "boolean", "SHOW_VERSION_BADGE", "true"
 ```
 
@@ -39,6 +39,8 @@ Turn it off for a public store package.
 ## Version path
 
 ```text
+3.5.0-beta   expedition perk draft, hand-thrown snowballs, standing polar bear boss
+3.4.2-beta   fair river-log hitbox and ground-level obstacle alignment
 3.4.1-beta   launch polish: runner clipping, grounded wildlife, responsive D-pad, reworked eye beam
 3.4.0-beta   action-platformer overhaul bridge, new runner, and control visibility
 3.3.0-beta   encounter-beat and high-risk FLOW gameplay revamp
