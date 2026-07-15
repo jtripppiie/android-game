@@ -6,6 +6,25 @@ Current release details are tracked in `docs/VERSIONING.md` and the root
 ## Current Stable Update
 
 ```text
+4.1.1
+versionCode 411
+ALASKA RELEASE
+ALASKA PASSPORT v4.11
+```
+
+Field-review highlights:
+
+- Added a `NOTE` button to the live debug overlay.
+- Opening the notebook freezes the run and opens a multiline Android text box.
+- Notes capture stage, encounter, gate progress, score, run seed, and visible IDs.
+- Notes can be marked as priority, persist locally, and display a saved count.
+- `Copy all` places the complete review log on the clipboard for sharing.
+
+See [the complete 4.1.1 release record](RELEASE_4_1_1_REVIEW_NOTEBOOK.md).
+
+## Previous Stable Update
+
+```text
 4.1.0
 versionCode 410
 ALASKA RELEASE

@@ -1,6 +1,10 @@
 package com.jtripppiie.mooserush;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
@@ -23,12 +27,23 @@ import android.view.Window;
 import android.view.WindowInsets;
 import android.view.WindowInsetsController;
 import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.CheckBox;
+import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.ByteArrayOutputStream;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 @SuppressWarnings("deprecation")
 public class MainActivity extends Activity {
@@ -39,6 +54,8 @@ public class MainActivity extends Activity {
     private static final float MIN_EYE_DISTANCE_RATIO = 0.035f;
     private static final String PREFS_NAME = "moose_rush";
     private static final String PREF_PLAYER_PHOTO_URI = "player_photo_uri";
+    private static final String PREF_DEBUG_NOTE_COUNT = "debug_note_count";
+    private static final String DEBUG_NOTES_FILE = "debug-review-notes.txt";
 
     private MooseRushView gameView;
     private TextView versionBadge;
@@ -67,6 +84,8 @@ public class MainActivity extends Activity {
                 resetPlayerPhoto();
             }
         });
+        gameView.setDebugNoteRequestListener(this::showDebugNoteDialog);
+        gameView.setDebugNoteCount(prefs.getInt(PREF_DEBUG_NOTE_COUNT, 0));
         setContentView(createGameRoot());
         loadSavedPlayerPhoto();
         enableImmersiveMode();
@@ -164,6 +183,116 @@ public class MainActivity extends Activity {
         }
 
         return root;
+    }
+
+    private void showDebugNoteDialog(String context) {
+        LinearLayout layout = new LinearLayout(this);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        int padding = dp(18);
+        layout.setPadding(padding, dp(8), padding, 0);
+
+        TextView contextView = new TextView(this);
+        contextView.setText(context);
+        contextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 11);
+        contextView.setTextColor(Color.rgb(70, 82, 92));
+        contextView.setTextIsSelectable(true);
+        contextView.setMaxLines(3);
+        layout.addView(contextView, new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+
+        EditText noteInput = new EditText(this);
+        noteInput.setHint("What feels wrong? Include an item ID if possible.");
+        noteInput.setMinLines(3);
+        noteInput.setMaxLines(5);
+        noteInput.setGravity(Gravity.TOP | Gravity.START);
+        noteInput.setSingleLine(false);
+        layout.addView(noteInput, new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+
+        CheckBox priority = new CheckBox(this);
+        priority.setText("Priority fix");
+        layout.addView(priority);
+
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setTitle("Game review note")
+                .setView(layout)
+                .setPositiveButton("Save", (ignored, which) -> saveDebugNote(context,
+                        noteInput.getText().toString(), priority.isChecked()))
+                .setNegativeButton("Cancel", null)
+                .setNeutralButton("Copy all", (ignored, which) -> copyAllDebugNotes())
+                .create();
+        dialog.setOnDismissListener(ignored -> {
+            if (gameView != null) gameView.finishDebugNote();
+            enableImmersiveMode();
+        });
+        dialog.setOnShowListener(ignored -> {
+            Window dialogWindow = dialog.getWindow();
+            if (dialogWindow != null) {
+                int screenWidth = getResources().getDisplayMetrics().widthPixels;
+                WindowManager.LayoutParams params = dialogWindow.getAttributes();
+                params.width = Math.min(Math.round(screenWidth * 0.42f), dp(360));
+                params.height = WindowManager.LayoutParams.WRAP_CONTENT;
+                params.gravity = Gravity.TOP | Gravity.END;
+                params.x = dp(12);
+                params.y = dp(48);
+                params.dimAmount = 0.08f;
+                dialogWindow.setAttributes(params);
+                dialogWindow.addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
+            }
+            noteInput.requestFocus();
+            if (dialogWindow != null) {
+                dialogWindow.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
+            }
+            InputMethodManager keyboard = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+            if (keyboard != null) keyboard.showSoftInput(noteInput, InputMethodManager.SHOW_IMPLICIT);
+        });
+        dialog.show();
+    }
+
+    private void saveDebugNote(String context, String note, boolean priority) {
+        String cleanNote = note == null ? "" : note.trim();
+        if (cleanNote.length() == 0) {
+            Toast.makeText(this, "Empty note not saved.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(new Date());
+        String entry = DebugReviewNotes.formatEntry(timestamp, context, cleanNote, priority);
+        try (FileOutputStream output = openFileOutput(DEBUG_NOTES_FILE, MODE_APPEND)) {
+            output.write(entry.getBytes(StandardCharsets.UTF_8));
+            int count = prefs.getInt(PREF_DEBUG_NOTE_COUNT, 0) + 1;
+            prefs.edit().putInt(PREF_DEBUG_NOTE_COUNT, count).apply();
+            if (gameView != null) gameView.setDebugNoteCount(count);
+            Toast.makeText(this, "Review note " + count + " saved.", Toast.LENGTH_SHORT).show();
+            Log.d(TAG, "Saved debug review note " + count + ".");
+        } catch (IOException exception) {
+            Toast.makeText(this, "Could not save review note.", Toast.LENGTH_LONG).show();
+            Log.e(TAG, "Unable to save debug review note", exception);
+        }
+    }
+
+    private void copyAllDebugNotes() {
+        String notes = readAllDebugNotes();
+        if (notes.length() == 0) {
+            Toast.makeText(this, "No saved review notes yet.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+        if (clipboard != null) {
+            clipboard.setPrimaryClip(ClipData.newPlainText("You Rush review notes", notes));
+            Toast.makeText(this, "All review notes copied.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private String readAllDebugNotes() {
+        try (FileInputStream input = openFileInput(DEBUG_NOTES_FILE);
+             ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+            byte[] buffer = new byte[4096];
+            int read;
+            while ((read = input.read(buffer)) != -1) output.write(buffer, 0, read);
+            return output.toString(StandardCharsets.UTF_8.name());
+        } catch (IOException exception) {
+            return "";
+        }
     }
 
     private void openPhotoPicker() {

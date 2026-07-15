@@ -58,6 +58,10 @@ public class MooseRushView extends View {
         void onPhotoResetRequested();
     }
 
+    public interface DebugNoteRequestListener {
+        void onDebugNoteRequested(String context);
+    }
+
     private static final String TAG = "YouRushGame";
 
     /*
@@ -315,9 +319,11 @@ public class MooseRushView extends View {
     private final RectF aimUpPadBounds = new RectF();
     private final RectF aimDownPadBounds = new RectF();
     private final RectF pauseButtonBounds = new RectF();
+    private final RectF debugNoteButtonBounds = new RectF();
     private final RectF tempRect = new RectF();
     private final Rect spriteSourceRect = new Rect();
     private PhotoRequestListener photoRequestListener;
+    private DebugNoteRequestListener debugNoteRequestListener;
     private Bitmap playerPhoto;
     private Bitmap backdropCache;
 
@@ -375,6 +381,7 @@ public class MooseRushView extends View {
     private boolean bossActive = false;
     private boolean bossDefeated = false;
     private boolean debugOverlay = false;
+    private boolean debugNoteOpen = false;
     private int debugUnlockTaps = 0;
     private long debugUnlockLastTapMs = 0L;
     private boolean leftPressed = false;
@@ -477,6 +484,7 @@ public class MooseRushView extends View {
     private int debugWaterSequence = 0;
     private int debugPickupSequence = 0;
     private int debugAttackSequence = 0;
+    private int debugNoteCount = 0;
     private String runCallout = "";
     private String mapNotice = "";
     private float mapNoticeTimer = 0f;
@@ -540,6 +548,25 @@ public class MooseRushView extends View {
 
     public void setPhotoRequestListener(PhotoRequestListener listener) {
         this.photoRequestListener = listener;
+    }
+
+    public void setDebugNoteRequestListener(DebugNoteRequestListener listener) {
+        this.debugNoteRequestListener = listener;
+    }
+
+    public void setDebugNoteCount(int count) {
+        debugNoteCount = Math.max(0, count);
+        invalidate();
+    }
+
+    public void finishDebugNote() {
+        debugNoteOpen = false;
+        if (state == STATE_PAUSED) {
+            state = STATE_RUNNING;
+            lastFrameNanos = 0L;
+            logEvent("Debug note closed.");
+            postInvalidateOnAnimation();
+        }
     }
 
     public void setPlayerPhoto(Bitmap photo) {
@@ -664,7 +691,7 @@ public class MooseRushView extends View {
             drawWorld(canvas);
             drawHud(canvas);
             drawVirtualControls(canvas);
-            drawPausePanel(canvas);
+            if (!debugNoteOpen) drawPausePanel(canvas);
         } else {
             drawWorld(canvas);
             drawHud(canvas);
@@ -1015,6 +1042,16 @@ public class MooseRushView extends View {
         }
 
         if (state == STATE_RUNNING) {
+            if (debugOverlay && debugNoteButtonBounds.contains(x, y)) {
+                state = STATE_PAUSED;
+                debugNoteOpen = true;
+                clearHeldControls();
+                logEvent("Debug note opened.");
+                if (debugNoteRequestListener != null) {
+                    debugNoteRequestListener.onDebugNoteRequested(debugNoteContext());
+                }
+                return true;
+            }
             if (pauseButtonBounds.contains(x, y)) {
                 state = STATE_PAUSED;
                 clearHeldControls();
@@ -6889,6 +6926,55 @@ public class MooseRushView extends View {
             String event = debugEvents.get(debugEvents.size() - 1 - i);
             canvas.drawText("> " + event, left + dp(8), top + dp(59 + i * 13), textPaint);
         }
+        drawDebugNoteButton(canvas);
+    }
+
+    private void drawDebugNoteButton(Canvas canvas) {
+        float right = getWidth() - dp(88);
+        debugNoteButtonBounds.set(right - dp(72), dp(76), right, dp(106));
+        paint.setStyle(Paint.Style.FILL);
+        paint.setColor(Color.argb(225, 22, 74, 60));
+        canvas.drawRoundRect(debugNoteButtonBounds, dp(9), dp(9), paint);
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setStrokeWidth(dp(1.5f));
+        paint.setColor(Color.rgb(77, 219, 184));
+        canvas.drawRoundRect(debugNoteButtonBounds, dp(9), dp(9), paint);
+        paint.setStyle(Paint.Style.FILL);
+        textPaint.setTextAlign(Paint.Align.CENTER);
+        textPaint.setTextSize(dp(9.5f));
+        textPaint.setColor(Color.WHITE);
+        String label = debugNoteCount > 0 ? "NOTE " + debugNoteCount : "NOTE";
+        canvas.drawText(label, debugNoteButtonBounds.centerX(), debugNoteButtonBounds.centerY() + dp(3.5f), textPaint);
+    }
+
+    private String debugNoteContext() {
+        StringBuilder visible = new StringBuilder();
+        appendVisibleDebugIds(visible);
+        String encounter = activeEncounter == null ? "none" : activeEncounter.id;
+        return "stage=" + STAGES[selectedStage].name
+                + " | encounter=" + encounter
+                + " | gates=" + gatesPassed + "/" + STAGES[selectedStage].goalGates
+                + " | score=" + score
+                + " | seed=" + Long.toUnsignedString(runSeed, 36).toUpperCase(Locale.ROOT)
+                + "\nvisible=" + (visible.length() == 0 ? "none" : visible.toString());
+    }
+
+    private void appendVisibleDebugIds(StringBuilder out) {
+        for (Gate item : gates) if (item.debugId.length() > 0 && isDebugMarkerVisible(item.x, getGroundY(), item.width)) appendDebugId(out, item.debugId);
+        for (Hazard item : hazards) if (item.debugId.length() > 0 && isDebugMarkerVisible(item.x, item.y, item.radius * 2f)) appendDebugId(out, item.debugId);
+        for (RoutePlatform item : routePlatforms) if (item.debugId.length() > 0 && isDebugMarkerVisible(item.x, item.y, item.width)) appendDebugId(out, item.debugId);
+        for (LaunchPad item : launchPads) if (item.debugId.length() > 0 && isDebugMarkerVisible(item.x, item.y, item.width)) appendDebugId(out, item.debugId);
+        for (BonusBlock item : bonusBlocks) if (item.debugId.length() > 0 && isDebugMarkerVisible(item.x, item.y, item.size)) appendDebugId(out, item.debugId);
+        for (TrickRing item : trickRings) if (item.debugId.length() > 0 && isDebugMarkerVisible(item.x, item.y, item.radius * 2f)) appendDebugId(out, item.debugId);
+        for (WaterPatch item : waterPatches) if (item.debugId.length() > 0 && isDebugMarkerVisible(item.x, getGroundY(), item.width)) appendDebugId(out, item.debugId);
+        for (PowerUp item : powerUps) if (item.debugId.length() > 0 && isDebugMarkerVisible(item.x, item.y, item.radius * 2f)) appendDebugId(out, item.debugId);
+        for (BossAttack item : bossAttacks) if (item.debugId.length() > 0 && isDebugMarkerVisible(item.x, item.y, item.radius * 2f)) appendDebugId(out, item.debugId);
+        if (bossActive) appendDebugId(out, DebugItemIds.boss(selectedStage));
+    }
+
+    private void appendDebugId(StringBuilder out, String id) {
+        if (out.length() > 0) out.append(", ");
+        out.append(id);
     }
 
     private void drawDebugObjectNumbers(Canvas canvas) {

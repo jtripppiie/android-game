@@ -55,3 +55,17 @@ Useful feedback format:
 Bear Country, encounter bear_country_chain:
 BER-AN02 is too close to BER-PF03 and BER-PU01 is too high.
 ```
+
+## In-game notebook
+
+Tap `NOTE` in the debug overlay to freeze the run and open the review notebook.
+The note automatically includes the stage, encounter, progress, score, run
+seed, and currently visible IDs. Check `Priority fix` for urgent items. The
+number on the `NOTE` button is the locally saved note count.
+
+The compact editor stays on the right side and suppresses the normal pause
+panel so the gameplay scene remains visible while describing it.
+
+Use `Copy all` in the notebook to place the complete persistent log on the
+Android clipboard. Notes remain on the device in the app's private storage and
+are never uploaded.

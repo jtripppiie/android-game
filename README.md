@@ -9,14 +9,14 @@ wildlife encounters through stage runs and boss fights.
 ## Current Build
 
 ```text
-versionCode: 410
-versionName: 4.1.0
+versionCode: 411
+versionName: 4.1.1
 build channel: ALASKA RELEASE
-build badge: ALASKA PASSPORT v4.10
-APK: app/build/outputs/apk/debug/you-rush-alaska-4.1.0-410-debug.apk
+build badge: ALASKA PASSPORT v4.11
+APK: app/build/outputs/apk/debug/you-rush-alaska-4.1.1-411-debug.apk
 ```
 
-Version 4.1.0 is the debug tuning overhaul. The listed debug APK is
+Version 4.1.1 adds the persistent in-game review notebook. The listed debug APK is
 developer-signed for direct device testing; an app-store upload still requires
 the owner's private release key and store submission.
 
@@ -120,6 +120,7 @@ Start with [docs/README.md](docs/README.md).
 
 Key active docs:
 
+- [4.1.1 review notebook](docs/RELEASE_4_1_1_REVIEW_NOTEBOOK.md)
 - [4.1 debug tuning overhaul](docs/RELEASE_4_1_DEBUG_TUNING_OVERHAUL.md)
 - [Debug item identifiers](docs/DEBUG_ITEM_IDENTIFIERS.md)
 - [4.0.1 gameplay fairness update](docs/RELEASE_4_0_1_GAMEPLAY_FAIRNESS.md)
