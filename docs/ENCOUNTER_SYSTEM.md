@@ -39,7 +39,8 @@ Encounter routes now create physical one-way-style footing in the Android run:
 - Brittle routes crack after one normal hit, shatter after two, or break at once
   from an empowered shot.
 - The landing solver checks downward crossings, horizontal overlap, moving
-  platform position, and ground fallback each frame.
+  platform position, and ground fallback each frame. Its crossing and snap use
+  the same full-radius foot contact, so standing remains grounded.
 
 Wildlife now has intent states. Eagles slow and draw their committed dive line
 before accelerating toward a captured vertical target. Bears, polar bears, and
@@ -74,8 +75,9 @@ four FLOW-only cards. Tests enforce minimum route and FLOW vocabulary.
 
 `TrailEncounterCard` and `TrailEncounterDirector` mirror the same route types,
 budgets, history constraints, deterministic selection, and FLOW requirements.
-The Chugach slice prebuilds a seeded encounter sequence and exposes its current
-route in the HUD. It now includes an upper moving-platform chain, precision line
+The Chugach slice prebuilds a seeded encounter sequence and uses each card to
+place route-specific footing, rewards, and enemy pressure. Player position
+selects the matching route label in the HUD. It includes an upper moving-platform chain, precision line
 with snowball-reactive ice, lower wildlife route, fallbacks, and convergence
 section. `ReactiveIce` provides a reusable two-hit destructible terrain body.
 `FreezableWater` is a lethal route volume that converts into `ReactiveIce` when
@@ -96,6 +98,8 @@ segment, tell line, reflection target, and debug origin all call the same
 actual standing sprite: `-0.48 radius` horizontally and `0.895 sprite height`
 above its bottom anchor. The emitter is repainted over the boss during the tell;
 previously the tell was drawn first and then hidden underneath the boss sprite.
+Snowball reflection uses circle-versus-segment collision against the same visible
+beam, and terrain damage requires beam-versus-platform intersection.
 
 ## Extension rule
 

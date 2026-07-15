@@ -6,6 +6,31 @@ Current release details are tracked in `docs/VERSIONING.md` and the root
 ## Latest Beta
 
 ```text
+3.15.0-beta
+versionCode 383
+ALASKA PASSPORT v3.83 BETA
+```
+
+System-integrity highlights:
+
+- Unified platform landing and standing contact geometry, eliminating unstable
+  grounded state on fixed and moving route platforms.
+- Made FLOW snowballs reflect the actual visible laser segment, including both
+  Midnight Sun beams, rather than an invisible mixed-coordinate target.
+- Limited laser terrain damage to brittle platforms intersected by the beam.
+- Bound gates, route geometry, rewards, and wildlife to the same encounter card
+  until its hazard wave is consumed; route geometry spawns once per encounter.
+- Made the Godot encounter sequence construct physical routes, rewards, and
+  enemy pressure instead of changing only a HUD label.
+- Expanded Godot validation to require all new scripts and assets, inspect RGBA
+  output and integration markers, and run a headless engine parse when Godot is
+  available.
+
+See [the complete 3.15 release note](RELEASE_3_15_BETA_SYSTEM_INTEGRITY.md).
+
+## Previous Beta
+
+```text
 3.14.0-beta
 versionCode 382
 ALASKA PASSPORT v3.82 BETA

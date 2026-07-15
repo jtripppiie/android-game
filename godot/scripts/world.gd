@@ -1,6 +1,8 @@
 extends Node2D
 
 const LEVEL_END := 5600.0
+const DIRECTED_START_X := 720.0
+const DIRECTED_SPACING := 610.0
 var player: AlaskaRunner
 var hud_label: Label
 var checkpoint_label: Label
@@ -71,6 +73,7 @@ func build_level() -> void:
 	enemy(Vector2(4520, 460), 180, "bear")
 	goal(Vector2(5480, 450))
 	build_route_branches()
+	build_directed_encounters()
 	var title := Label.new()
 	title.text = "CHUGACH RUN · FIND THE KEY · REACH THE RESCUE BEACON"
 	title.position = Vector2(120, 92)
@@ -112,6 +115,32 @@ func build_route_branches() -> void:
 	route_sign(Vector2(980, 330), "HIGH · SPEED")
 	route_sign(Vector2(2750, 440), "PRECISION · BREAKABLE")
 	route_sign(Vector2(3300, 625), "LOW · WILDLIFE")
+
+func build_directed_encounters() -> void:
+	# The seeded cards now change physical footing, rewards, and enemy pressure.
+	# The handcrafted terrain remains the readable fallback beneath every route.
+	for index in range(encounter_sequence.size()):
+		var card := encounter_sequence[index]
+		var x := DIRECTED_START_X + index * DIRECTED_SPACING
+		if card.route == TrailEncounterCard.Route.HIGH:
+			platform(Rect2(x, 275, 145, 24), Color("#dff8fb"))
+			collectible(Vector2(x + 52, 230), "coin")
+			collectible(Vector2(x + 108, 215), "coin")
+		elif card.route == TrailEncounterCard.Route.PRECISION:
+			var ice := ReactiveIce.new()
+			ice.position = Vector2(x + 70, 385)
+			ice.size = Vector2(140, 24)
+			ice.shattered.connect(func(_at): checkpoint_label.text = "DIRECTED ICE SHATTERED")
+			add_child(ice)
+			collectible(Vector2(x + 70, 340), "coin")
+		else:
+			collectible(Vector2(x + 55, 485), "coin")
+
+		var hazard_count := mini(2, card.hazards.size())
+		for hazard_index in range(hazard_count):
+			var authored_kind := String(card.hazards[hazard_index])
+			var enemy_kind := "bear" if authored_kind in ["bear", "polar"] else "wolf"
+			enemy(Vector2(x + 180 + hazard_index * 72, 300), 85 + hazard_index * 25, enemy_kind)
 
 func route_sign(at: Vector2, message: String) -> void:
 	var label := Label.new()
@@ -267,6 +296,7 @@ func _process(_delta: float) -> void:
 	if player:
 		var route := "PRECISION"
 		if not encounter_sequence.is_empty():
-			var route_type := encounter_sequence[mini(player.coins, encounter_sequence.size() - 1)].route
+			var encounter_index := clampi(int((player.global_position.x - DIRECTED_START_X) / DIRECTED_SPACING), 0, encounter_sequence.size() - 1)
+			var route_type := encounter_sequence[encounter_index].route
 			route = "HIGH" if route_type == TrailEncounterCard.Route.HIGH else "GROUND" if route_type == TrailEncounterCard.Route.GROUND else "PRECISION"
 		hud_label.text = "HP %d  COINS %d  KEY %s  RESCUE %d/2  COMBO %d  %s  ROUTE %s" % [player.health, player.coins, "YES" if key_collected else "NO", survivors_found, player.combo, player.state.to_upper(), route]

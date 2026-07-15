@@ -6,6 +6,8 @@ testing, and release preparation.
 
 ## Active Docs
 
+- [3.15 system integrity release](RELEASE_3_15_BETA_SYSTEM_INTEGRITY.md):
+  platform, laser, encounter ownership, Godot integration, and validation fixes.
 - [3.14 visual gameplay release](RELEASE_3_14_BETA_VISUAL_GAMEPLAY_PASS.md):
   current artwork integration, implementation map, verification, and device QA.
 - [Release notes](RELEASE_NOTES.md): current and previous beta highlights.
@@ -45,7 +47,7 @@ source of truth for the current beta.
 
 - Version metadata: `app/build.gradle`
 - Current build summary: root `README.md`
-- Current implementation release: `docs/RELEASE_3_14_BETA_VISUAL_GAMEPLAY_PASS.md`
+- Current implementation release: `docs/RELEASE_3_15_BETA_SYSTEM_INTEGRITY.md`
 - QA checklist: `docs/ANDROID_TEST_CHECKLIST.md`
 - Offline visual debugging: `docs/OFFLINE_DEBUG_PREVIEWS.md`
 - Privacy/store readiness: `docs/PRIVACY.md` and `docs/STORE_LISTING_DRAFT.md`

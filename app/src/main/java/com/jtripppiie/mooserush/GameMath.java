@@ -58,4 +58,36 @@ public final class GameMath {
         float combinedRadius = radius + segmentRadius;
         return distanceX * distanceX + distanceY * distanceY < combinedRadius * combinedRadius;
     }
+
+    public static boolean segmentHitsRect(float x1, float y1, float x2, float y2,
+                                          float left, float top, float right, float bottom) {
+        if (pointInsideRect(x1, y1, left, top, right, bottom)
+                || pointInsideRect(x2, y2, left, top, right, bottom)) {
+            return true;
+        }
+        return segmentsIntersect(x1, y1, x2, y2, left, top, right, top)
+                || segmentsIntersect(x1, y1, x2, y2, right, top, right, bottom)
+                || segmentsIntersect(x1, y1, x2, y2, right, bottom, left, bottom)
+                || segmentsIntersect(x1, y1, x2, y2, left, bottom, left, top);
+    }
+
+    private static boolean pointInsideRect(float x, float y, float left, float top,
+                                           float right, float bottom) {
+        return x >= left && x <= right && y >= top && y <= bottom;
+    }
+
+    private static boolean segmentsIntersect(float ax, float ay, float bx, float by,
+                                             float cx, float cy, float dx, float dy) {
+        float rX = bx - ax;
+        float rY = by - ay;
+        float sX = dx - cx;
+        float sY = dy - cy;
+        float denominator = rX * sY - rY * sX;
+        if (Math.abs(denominator) < 0.00001f) return false;
+        float qX = cx - ax;
+        float qY = cy - ay;
+        float t = (qX * sY - qY * sX) / denominator;
+        float u = (qX * rY - qY * rX) / denominator;
+        return t >= 0f && t <= 1f && u >= 0f && u <= 1f;
+    }
 }

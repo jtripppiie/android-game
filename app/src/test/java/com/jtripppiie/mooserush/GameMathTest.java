@@ -67,4 +67,14 @@ public class GameMathTest {
     public void circleHitsLaserEndCap() {
         assertTrue(GameMath.circleHitsSegment(11f, 0f, 0.6f, 0f, 0f, 10f, 0f, 0.6f));
     }
+
+    @Test
+    public void diagonalLaserCrossesPlatformRect() {
+        assertTrue(GameMath.segmentHitsRect(20f, 0f, 0f, 20f, 7f, 7f, 13f, 13f));
+    }
+
+    @Test
+    public void laserDoesNotDamageOffBeamPlatform() {
+        assertFalse(GameMath.segmentHitsRect(20f, 0f, 0f, 20f, 14f, 14f, 19f, 19f));
+    }
 }

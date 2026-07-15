@@ -257,6 +257,7 @@ public class MooseRushView extends View {
     private final Random random = new Random();
     private EncounterDirector encounterDirector;
     private EncounterCard activeEncounter;
+    private boolean activeEncounterGeometrySpawned;
     private long runSeed;
     /*
      * These lists are the moving things currently alive in the level.
@@ -1157,6 +1158,7 @@ public class MooseRushView extends View {
         runSeed = System.currentTimeMillis() ^ ((long) selectedStage << 32);
         encounterDirector = new EncounterDirector(runSeed);
         activeEncounter = null;
+        activeEncounterGeometrySpawned = false;
         /*
          * Starting a run is mostly cleaning the table:
          * remove old obstacles, reset timers, reset score, and place the
@@ -1794,8 +1796,10 @@ public class MooseRushView extends View {
 
     private RoutePlatform landingRoutePlatform(float oldY, float newY) {
         if (playerVelocityY < 0f) return null;
-        float oldBottom = oldY + playerRadius * 0.82f;
-        float newBottom = newY + playerRadius * 0.82f;
+        // Platform snapping uses the runner's full visual foot radius, so the
+        // crossing test must use the same contact point on every frame.
+        float oldBottom = oldY + playerRadius;
+        float newBottom = newY + playerRadius;
         RoutePlatform best = null;
         for (RoutePlatform platform : routePlatforms) {
             if (platform.broken || playerX + playerRadius * 0.48f < platform.x
@@ -2250,7 +2254,26 @@ public class MooseRushView extends View {
             if (!bossAttackCanBeShot(attack)) {
                 continue;
             }
-            if (circleHitsCircle(shot.x, shot.y, shot.radius * CollisionTuning.SHOT_BOSS_ATTACK_RADIUS_SCALE, attack.x, attack.y, attack.radius * CollisionTuning.BOSS_ATTACK_SHOT_RADIUS_SCALE)) {
+            boolean hit;
+            if (attack.type == ATTACK_LASER) {
+                hit = GameMath.circleHitsSegment(shot.x, shot.y,
+                        shot.radius * CollisionTuning.SHOT_BOSS_ATTACK_RADIUS_SCALE,
+                        bossLaserEyeX(), bossLaserEyeY(), laserAttackEndX(attack), attack.y,
+                        attack.radius * CollisionTuning.BOSS_ATTACK_SHOT_RADIUS_SCALE);
+                if (!hit && selectedStage == 0) {
+                    hit = GameMath.circleHitsSegment(shot.x, shot.y,
+                            shot.radius * CollisionTuning.SHOT_BOSS_ATTACK_RADIUS_SCALE,
+                            bossX + bossRadius() * 0.28f, bossLaserEyeY(),
+                            laserAttackEndX(attack), attack.y,
+                            attack.radius * CollisionTuning.BOSS_ATTACK_SHOT_RADIUS_SCALE);
+                }
+            } else {
+                hit = circleHitsCircle(shot.x, shot.y,
+                        shot.radius * CollisionTuning.SHOT_BOSS_ATTACK_RADIUS_SCALE,
+                        attack.x, attack.y,
+                        attack.radius * CollisionTuning.BOSS_ATTACK_SHOT_RADIUS_SCALE);
+            }
+            if (hit) {
                 return attack;
             }
         }
@@ -2787,15 +2810,20 @@ public class MooseRushView extends View {
         BossAttack laser = new BossAttack(beamX, targetY, dp(selectedStage == 0 ? 6.5f : 5.5f), 0f, 0f, ATTACK_LASER, "Eye beam");
         laser.spin = getWidth() + dp(80);
         bossAttacks.add(laser);
-        damagePlatformsAlongLaser(targetY);
+        damagePlatformsAlongLaser(beamX, bossLaserEyeY(), -dp(20), targetY, laser.radius);
         screenShake = Math.max(screenShake, 0.10f);
         effects.spawnSparkBurst(beamX, bossLaserEyeY(), 12, Color.rgb(255, 98, 84));
         playSound("throw");
     }
 
-    private void damagePlatformsAlongLaser(float targetY) {
+    private void damagePlatformsAlongLaser(float startX, float startY, float endX, float endY,
+                                           float beamRadius) {
         for (RoutePlatform platform : routePlatforms) {
-            if (!platform.brittle || platform.broken || Math.abs(platform.y - targetY) > dp(24)) continue;
+            if (!platform.brittle || platform.broken) continue;
+            float margin = beamRadius + dp(4);
+            if (!GameMath.segmentHitsRect(startX, startY, endX, endY,
+                    platform.x - margin, platform.y - margin,
+                    platform.x + platform.width + margin, platform.y + dp(18) + margin)) continue;
             platform.hits++;
             if (platform.hits >= 2 || bossEnraged()) {
                 platform.broken = true;
@@ -3371,8 +3399,9 @@ public class MooseRushView extends View {
     }
 
     private void spawnGate() {
-        if (encounterDirector != null) {
+        if (activeEncounter == null && encounterDirector != null) {
             activeEncounter = encounterDirector.next(selectedStage, gatesPassed, flowActive());
+            activeEncounterGeometrySpawned = false;
         }
         float gateWidth = gameplayDp(34) + random.nextFloat() * gameplayDp(18);
         float hurdleHeight = RunnerTuning.gateHeight(getResources().getDisplayMetrics().density, selectedStage, gatesPassed, random.nextFloat());
@@ -3384,7 +3413,10 @@ public class MooseRushView extends View {
             }
         }
         gates.add(new Gate(getWidth() + gateWidth, hurdleHeight, gateWidth));
-        spawnRouteGeometry(activeEncounter, getWidth() + gateWidth);
+        if (!activeEncounterGeometrySpawned) {
+            spawnRouteGeometry(activeEncounter, getWidth() + gateWidth);
+            activeEncounterGeometrySpawned = true;
+        }
         int starCount = activeEncounter == null
                 ? RushDirector.starTrailCount(gatesPassed) : activeEncounter.starCount;
         if (random.nextFloat() < 0.88f) {
@@ -3643,6 +3675,11 @@ public class MooseRushView extends View {
         }
         if (encounter != null) {
             showRunCallout(encounter.routeLabel() + " · " + encounter.id.replace('_', ' ').toUpperCase(Locale.ROOT), 0.94f);
+            // The next gate now selects a fresh card. Until this wave consumes
+            // the current one, its route, rewards, and threats stay owned by
+            // the same authored encounter.
+            activeEncounter = null;
+            activeEncounterGeometrySpawned = false;
         } else if (count > 1) {
             showRunCallout(count == 3 ? "THREAT CHAIN x3" : "COMBO THREAT", 0.82f);
         }
