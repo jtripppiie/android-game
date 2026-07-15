@@ -19,8 +19,8 @@ public class DifficultyCurveTest {
         float tension = DifficultyCurve.tension(4, 10, 10);
 
         assertTrue(DifficultyCurve.speedMultiplier(tension) > 1f);
-        assertEquals(1.32f, DifficultyCurve.gateCooldown(0.3f, tension), 0.0001f);
-        assertEquals(1.52f, DifficultyCurve.hazardCooldown(0.3f, tension), 0.0001f);
+        assertEquals(0.92f, DifficultyCurve.gateCooldown(0.3f, tension), 0.0001f);
+        assertEquals(1.08f, DifficultyCurve.hazardCooldown(0.3f, tension), 0.0001f);
         assertTrue(DifficultyCurve.hazardCooldown(2.4f, tension) < 2.4f);
     }
 }

@@ -610,13 +610,15 @@ final class SpriteRenderer {
             rotation = (float) Math.sin(phase * 6.0f) * 9.0f;
         } else if ("EAGLE".equals(label) || "DARK".equals(label)) {
             centerY += (float) Math.sin(phase * 1.8f) * dp(4.5f);
-            height = yRadius * 2.55f;
+            // A bald eagle should read as a fast aerial threat, not a plane-sized bird.
+            height = yRadius * 2.20f;
             rotation = (float) Math.sin(phase * 1.4f) * 2.2f;
         } else if ("BEAR".equals(label)) {
-            height = yRadius * 2.45f;
+            // Adult bears must carry more mass than the human runner.
+            height = yRadius * 2.70f;
             groundAnchored = true;
         } else if ("POLAR".equals(label)) {
-            height = yRadius * 2.35f;
+            height = yRadius * 2.62f;
             groundAnchored = true;
         } else if ("WOLF".equals(label)) {
             height = yRadius * 2.30f;

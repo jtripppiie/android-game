@@ -26,25 +26,25 @@ final class RunnerTuning {
     // Darkness is a little heavier so that stage feels more dangerous.
     static final float DARKNESS_GRAVITY_DP = 1685f;
     // Spawn caps stop the game from becoming impossible spam.
-    static final float MIN_GATE_COOLDOWN_SECONDS = 1.45f;
-    static final float MIN_HAZARD_COOLDOWN_SECONDS = 1.95f;
+    static final float MIN_GATE_COOLDOWN_SECONDS = 1.05f;
+    static final float MIN_HAZARD_COOLDOWN_SECONDS = 1.28f;
 
     private RunnerTuning() {
     }
 
     static float nextGateCooldown(float stageSpawnSeconds, int gatesPassed) {
         // Gates appear slightly faster as the run goes on, but never below cap.
-        return Math.max(MIN_GATE_COOLDOWN_SECONDS, stageSpawnSeconds - gatesPassed * 0.006f);
+        return Math.max(MIN_GATE_COOLDOWN_SECONDS, stageSpawnSeconds - gatesPassed * 0.035f);
     }
 
     static float nextHazardCooldown(int selectedStage, int gatesPassed) {
         // Later stages and longer runs both ask hazards to show up sooner.
-        return Math.max(MIN_HAZARD_COOLDOWN_SECONDS, 2.85f - selectedStage * 0.12f - gatesPassed * 0.008f);
+        return Math.max(MIN_HAZARD_COOLDOWN_SECONDS, 2.35f - selectedStage * 0.14f - gatesPassed * 0.035f);
     }
 
     static float scrollSpeedDp(float baseSpeedDp, int gatesPassed) {
-        // The world scrolls faster with progress, then stops ramping at +42.
-        return baseSpeedDp + Math.min(42f, gatesPassed * 3.5f);
+        // The world scrolls faster with progress, then stops ramping at +64.
+        return baseSpeedDp + Math.min(64f, gatesPassed * 5.0f);
     }
 
     static float gateHeight(float density, int selectedStage, int gatesPassed, float random01) {

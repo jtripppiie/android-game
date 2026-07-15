@@ -52,4 +52,15 @@ final class RushDirector {
     static float horizontalSpeedMultiplier(boolean flowActive) {
         return flowActive ? 1.12f : 1f;
     }
+
+    static int hazardWaveSize(int stage, int gatesPassed) {
+        if (gatesPassed < 3) return 1;
+        if (stage >= 3 && gatesPassed >= 6) return 3;
+        if (beatFor(gatesPassed) == BEAT_WILDLIFE || gatesPassed >= 5) return 2;
+        return 1;
+    }
+
+    static float hazardWaveSpacingDp(int waveIndex) {
+        return 104f + waveIndex * 18f;
+    }
 }

@@ -9,12 +9,12 @@ public class RunnerTuningTest {
 
     @Test
     public void gateCooldownHasFairMinimum() {
-        assertEquals(1.45f, RunnerTuning.nextGateCooldown(0.4f, 99), 0.0001f);
+        assertEquals(1.05f, RunnerTuning.nextGateCooldown(0.4f, 99), 0.0001f);
     }
 
     @Test
     public void hazardCooldownHasFairMinimum() {
-        assertEquals(1.95f, RunnerTuning.nextHazardCooldown(4, 999), 0.0001f);
+        assertEquals(1.28f, RunnerTuning.nextHazardCooldown(4, 999), 0.0001f);
     }
 
     @Test
@@ -44,7 +44,7 @@ public class RunnerTuningTest {
     @Test
     public void scrollSpeedRampsSlowly() {
         assertEquals(150f, RunnerTuning.scrollSpeedDp(150f, 0), 0.0001f);
-        assertEquals(192f, RunnerTuning.scrollSpeedDp(150f, 99), 0.0001f);
+        assertEquals(214f, RunnerTuning.scrollSpeedDp(150f, 99), 0.0001f);
     }
 
     @Test

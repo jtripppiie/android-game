@@ -1175,8 +1175,8 @@ public class MooseRushView extends View {
         bossDefeated = false;
         bossHealth = stage.bossHealth;
         bossMaxHealth = stage.bossHealth;
-        spawnCooldown = selectedStage == 0 ? 2.0f : 1.65f;
-        hazardCooldown = selectedStage == 0 ? 4.0f : 3.25f;
+        spawnCooldown = selectedStage == 0 ? 1.35f : 1.15f;
+        hazardCooldown = selectedStage == 0 ? 2.45f : 1.90f;
         shotCooldown = 0f;
         groundScroll = 0f;
         sceneryScroll = 0f;
@@ -1834,7 +1834,7 @@ public class MooseRushView extends View {
         if (allowSpawns) {
             hazardCooldown -= dt;
             if (hazardCooldown <= 0f) {
-                spawnHazard();
+                spawnHazardWave();
                 float tension = DifficultyCurve.tension(selectedStage, gatesPassed, STAGES[selectedStage].goalGates);
                 hazardCooldown = DifficultyCurve.hazardCooldown(RunnerTuning.nextHazardCooldown(selectedStage, gatesPassed), tension)
                         * RushDirector.hazardCooldownMultiplier(gatesPassed, flowActive());
@@ -2327,6 +2327,18 @@ public class MooseRushView extends View {
             hazards.add(new Hazard(rx, -dp(40), gameplayDp(14), 0.8f, random.nextFloat(), "ICE SPIKE", null));
             logEvent("Polar Bear summoned Ice Spike!");
         }
+
+        // Phase-two attacks overlap with a fast wildlife lane. Boss fights now
+        // test positioning and prioritization instead of presenting one isolated
+        // mechanic at a time.
+        if (bossPhaseTwoAnnounced && bossPattern != BOSS_PATTERN_SUMMON && bossPatternCount % 2 == 1) {
+            String pressureLabel = selectedStage >= 3 ? "WOLF" : STAGES[selectedStage].hazardLabel;
+            float pressureRadius = gameplayDp(hazardRadiusDp(pressureLabel));
+            hazards.add(new Hazard(getWidth() + dp(42), hazardSpawnY(pressureLabel, pressureRadius),
+                    pressureRadius, hazardSpeedMultiplier(pressureLabel) + 0.12f,
+                    random.nextFloat() * 4f, pressureLabel, null));
+            showRunCallout("CROSSFIRE", 0.72f);
+        }
     }
 
     private void enterBossRecover() {
@@ -2417,7 +2429,7 @@ public class MooseRushView extends View {
     private void spawnBossLaser() {
         float beamX = bossLaserEyeX();
         float targetY = clamp(bossTellY, getGroundY() - dp(128), getGroundY() - dp(38));
-        BossAttack laser = new BossAttack(beamX, targetY, dp(3.2f), 0f, 0f, ATTACK_LASER, "Eye beam");
+        BossAttack laser = new BossAttack(beamX, targetY, dp(selectedStage == 0 ? 6.5f : 5.5f), 0f, 0f, ATTACK_LASER, "Eye beam");
         laser.spin = getWidth() + dp(80);
         bossAttacks.add(laser);
         screenShake = Math.max(screenShake, 0.10f);
@@ -3198,11 +3210,32 @@ public class MooseRushView extends View {
     }
 
     private void spawnHazard() {
-        String label = selectHazardLabel();
+        spawnHazardAt(hazardSpawnX(), selectHazardLabel());
+    }
+
+    private void spawnHazardWave() {
+        int count = RushDirector.hazardWaveSize(selectedStage, gatesPassed);
+        float x = hazardSpawnX();
+        for (int i = 0; i < count; i++) {
+            String label = selectHazardLabel();
+            if (i == 1 && selectedStage == 3) {
+                label = "WOLF";
+            } else if (i == 1 && selectedStage == 4) {
+                label = "BEAR";
+            }
+            spawnHazardAt(x, label);
+            x += gameplayDp(RushDirector.hazardWaveSpacingDp(i));
+        }
+        if (count > 1) {
+            showRunCallout(count == 3 ? "THREAT CHAIN x3" : "COMBO THREAT", 0.82f);
+        }
+    }
+
+    private void spawnHazardAt(float x, String label) {
         float radius = gameplayDp(hazardRadiusDp(label));
         float y = hazardSpawnY(label, radius);
         float speed = hazardSpeedMultiplier(label);
-        hazards.add(new Hazard(hazardSpawnX(), y, radius, speed, random.nextFloat() * 4f, label, null));
+        hazards.add(new Hazard(x, y, radius, speed, random.nextFloat() * 4f, label, null));
         if (shouldForecastHazard(label)) {
             showRunCallout("WATCH: " + label, 0.92f);
             effects.spawnScorePopup("!", getWidth() - dp(58), Math.max(dp(96), y - radius * 1.8f), Color.rgb(255, 218, 121));
@@ -3259,11 +3292,11 @@ public class MooseRushView extends View {
     }
 
     private float hazardRadiusDp(String label) {
-        if ("POLAR".equals(label)) return 24f;
-        if ("BEAR".equals(label)) return 23f;
+        if ("POLAR".equals(label)) return 34f;
+        if ("BEAR".equals(label)) return 31f;
         if ("MOOSE".equals(label)) return 26f;
         if ("WOLF".equals(label)) return 18f;
-        if ("EAGLE".equals(label) || "DARK".equals(label)) return 18f;
+        if ("EAGLE".equals(label) || "DARK".equals(label)) return 14f;
         if ("SALMON".equals(label)) return 17f;
         if ("AVALANCHE".equals(label)) return 22f;
         if ("THIN ICE".equals(label)) return 20f;
@@ -4533,10 +4566,10 @@ public class MooseRushView extends View {
 
     private float hazardHorizontalScale(String label) {
         if ("MOOSE".equals(label)) return 1.70f;
-        if ("BEAR".equals(label)) return 1.60f;
-        if ("POLAR".equals(label)) return 1.72f;
+        if ("BEAR".equals(label)) return 1.86f;
+        if ("POLAR".equals(label)) return 1.94f;
         if ("WOLF".equals(label)) return 1.74f;
-        if ("EAGLE".equals(label) || "DARK".equals(label)) return 1.65f;
+        if ("EAGLE".equals(label) || "DARK".equals(label)) return 1.42f;
         if ("SALMON".equals(label)) return 1.35f;
         if ("AVALANCHE".equals(label)) return 1.38f;
         if ("THIN ICE".equals(label)) return 1.85f;
@@ -4544,10 +4577,11 @@ public class MooseRushView extends View {
     }
 
     private float hazardVerticalScale(String label) {
-        if ("MOOSE".equals(label) || "BEAR".equals(label)) return 1.08f;
-        if ("POLAR".equals(label)) return 1.02f;
+        if ("MOOSE".equals(label)) return 1.08f;
+        if ("BEAR".equals(label)) return 1.16f;
+        if ("POLAR".equals(label)) return 1.12f;
         if ("WOLF".equals(label)) return 0.84f;
-        if ("EAGLE".equals(label) || "DARK".equals(label)) return 1.00f;
+        if ("EAGLE".equals(label) || "DARK".equals(label)) return 0.88f;
         if ("SALMON".equals(label)) return 0.80f;
         if ("AVALANCHE".equals(label)) return 1.00f;
         if ("THIN ICE".equals(label)) return 0.42f;
@@ -4830,25 +4864,28 @@ public class MooseRushView extends View {
         paint.setStyle(Paint.Style.STROKE);
         paint.setStrokeCap(Paint.Cap.ROUND);
         paint.setShader(null);
-        paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.ADD));
-
-        // 1. Soft outer energy halo (Wide, low alpha)
-        paint.setStrokeWidth(height * 2.8f * intensity);
-        paint.setColor(Color.argb(Math.round(72 * alpha), 255, 70, 0));
-        canvas.drawLine(x1, y1, x2, y2, paint);
-
-        // 2. Bright hot body (Medium width)
-        paint.setStrokeWidth(height * 1.4f * intensity);
-        paint.setColor(Color.argb(Math.round(160 * alpha), 255, 120, 40));
-        canvas.drawLine(x1, y1, x2, y2, paint);
-
-        // 3. White-hot pinpoint core (Very thin, flickers with pulse)
-        float corePulse = 0.85f + 0.15f * pulse;
-        paint.setStrokeWidth(Math.max(dp(1.2f), height * 0.35f * corePulse));
-        paint.setColor(Color.argb(Math.round(235 * alpha), 255, 253, 220));
-        canvas.drawLine(x1, y1, x2, y2, paint);
-
         paint.setXfermode(null);
+
+        // Dark silhouette: the danger lane stays legible against every biome.
+        paint.setStrokeWidth(height * 3.6f * intensity);
+        paint.setColor(Color.argb(Math.round(210 * alpha), 38, 4, 18));
+        canvas.drawLine(x1, y1, x2, y2, paint);
+
+        // Solid saturated body avoids the old blurry additive smear.
+        paint.setStrokeWidth(height * 2.15f * intensity);
+        paint.setColor(Color.argb(Math.round(245 * alpha), 222, 24, 52));
+        canvas.drawLine(x1, y1, x2, y2, paint);
+
+        paint.setStrokeWidth(height * 1.18f * intensity);
+        paint.setColor(Color.argb(Math.round(250 * alpha), 255, 126, 52));
+        canvas.drawLine(x1, y1, x2, y2, paint);
+
+        // Stable white core communicates the exact collision center.
+        float corePulse = 0.92f + 0.08f * pulse;
+        paint.setStrokeWidth(Math.max(dp(1.5f), height * 0.46f * corePulse));
+        paint.setColor(Color.argb(Math.round(255 * alpha), 255, 251, 224));
+        canvas.drawLine(x1, y1, x2, y2, paint);
+
         paint.setStrokeCap(Paint.Cap.BUTT);
         paint.setStyle(Paint.Style.FILL);
     }

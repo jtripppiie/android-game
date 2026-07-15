@@ -27,4 +27,12 @@ public class RushDirectorTest {
         assertTrue(RushDirector.gateCooldownMultiplier(1, true) < RushDirector.gateCooldownMultiplier(1, false));
         assertTrue(RushDirector.hazardCooldownMultiplier(2, true) < RushDirector.hazardCooldownMultiplier(2, false));
     }
+
+    @Test
+    public void laterRunsBuildMultiThreatWaves() {
+        assertEquals(1, RushDirector.hazardWaveSize(0, 1));
+        assertEquals(2, RushDirector.hazardWaveSize(2, 5));
+        assertEquals(3, RushDirector.hazardWaveSize(4, 6));
+        assertTrue(RushDirector.hazardWaveSpacingDp(1) > RushDirector.hazardWaveSpacingDp(0));
+    }
 }
