@@ -6,6 +6,31 @@ Current release details are tracked in `docs/VERSIONING.md` and the root
 ## Latest Beta
 
 ```text
+3.19.0-beta
+versionCode 387
+ALASKA PASSPORT v3.87 BETA
+```
+
+Aerial-ring highlights:
+
+- Added four-ring airborne routes after launch pads in ground, precision and
+  high encounter layouts.
+- Ring collection supplies a small upward correction so clean lines remain
+  controllable without becoming automatic.
+- Consecutive rings increase score, combo, Aurora energy and speed-surge time.
+- A three-ring chain activates FLOW; later chains extend it.
+- Ring Rush raises world pace and horizontal control together, creating a brief
+  high-risk/high-reward acceleration window.
+- Added matching ring routes and temporary speed surges to Godot.
+- Centralized wildlife sizing and switched animated hazards to trimmed-frame
+  rendering so bears, wolves, moose, eagles and salmon keep explicit relative
+  scale regardless of transparent sprite-sheet padding.
+
+See [the complete 3.19 release note](RELEASE_3_19_BETA_AERIAL_RING_ROUTES.md).
+
+## Previous Beta
+
+```text
 3.18.0-beta
 versionCode 386
 ALASKA PASSPORT v3.86 BETA

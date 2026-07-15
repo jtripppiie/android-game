@@ -126,6 +126,7 @@ func build_directed_encounters() -> void:
 		if card.route == TrailEncounterCard.Route.HIGH:
 			platform(Rect2(x, 275, 145, 24), Color("#dff8fb"))
 			launch_pad(Vector2(x + 42, 275))
+			trick_ring_line(Vector2(x + 100, 215))
 			collectible(Vector2(x + 52, 230), "coin")
 			collectible(Vector2(x + 108, 215), "coin")
 		elif card.route == TrailEncounterCard.Route.PRECISION:
@@ -136,9 +137,11 @@ func build_directed_encounters() -> void:
 			add_child(ice)
 			collectible(Vector2(x + 70, 340), "coin")
 			launch_pad(Vector2(x + 22, 385))
+			trick_ring_line(Vector2(x + 82, 325))
 		else:
 			collectible(Vector2(x + 55, 485), "coin")
 			launch_pad(Vector2(x + 115, 520))
+			trick_ring_line(Vector2(x + 175, 455))
 
 		var hazard_count := mini(2, card.hazards.size())
 		for hazard_index in range(hazard_count):
@@ -211,6 +214,13 @@ func supply_block(at: Vector2) -> void:
 	block.position = at
 	block.opened.connect(_on_supply_block_opened)
 	add_child(block)
+
+func trick_ring_line(at: Vector2) -> void:
+	var heights := [0.0, -46.0, -72.0, -42.0]
+	for index in range(heights.size()):
+		var ring := AuroraTrickRing.new()
+		ring.position = at + Vector2(index * 54.0, heights[index])
+		add_child(ring)
 
 func _on_supply_block_opened(at: Vector2) -> void:
 	checkpoint_label.text = "SECRET CACHE · REWARD ARC"

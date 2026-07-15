@@ -33,6 +33,9 @@ var dash_cooldown := 0.0
 var invulnerability := 0.0
 var was_on_floor := false
 var combo := 0
+var ring_chain := 0
+var ring_chain_timer := 0.0
+var ring_rush_timer := 0.0
 var sprite: Sprite2D
 
 func _ready() -> void:
@@ -66,6 +69,9 @@ func _physics_process(delta: float) -> void:
 	dash_cooldown = maxf(0.0, dash_cooldown - delta)
 	invulnerability = maxf(0.0, invulnerability - delta)
 	dash_timer = maxf(0.0, dash_timer - delta)
+	ring_chain_timer = maxf(0.0, ring_chain_timer - delta)
+	ring_rush_timer = maxf(0.0, ring_rush_timer - delta)
+	if ring_chain_timer <= 0.0: ring_chain = 0
 	if is_on_floor(): coyote = COYOTE_TIME
 	else:
 		coyote = maxf(0.0, coyote - delta)
@@ -94,6 +100,7 @@ func _physics_process(delta: float) -> void:
 		update_animation(delta, axis)
 		return
 	var target_speed := SPRINT_SPEED if Input.is_action_pressed("sprint") else WALK_SPEED
+	if ring_rush_timer > 0.0: target_speed *= 1.18
 	if axis != 0.0:
 		facing = signf(axis)
 		velocity.x = move_toward(velocity.x, axis * target_speed, (ACCELERATION if is_on_floor() else AIR_ACCELERATION) * delta)
@@ -147,6 +154,14 @@ func enemy_defeated(stomp: bool) -> void:
 		velocity.y = -420.0
 		action_feedback.emit("STOMP COMBO x%d" % combo)
 	else: action_feedback.emit("HIT COMBO x%d" % combo)
+
+func collect_aurora_ring() -> void:
+	ring_chain = ring_chain + 1 if ring_chain_timer > 0.0 else 1
+	ring_chain_timer = 1.65
+	ring_rush_timer = minf(4.2, 1.8 + ring_chain * 0.38)
+	velocity.y = minf(velocity.y, -115.0 - mini(3, ring_chain) * 22.0)
+	combo += 1
+	action_feedback.emit("AURORA RING x%d · SPEED SURGE" % ring_chain)
 
 func respawn() -> void:
 	health = 3

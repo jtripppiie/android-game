@@ -15,7 +15,7 @@ func _ready() -> void:
 	add_to_group("enemy")
 	var collision := CollisionShape2D.new()
 	var shape := CircleShape2D.new()
-	shape.radius = 26.0
+	shape.radius = 34.0 if kind == "bear" else 22.0
 	collision.shape = shape
 	add_child(collision)
 
@@ -45,7 +45,7 @@ func _physics_process(delta: float) -> void:
 	queue_redraw()
 
 func _draw() -> void:
-	var scale_factor := 1.28 if kind == "bear" else 0.86 if kind == "wolf" else 1.0
+	var scale_factor := 1.34 if kind == "bear" else 0.78 if kind == "wolf" else 1.0
 	draw_circle(Vector2(0, 4), 29.0 * scale_factor, Color("#3c2e2b"))
 	draw_circle(Vector2(-18, -14), 12.0, Color("#4e3a32"))
 	draw_circle(Vector2(18, -14), 12.0, Color("#4e3a32"))

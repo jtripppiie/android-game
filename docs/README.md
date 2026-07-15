@@ -6,6 +6,10 @@ testing, and release preparation.
 
 ## Active Docs
 
+- [3.19 aerial ring routes](RELEASE_3_19_BETA_AERIAL_RING_ROUTES.md):
+  launch-directed ring arcs, trick chains, lift preservation, and speed surges.
+- [Wildlife scale contract](WILDLIFE_SCALE_CONTRACT.md): explicit visual and
+  collision dimensions for moose, bears, wolves, eagles, and salmon.
 - [3.18 secrets and chains release](RELEASE_3_18_BETA_SECRETS_AND_CHAINS.md):
   escalating stomp chains, hidden supply blocks, reward arcs, and gear caches.
 - [3.17 arcade joy release](RELEASE_3_17_BETA_ARCADE_JOY.md): wildlife
@@ -53,7 +57,7 @@ source of truth for the current beta.
 
 - Version metadata: `app/build.gradle`
 - Current build summary: root `README.md`
-- Current implementation release: `docs/RELEASE_3_18_BETA_SECRETS_AND_CHAINS.md`
+- Current implementation release: `docs/RELEASE_3_19_BETA_AERIAL_RING_ROUTES.md`
 - QA checklist: `docs/ANDROID_TEST_CHECKLIST.md`
 - Offline visual debugging: `docs/OFFLINE_DEBUG_PREVIEWS.md`
 - Privacy/store readiness: `docs/PRIVACY.md` and `docs/STORE_LISTING_DRAFT.md`

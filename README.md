@@ -9,10 +9,10 @@ wildlife encounters through stage runs and boss fights.
 ## Current Build
 
 ```text
-versionCode: 386
-versionName: 3.18.0-beta
-build badge: ALASKA PASSPORT v3.86 BETA
-APK: app/build/outputs/apk/debug/you-rush-alaska-3.18.0-beta-386-debug.apk
+versionCode: 387
+versionName: 3.19.0-beta
+build badge: ALASKA PASSPORT v3.87 BETA
+APK: app/build/outputs/apk/debug/you-rush-alaska-3.19.0-beta-387-debug.apk
 ```
 
 This is a beta package for device testing and gameplay tuning. It is not a
@@ -22,6 +22,9 @@ signed public-store release.
 
 - Five Alaska stages with distinct obstacles, hazards, bosses, and seasonal
   presentation.
+- Wildlife follows an explicit scale hierarchy: salmon and wolves stay compact,
+  eagles retain a readable wingspan, bears carry heavy mass, and moose is the
+  tallest/longest ground animal.
 - Platform-runner controls: left-thumb D-pad movement/aim, jump, double jump,
   fire, and spray.
 - Snowballs can damage bosses, clear specific threats, and destroy Salmon Rush
@@ -34,6 +37,8 @@ signed public-store release.
   reward arcs and a three-stomp FLOW ignition.
 - Hidden Aurora supply blocks can be jump-hit or shot open; every third cache
   adds gear to its collectible burst.
+- Launch pads now feed authored Aurora ring arcs; chaining rings preserves lift,
+  triggers a speed surge, raises rewards, and ignites or extends FLOW.
 - Bear spray is a scarce pickup with its own SPRAY button to stun close wildlife
   and interrupt close boss lunges.
 - Clean vault streaks trigger FLOW, a short momentum state with bonus scoring,
@@ -113,6 +118,7 @@ Start with [docs/README.md](docs/README.md).
 
 Key active docs:
 
+- [3.19 aerial ring routes](docs/RELEASE_3_19_BETA_AERIAL_RING_ROUTES.md)
 - [3.18 secrets and chains release](docs/RELEASE_3_18_BETA_SECRETS_AND_CHAINS.md)
 - [3.17 arcade joy release](docs/RELEASE_3_17_BETA_ARCADE_JOY.md)
 - [3.16 reactive river release](docs/RELEASE_3_16_BETA_REACTIVE_RIVER.md)

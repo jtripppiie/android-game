@@ -269,6 +269,7 @@ public class MooseRushView extends View {
     private final List<WaterPatch> waterPatches = new ArrayList<>();
     private final List<LaunchPad> launchPads = new ArrayList<>();
     private final List<BonusBlock> bonusBlocks = new ArrayList<>();
+    private final List<TrickRing> trickRings = new ArrayList<>();
     private final List<Hazard> hazards = new ArrayList<>();
     private final List<Star> stars = new ArrayList<>();
     private final List<PowerUp> powerUps = new ArrayList<>();
@@ -348,6 +349,7 @@ public class MooseRushView extends View {
     private int runCleanVaults = 0;
     private int airStompChain = 0;
     private int supplyBlocksOpened = 0;
+    private int ringChain = 0;
     private int cleanVaultStreak = 0;
     private int bestCleanVaultStreak = 0;
     private int activePerk = PERK_NONE;
@@ -435,6 +437,8 @@ public class MooseRushView extends View {
     private float auroraRushTimer = 0f;
     private float auroraFocusTimer = 0f;
     private float flowTimer = 0f;
+    private float ringChainTimer = 0f;
+    private float ringRushTimer = 0f;
     private float respawnGraceTimer = 0f;
     private float routeMilestoneTimer = 0f;
     private float scoutTimer = 0f;
@@ -1173,6 +1177,7 @@ public class MooseRushView extends View {
         routePlatforms.clear();
         launchPads.clear();
         bonusBlocks.clear();
+        trickRings.clear();
         waterPatches.clear();
         hazards.clear();
         stars.clear();
@@ -1215,6 +1220,8 @@ public class MooseRushView extends View {
         auroraRushTimer = 0f;
         auroraFocusTimer = 0f;
         flowTimer = 0f;
+        ringChainTimer = 0f;
+        ringRushTimer = 0f;
         scoutTimer = 0f;
         auroraRushes = 0;
         runTokensEarned = 0;
@@ -1227,6 +1234,7 @@ public class MooseRushView extends View {
         runCleanVaults = 0;
         airStompChain = 0;
         supplyBlocksOpened = 0;
+        ringChain = 0;
         cleanVaultStreak = 0;
         bestCleanVaultStreak = 0;
         activePerk = PERK_NONE;
@@ -1533,6 +1541,7 @@ public class MooseRushView extends View {
             gravity *= 0.88f;
         }
         float horizontalSpeed = dp(300) * RushDirector.horizontalSpeedMultiplier(flowActive());
+        if (ringRushTimer > 0f) horizontalSpeed *= 1.14f;
         boolean wasGrounded = grounded;
 
         spriteClock += dt * (5.5f + Math.min(4.5f, gatesPassed * 0.28f));
@@ -1546,6 +1555,7 @@ public class MooseRushView extends View {
         updateAuroraRush(dt);
         updateAuroraFocus(dt);
         updateFlowTimer(dt);
+        updateTrickRingTimers(dt);
         updateChaseBear(dt, gateSpeed);
         respawnGraceTimer = Math.max(0f, respawnGraceTimer - dt);
         jumpBufferTimer = Math.max(0f, jumpBufferTimer - dt);
@@ -1601,6 +1611,7 @@ public class MooseRushView extends View {
         updateWaterPatches(dt, bossActive ? 0f : gateSpeed);
         updateLaunchPads(dt, bossActive ? 0f : gateSpeed);
         updateBonusBlocks(dt, bossActive ? 0f : gateSpeed);
+        updateTrickRings(dt, bossActive ? 0f : gateSpeed);
 
         BonusBlock bumpedBlock = headBumpedBonusBlock(previousPlayerY, playerY);
         if (bumpedBlock != null) {
@@ -1880,6 +1891,51 @@ public class MooseRushView extends View {
             block.bump = Math.max(0f, block.bump - dt);
             if (block.x + block.size < -dp(40)) iterator.remove();
         }
+    }
+
+    private void updateTrickRings(float dt, float speed) {
+        Iterator<TrickRing> iterator = trickRings.iterator();
+        while (iterator.hasNext()) {
+            TrickRing ring = iterator.next();
+            ring.x -= speed * dt;
+            ring.spin += dt * 5.5f;
+            if (circleHitsCircle(playerX, playerY, playerRadius * 0.48f,
+                    ring.x, ring.y, ring.radius * 0.72f)) {
+                iterator.remove();
+                collectTrickRing(ring);
+                continue;
+            }
+            if (ring.x + ring.radius < -dp(40)) iterator.remove();
+        }
+    }
+
+    private void collectTrickRing(TrickRing ring) {
+        ringChain = ringChainTimer > 0f ? ringChain + 1 : 1;
+        ringChainTimer = 1.65f;
+        ringRushTimer = Math.min(4.2f, 1.8f + ringChain * 0.38f);
+        playerVelocityY = Math.min(playerVelocityY, -dp(115 + Math.min(3, ringChain) * 22));
+        gameState.addCombo();
+        int awarded = addScore(16 + ringChain * 8, "Aurora ring chain");
+        effects.spawnScorePopup("RING x" + ringChain + " +" + awarded,
+                ring.x, ring.y - ring.radius, Color.rgb(77, 219, 184));
+        effects.spawnSparkBurst(ring.x, ring.y, 18 + Math.min(18, ringChain * 3),
+                Color.rgb(132, 213, 232));
+        addAuroraMeter(7f + ringChain * 2f, "Aurora ring");
+        if (ringChain >= 3) {
+            if (flowActive()) flowTimer = Math.min(FLOW_TIMER_SECONDS + 2f, flowTimer + 0.75f);
+            else {
+                flowTimer = FLOW_TIMER_SECONDS;
+                showRunCallout("RING FLOW · KEEP THE AIR LINE", 1.1f);
+            }
+        }
+        screenShake = Math.max(screenShake, 0.055f);
+        haptic(HapticFeedbackConstants.CLOCK_TICK);
+    }
+
+    private void updateTrickRingTimers(float dt) {
+        ringChainTimer = Math.max(0f, ringChainTimer - dt);
+        ringRushTimer = Math.max(0f, ringRushTimer - dt);
+        if (ringChainTimer <= 0f) ringChain = 0;
     }
 
     private BonusBlock headBumpedBonusBlock(float oldY, float newY) {
@@ -2681,6 +2737,7 @@ public class MooseRushView extends View {
         routePlatforms.clear();
         launchPads.clear();
         bonusBlocks.clear();
+        trickRings.clear();
         hazards.clear();
         stars.clear();
         powerUps.clear();
@@ -3425,18 +3482,19 @@ public class MooseRushView extends View {
 
     private void activateFlow(float x, float y) {
         flowTimer = FLOW_TIMER_SECONDS;
+        int masteryChain = Math.max(cleanVaultStreak, Math.max(airStompChain, ringChain));
         int awarded = 0;
         if (cleanVaultStreak == FLOW_STREAK_THRESHOLD || cleanVaultStreak % 2 == 0) {
             awarded = addScore(12 + cleanVaultStreak * 2, "Flow streak");
             addAuroraMeter(9f + cleanVaultStreak, "Flow streak");
         }
-        effects.spawnSparkBurst(x, y, 10 + Math.min(12, cleanVaultStreak * 2), Color.rgb(77, 219, 184));
+        effects.spawnSparkBurst(x, y, 10 + Math.min(12, masteryChain * 2), Color.rgb(77, 219, 184));
         if (awarded > 0) {
             effects.spawnScorePopup("FLOW +" + awarded, x, y - dp(42), Color.rgb(77, 219, 184));
         }
         screenShake = Math.max(screenShake, 0.045f);
-        showRunCallout("FLOW x" + cleanVaultStreak + "  SPEED + SCORE", 1.20f);
-        logEvent("Flow streak x" + cleanVaultStreak + ".");
+        showRunCallout("FLOW x" + Math.max(1, masteryChain) + "  SPEED + SCORE", 1.20f);
+        logEvent("Flow mastery x" + Math.max(1, masteryChain) + ".");
     }
 
     private float worldSpeedMultiplier() {
@@ -3446,6 +3504,9 @@ public class MooseRushView extends View {
         }
         if (chaseBearActive) {
             multiplier *= CHASE_BEAR_SPEED_BOOST;
+        }
+        if (ringRushTimer > 0f) {
+            multiplier *= 1.12f;
         }
         return multiplier;
     }
@@ -3679,6 +3740,21 @@ public class MooseRushView extends View {
             waterPatches.add(new WaterPatch(anchorX + gameplayDp(86), gameplayDp(132)));
         } else {
             launchPads.add(new LaunchPad(anchorX + gameplayDp(104), ground - dp(2), gameplayDp(58)));
+        }
+        if (!(encounter.route == EncounterCard.ROUTE_GROUND && selectedStage == 1 && !flowActive())) {
+            float launchY = encounter.route == EncounterCard.ROUTE_HIGH ? ground - gameplayDp(92)
+                    : encounter.route == EncounterCard.ROUTE_GROUND && flowActive()
+                    ? ground - gameplayDp(42) : ground - dp(2);
+            float ringX = anchorX + gameplayDp(encounter.route == EncounterCard.ROUTE_HIGH ? 104 : 150);
+            spawnTrickRingLine(ringX, launchY);
+        }
+    }
+
+    private void spawnTrickRingLine(float startX, float launchY) {
+        float[] heights = {62f, 108f, 142f, 112f};
+        for (int i = 0; i < heights.length; i++) {
+            trickRings.add(new TrickRing(startX + gameplayDp(i * 48),
+                    launchY - gameplayDp(heights[i]), gameplayDp(15)));
         }
     }
 
@@ -3948,12 +4024,7 @@ public class MooseRushView extends View {
     }
 
     private float hazardRadiusDp(String label) {
-        if ("POLAR".equals(label)) return 34f;
-        if ("BEAR".equals(label)) return 31f;
-        if ("MOOSE".equals(label)) return 26f;
-        if ("WOLF".equals(label)) return 18f;
-        if ("EAGLE".equals(label) || "DARK".equals(label)) return 14f;
-        if ("SALMON".equals(label)) return 17f;
+        if (WildlifeScale.supports(label)) return WildlifeScale.collisionRadiusDp(label);
         if ("AVALANCHE".equals(label)) return 22f;
         if ("THIN ICE".equals(label)) return 20f;
         return 15 + Math.min(8, selectedStage * 2);
@@ -4369,6 +4440,9 @@ public class MooseRushView extends View {
         for (BonusBlock block : bonusBlocks) {
             drawBonusBlock(canvas, block);
         }
+        for (TrickRing ring : trickRings) {
+            drawTrickRing(canvas, ring);
+        }
         for (Hazard hazard : hazards) {
             drawHazard(canvas, hazard);
         }
@@ -4779,6 +4853,24 @@ public class MooseRushView extends View {
             canvas.drawRoundRect(tempRect, dp(5), dp(5), paint);
             paint.setStyle(Paint.Style.FILL);
         }
+    }
+
+    private void drawTrickRing(Canvas canvas, TrickRing ring) {
+        float pulse = 0.82f + 0.18f * (float) Math.sin(ring.spin * 2.2f);
+        float width = Math.max(dp(3), ring.radius * 0.28f * pulse);
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setStrokeWidth(width * 2.3f);
+        paint.setColor(Color.argb(80, 77, 219, 184));
+        canvas.drawCircle(ring.x, ring.y, ring.radius * 1.08f, paint);
+        paint.setStrokeWidth(width);
+        paint.setColor(Color.rgb(132, 213, 232));
+        canvas.drawCircle(ring.x, ring.y, ring.radius, paint);
+        paint.setStrokeWidth(Math.max(dp(1), width * 0.34f));
+        paint.setColor(Color.WHITE);
+        canvas.drawArc(ring.x - ring.radius, ring.y - ring.radius,
+                ring.x + ring.radius, ring.y + ring.radius,
+                -72f + ring.spin * 18f, 92f, false, paint);
+        paint.setStyle(Paint.Style.FILL);
     }
 
     private void drawWaterPatch(Canvas canvas, WaterPatch water) {
@@ -5356,24 +5448,14 @@ public class MooseRushView extends View {
     }
 
     private float hazardHorizontalScale(String label) {
-        if ("MOOSE".equals(label)) return 1.70f;
-        if ("BEAR".equals(label)) return 1.86f;
-        if ("POLAR".equals(label)) return 1.94f;
-        if ("WOLF".equals(label)) return 1.74f;
-        if ("EAGLE".equals(label) || "DARK".equals(label)) return 1.42f;
-        if ("SALMON".equals(label)) return 1.35f;
+        if (WildlifeScale.supports(label)) return WildlifeScale.horizontalRadiusScale(label);
         if ("AVALANCHE".equals(label)) return 1.38f;
         if ("THIN ICE".equals(label)) return 1.85f;
         return 1.0f;
     }
 
     private float hazardVerticalScale(String label) {
-        if ("MOOSE".equals(label)) return 1.08f;
-        if ("BEAR".equals(label)) return 1.16f;
-        if ("POLAR".equals(label)) return 1.12f;
-        if ("WOLF".equals(label)) return 0.84f;
-        if ("EAGLE".equals(label) || "DARK".equals(label)) return 0.88f;
-        if ("SALMON".equals(label)) return 0.80f;
+        if (WildlifeScale.supports(label)) return WildlifeScale.verticalRadiusScale(label);
         if ("AVALANCHE".equals(label)) return 1.00f;
         if ("THIN ICE".equals(label)) return 0.42f;
         return 1.0f;
@@ -5383,21 +5465,20 @@ public class MooseRushView extends View {
         String label = hazard.label;
         float phase = hazardVisualPhase(hazard);
         float rate = hazardAnimationRate(label);
-
-        // Ground creatures must plant their feet on the ground line.
+        int frame = Math.floorMod((int) (phase * rate), SPRITE_SHEET_FRAMES);
+        float height = WildlifeScale.supports(label)
+                ? gameplayDp(WildlifeScale.visualHeightDp(label)) : yRadius * 2f;
         boolean groundAnchored = !("SALMON".equals(label) || "EAGLE".equals(label) || "DARK".equals(label));
-
         float y = hazard.y;
-        if (hazard.roaring) {
-            y = getGroundY() - yRadius * 1.50f;
-        } else if (groundAnchored) {
-            float groundBottom = getGroundY() + dp(1);
+        if (groundAnchored) {
             float lift = hazard.y - hazard.baseY;
-            float height = yRadius * 2.35f; // Estimated height for anchoring
-            y = groundBottom + lift - height * 0.5f;
+            y = getGroundY() + dp(1) + lift - height * 0.5f;
         }
-
-        spriteRenderer.drawAnimatedHazard(canvas, sheet, label, hazard.x, y, yRadius, phase, rate, hazard.roaring);
+        float rotation = 0f;
+        if ("SALMON".equals(label)) rotation = (float) Math.sin(phase * 6f) * 9f;
+        else if ("EAGLE".equals(label) || "DARK".equals(label)) rotation = (float) Math.sin(phase * 1.4f) * 2.2f;
+        else if ("WOLF".equals(label)) rotation = (float) Math.sin(phase * 10f) * 2f;
+        drawSpriteSheetFrame(canvas, sheet, SPRITE_SHEET_FRAMES, frame, hazard.x, y, height, rotation);
     }
 
     private float hazardAnimationRate(String label) {
@@ -8015,6 +8096,19 @@ public class MooseRushView extends View {
             this.x = x;
             this.y = y;
             this.size = size;
+        }
+    }
+
+    private static class TrickRing {
+        float x;
+        final float y;
+        final float radius;
+        float spin = 0f;
+
+        TrickRing(float x, float y, float radius) {
+            this.x = x;
+            this.y = y;
+            this.radius = radius;
         }
     }
 

@@ -14,6 +14,7 @@ required = [
     "scripts/reactive_ice.gd", "scripts/freezable_water.gd",
     "scripts/launch_pad.gd",
     "scripts/supply_block.gd",
+    "scripts/trick_ring.gd",
     "assets/runner_overhaul.png",
     "assets/route_platform_ice.png", "assets/route_platform_moving.png",
     "assets/route_platform_snow.png", "assets/glacial_water_surface.png",
@@ -54,7 +55,7 @@ for asset_name in (
     assert asset.mode == "RGBA", (asset_name, asset.mode)
     assert asset.getbbox() is not None, asset_name
 
-for marker in ("build_directed_encounters", "encounter_sequence", "ReactiveIce", "card.hazards", "launch_pad", "supply_block"):
+for marker in ("build_directed_encounters", "encounter_sequence", "ReactiveIce", "card.hazards", "launch_pad", "supply_block", "trick_ring_line"):
     assert marker in world, marker
 projectile = (root / "scripts/projectile.gd").read_text()
 assert 'has_method("snowball_hit")' in projectile
