@@ -13,15 +13,18 @@ final class DifficultyCurve {
 
     static float tension(int stageIndex, int gatesPassed, int goalGates) {
         // stagePressure makes later stages start a little harder.
-        float stagePressure = Math.min(0.48f, Math.max(0, stageIndex) * 0.12f);
+        // A later biome may start a little sharper, but it still needs a
+        // readable opening beat. The previous 0.12/stage made stage five begin
+        // at 25% extra speed before the player cleared a single obstacle.
+        float stagePressure = Math.min(0.24f, Math.max(0, stageIndex) * 0.06f);
         // runPressure rises as you get closer to the boss.
-        float runPressure = goalGates <= 0 ? 0f : Math.min(0.72f, Math.max(0, gatesPassed) / (float) goalGates * 0.72f);
+        float runPressure = goalGates <= 0 ? 0f : Math.min(0.56f, Math.max(0, gatesPassed) / (float) goalGates * 0.56f);
         return Math.min(1f, stagePressure + runPressure);
     }
 
     static float speedMultiplier(float tension) {
-        // At full tension, speed is 52% higher than normal.
-        return 1f + Math.min(1f, Math.max(0f, tension)) * 0.52f;
+        // Difficulty should come from decisions, not unreadable scroll speed.
+        return 1f + Math.min(1f, Math.max(0f, tension)) * 0.38f;
     }
 
     static float gateCooldown(float baseCooldown, float tension) {

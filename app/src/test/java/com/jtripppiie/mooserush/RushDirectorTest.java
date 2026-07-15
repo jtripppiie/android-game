@@ -34,5 +34,6 @@ public class RushDirectorTest {
         assertEquals(2, RushDirector.hazardWaveSize(2, 5));
         assertEquals(3, RushDirector.hazardWaveSize(4, 6));
         assertTrue(RushDirector.hazardWaveSpacingDp(1) > RushDirector.hazardWaveSpacingDp(0));
+        assertTrue(RushDirector.hazardWaveSpacingDp(0) >= 188f);
     }
 }

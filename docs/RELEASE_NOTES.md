@@ -3,7 +3,26 @@
 Current release details are tracked in `docs/VERSIONING.md` and the root
 `README.md`.
 
-## Stable Release
+## Stable Update
+
+```text
+4.0.1
+versionCode 401
+ALASKA RELEASE
+ALASKA PASSPORT v4.01
+```
+
+Gameplay-fairness highlights:
+
+- Rebuilt obstacle and wildlife pacing around complete, readable encounters.
+- Kept biome recipes stage-specific and prevented route-less duplicate gates.
+- Separated wildlife responses from platform sequences and removed reward clutter.
+- Corrected animal-to-human visual and collision scale.
+- Capped stacked speed boosts, softened progression, and unified variable jump input.
+
+See [the complete 4.0.1 release record](RELEASE_4_0_1_GAMEPLAY_FAIRNESS.md).
+
+## Previous Stable Release
 
 ```text
 4.0.0

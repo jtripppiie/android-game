@@ -6,6 +6,8 @@ testing, and release preparation.
 
 ## Active Docs
 
+- [4.0.1 gameplay fairness](RELEASE_4_0_1_GAMEPLAY_FAIRNESS.md): encounter
+  coherence, obstacle recovery, wildlife scale, speed caps, and input parity.
 - [4.0 stable release](RELEASE_4_0_STABLE.md): expanded stages, regional
   mastery gauntlets, release identity, validation, and device acceptance.
 - [3.19 aerial ring routes](RELEASE_3_19_BETA_AERIAL_RING_ROUTES.md):
@@ -59,7 +61,7 @@ source of truth for the current beta.
 
 - Version metadata: `app/build.gradle`
 - Current build summary: root `README.md`
-- Current implementation release: `docs/RELEASE_4_0_STABLE.md`
+- Current implementation release: `docs/RELEASE_4_0_1_GAMEPLAY_FAIRNESS.md`
 - QA checklist: `docs/ANDROID_TEST_CHECKLIST.md`
 - Offline visual debugging: `docs/OFFLINE_DEBUG_PREVIEWS.md`
 - Privacy/store readiness: `docs/PRIVACY.md` and `docs/STORE_LISTING_DRAFT.md`

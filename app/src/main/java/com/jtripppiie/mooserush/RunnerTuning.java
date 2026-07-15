@@ -28,6 +28,10 @@ final class RunnerTuning {
     // Spawn caps stop the game from becoming impossible spam.
     static final float MIN_GATE_COOLDOWN_SECONDS = 1.05f;
     static final float MIN_HAZARD_COOLDOWN_SECONDS = 1.28f;
+    static final float READABLE_GATE_COOLDOWN_SECONDS = 1.20f;
+    static final float READABLE_FLOW_GATE_COOLDOWN_SECONDS = 1.05f;
+    static final float READABLE_HAZARD_COOLDOWN_SECONDS = 1.45f;
+    static final float READABLE_FLOW_HAZARD_COOLDOWN_SECONDS = 1.20f;
 
     private RunnerTuning() {
     }
@@ -43,8 +47,22 @@ final class RunnerTuning {
     }
 
     static float scrollSpeedDp(float baseSpeedDp, int gatesPassed) {
-        // The world scrolls faster with progress, then stops ramping at +64.
-        return baseSpeedDp + Math.min(64f, gatesPassed * 5.0f);
+        // Keep this hidden ramp subordinate to the visible difficulty curve.
+        return baseSpeedDp + Math.min(36f, gatesPassed * 3.0f);
+    }
+
+    static float capScrollSpeedDp(float speedDp, float stageBaseSpeedDp) {
+        return Math.min(speedDp, stageBaseSpeedDp * 1.72f);
+    }
+
+    static float readableGateCooldown(float proposedSeconds, boolean flowActive) {
+        return Math.max(flowActive ? READABLE_FLOW_GATE_COOLDOWN_SECONDS
+                : READABLE_GATE_COOLDOWN_SECONDS, proposedSeconds);
+    }
+
+    static float readableHazardCooldown(float proposedSeconds, boolean flowActive) {
+        return Math.max(flowActive ? READABLE_FLOW_HAZARD_COOLDOWN_SECONDS
+                : READABLE_HAZARD_COOLDOWN_SECONDS, proposedSeconds);
     }
 
     static float gateHeight(float density, int selectedStage, int gatesPassed, float random01) {

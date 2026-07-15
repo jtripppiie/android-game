@@ -12,32 +12,32 @@ final class WildlifeScale {
     }
 
     static float collisionRadiusDp(String label) {
-        if ("POLAR".equals(label)) return 36f;
-        if ("MOOSE".equals(label)) return 34f;
-        if ("BEAR".equals(label)) return 32f;
-        if ("WOLF".equals(label)) return 19f;
-        if ("EAGLE".equals(label) || "DARK".equals(label)) return 16f;
-        if ("SALMON".equals(label)) return 15f;
+        if ("MOOSE".equals(label)) return 42f;
+        if ("POLAR".equals(label)) return 40f;
+        if ("BEAR".equals(label)) return 36f;
+        if ("WOLF".equals(label)) return 21f;
+        if ("EAGLE".equals(label) || "DARK".equals(label)) return 17f;
+        if ("SALMON".equals(label)) return 16f;
         return 15f;
     }
 
     static float visualHeightDp(String label) {
-        if ("MOOSE".equals(label)) return 92f;
-        if ("POLAR".equals(label)) return 88f;
-        if ("BEAR".equals(label)) return 78f;
-        if ("EAGLE".equals(label) || "DARK".equals(label)) return 44f;
-        if ("WOLF".equals(label)) return 42f;
-        if ("SALMON".equals(label)) return 28f;
+        if ("MOOSE".equals(label)) return 132f;
+        if ("POLAR".equals(label)) return 116f;
+        if ("BEAR".equals(label)) return 104f;
+        if ("WOLF".equals(label)) return 56f;
+        if ("EAGLE".equals(label) || "DARK".equals(label)) return 50f;
+        if ("SALMON".equals(label)) return 30f;
         return collisionRadiusDp(label) * 2f;
     }
 
     static float halfWidthDp(String label) {
-        if ("MOOSE".equals(label)) return 78f;
-        if ("POLAR".equals(label)) return 70f;
-        if ("BEAR".equals(label)) return 62f;
-        if ("EAGLE".equals(label) || "DARK".equals(label)) return 40f;
-        if ("WOLF".equals(label)) return 36f;
-        if ("SALMON".equals(label)) return 30f;
+        if ("MOOSE".equals(label)) return 92f;
+        if ("POLAR".equals(label)) return 82f;
+        if ("BEAR".equals(label)) return 74f;
+        if ("EAGLE".equals(label) || "DARK".equals(label)) return 44f;
+        if ("WOLF".equals(label)) return 42f;
+        if ("SALMON".equals(label)) return 32f;
         return collisionRadiusDp(label);
     }
 

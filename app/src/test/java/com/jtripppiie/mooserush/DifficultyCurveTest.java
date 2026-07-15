@@ -23,4 +23,13 @@ public class DifficultyCurveTest {
         assertEquals(1.08f, DifficultyCurve.hazardCooldown(0.3f, tension), 0.0001f);
         assertTrue(DifficultyCurve.hazardCooldown(2.4f, tension) < 2.4f);
     }
+
+    @Test
+    public void finalStageStillHasAReadableOpeningAndControlledTopSpeed() {
+        float opening = DifficultyCurve.tension(4, 0, 22);
+        float finish = DifficultyCurve.tension(4, 22, 22);
+        assertTrue(DifficultyCurve.speedMultiplier(opening) <= 1.10f);
+        assertTrue(DifficultyCurve.speedMultiplier(finish) <= 1.31f);
+        assertTrue(finish > opening);
+    }
 }

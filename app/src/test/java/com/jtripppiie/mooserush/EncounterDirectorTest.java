@@ -61,4 +61,13 @@ public class EncounterDirectorTest {
         assertTrue(card.mastery);
         assertEquals(3, card.minStage);
     }
+
+    @Test
+    public void lateStagesDoNotRecycleEarlierBiomeRecipes() {
+        EncounterDirector director = new EncounterDirector(91L);
+        for (int i = 0; i < 30; i++) {
+            EncounterCard card = director.next(4, 8, 22, false);
+            assertTrue("clean_launch".equals(card.id) || card.minStage == 4);
+        }
+    }
 }

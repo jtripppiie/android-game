@@ -156,7 +156,7 @@ public class MooseRushView extends View {
     private static final float PLAYER_START_X_FRACTION = 0.265f;
     private static final float PLAYER_HEAD_DRAW_OFFSET = 2.18f;
     private static final float PLAYER_SPRITE_VISUAL_SCALE = 1.20f;
-    private static final float HAZARD_GATE_CLEARANCE_DP = 138f;
+    private static final float HAZARD_GATE_CLEARANCE_DP = 230f;
     private static final float PLAYFIELD_BOTTOM_MARGIN_DP = 52f;
     private static final float GROUND_LINE_HEIGHT_FRACTION = 0.82f;
     private static final float JUMP_CEILING_TOP_MARGIN_DP = 40f;
@@ -1011,9 +1011,7 @@ public class MooseRushView extends View {
                 logEvent("Run paused.");
                 return true;
             }
-            if (!isControlTouch(x, y)) {
-                requestJump();
-            }
+            // updateHeldControls owns both labeled-button and playfield jumps.
             return true;
         }
 
@@ -1089,6 +1087,10 @@ public class MooseRushView extends View {
                     aimUpPressed = true;
                 } else if (aimDownPadBounds.contains(px, py)) {
                     aimDownPressed = true;
+                } else if (state == STATE_RUNNING && !pauseButtonBounds.contains(px, py)) {
+                    // Open playfield touches use the same held/released jump
+                    // path as the labeled button, including short hops.
+                    jumpPressed = true;
                 }
             }
         }
@@ -1132,17 +1134,6 @@ public class MooseRushView extends View {
             aimDownPressed = true;
             aimPadY = Math.max(aimPadY, dy);
         }
-    }
-
-    private boolean isControlTouch(float x, float y) {
-        return leftPadBounds.contains(x, y)
-                || dpadTouchContains(x, y)
-                || rightPadBounds.contains(x, y)
-                || jumpPadBounds.contains(x, y)
-                || firePadBounds.contains(x, y)
-                || sprayPadBounds.contains(x, y)
-                || aimUpPadBounds.contains(x, y)
-                || aimDownPadBounds.contains(x, y);
     }
 
     /**
@@ -1534,8 +1525,9 @@ public class MooseRushView extends View {
          * This keeps early seconds readable and later seconds exciting.
          */
         float tension = DifficultyCurve.tension(selectedStage, gatesPassed, stage.goalGates);
-        float gateSpeed = dp(RunnerTuning.scrollSpeedDp(stage.baseSpeed, gatesPassed)) * DifficultyCurve.speedMultiplier(tension);
-        gateSpeed *= worldSpeedMultiplier();
+        float gateSpeedDp = RunnerTuning.scrollSpeedDp(stage.baseSpeed, gatesPassed)
+                * DifficultyCurve.speedMultiplier(tension) * worldSpeedMultiplier();
+        float gateSpeed = dp(RunnerTuning.capScrollSpeedDp(gateSpeedDp, stage.baseSpeed));
         float gravity = selectedSeason == SEASON_DARKNESS ? dp(RunnerTuning.DARKNESS_GRAVITY_DP) : dp(RunnerTuning.GRAVITY_DP);
         if (auroraFocusTimer > 0f) {
             gravity *= 0.88f;
@@ -1813,10 +1805,18 @@ public class MooseRushView extends View {
          */
         spawnCooldown -= dt;
         if (spawnCooldown <= 0f) {
-            spawnGate();
-            float tension = DifficultyCurve.tension(selectedStage, gatesPassed, STAGES[selectedStage].goalGates);
-            spawnCooldown = DifficultyCurve.gateCooldown(RunnerTuning.nextGateCooldown(STAGES[selectedStage].spawnSeconds, gatesPassed), tension)
-                    * RushDirector.gateCooldownMultiplier(gatesPassed, flowActive());
+            if (activeEncounter != null) {
+                // The current card still owes its wildlife wave. Do not emit a
+                // second, route-less gate from the same recipe while the two
+                // independent timers race each other.
+                spawnCooldown = 0.24f;
+            } else {
+                spawnGate();
+                float tension = DifficultyCurve.tension(selectedStage, gatesPassed, STAGES[selectedStage].goalGates);
+                float proposedCooldown = DifficultyCurve.gateCooldown(RunnerTuning.nextGateCooldown(STAGES[selectedStage].spawnSeconds, gatesPassed), tension)
+                        * RushDirector.gateCooldownMultiplier(gatesPassed, flowActive());
+                spawnCooldown = RunnerTuning.readableGateCooldown(proposedCooldown, flowActive());
+            }
         }
 
         Iterator<Gate> iterator = gates.iterator();
@@ -2031,6 +2031,11 @@ public class MooseRushView extends View {
             return;
         }
 
+        if (selectedStage != 4) {
+            if (chaseBearActive) endChaseBear(false);
+            return;
+        }
+
         if (!chaseBearActive) {
             if (gatesPassed < 2 || STAGES[selectedStage].goalGates - gatesPassed <= 1) {
                 return;
@@ -2068,9 +2073,7 @@ public class MooseRushView extends View {
     }
 
     private float chaseBearSpawnChance() {
-        if (selectedStage == 4) return 0.92f;
-        if (selectedStage >= 2) return 0.55f;
-        return 0.38f;
+        return selectedStage == 4 ? 0.92f : 0f;
     }
 
     private void startChaseBear() {
@@ -2120,8 +2123,9 @@ public class MooseRushView extends View {
             if (hazardCooldown <= 0f) {
                 spawnHazardWave();
                 float tension = DifficultyCurve.tension(selectedStage, gatesPassed, STAGES[selectedStage].goalGates);
-                hazardCooldown = DifficultyCurve.hazardCooldown(RunnerTuning.nextHazardCooldown(selectedStage, gatesPassed), tension)
+                float proposedCooldown = DifficultyCurve.hazardCooldown(RunnerTuning.nextHazardCooldown(selectedStage, gatesPassed), tension)
                         * RushDirector.hazardCooldownMultiplier(gatesPassed, flowActive());
+                hazardCooldown = RunnerTuning.readableHazardCooldown(proposedCooldown, flowActive());
             }
         }
 
@@ -2151,7 +2155,7 @@ public class MooseRushView extends View {
                  * baseY is the normal lane position. Bobbing and pouncing add a
                  * small animation offset without permanently moving the lane.
                  */
-                hazard.y = hazard.baseY + hazardBobOffset(hazard) + wolfPounceOffset(hazard);
+                hazard.y = hazard.baseY + hazardBobOffset(hazard);
             }
             maybeAwardNearMiss(hazard);
             if (!hazard.passed && hazard.x + hazard.radius < playerX) {
@@ -2265,20 +2269,6 @@ public class MooseRushView extends View {
                 return;
             }
         }
-    }
-
-    private float wolfPounceOffset(Hazard hazard) {
-        if (!hazard.pouncingWolf || hazard.roaring) {
-            return 0f;
-        }
-        float distance = hazard.x - playerX;
-        if (distance < dp(18) || distance > dp(154)) {
-            return 0f;
-        }
-        float progress = 1f - (distance - dp(18)) / dp(136);
-        float arc = (float) Math.sin(progress * Math.PI);
-        float airborneAllowance = grounded ? 1f : 0.72f;
-        return -arc * dp(38) * airborneAllowance;
     }
 
     private float hazardVisualPhase(Hazard hazard) {
@@ -3669,7 +3659,8 @@ public class MooseRushView extends View {
         }
         int starCount = activeEncounter == null
                 ? RushDirector.starTrailCount(gatesPassed) : activeEncounter.starCount;
-        if (random.nextFloat() < 0.88f) {
+        boolean highRoute = activeEncounter != null && activeEncounter.route == EncounterCard.ROUTE_HIGH;
+        if (!highRoute && random.nextFloat() < 0.82f) {
             float baseStarY = getGroundY() - hurdleHeight - gameplayDp(30 + random.nextFloat() * 12);
             for (int i = 0; i < starCount; i++) {
                 float arc = (float) Math.sin((i + 1f) / (starCount + 1f) * Math.PI);
@@ -3678,39 +3669,41 @@ public class MooseRushView extends View {
                 stars.add(new Star(starX, Math.max(dp(78), starY), gameplayDp(8)));
             }
         }
-        if (!gameState.shieldActive && gatesPassed >= 1 && random.nextFloat() < powerUpSpawnChance()) {
-            float shieldY = getGroundY() - hurdleHeight - gameplayDp(58 + random.nextFloat() * 16);
-            powerUps.add(new PowerUp(getWidth() + gateWidth + gameplayDp(86), Math.max(dp(92), shieldY), gameplayDp(10), "SHIELD"));
-        }
-        if (gatesPassed >= 2 && random.nextFloat() < cacheSpawnChance()) {
-            float cacheY = getGroundY() - hurdleHeight - gameplayDp(24 + random.nextFloat() * 26);
-            powerUps.add(new PowerUp(getWidth() + gateWidth + gameplayDp(126), Math.max(dp(88), cacheY), gameplayDp(9.5f), "CACHE"));
-        }
-        if (gatesPassed >= 3 && auroraFocusTimer <= 0f && random.nextFloat() < focusSpawnChance()) {
-            float focusY = getGroundY() - hurdleHeight - gameplayDp(72 + random.nextFloat() * 18);
-            powerUps.add(new PowerUp(getWidth() + gateWidth + gameplayDp(166), Math.max(dp(86), focusY), gameplayDp(10.5f), "FOCUS"));
-        }
-        if (gatesPassed >= 2 && random.nextFloat() < trailMapSpawnChance()) {
-            float mapY = getGroundY() - hurdleHeight - gameplayDp(42 + random.nextFloat() * 18);
-            powerUps.add(new PowerUp(getWidth() + gateWidth + gameplayDp(206), Math.max(dp(86), mapY), gameplayDp(9.0f), "MAP"));
-        }
-        if (gatesPassed >= 4 && gameState.lives < 3 && random.nextFloat() < rescueKitSpawnChance()) {
-            float kitY = getGroundY() - hurdleHeight - gameplayDp(52 + random.nextFloat() * 18);
-            powerUps.add(new PowerUp(getWidth() + gateWidth + gameplayDp(246), Math.max(dp(88), kitY), gameplayDp(9.6f), "KIT"));
-        }
-        if (gatesPassed >= 3 && bearSprayCharges < SprayTuning.MAX_CHARGES && random.nextFloat() < bearSpraySpawnChance()) {
-            float sprayY = getGroundY() - hurdleHeight - gameplayDp(34 + random.nextFloat() * 20);
-            powerUps.add(new PowerUp(getWidth() + gateWidth + gameplayDp(286), Math.max(dp(88), sprayY), gameplayDp(9.4f), "SPRAY"));
-        }
+        spawnSingleRouteReward(gateWidth, hurdleHeight);
+    }
+
+    private void spawnSingleRouteReward(float gateWidth, float hurdleHeight) {
+        // A gate already owns stars and route geometry. Choose at most one
+        // utility reward so the player can instantly read what is worth taking.
+        float spawnChance = gatesPassed < 2 ? 0.18f : selectedStage >= 3 ? 0.34f : 0.28f;
+        if (random.nextFloat() >= spawnChance) return;
+
+        List<String> choices = new ArrayList<>();
+        if (!gameState.shieldActive && gatesPassed >= 1) choices.add("SHIELD");
+        if (gatesPassed >= 2) choices.add("CACHE");
+        if (gatesPassed >= 3 && auroraFocusTimer <= 0f) choices.add("FOCUS");
+        if (gatesPassed >= 2 && routeMilestoneIndex < 3) choices.add("MAP");
+        if (gatesPassed >= 4 && gameState.lives < 3) choices.add("KIT");
+        if (gatesPassed >= 3 && bearSprayCharges < SprayTuning.MAX_CHARGES) choices.add("SPRAY");
+        if (choices.isEmpty()) return;
+
+        String type = choices.get(random.nextInt(choices.size()));
+        float radius = "SHIELD".equals(type) ? 10f : "FOCUS".equals(type) ? 10.5f : 9.5f;
+        float rewardY = getGroundY() - hurdleHeight - gameplayDp(46 + random.nextFloat() * 14);
+        powerUps.add(new PowerUp(getWidth() + gateWidth + gameplayDp(112),
+                Math.max(dp(88), rewardY), gameplayDp(radius), type));
     }
 
     private void spawnRouteGeometry(EncounterCard encounter, float anchorX) {
         if (encounter == null) return;
         float ground = getGroundY();
-        float blockX = anchorX + gameplayDp(encounter.route == EncounterCard.ROUTE_PRECISION ? 300 : 218);
-        float blockY = ground - gameplayDp(encounter.route == EncounterCard.ROUTE_HIGH ? 190
-                : encounter.route == EncounterCard.ROUTE_PRECISION ? 142 : 108);
-        bonusBlocks.add(new BonusBlock(blockX, blockY, gameplayDp(38)));
+        // The bonus block is the precision route's focal target. High and
+        // ground routes already have their own decision and reward language.
+        if (encounter.route == EncounterCard.ROUTE_PRECISION) {
+            float blockX = anchorX + gameplayDp(300);
+            float blockY = ground - gameplayDp(142);
+            bonusBlocks.add(new BonusBlock(blockX, blockY, gameplayDp(38)));
+        }
         if (encounter.route == EncounterCard.ROUTE_HIGH) {
             routePlatforms.add(new RoutePlatform(anchorX + gameplayDp(32), ground - gameplayDp(92),
                     gameplayDp(92), false, flowActive(), random.nextFloat() * 6f));
@@ -3752,7 +3745,7 @@ public class MooseRushView extends View {
                     gameplayDp(104), selectedStage >= 2, true, random.nextFloat() * 6f));
             launchPads.add(new LaunchPad(anchorX + gameplayDp(342), ground - dp(2), gameplayDp(62)));
         }
-        if (!(encounter.route == EncounterCard.ROUTE_GROUND && selectedStage == 1 && !flowActive())) {
+        if (encounter.route == EncounterCard.ROUTE_HIGH || encounter.mastery || flowActive()) {
             float launchY = encounter.route == EncounterCard.ROUTE_HIGH ? ground - gameplayDp(92)
                     : encounter.route == EncounterCard.ROUTE_GROUND && flowActive()
                     ? ground - gameplayDp(42) : ground - dp(2);
@@ -3767,37 +3760,6 @@ public class MooseRushView extends View {
             trickRings.add(new TrickRing(startX + gameplayDp(i * 48),
                     launchY - gameplayDp(heights[i]), gameplayDp(15)));
         }
-    }
-
-    private float powerUpSpawnChance() {
-        if (selectedStage == 0) return 0.18f;
-        if (selectedStage >= 4) return 0.25f;
-        return 0.22f;
-    }
-
-    private float cacheSpawnChance() {
-        if (selectedStage >= 4) return 0.24f;
-        if (selectedStage >= 2) return 0.18f;
-        return 0.12f;
-    }
-
-    private float focusSpawnChance() {
-        if (selectedStage >= 4) return 0.16f;
-        if (selectedStage >= 2) return 0.13f;
-        return 0.10f;
-    }
-
-    private float trailMapSpawnChance() {
-        if (routeMilestoneIndex >= 3) return 0.04f;
-        return selectedStage >= 3 ? 0.14f : 0.10f;
-    }
-
-    private float rescueKitSpawnChance() {
-        return selectedStage >= 3 ? 0.18f : 0.12f;
-    }
-
-    private float bearSpraySpawnChance() {
-        return SprayTuning.spawnChance(selectedStage);
     }
 
     private void updateStars(float dt, float speed) {
@@ -3991,6 +3953,30 @@ public class MooseRushView extends View {
         for (Gate gate : gates) {
             if (gate.x > playerX) {
                 x = Math.max(x, gate.x + gate.width + dp(HAZARD_GATE_CLEARANCE_DP));
+            }
+        }
+        // Finish the authored jump route before asking for a wildlife response.
+        // Previously the first animal was placed from the gate edge and could
+        // occupy the second or third platform in the same route.
+        float routeClearance = gameplayDp(96);
+        for (RoutePlatform platform : routePlatforms) {
+            if (platform.x + platform.width > playerX) {
+                x = Math.max(x, platform.x + platform.width + routeClearance);
+            }
+        }
+        for (LaunchPad pad : launchPads) {
+            if (pad.x + pad.width > playerX) {
+                x = Math.max(x, pad.x + pad.width + routeClearance);
+            }
+        }
+        for (BonusBlock block : bonusBlocks) {
+            if (block.x + block.size > playerX) {
+                x = Math.max(x, block.x + block.size + routeClearance);
+            }
+        }
+        for (WaterPatch water : waterPatches) {
+            if (water.x + water.width > playerX) {
+                x = Math.max(x, water.x + water.width + routeClearance);
             }
         }
         return x;
@@ -8145,8 +8131,6 @@ public class MooseRushView extends View {
         boolean nearMissAwarded = false;
         boolean roaring = false;
         boolean roarUsed = false;
-        // Some wolves pounce; the phase makes that choice deterministic.
-        final boolean pouncingWolf;
         float roarTimer = 0f;
         float age = 0f;
         int behaviorState = 0;
@@ -8165,7 +8149,6 @@ public class MooseRushView extends View {
             this.phase = phase;
             this.label = label;
             this.drawable = drawable;
-            this.pouncingWolf = "WOLF".equals(label) && ((int) (phase * 1000f) & 1) == 0;
         }
     }
 

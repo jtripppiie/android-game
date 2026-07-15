@@ -44,7 +44,8 @@ public class RunnerTuningTest {
     @Test
     public void scrollSpeedRampsSlowly() {
         assertEquals(150f, RunnerTuning.scrollSpeedDp(150f, 0), 0.0001f);
-        assertEquals(214f, RunnerTuning.scrollSpeedDp(150f, 99), 0.0001f);
+        assertEquals(186f, RunnerTuning.scrollSpeedDp(150f, 99), 0.0001f);
+        assertEquals(258f, RunnerTuning.capScrollSpeedDp(400f, 150f), 0.0001f);
     }
 
     @Test
@@ -60,5 +61,13 @@ public class RunnerTuningTest {
     public void normalGravityKeepsJumpFloatierThanDarkness() {
         assertTrue(RunnerTuning.GRAVITY_DP < RunnerTuning.DARKNESS_GRAVITY_DP);
         assertTrue(RunnerTuning.GRAVITY_DP <= 1600f);
+    }
+
+    @Test
+    public void finalMultipliersCannotCollapseRecoveryWindow() {
+        assertEquals(1.20f, RunnerTuning.readableGateCooldown(0.62f, false), 0.0001f);
+        assertEquals(1.05f, RunnerTuning.readableGateCooldown(0.62f, true), 0.0001f);
+        assertEquals(1.45f, RunnerTuning.readableHazardCooldown(0.58f, false), 0.0001f);
+        assertEquals(1.20f, RunnerTuning.readableHazardCooldown(0.58f, true), 0.0001f);
     }
 }

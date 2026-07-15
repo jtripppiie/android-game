@@ -39,7 +39,11 @@ final class EncounterCard {
     }
 
     boolean supports(int stage, int gates, boolean flow, int budget) {
-        return stage >= minStage && gates >= minGates && threatBudget <= budget
+        // Encounter art and hazard combinations are biome-specific. Only the
+        // clean tutorial launch is shared; later stages must not inherit every
+        // earlier stage's animals and route recipe.
+        boolean stageMatches = "clean_launch".equals(id) || stage == minStage;
+        return stageMatches && gates >= minGates && threatBudget <= budget
                 && (!flowVariant || flow);
     }
 

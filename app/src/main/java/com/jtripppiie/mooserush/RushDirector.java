@@ -61,6 +61,8 @@ final class RushDirector {
     }
 
     static float hazardWaveSpacingDp(int waveIndex) {
-        return 104f + waveIndex * 18f;
+        // Center-to-center spacing: broad animal sprites must not overlap into
+        // one unreadable wall.
+        return 188f + waveIndex * 20f;
     }
 }

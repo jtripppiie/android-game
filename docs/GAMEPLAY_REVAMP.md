@@ -45,3 +45,11 @@ FLOW must never slow the game. Focus remains the deliberate slow-motion state.
 - Reward a line of execution, not a random pickup cloud.
 - New systems must change a player decision or replace an older system.
 - Pure pacing rules require JVM tests before device tuning.
+- A gate, its route geometry, rewards, and wildlife wave form one owned beat;
+  another gate cannot reuse a partially emitted encounter.
+- Wildlife begins after the route footprint plus recovery clearance, never
+  inside a platform sequence.
+- A route may present one utility pickup and one primary reward language:
+  precision uses stars/blocks, while high routes use rings.
+- Combined speed effects are capped relative to the stage's authored base speed.
+- Open-playfield and labeled-button jumps share identical hold/release physics.
