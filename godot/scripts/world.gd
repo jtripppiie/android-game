@@ -70,12 +70,51 @@ func build_level() -> void:
 	enemy(Vector2(3520, 500), 120, "wolf")
 	enemy(Vector2(4520, 460), 180, "bear")
 	goal(Vector2(5480, 450))
+	build_route_branches()
 	var title := Label.new()
 	title.text = "CHUGACH RUN · FIND THE KEY · REACH THE RESCUE BEACON"
 	title.position = Vector2(120, 92)
 	title.add_theme_font_size_override("font_size", 24)
 	title.add_theme_color_override("font_color", Color("#fff1b8"))
 	add_child(title)
+
+func build_route_branches() -> void:
+	# HIGH: moving-platform chain with the best reward line and aerial exposure.
+	platform(Rect2(1080, 295, 150, 24), Color("#dff8fb"))
+	moving_platform(Vector2(1370, 255), Vector2(190, -70), 2.4)
+	platform(Rect2(1650, 235, 170, 24), Color("#dff8fb"))
+	for point in [Vector2(1140,250), Vector2(1430,205), Vector2(1700,190)]:
+		collectible(point, "coin")
+
+	# PRECISION: brittle ice is a usable bridge or a player-created drop route.
+	var ice := ReactiveIce.new()
+	ice.position = Vector2(2890, 390)
+	ice.size = Vector2(220, 26)
+	ice.shattered.connect(func(_at): checkpoint_label.text = "ICE ROUTE SHATTERED")
+	add_child(ice)
+	collectible(Vector2(2890, 340), "coin")
+
+	# LOW: safer cave line, but a bear owns the exit and must be outplayed.
+	platform(Rect2(3320, 650, 620, 70), Color("#8cb9c4"))
+	platform(Rect2(3450, 595, 145, 24), Color("#b8dce3"))
+	enemy(Vector2(3820, 610), 115, "bear")
+	collectible(Vector2(3500, 550), "coin")
+
+	# Reunion: routes converge through moving footing before the final approach.
+	moving_platform(Vector2(4300, 360), Vector2(0, 150), 2.1)
+	platform(Rect2(4480, 300, 190, 24), Color("#dff8fb"))
+	collectible(Vector2(4550, 255), "coin")
+	route_sign(Vector2(980, 330), "HIGH · SPEED")
+	route_sign(Vector2(2750, 440), "PRECISION · BREAKABLE")
+	route_sign(Vector2(3300, 625), "LOW · WILDLIFE")
+
+func route_sign(at: Vector2, message: String) -> void:
+	var label := Label.new()
+	label.position = at
+	label.text = message
+	label.add_theme_font_size_override("font_size", 17)
+	label.add_theme_color_override("font_color", Color("#ffda79"))
+	add_child(label)
 
 func platform(rect: Rect2, color: Color) -> void:
 	var body := StaticBody2D.new()

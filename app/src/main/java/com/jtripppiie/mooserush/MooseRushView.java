@@ -264,6 +264,7 @@ public class MooseRushView extends View {
      * When an object scrolls off screen, we remove it so the game stays fast.
      */
     private final List<Gate> gates = new ArrayList<>();
+    private final List<RoutePlatform> routePlatforms = new ArrayList<>();
     private final List<Hazard> hazards = new ArrayList<>();
     private final List<Star> stars = new ArrayList<>();
     private final List<PowerUp> powerUps = new ArrayList<>();
@@ -1162,6 +1163,7 @@ public class MooseRushView extends View {
          * this is one of the first places to check.
          */
         gates.clear();
+        routePlatforms.clear();
         hazards.clear();
         stars.clear();
         powerUps.clear();
@@ -1562,6 +1564,7 @@ public class MooseRushView extends View {
          * velocity changes because of gravity, then position changes because
          * of velocity. Negative velocity moves up; positive velocity falls down.
          */
+        float previousPlayerY = playerY;
         playerVelocityY += gravity * dt;
         playerY += playerVelocityY * dt;
 
@@ -1575,8 +1578,13 @@ public class MooseRushView extends View {
 
         groundScroll = (groundScroll + gateSpeed * dt) % dp(48);
         sceneryScroll = (sceneryScroll + gateSpeed * dt) % dp(3600);
+        updateRoutePlatforms(dt, bossActive ? 0f : gateSpeed);
 
         float restY = getGroundY() - playerRadius;
+        RoutePlatform landedPlatform = landingRoutePlatform(previousPlayerY, playerY);
+        if (landedPlatform != null) {
+            restY = landedPlatform.y - playerRadius;
+        }
         if (playerY >= restY) {
             /*
              * Landing means the runner touched the ground line. We snap exactly
@@ -1588,7 +1596,7 @@ public class MooseRushView extends View {
             jumpsUsed = 0;
             coyoteTimer = RunnerTuning.COYOTE_SECONDS;
             if (!wasGrounded) {
-                effects.spawnDustBurst(playerX, getGroundY(), 9, Color.argb(185, 235, 245, 248));
+                effects.spawnDustBurst(playerX, restY + playerRadius, 9, Color.argb(185, 235, 245, 248));
                 screenShake = Math.max(screenShake, 0.035f);
                 squashY = 0.65f; // Hard squash on landing
                 squashX = 1.4f;
@@ -1721,6 +1729,34 @@ public class MooseRushView extends View {
                 iterator.remove();
             }
         }
+    }
+
+    private void updateRoutePlatforms(float dt, float speed) {
+        Iterator<RoutePlatform> iterator = routePlatforms.iterator();
+        while (iterator.hasNext()) {
+            RoutePlatform platform = iterator.next();
+            platform.age += dt;
+            platform.x -= speed * dt;
+            platform.y = platform.baseY + (platform.moving
+                    ? (float) Math.sin(platform.age * 2.15f + platform.phase) * dp(20) : 0f);
+            if (platform.x + platform.width < -dp(40)) iterator.remove();
+        }
+    }
+
+    private RoutePlatform landingRoutePlatform(float oldY, float newY) {
+        if (playerVelocityY < 0f) return null;
+        float oldBottom = oldY + playerRadius * 0.82f;
+        float newBottom = newY + playerRadius * 0.82f;
+        RoutePlatform best = null;
+        for (RoutePlatform platform : routePlatforms) {
+            if (platform.broken || playerX + playerRadius * 0.48f < platform.x
+                    || playerX - playerRadius * 0.48f > platform.x + platform.width) continue;
+            if (oldBottom <= platform.y + dp(5) && newBottom >= platform.y - dp(2)
+                    && (best == null || platform.y < best.y)) {
+                best = platform;
+            }
+        }
+        return best;
     }
 
     private boolean maybeAwardCleanVault(Gate gate) {
@@ -1857,6 +1893,7 @@ public class MooseRushView extends View {
             Hazard hazard = iterator.next();
             hazard.age += dt;
             updateHazardRoar(hazard, dt);
+            updateHazardIntent(hazard, dt);
 
             if ("ICE SPIKE".equals(hazard.label)) {
                 hazard.y += dp(320) * dt;
@@ -1868,8 +1905,11 @@ public class MooseRushView extends View {
             } else {
                 hazard.x -= speed * hazard.speedMultiplier * dt;
             }
+            resolveCommittedWildlife(hazard);
 
-            if (!hazard.roaring) {
+            if (!hazard.roaring && isDivingHazard(hazard)) {
+                hazard.y += (hazard.targetY - hazard.y) * Math.min(1f, dt * 5.8f);
+            } else if (!hazard.roaring) {
                 /*
                  * baseY is the normal lane position. Bobbing and pouncing add a
                  * small animation offset without permanently moving the lane.
@@ -1916,6 +1956,78 @@ public class MooseRushView extends View {
             return (float) Math.sin(phase * 6.8f) * dp(0.8f);
         }
         return (float) Math.sin(phase * 1.6f) * dp(0.36f);
+    }
+
+    private void updateHazardIntent(Hazard hazard, float dt) {
+        boolean eagle = "EAGLE".equals(hazard.label) || "DARK".equals(hazard.label);
+        boolean charger = "BEAR".equals(hazard.label) || "POLAR".equals(hazard.label)
+                || "MOOSE".equals(hazard.label);
+        if (!eagle && !charger) return;
+
+        if (hazard.behaviorState == 0 && hazard.x < getWidth() * 0.88f) {
+            hazard.behaviorState = 1;
+            hazard.intentTimer = eagle ? 0.62f : 0.54f;
+            hazard.targetY = eagle
+                    ? clamp(playerY, getGroundY() - dp(150), getGroundY() - dp(34)) : hazard.baseY;
+            hazard.speedMultiplier = hazard.baseSpeedMultiplier * (eagle ? 0.48f : 0.34f);
+        } else if (hazard.behaviorState == 1) {
+            hazard.intentTimer -= dt;
+            if (hazard.intentTimer <= 0f) {
+                hazard.behaviorState = 2;
+                hazard.committed = true;
+                hazard.speedMultiplier = hazard.baseSpeedMultiplier * (eagle ? 1.42f : 1.72f);
+                effects.spawnScorePopup(eagle ? "DIVE" : "CHARGE", hazard.x,
+                        hazard.y - hazard.radius * 1.5f, Color.rgb(255, 98, 84));
+            }
+        } else if (hazard.behaviorState == 2 && hazard.x < playerX - dp(80)) {
+            hazard.behaviorState = 3;
+            hazard.committed = false;
+            hazard.speedMultiplier = hazard.baseSpeedMultiplier * 0.72f;
+        }
+    }
+
+    private boolean isDivingHazard(Hazard hazard) {
+        return hazard.behaviorState >= 1
+                && ("EAGLE".equals(hazard.label) || "DARK".equals(hazard.label));
+    }
+
+    private void resolveCommittedWildlife(Hazard hazard) {
+        if (!hazard.committed || hazard.environmentHit
+                || !("BEAR".equals(hazard.label) || "POLAR".equals(hazard.label)
+                || "MOOSE".equals(hazard.label))) return;
+
+        for (Gate gate : new ArrayList<>(gates)) {
+            if (hazard.x + hazard.radius < gate.x || hazard.x - hazard.radius > gate.x + gate.width) continue;
+            hazard.environmentHit = true;
+            gates.remove(gate);
+            if (!gate.passed) {
+                gate.passed = true;
+                gatesPassed++;
+                gameState.gatesPassed = gatesPassed;
+            }
+            gameState.addCombo();
+            int awarded = addScore(32, "Wildlife route break");
+            effects.spawnScorePopup("BAITED BREAK +" + awarded, gate.x, getGroundY() - gate.height,
+                    Color.rgb(255, 218, 121));
+            effects.spawnDustBurst(gate.x, getGroundY(), 24, Color.argb(190, 235, 245, 248));
+            screenShake = Math.max(screenShake, 0.14f);
+            addAuroraMeter(15f, "Wildlife route break");
+            return;
+        }
+
+        for (RoutePlatform platform : routePlatforms) {
+            if (!platform.brittle || platform.broken) continue;
+            if (hazard.x + hazard.radius >= platform.x && hazard.x - hazard.radius <= platform.x + platform.width
+                    && Math.abs(hazard.y - platform.y) < hazard.radius * 2f) {
+                platform.broken = true;
+                hazard.environmentHit = true;
+                effects.spawnScorePopup("BEAR BREAK", platform.x + platform.width / 2f,
+                        platform.y - dp(18), Color.rgb(255, 166, 84));
+                effects.spawnSparkBurst(platform.x + platform.width / 2f, platform.y, 26, Color.WHITE);
+                screenShake = Math.max(screenShake, 0.13f);
+                return;
+            }
+        }
     }
 
     private float wolfPounceOffset(Hazard hazard) {
@@ -1996,6 +2108,13 @@ public class MooseRushView extends View {
             if (hitAttack != null) {
                 iterator.remove();
                 shatterBossAttack(hitAttack, shot);
+                continue;
+            }
+
+            RoutePlatform hitPlatform = hitRoutePlatformForShot(shot);
+            if (hitPlatform != null) {
+                iterator.remove();
+                damageRoutePlatform(hitPlatform, shot);
                 continue;
             }
 
@@ -2096,12 +2215,24 @@ public class MooseRushView extends View {
     }
 
     private boolean bossAttackCanBeShot(BossAttack attack) {
-        return attack.type == ATTACK_ICE;
+        return attack.type == ATTACK_ICE || (attack.type == ATTACK_LASER && flowActive());
     }
 
     private void shatterBossAttack(BossAttack attack, Shot shot) {
         freezeTimer = 0.04f; // Tiny impact freeze
         bossAttacks.remove(attack);
+        if (attack.type == ATTACK_LASER) {
+            int reflectedDamage = shot.empowered ? 3 : 2;
+            bossHealth -= reflectedDamage;
+            int reflectedScore = addScore(45, "Flow laser reflection");
+            effects.spawnScorePopup("BEAM REFLECT +" + reflectedScore, bossX,
+                    bossLaserEyeY() - dp(18), Color.rgb(77, 219, 184));
+            effects.spawnSparkBurst(bossLaserEyeX(), bossLaserEyeY(), 34, Color.WHITE);
+            flowTimer = Math.min(FLOW_TIMER_SECONDS + 2f, flowTimer + 0.8f);
+            screenShake = Math.max(screenShake, 0.16f);
+            if (bossHealth <= 0) completeStage();
+            return;
+        }
         int awarded = addScore(shot.empowered ? 24 : 16, "Boss projectile shattered");
         effects.spawnScorePopup("SHATTER +" + awarded, attack.x, attack.y - attack.radius * 1.4f, Color.rgb(132, 213, 232));
         effects.spawnSparkBurst(attack.x, attack.y, shot.empowered ? 22 : 15, shot.empowered ? Color.rgb(255, 218, 121) : Color.rgb(230, 248, 255));
@@ -2110,6 +2241,12 @@ public class MooseRushView extends View {
         showRunCallout("PROJECTILE SHATTERED", 0.75f);
         playSound("hit");
         logEvent("Boss projectile shattered.");
+        if ((selectedStage == 1 || selectedStage == 3) && routePlatforms.size() < 5) {
+            float platformY = clamp(attack.y + dp(32), getGroundY() - dp(138), getGroundY() - dp(58));
+            routePlatforms.add(new RoutePlatform(attack.x - dp(46), platformY, dp(92),
+                    false, true, random.nextFloat() * 6f));
+            effects.spawnScorePopup("ICE BRIDGE", attack.x, platformY - dp(14), Color.rgb(132, 213, 232));
+        }
     }
 
     private Gate hitDestructibleGateForShot(Shot shot) {
@@ -2126,6 +2263,31 @@ public class MooseRushView extends View {
             }
         }
         return null;
+    }
+
+    private RoutePlatform hitRoutePlatformForShot(Shot shot) {
+        for (RoutePlatform platform : routePlatforms) {
+            if (!platform.brittle || platform.broken) continue;
+            tempRect.set(platform.x, platform.y - dp(5), platform.x + platform.width, platform.y + dp(18));
+            if (circleHitsRect(shot.x, shot.y, shot.radius, tempRect)) return platform;
+        }
+        return null;
+    }
+
+    private void damageRoutePlatform(RoutePlatform platform, Shot shot) {
+        platform.hits += shot.empowered ? 2 : 1;
+        if (platform.hits < 2) {
+            effects.spawnScorePopup("ICE CRACK", shot.x, platform.y - dp(14), Color.rgb(132, 213, 232));
+            effects.spawnSparkBurst(shot.x, platform.y, 10, Color.WHITE);
+            return;
+        }
+        platform.broken = true;
+        int awarded = addScore(shot.empowered ? 30 : 20, "Brittle route shattered");
+        effects.spawnScorePopup("ROUTE SHATTER +" + awarded, platform.x + platform.width / 2f,
+                platform.y - dp(18), Color.rgb(77, 219, 184));
+        effects.spawnSparkBurst(platform.x + platform.width / 2f, platform.y, 28, Color.rgb(132, 213, 232));
+        screenShake = Math.max(screenShake, 0.10f);
+        if (flowActive()) flowTimer = Math.min(FLOW_TIMER_SECONDS + 2f, flowTimer + 0.5f);
     }
 
     private Gate nearestDestructibleGate(float startX, float maxX) {
@@ -2245,6 +2407,7 @@ public class MooseRushView extends View {
 
     private void startBossPhase() {
         gates.clear();
+        routePlatforms.clear();
         hazards.clear();
         stars.clear();
         powerUps.clear();
@@ -2263,9 +2426,29 @@ public class MooseRushView extends View {
         bossY = bossLaneCenterY(selectedStage);
         bossVelocityY = 0f;
         bossWarningTimer = 2.2f;
+        buildBossArena();
         showRunCallout("FIRE TO DEFEAT. DODGE TELLS.", 2.2f);
         screenShake = Math.max(screenShake, 0.08f);
         logEvent("Boss phase: " + STAGES[selectedStage].bossName + ". Use FIRE.");
+    }
+
+    private void buildBossArena() {
+        float ground = getGroundY();
+        if (selectedStage == 0) {
+            routePlatforms.add(new RoutePlatform(getWidth() * 0.34f, ground - dp(72), dp(86), true, false, 0.4f));
+            routePlatforms.add(new RoutePlatform(getWidth() * 0.58f, ground - dp(116), dp(78), true, false, 2.2f));
+        } else if (selectedStage == 1) {
+            routePlatforms.add(new RoutePlatform(getWidth() * 0.42f, ground - dp(62), dp(118), false, true, 0f));
+        } else if (selectedStage == 2) {
+            routePlatforms.add(new RoutePlatform(getWidth() * 0.30f, ground - dp(82), dp(92), false, false, 0f));
+            routePlatforms.add(new RoutePlatform(getWidth() * 0.55f, ground - dp(124), dp(92), true, false, 1.4f));
+        } else if (selectedStage == 3) {
+            routePlatforms.add(new RoutePlatform(getWidth() * 0.28f, ground - dp(76), dp(82), true, true, 0.5f));
+            routePlatforms.add(new RoutePlatform(getWidth() * 0.52f, ground - dp(132), dp(94), true, true, 2.8f));
+        } else {
+            routePlatforms.add(new RoutePlatform(getWidth() * 0.26f, ground - dp(66), dp(108), false, true, 0f));
+            routePlatforms.add(new RoutePlatform(getWidth() * 0.52f, ground - dp(112), dp(104), true, true, 2.1f));
+        }
     }
 
     private void updateBoss(float dt) {
@@ -2393,6 +2576,9 @@ public class MooseRushView extends View {
         } else {
             screenShake = Math.max(screenShake, selectedStage == 4 ? 0.11f : 0.07f);
             effects.spawnDustBurst(bossX - bossRadius(), getGroundY(), selectedStage == 4 ? 18 : 10, Color.argb(190, 235, 245, 248));
+            if ((selectedStage == 2 || selectedStage == 4) && bossEnraged()) {
+                collapseBossPlatform();
+            }
         }
 
         if (selectedStage == 4 && bossPhaseThreeAnnounced) {
@@ -2413,6 +2599,25 @@ public class MooseRushView extends View {
                     random.nextFloat() * 4f, pressureLabel, null));
             showRunCallout("CROSSFIRE", 0.72f);
         }
+    }
+
+    private void collapseBossPlatform() {
+        RoutePlatform target = null;
+        float best = Float.MAX_VALUE;
+        for (RoutePlatform platform : routePlatforms) {
+            if (platform.broken) continue;
+            float distance = Math.abs((platform.x + platform.width / 2f) - playerX);
+            if (distance < best) {
+                best = distance;
+                target = platform;
+            }
+        }
+        if (target == null) return;
+        target.broken = true;
+        effects.spawnScorePopup("ARENA BREAK", target.x + target.width / 2f,
+                target.y - dp(16), Color.rgb(255, 98, 84));
+        effects.spawnDustBurst(target.x + target.width / 2f, target.y, 22, Color.argb(190, 235, 245, 248));
+        screenShake = Math.max(screenShake, 0.18f);
     }
 
     private void enterBossRecover() {
@@ -2506,9 +2711,26 @@ public class MooseRushView extends View {
         BossAttack laser = new BossAttack(beamX, targetY, dp(selectedStage == 0 ? 6.5f : 5.5f), 0f, 0f, ATTACK_LASER, "Eye beam");
         laser.spin = getWidth() + dp(80);
         bossAttacks.add(laser);
+        damagePlatformsAlongLaser(targetY);
         screenShake = Math.max(screenShake, 0.10f);
         effects.spawnSparkBurst(beamX, bossLaserEyeY(), 12, Color.rgb(255, 98, 84));
         playSound("throw");
+    }
+
+    private void damagePlatformsAlongLaser(float targetY) {
+        for (RoutePlatform platform : routePlatforms) {
+            if (!platform.brittle || platform.broken || Math.abs(platform.y - targetY) > dp(24)) continue;
+            platform.hits++;
+            if (platform.hits >= 2 || bossEnraged()) {
+                platform.broken = true;
+                effects.spawnScorePopup("LASER SHATTER", platform.x + platform.width / 2f,
+                        platform.y - dp(16), Color.rgb(255, 98, 84));
+                effects.spawnSparkBurst(platform.x + platform.width / 2f, platform.y, 24, Color.WHITE);
+            } else {
+                effects.spawnScorePopup("ICE CRACK", platform.x + platform.width / 2f,
+                        platform.y - dp(16), Color.rgb(132, 213, 232));
+            }
+        }
     }
 
     private void updateBossAttacks(float dt) {
@@ -3086,6 +3308,7 @@ public class MooseRushView extends View {
             }
         }
         gates.add(new Gate(getWidth() + gateWidth, hurdleHeight, gateWidth));
+        spawnRouteGeometry(activeEncounter, getWidth() + gateWidth);
         int starCount = activeEncounter == null
                 ? RushDirector.starTrailCount(gatesPassed) : activeEncounter.starCount;
         if (random.nextFloat() < 0.88f) {
@@ -3120,6 +3343,27 @@ public class MooseRushView extends View {
         if (gatesPassed >= 3 && bearSprayCharges < SprayTuning.MAX_CHARGES && random.nextFloat() < bearSpraySpawnChance()) {
             float sprayY = getGroundY() - hurdleHeight - gameplayDp(34 + random.nextFloat() * 20);
             powerUps.add(new PowerUp(getWidth() + gateWidth + gameplayDp(286), Math.max(dp(88), sprayY), gameplayDp(9.4f), "SPRAY"));
+        }
+    }
+
+    private void spawnRouteGeometry(EncounterCard encounter, float anchorX) {
+        if (encounter == null) return;
+        float ground = getGroundY();
+        if (encounter.route == EncounterCard.ROUTE_HIGH) {
+            routePlatforms.add(new RoutePlatform(anchorX + gameplayDp(32), ground - gameplayDp(92),
+                    gameplayDp(92), false, flowActive(), random.nextFloat() * 6f));
+            routePlatforms.add(new RoutePlatform(anchorX + gameplayDp(158), ground - gameplayDp(132),
+                    gameplayDp(88), true, false, random.nextFloat() * 6f));
+            routePlatforms.add(new RoutePlatform(anchorX + gameplayDp(278), ground - gameplayDp(104),
+                    gameplayDp(104), false, selectedStage >= 3, random.nextFloat() * 6f));
+        } else if (encounter.route == EncounterCard.ROUTE_PRECISION) {
+            routePlatforms.add(new RoutePlatform(anchorX + gameplayDp(116), ground - gameplayDp(70),
+                    gameplayDp(82), selectedStage >= 2, false, random.nextFloat() * 6f));
+        } else if (flowActive()) {
+            // A low FLOW bridge lets skilled players stay aggressive beneath
+            // aerial threats without turning the safe route into a free pass.
+            routePlatforms.add(new RoutePlatform(anchorX + gameplayDp(120), ground - gameplayDp(42),
+                    gameplayDp(132), false, true, random.nextFloat() * 6f));
         }
     }
 
@@ -3793,6 +4037,9 @@ public class MooseRushView extends View {
         for (Gate gate : gates) {
             drawGate(canvas, gate);
         }
+        for (RoutePlatform platform : routePlatforms) {
+            drawRoutePlatform(canvas, platform);
+        }
         for (Hazard hazard : hazards) {
             drawHazard(canvas, hazard);
         }
@@ -4125,6 +4372,27 @@ public class MooseRushView extends View {
         paint.setStyle(Paint.Style.FILL);
     }
 
+    private void drawRoutePlatform(Canvas canvas, RoutePlatform platform) {
+        if (platform.broken) return;
+        float bottom = platform.y + dp(13);
+        paint.setStyle(Paint.Style.FILL);
+        paint.setColor(Color.argb(105, 0, 0, 0));
+        canvas.drawOval(platform.x + dp(5), bottom - dp(2), platform.x + platform.width - dp(5), bottom + dp(7), paint);
+        paint.setColor(platform.brittle ? Color.rgb(125, 207, 226)
+                : platform.moving ? Color.rgb(77, 219, 184) : Color.rgb(232, 244, 247));
+        canvas.drawRoundRect(platform.x, platform.y, platform.x + platform.width, bottom, dp(7), dp(7), paint);
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setStrokeWidth(dp(platform.brittle ? 2.2f : 1.4f));
+        paint.setColor(platform.brittle ? Color.WHITE : Color.rgb(35, 86, 108));
+        canvas.drawRoundRect(platform.x, platform.y, platform.x + platform.width, bottom, dp(7), dp(7), paint);
+        if (platform.brittle) {
+            float mid = platform.x + platform.width * 0.52f;
+            canvas.drawLine(mid - dp(14), platform.y + dp(2), mid, platform.y + dp(10), paint);
+            canvas.drawLine(mid, platform.y + dp(10), mid + dp(18), platform.y + dp(3), paint);
+        }
+        paint.setStyle(Paint.Style.FILL);
+    }
+
     private int gateDarkColor() {
         if (selectedStage == 3 || selectedStage == 4) return Color.rgb(74, 96, 110);
         if (selectedStage == 1) return Color.rgb(64, 45, 32);
@@ -4409,6 +4677,7 @@ public class MooseRushView extends View {
          * game keep working even if an art asset is missing.
          */
         Bitmap sheet = sheetForHazard(hazard.label);
+        drawHazardIntent(canvas, hazard);
         float xRadius = hazard.radius * hazardHorizontalScale(hazard.label);
         float yRadius = hazard.radius * hazardVerticalScale(hazard.label);
         /*
@@ -4441,6 +4710,25 @@ public class MooseRushView extends View {
             canvas.drawCircle(hazard.x, hazard.y, hazard.radius, paint);
         }
         drawHazardBadge(canvas, hazard, yRadius);
+    }
+
+    private void drawHazardIntent(Canvas canvas, Hazard hazard) {
+        if (hazard.behaviorState != 1) return;
+        float pulse = 0.55f + 0.45f * (float) Math.sin(hazard.age * 18f);
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setStrokeWidth(dp(2.2f));
+        paint.setColor(Color.argb(Math.round(150 + pulse * 95), 255, 98, 84));
+        canvas.drawCircle(hazard.x, hazard.y, hazard.radius * (1.45f + pulse * 0.12f), paint);
+        if ("EAGLE".equals(hazard.label) || "DARK".equals(hazard.label)) {
+            paint.setStrokeWidth(dp(1.5f));
+            paint.setColor(Color.argb(190, 255, 218, 121));
+            canvas.drawLine(hazard.x, hazard.y, playerX, hazard.targetY, paint);
+        } else {
+            paint.setColor(Color.argb(190, 255, 218, 121));
+            canvas.drawLine(hazard.x - hazard.radius * 1.5f, getGroundY() - dp(5),
+                    playerX, getGroundY() - dp(5), paint);
+        }
+        paint.setStyle(Paint.Style.FILL);
     }
 
     private void drawChaseBearWarning(Canvas canvas) {
@@ -7220,6 +7508,29 @@ public class MooseRushView extends View {
         }
     }
 
+    private static class RoutePlatform {
+        float x;
+        float y;
+        final float baseY;
+        final float width;
+        final boolean moving;
+        final boolean brittle;
+        final float phase;
+        float age = 0f;
+        boolean broken = false;
+        int hits = 0;
+
+        RoutePlatform(float x, float y, float width, boolean moving, boolean brittle, float phase) {
+            this.x = x;
+            this.y = y;
+            this.baseY = y;
+            this.width = width;
+            this.moving = moving;
+            this.brittle = brittle;
+            this.phase = phase;
+        }
+    }
+
     private static class Hazard {
         // Current center position of the hazard.
         float x;
@@ -7245,6 +7556,11 @@ public class MooseRushView extends View {
         final boolean pouncingWolf;
         float roarTimer = 0f;
         float age = 0f;
+        int behaviorState = 0;
+        float intentTimer = 0f;
+        float targetY = 0f;
+        boolean committed = false;
+        boolean environmentHit = false;
 
         Hazard(float x, float y, float radius, float speedMultiplier, float phase, String label, Drawable drawable) {
             this.x = x;

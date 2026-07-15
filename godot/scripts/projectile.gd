@@ -28,7 +28,9 @@ func _draw() -> void:
 	draw_circle(Vector2(-3, -3), 3.0, Color.WHITE)
 
 func _on_body_entered(body: Node) -> void:
-	if body.is_in_group("enemy"):
+	if body.has_method("snowball_hit"):
+		body.snowball_hit(self)
+	elif body.is_in_group("enemy"):
 		var player := get_tree().get_first_node_in_group("player")
 		if is_instance_valid(player): player.enemy_defeated(false)
 		body.queue_free()
