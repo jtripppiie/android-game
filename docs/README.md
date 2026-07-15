@@ -6,6 +6,8 @@ testing, and release preparation.
 
 ## Active Docs
 
+- [4.0 stable release](RELEASE_4_0_STABLE.md): expanded stages, regional
+  mastery gauntlets, release identity, validation, and device acceptance.
 - [3.19 aerial ring routes](RELEASE_3_19_BETA_AERIAL_RING_ROUTES.md):
   launch-directed ring arcs, trick chains, lift preservation, and speed surges.
 - [Wildlife scale contract](WILDLIFE_SCALE_CONTRACT.md): explicit visual and
@@ -20,7 +22,7 @@ testing, and release preparation.
   platform, laser, encounter ownership, Godot integration, and validation fixes.
 - [3.14 visual gameplay release](RELEASE_3_14_BETA_VISUAL_GAMEPLAY_PASS.md):
   current artwork integration, implementation map, verification, and device QA.
-- [Release notes](RELEASE_NOTES.md): current and previous beta highlights.
+- [Release notes](RELEASE_NOTES.md): current stable and previous beta highlights.
 - [Generated assets](GENERATED_ASSETS.md): raster-art prompt summaries and
   transparency pipeline provenance.
 - [Versioning](VERSIONING.md): Android version fields, build badge rules, and
@@ -57,7 +59,7 @@ source of truth for the current beta.
 
 - Version metadata: `app/build.gradle`
 - Current build summary: root `README.md`
-- Current implementation release: `docs/RELEASE_3_19_BETA_AERIAL_RING_ROUTES.md`
+- Current implementation release: `docs/RELEASE_4_0_STABLE.md`
 - QA checklist: `docs/ANDROID_TEST_CHECKLIST.md`
 - Offline visual debugging: `docs/OFFLINE_DEBUG_PREVIEWS.md`
 - Privacy/store readiness: `docs/PRIVACY.md` and `docs/STORE_LISTING_DRAFT.md`

@@ -38,7 +38,7 @@ public class EncounterDirectorTest {
     @Test
     public void deckHasEnoughAuthoredVocabularyForDistinctRuns() {
         EncounterCard[] cards = EncounterDeck.cards();
-        assertTrue(cards.length >= 24);
+        assertTrue(cards.length >= 32);
         int flowCards = 0;
         int highRoutes = 0;
         int groundRoutes = 0;
@@ -52,5 +52,13 @@ public class EncounterDirectorTest {
         assertTrue(flowCards >= 4);
         assertTrue(highRoutes >= 6);
         assertTrue(groundRoutes >= 6);
+    }
+
+    @Test
+    public void finalQuarterUsesStageSpecificMasteryGauntlets() {
+        EncounterDirector director = new EncounterDirector(400L);
+        EncounterCard card = director.next(3, 14, 18, false);
+        assertTrue(card.mastery);
+        assertEquals(3, card.minStage);
     }
 }

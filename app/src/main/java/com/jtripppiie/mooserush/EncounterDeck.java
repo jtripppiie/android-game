@@ -29,7 +29,12 @@ final class EncounterDeck {
             new EncounterCard("aurora_overdrive", 1, 3, EncounterCard.ROUTE_HIGH, 8, 6, true, "STAGE", "WOLF", "STAGE"),
             new EncounterCard("flow_ground_thread", 2, 5, EncounterCard.ROUTE_GROUND, 8, 5, true, "MOOSE", "WOLF", "STAGE"),
             new EncounterCard("flow_dark_dare", 3, 6, EncounterCard.ROUTE_HIGH, 8, 6, true, "EAGLE", "WOLF", "EAGLE"),
-            new EncounterCard("flow_bear_gauntlet", 4, 7, EncounterCard.ROUTE_PRECISION, 8, 6, true, "BEAR", "WOLF", "POLAR")
+            new EncounterCard("flow_bear_gauntlet", 4, 7, EncounterCard.ROUTE_PRECISION, 8, 6, true, "BEAR", "WOLF", "POLAR"),
+            new EncounterCard("sunset_mastery", 0, 6, EncounterCard.ROUTE_HIGH, 5, 6, false, true, "WOLF", "STAGE", "WOLF"),
+            new EncounterCard("river_mastery", 1, 9, EncounterCard.ROUTE_PRECISION, 6, 6, false, true, "SALMON", "WOLF", "SALMON"),
+            new EncounterCard("antler_mastery", 2, 11, EncounterCard.ROUTE_GROUND, 6, 6, false, true, "MOOSE", "WOLF", "MOOSE"),
+            new EncounterCard("aurora_mastery", 3, 13, EncounterCard.ROUTE_HIGH, 6, 7, false, true, "EAGLE", "WOLF", "EAGLE"),
+            new EncounterCard("whiteout_mastery", 4, 16, EncounterCard.ROUTE_PRECISION, 7, 8, false, true, "BEAR", "WOLF", "POLAR")
     };
 
     private EncounterDeck() {

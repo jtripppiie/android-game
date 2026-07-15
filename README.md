@@ -9,14 +9,16 @@ wildlife encounters through stage runs and boss fights.
 ## Current Build
 
 ```text
-versionCode: 387
-versionName: 3.19.0-beta
-build badge: ALASKA PASSPORT v3.87 BETA
-APK: app/build/outputs/apk/debug/you-rush-alaska-3.19.0-beta-387-debug.apk
+versionCode: 400
+versionName: 4.0.0
+build channel: ALASKA RELEASE
+build badge: ALASKA PASSPORT v4.00
+APK: app/build/outputs/apk/debug/you-rush-alaska-4.0.0-400-debug.apk
 ```
 
-This is a beta package for device testing and gameplay tuning. It is not a
-signed public-store release.
+Version 4.0.0 is the first stable gameplay release. The listed debug APK is
+developer-signed for direct device testing; an app-store upload still requires
+the owner's private release key and store submission.
 
 ## Gameplay
 
@@ -118,6 +120,7 @@ Start with [docs/README.md](docs/README.md).
 
 Key active docs:
 
+- [4.0 stable release](docs/RELEASE_4_0_STABLE.md)
 - [3.19 aerial ring routes](docs/RELEASE_3_19_BETA_AERIAL_RING_ROUTES.md)
 - [3.18 secrets and chains release](docs/RELEASE_3_18_BETA_SECRETS_AND_CHAINS.md)
 - [3.17 arcade joy release](docs/RELEASE_3_17_BETA_ARCADE_JOY.md)

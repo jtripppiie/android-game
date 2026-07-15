@@ -146,11 +146,11 @@ public class MooseRushView extends View {
      * Changing these numbers is one of the safest ways to design new levels.
      */
     private static final StageConfig[] STAGES = {
-            new StageConfig("Midnight Sun Run", "Vault driftwood logs before the eclipse.", SEASON_MIDNIGHT_SUN, "Midnight Sun", "WOLF", "DRIFTWOOD LOGS", 8, 18, 160, 2.22f, 0),
-            new StageConfig("Salmon Rush", "Vault slick river logs while salmon arc in.", SEASON_SUMMER, "Salmon Boss", "SALMON", "RIVER LOGS", 10, 8, 165, 2.15f, 1),
-            new StageConfig("Moose Pass", "Vault antler barricades and dodge real moose.", SEASON_SUMMER, "Moose Boss", "MOOSE", "ANTLER BARRICADES", 12, 10, 178, 2.05f, 2),
-            new StageConfig("Dark Winter", "Leap jagged icebergs through low light.", SEASON_DARKNESS, "Eagle Boss", "EAGLE", "ICEBERGS", 14, 12, 188, 1.95f, 3),
-            new StageConfig("Bear Country", "Survive snowbank barricades and winter wildlife.", SEASON_WINTER, "Polar Bear Boss", "BEAR", "SNOWBANKS", 16, 20, 198, 1.85f, 4)
+            new StageConfig("Midnight Sun Run", "Vault driftwood logs before the eclipse.", SEASON_MIDNIGHT_SUN, "Midnight Sun", "WOLF", "DRIFTWOOD LOGS", 10, 18, 160, 2.22f, 0),
+            new StageConfig("Salmon Rush", "Vault slick river logs while salmon arc in.", SEASON_SUMMER, "Salmon Boss", "SALMON", "RIVER LOGS", 14, 8, 165, 2.15f, 1),
+            new StageConfig("Moose Pass", "Vault antler barricades and dodge real moose.", SEASON_SUMMER, "Moose Boss", "MOOSE", "ANTLER BARRICADES", 16, 10, 178, 2.05f, 2),
+            new StageConfig("Dark Winter", "Leap jagged icebergs through low light.", SEASON_DARKNESS, "Eagle Boss", "EAGLE", "ICEBERGS", 18, 12, 188, 1.95f, 3),
+            new StageConfig("Bear Country", "Survive snowbank barricades and winter wildlife.", SEASON_WINTER, "Polar Bear Boss", "BEAR", "SNOWBANKS", 22, 20, 198, 1.85f, 4)
     };
     private static final int SPRITE_SHEET_FRAMES = 6;
     private static final float PLAYER_START_X_FRACTION = 0.265f;
@@ -3649,7 +3649,8 @@ public class MooseRushView extends View {
 
     private void spawnGate() {
         if (activeEncounter == null && encounterDirector != null) {
-            activeEncounter = encounterDirector.next(selectedStage, gatesPassed, flowActive());
+            activeEncounter = encounterDirector.next(selectedStage, gatesPassed,
+                    STAGES[selectedStage].goalGates, flowActive());
             activeEncounterGeometrySpawned = false;
         }
         float gateWidth = gameplayDp(34) + random.nextFloat() * gameplayDp(18);
@@ -3740,6 +3741,16 @@ public class MooseRushView extends View {
             waterPatches.add(new WaterPatch(anchorX + gameplayDp(86), gameplayDp(132)));
         } else {
             launchPads.add(new LaunchPad(anchorX + gameplayDp(104), ground - dp(2), gameplayDp(58)));
+        }
+        if (encounter.mastery) {
+            // Final-quarter gauntlets expose a simultaneous lower route. The
+            // upper line carries rings and speed; this line is safer but its
+            // brittle platforms demand a committed choice in motion.
+            routePlatforms.add(new RoutePlatform(anchorX + gameplayDp(64), ground - gameplayDp(38),
+                    gameplayDp(118), false, true, random.nextFloat() * 6f));
+            routePlatforms.add(new RoutePlatform(anchorX + gameplayDp(220), ground - gameplayDp(54),
+                    gameplayDp(104), selectedStage >= 2, true, random.nextFloat() * 6f));
+            launchPads.add(new LaunchPad(anchorX + gameplayDp(342), ground - dp(2), gameplayDp(62)));
         }
         if (!(encounter.route == EncounterCard.ROUTE_GROUND && selectedStage == 1 && !flowActive())) {
             float launchY = encounter.route == EncounterCard.ROUTE_HIGH ? ground - gameplayDp(92)
@@ -3952,7 +3963,8 @@ public class MooseRushView extends View {
             x += gameplayDp(RushDirector.hazardWaveSpacingDp(i));
         }
         if (encounter != null) {
-            showRunCallout(encounter.routeLabel() + " · " + encounter.id.replace('_', ' ').toUpperCase(Locale.ROOT), 0.94f);
+            showRunCallout((encounter.mastery ? "MASTERY GAUNTLET · " : encounter.routeLabel() + " · ")
+                    + encounter.id.replace('_', ' ').toUpperCase(Locale.ROOT), encounter.mastery ? 1.35f : 0.94f);
             // The next gate now selects a fresh card. Until this wave consumes
             // the current one, its route, rewards, and threats stay owned by
             // the same authored encounter.

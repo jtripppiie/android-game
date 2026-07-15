@@ -15,10 +15,16 @@ final class EncounterDirector {
     }
 
     EncounterCard next(int stage, int gates, boolean flow) {
+        return next(stage, gates, Math.max(1, gates + 4), flow);
+    }
+
+    EncounterCard next(int stage, int gates, int goalGates, boolean flow) {
         int budget = threatBudget(stage, gates, flow);
+        boolean masteryWindow = gates >= Math.max(3, Math.round(goalGates * 0.75f));
         List<EncounterCard> candidates = new ArrayList<>();
         for (EncounterCard card : EncounterDeck.cards()) {
-            if (card.supports(stage, gates, flow, budget) && !card.id.equals(previousId)) {
+            if (card.supports(stage, gates, flow, budget, masteryWindow)
+                    && (!masteryWindow || card.minStage == stage) && !card.id.equals(previousId)) {
                 candidates.add(card);
             }
         }

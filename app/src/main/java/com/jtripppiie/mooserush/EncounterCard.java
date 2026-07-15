@@ -14,9 +14,15 @@ final class EncounterCard {
     final String[] hazards;
     final int starCount;
     final boolean flowVariant;
+    final boolean mastery;
 
     EncounterCard(String id, int minStage, int minGates, int route, int threatBudget,
                   int starCount, boolean flowVariant, String... hazards) {
+        this(id, minStage, minGates, route, threatBudget, starCount, flowVariant, false, hazards);
+    }
+
+    EncounterCard(String id, int minStage, int minGates, int route, int threatBudget,
+                  int starCount, boolean flowVariant, boolean mastery, String... hazards) {
         this.id = id;
         this.minStage = minStage;
         this.minGates = minGates;
@@ -24,7 +30,12 @@ final class EncounterCard {
         this.threatBudget = threatBudget;
         this.starCount = starCount;
         this.flowVariant = flowVariant;
+        this.mastery = mastery;
         this.hazards = hazards;
+    }
+
+    boolean supports(int stage, int gates, boolean flow, int budget, boolean masteryWindow) {
+        return supports(stage, gates, flow, budget) && mastery == masteryWindow;
     }
 
     boolean supports(int stage, int gates, boolean flow, int budget) {

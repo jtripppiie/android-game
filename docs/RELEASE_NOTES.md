@@ -3,7 +3,26 @@
 Current release details are tracked in `docs/VERSIONING.md` and the root
 `README.md`.
 
-## Latest Beta
+## Stable Release
+
+```text
+4.0.0
+versionCode 400
+ALASKA RELEASE
+ALASKA PASSPORT v4.00
+```
+
+4.0 highlights:
+
+- Expanded every stage by 25–40 percent.
+- Added five stage-specific final-quarter Mastery Gauntlets.
+- Mastery encounters present simultaneous high-risk aerial and lower brittle
+  routes, creating a real in-motion decision instead of one mandatory line.
+- Added deterministic coverage for regional finales and onboarding separation.
+
+See [the complete 4.0 stable release record](RELEASE_4_0_STABLE.md).
+
+## Previous Beta
 
 ```text
 3.19.0-beta
