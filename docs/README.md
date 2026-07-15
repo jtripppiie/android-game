@@ -6,6 +6,8 @@ testing, and release preparation.
 
 ## Active Docs
 
+- [4.1.2 quick voice notes](RELEASE_4_1_2_QUICK_VOICE_NOTES.md): one-tap
+  speech capture, automatic contextual save, and immediate gameplay resume.
 - [4.1.1 review notebook](RELEASE_4_1_1_REVIEW_NOTEBOOK.md): pause-and-type
   field notes, priority flagging, captured run context, persistence, and export.
 - [4.1 debug tuning overhaul](RELEASE_4_1_DEBUG_TUNING_OVERHAUL.md): stable
@@ -67,7 +69,7 @@ source of truth for the current beta.
 
 - Version metadata: `app/build.gradle`
 - Current build summary: root `README.md`
-- Current implementation release: `docs/RELEASE_4_1_1_REVIEW_NOTEBOOK.md`
+- Current implementation release: `docs/RELEASE_4_1_2_QUICK_VOICE_NOTES.md`
 - QA checklist: `docs/ANDROID_TEST_CHECKLIST.md`
 - Offline visual debugging: `docs/OFFLINE_DEBUG_PREVIEWS.md`
 - Privacy/store readiness: `docs/PRIVACY.md` and `docs/STORE_LISTING_DRAFT.md`

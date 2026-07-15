@@ -60,6 +60,7 @@ public class MooseRushView extends View {
 
     public interface DebugNoteRequestListener {
         void onDebugNoteRequested(String context);
+        void onDebugVoiceNoteRequested(String context);
     }
 
     private static final String TAG = "YouRushGame";
@@ -320,6 +321,7 @@ public class MooseRushView extends View {
     private final RectF aimDownPadBounds = new RectF();
     private final RectF pauseButtonBounds = new RectF();
     private final RectF debugNoteButtonBounds = new RectF();
+    private final RectF debugVoiceButtonBounds = new RectF();
     private final RectF tempRect = new RectF();
     private final Rect spriteSourceRect = new Rect();
     private PhotoRequestListener photoRequestListener;
@@ -1042,14 +1044,12 @@ public class MooseRushView extends View {
         }
 
         if (state == STATE_RUNNING) {
+            if (debugOverlay && debugVoiceButtonBounds.contains(x, y)) {
+                openDebugNote(true);
+                return true;
+            }
             if (debugOverlay && debugNoteButtonBounds.contains(x, y)) {
-                state = STATE_PAUSED;
-                debugNoteOpen = true;
-                clearHeldControls();
-                logEvent("Debug note opened.");
-                if (debugNoteRequestListener != null) {
-                    debugNoteRequestListener.onDebugNoteRequested(debugNoteContext());
-                }
+                openDebugNote(false);
                 return true;
             }
             if (pauseButtonBounds.contains(x, y)) {
@@ -6932,19 +6932,39 @@ public class MooseRushView extends View {
     private void drawDebugNoteButton(Canvas canvas) {
         float right = getWidth() - dp(88);
         debugNoteButtonBounds.set(right - dp(72), dp(76), right, dp(106));
+        debugVoiceButtonBounds.set(right - dp(150), dp(76), right - dp(78), dp(106));
+        drawDebugReviewButton(canvas, debugVoiceButtonBounds, "MIC", Color.rgb(255, 177, 70));
+        String label = debugNoteCount > 0 ? "NOTE " + debugNoteCount : "NOTE";
+        drawDebugReviewButton(canvas, debugNoteButtonBounds, label, Color.rgb(77, 219, 184));
+    }
+
+    private void drawDebugReviewButton(Canvas canvas, RectF bounds, String label, int accent) {
         paint.setStyle(Paint.Style.FILL);
         paint.setColor(Color.argb(225, 22, 74, 60));
-        canvas.drawRoundRect(debugNoteButtonBounds, dp(9), dp(9), paint);
+        canvas.drawRoundRect(bounds, dp(9), dp(9), paint);
         paint.setStyle(Paint.Style.STROKE);
         paint.setStrokeWidth(dp(1.5f));
-        paint.setColor(Color.rgb(77, 219, 184));
-        canvas.drawRoundRect(debugNoteButtonBounds, dp(9), dp(9), paint);
+        paint.setColor(accent);
+        canvas.drawRoundRect(bounds, dp(9), dp(9), paint);
         paint.setStyle(Paint.Style.FILL);
         textPaint.setTextAlign(Paint.Align.CENTER);
         textPaint.setTextSize(dp(9.5f));
         textPaint.setColor(Color.WHITE);
-        String label = debugNoteCount > 0 ? "NOTE " + debugNoteCount : "NOTE";
-        canvas.drawText(label, debugNoteButtonBounds.centerX(), debugNoteButtonBounds.centerY() + dp(3.5f), textPaint);
+        canvas.drawText(label, bounds.centerX(), bounds.centerY() + dp(3.5f), textPaint);
+    }
+
+    private void openDebugNote(boolean voice) {
+        state = STATE_PAUSED;
+        debugNoteOpen = true;
+        clearHeldControls();
+        String context = debugNoteContext();
+        logEvent(voice ? "Voice note opened." : "Debug note opened.");
+        if (debugNoteRequestListener == null) {
+            finishDebugNote();
+            return;
+        }
+        if (voice) debugNoteRequestListener.onDebugVoiceNoteRequested(context);
+        else debugNoteRequestListener.onDebugNoteRequested(context);
     }
 
     private String debugNoteContext() {

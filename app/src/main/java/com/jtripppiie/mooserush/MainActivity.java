@@ -2,6 +2,7 @@ package com.jtripppiie.mooserush;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.ActivityNotFoundException;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
@@ -19,6 +20,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.speech.RecognizerIntent;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -43,12 +45,14 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.ArrayList;
 import java.util.Locale;
 
 @SuppressWarnings("deprecation")
 public class MainActivity extends Activity {
     private static final String TAG = "YouRushDebug";
     private static final int REQUEST_PLAYER_PHOTO = 1001;
+    private static final int REQUEST_DEBUG_VOICE_NOTE = 1002;
     private static final int MAX_FACE_COUNT = 3;
     private static final float MIN_FACE_CONFIDENCE = 0.38f;
     private static final float MIN_EYE_DISTANCE_RATIO = 0.035f;
@@ -60,6 +64,7 @@ public class MainActivity extends Activity {
     private MooseRushView gameView;
     private TextView versionBadge;
     private SharedPreferences prefs;
+    private String pendingVoiceNoteContext = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,7 +89,17 @@ public class MainActivity extends Activity {
                 resetPlayerPhoto();
             }
         });
-        gameView.setDebugNoteRequestListener(this::showDebugNoteDialog);
+        gameView.setDebugNoteRequestListener(new MooseRushView.DebugNoteRequestListener() {
+            @Override
+            public void onDebugNoteRequested(String context) {
+                showDebugNoteDialog(context);
+            }
+
+            @Override
+            public void onDebugVoiceNoteRequested(String context) {
+                startDebugVoiceNote(context);
+            }
+        });
         gameView.setDebugNoteCount(prefs.getInt(PREF_DEBUG_NOTE_COUNT, 0));
         setContentView(createGameRoot());
         loadSavedPlayerPhoto();
@@ -116,6 +131,10 @@ public class MainActivity extends Activity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         Log.d(TAG, "onActivityResult: requestCode=" + requestCode + ", resultCode=" + resultCode);
+        if (requestCode == REQUEST_DEBUG_VOICE_NOTE) {
+            handleDebugVoiceNoteResult(resultCode, data);
+            return;
+        }
         if (requestCode != REQUEST_PLAYER_PHOTO || resultCode != RESULT_OK || data == null || data.getData() == null) {
             Log.d(TAG, "onActivityResult: no usable photo selected");
             return;
@@ -192,11 +211,10 @@ public class MainActivity extends Activity {
         layout.setPadding(padding, dp(8), padding, 0);
 
         TextView contextView = new TextView(this);
-        contextView.setText(context);
+        contextView.setText("Scene and visible item IDs will be attached automatically.");
         contextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 11);
         contextView.setTextColor(Color.rgb(70, 82, 92));
-        contextView.setTextIsSelectable(true);
-        contextView.setMaxLines(3);
+        contextView.setMaxLines(1);
         layout.addView(contextView, new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
 
@@ -247,6 +265,34 @@ public class MainActivity extends Activity {
             if (keyboard != null) keyboard.showSoftInput(noteInput, InputMethodManager.SHOW_IMPLICIT);
         });
         dialog.show();
+    }
+
+    private void startDebugVoiceNote(String context) {
+        pendingVoiceNoteContext = context;
+        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+        intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Say what should change");
+        intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1);
+        try {
+            startActivityForResult(intent, REQUEST_DEBUG_VOICE_NOTE);
+        } catch (ActivityNotFoundException exception) {
+            Toast.makeText(this, "Voice notes are unavailable; opening text note.", Toast.LENGTH_SHORT).show();
+            showDebugNoteDialog(context);
+        }
+    }
+
+    private void handleDebugVoiceNoteResult(int resultCode, Intent data) {
+        if (resultCode == RESULT_OK && data != null) {
+            ArrayList<String> results = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+            if (results != null && !results.isEmpty() && results.get(0) != null) {
+                saveDebugNote(pendingVoiceNoteContext, results.get(0), false);
+            } else {
+                Toast.makeText(this, "No speech captured.", Toast.LENGTH_SHORT).show();
+            }
+        }
+        pendingVoiceNoteContext = "";
+        if (gameView != null) gameView.finishDebugNote();
+        enableImmersiveMode();
     }
 
     private void saveDebugNote(String context, String note, boolean priority) {

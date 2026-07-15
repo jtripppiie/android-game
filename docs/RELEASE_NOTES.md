@@ -6,6 +6,25 @@ Current release details are tracked in `docs/VERSIONING.md` and the root
 ## Current Stable Update
 
 ```text
+4.1.2
+versionCode 412
+ALASKA RELEASE
+ALASKA PASSPORT v4.12
+```
+
+Quick-note highlights:
+
+- Added a dedicated `MIC` control beside `NOTE`.
+- One tap freezes the frame and starts Android speech recognition.
+- Recognized speech saves immediately with hidden scene context, then resumes.
+- Text entry remains available but no longer fills the editor with debug data.
+- Devices without a speech recognizer automatically fall back to the text note.
+
+See [the complete 4.1.2 release record](RELEASE_4_1_2_QUICK_VOICE_NOTES.md).
+
+## Previous Stable Update
+
+```text
 4.1.1
 versionCode 411
 ALASKA RELEASE

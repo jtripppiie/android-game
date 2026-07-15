@@ -58,6 +58,9 @@ BER-AN02 is too close to BER-PF03 and BER-PU01 is too high.
 
 ## In-game notebook
 
+For the easiest walking workflow, tap `MIC`, speak the problem, and stop. The
+game automatically saves the transcription with scene context and resumes.
+
 Tap `NOTE` in the debug overlay to freeze the run and open the review notebook.
 The note automatically includes the stage, encounter, progress, score, run
 seed, and currently visible IDs. Check `Priority fix` for urgent items. The
