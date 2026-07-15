@@ -56,9 +56,10 @@ func _ready() -> void:
 	sprite.scale = Vector2(0.34, 0.34)
 	sprite.position = Vector2(0, -55)
 	add_child(sprite)
+	apply_photo_head()
 	var camera := Camera2D.new()
 	camera.position = Vector2(220, -95)
-	camera.position_smoothing_enabled = true
+	camera.position_smoothing_enabled = not GameSession.reduced_motion
 	camera.position_smoothing_speed = 6.5
 	camera.limit_left = 0
 	camera.limit_top = -260
@@ -179,3 +180,15 @@ func chain_action(base_score: int) -> void:
 	combo_timer = maxf(2.15, 2.8 - maxf(0.0, combo - 1) * 0.045)
 	var multiplier := 4 if combo >= 10 else 3 if combo >= 7 else 2 if combo >= 4 else 1
 	score += base_score * multiplier
+
+func apply_photo_head() -> void:
+	if GameSession.photo_path.is_empty(): return
+	var image := Image.new()
+	if image.load(GameSession.photo_path) != OK: return
+	image.resize(96, 96, Image.INTERPOLATE_LANCZOS)
+	var head := Sprite2D.new()
+	head.texture = ImageTexture.create_from_image(image)
+	head.position = Vector2(0, -82)
+	head.scale = Vector2(0.52, 0.52)
+	head.z_index = 3
+	add_child(head)

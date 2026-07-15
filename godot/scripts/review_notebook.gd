@@ -14,7 +14,8 @@ func _ready() -> void:
 
 func build_panel() -> void:
 	panel = PanelContainer.new()
-	panel.position = Vector2(842, 12)
+	panel.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	panel.position = Vector2(-438, 12)
 	panel.size = Vector2(426, 112)
 	panel.visible = false
 	panel.process_mode = Node.PROCESS_MODE_ALWAYS
@@ -43,11 +44,13 @@ func build_panel() -> void:
 	priority.text = "FIX FIRST"
 	priority.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	actions.add_child(priority)
-	for spec in [["COPY", copy_notes], ["CANCEL", close], ["SAVE", save_note]]:
+	for spec in [["MIC", start_voice_note], ["COPY", copy_notes], ["CANCEL", close], ["SAVE", save_note]]:
 		var button := Button.new()
 		button.text = spec[0]
 		button.pressed.connect(spec[1])
 		actions.add_child(button)
+	AndroidBridge.voice_note_received.connect(_on_voice_note)
+	AndroidBridge.voice_note_failed.connect(_on_voice_error)
 
 func toggle() -> void:
 	if panel.visible: close()
@@ -78,3 +81,15 @@ func copy_notes() -> void:
 	if not FileAccess.file_exists("user://debug-review-notes.txt"): return
 	var file := FileAccess.open("user://debug-review-notes.txt", FileAccess.READ)
 	DisplayServer.clipboard_set(file.get_as_text())
+
+func start_voice_note() -> void:
+	input.placeholder_text = "Listening…"
+	AndroidBridge.start_voice_note()
+
+func _on_voice_note(text: String) -> void:
+	input.text = text.left(input.max_length)
+	input.placeholder_text = "What feels wrong?"
+	input.grab_focus()
+
+func _on_voice_error(message: String) -> void:
+	input.placeholder_text = message

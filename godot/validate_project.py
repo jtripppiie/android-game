@@ -7,6 +7,7 @@ from PIL import Image
 root = Path(__file__).resolve().parent
 required = [
     "project.godot", "export_presets.cfg", "icon.svg", "scenes/main.tscn",
+    "scripts/main.gd", "scripts/game_session.gd", "scripts/feedback_service.gd",
     "scripts/world.gd", "scripts/player.gd", "scripts/enemy.gd",
     "scripts/projectile.gd", "scripts/touch_controls.gd",
     "scripts/moving_platform.gd",

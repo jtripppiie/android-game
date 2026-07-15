@@ -3,6 +3,20 @@
 .gradle-home/
 build/
 **/build/
+!godot/android/build/
+godot/android/build/*
+!godot/android/build/.gdignore
+!godot/android/build/src/
+godot/android/build/src/**
+!godot/android/build/src/main/
+godot/android/build/src/main/**
+!godot/android/build/src/main/AndroidManifest.xml
+!godot/android/build/src/main/java/
+godot/android/build/src/main/java/**
+!godot/android/build/src/main/java/com/
+!godot/android/build/src/main/java/com/jtripppiie/
+!godot/android/build/src/main/java/com/jtripppiie/mooserush/
+!godot/android/build/src/main/java/com/jtripppiie/mooserush/YouRushBridge.java
 
 # Android Studio
 .idea/

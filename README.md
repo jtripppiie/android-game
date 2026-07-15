@@ -11,15 +11,16 @@ wildlife encounters through stage runs and boss fights.
 ```text
 engine: Godot 4.7.1
 versionCode: 500
-versionName: 5.0.0-engine-alpha
-package: com.jtripppiie.mooserush.overhaul
-APK: app/build/outputs/apk/debug/you-rush-alaska-5.0.0-engine-alpha-debug.apk
+versionName: 5.0.0
+package: com.jtripppiie.mooserush
+APK: app/build/outputs/apk/debug/you-rush-alaska-5.0.0-debug.apk
 ```
 
-Version 5.0 is the primary gameplay development target. Its first migration
-milestone is a complete authored Chugach rescue stage with engine-native physics,
-camera, combat, boss flow, scoring, persistence, debug IDs, and compact notes.
-It installs beside the Java build for direct device comparison.
+Version 5.0 is the Godot replacement build. It contains all five authored
+stages, local progression, distinct stage bosses, accessibility controls,
+photo customization, stable debug IDs, and compact typed/voice review notes.
+It uses the original package name so the first launch can migrate the Java
+build's local progress before the Godot profile takes ownership.
 
 ## Java Rollback Build
 
@@ -82,6 +83,9 @@ the owner's private release key and store submission.
 - `PAUSE`: pause, resume, return to map, or edit the runner sprite
 
 ## Build And Test
+
+Godot 4.7.1 is now the primary build system. See
+[the owner handbook](docs/KID_OWNER_HANDBOOK.md) for the exact friendly steps.
 
 Open the project in Android Studio, or use the Gradle wrapper:
 
@@ -168,18 +172,10 @@ Historical release notes and rapid-iteration logs are preserved in
 
 ## Architecture
 
-`MainActivity` hosts a single custom Android view:
-
-```java
-new MooseRushView(this)
-```
-
-Pure gameplay math and tuning helpers live in small Java classes with fast JVM
-unit coverage. `BossStateMachine` owns pure boss transition decisions,
-`StageBossRules` owns stage-specific boss strategy routing, and
-`ReusableObjectPool` recycles high-frequency particles and score popups.
-Rendering, input, persistence, and moment-to-moment gameplay remain coordinated
-by `MooseRushView`.
+Godot 4.7.1 owns rendering, input, physics, stages, bosses, menus, scoring, and
+persistence under `godot/`. A narrow Android plugin supplies speech notes and
+one-time migration from the former Java SharedPreferences. The Java source and
+its 99-test suite remain as a rollback/reference implementation.
 
 ## Privacy
 

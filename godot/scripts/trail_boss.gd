@@ -5,11 +5,13 @@ signal defeated
 signal feedback(message: String)
 
 enum State { TELL, ATTACK, RECOVER, DEFEATED }
-const MAX_HEALTH := 8
+@export var max_health := 8
+@export var boss_name := "TRAIL GUARDIAN"
+@export_range(0, 4) var boss_variant := 0
 const TELL_SECONDS := 1.25
 const ATTACK_SECONDS := 0.72
 const RECOVER_SECONDS := 1.35
-var health := MAX_HEALTH
+var health := 8
 var state := State.TELL
 var state_timer := 0.0
 var rest_position := Vector2.ZERO
@@ -18,6 +20,7 @@ var player: AlaskaRunner
 
 func _ready() -> void:
 	rest_position = position
+	health = max_health
 	player = get_tree().get_first_node_in_group("player") as AlaskaRunner
 	var collision := CollisionShape2D.new()
 	var shape := CircleShape2D.new()
@@ -33,7 +36,11 @@ func _physics_process(delta: float) -> void:
 	if not is_instance_valid(player): player = get_tree().get_first_node_in_group("player") as AlaskaRunner
 	state_timer += delta
 	if state == State.TELL:
-		position = rest_position + Vector2(sin(state_timer * 18.0) * 5.0, 0.0)
+		var tell_motion := Vector2(sin(state_timer * 18.0) * 5.0, 0.0)
+		if boss_variant == 1: tell_motion.y = -absf(sin(state_timer * 7.0)) * 34.0 # salmon leap
+		elif boss_variant == 3: tell_motion.y = sin(state_timer * 12.0) * 24.0 # eagle hover
+		elif boss_variant == 4: tell_motion.x *= 2.2 # polar-bear ground shake
+		position = rest_position + tell_motion
 		if state_timer >= TELL_SECONDS:
 			state = State.ATTACK
 			state_timer = 0.0
@@ -41,7 +48,11 @@ func _physics_process(delta: float) -> void:
 			feedback.emit("CHARGE · MOVE")
 	elif state == State.ATTACK:
 		var pct := minf(1.0, state_timer / ATTACK_SECONDS)
-		position.x = lerpf(rest_position.x, maxf(rest_position.x - 360.0, target_x), sin(pct * PI))
+		var reach: float = [300.0, 250.0, 390.0, 440.0, 520.0][boss_variant]
+		position.x = lerpf(rest_position.x, maxf(rest_position.x - reach, target_x), sin(pct * PI))
+		if boss_variant == 0: position.y = rest_position.y - sin(pct * PI) * 90.0 # sun arc
+		elif boss_variant == 1: position.y = rest_position.y - sin(pct * PI) * 150.0 # salmon jump
+		elif boss_variant == 3: position.y = rest_position.y + sin(pct * PI) * 120.0 # eagle dive
 		if state_timer >= ATTACK_SECONDS:
 			state = State.RECOVER
 			state_timer = 0.0
@@ -58,7 +69,7 @@ func snowball_hit(_projectile: Node) -> void:
 		feedback.emit("ARMORED · WAIT FOR WEAK")
 		return
 	health -= 1
-	feedback.emit("BOSS HIT · %d/%d" % [health, MAX_HEALTH])
+	feedback.emit("%s HIT · %d/%d" % [boss_name, health, max_health])
 	if health <= 0:
 		state = State.DEFEATED
 		monitoring = false
@@ -70,6 +81,8 @@ func _on_body_entered(body: Node) -> void:
 
 func _draw() -> void:
 	var body_color := Color("#ffda79") if state == State.RECOVER else Color("#6c5142")
+	var variant_colors := [Color("#e8944e"), Color("#db6b68"), Color("#79573c"), Color("#526f94"), Color("#e9f3f5")]
+	if state != State.RECOVER: body_color = variant_colors[boss_variant]
 	draw_circle(Vector2.ZERO, 58.0, Color("#1f2226"))
 	draw_circle(Vector2.ZERO, 51.0, body_color)
 	draw_circle(Vector2(-22, -42), 18.0, body_color)

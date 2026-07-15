@@ -1,4 +1,8 @@
+class_name AlaskaStage
 extends Node2D
+
+signal stage_completed(stage: int, score: int)
+signal exit_requested
 
 var player: AlaskaRunner
 var hud_label: Label
@@ -11,8 +15,10 @@ var best_score := 0
 var notebook: ReviewNotebook
 var debug_item_counter := 0
 var debug_ids_visible := true
+var stage_index := 0
 
 func _ready() -> void:
+	stage_index = GameSession.selected_stage
 	RenderingServer.set_default_clear_color(Color("#102d4b"))
 	build_background()
 	build_hud()
@@ -35,24 +41,62 @@ func spawn_player() -> void:
 	player.position = Vector2(190, 470)
 	player.fired.connect(spawn_snowball)
 	player.checkpoint_reached.connect(func(_point): checkpoint_label.text = "CHECKPOINT SAVED")
-	player.action_feedback.connect(func(message): checkpoint_label.text = message)
+	player.action_feedback.connect(func(message): checkpoint_label.text = message; FeedbackService.cue(message))
 	add_child(player)
 
 func build_background() -> void:
-	var sky := Polygon2D.new()
-	sky.polygon = PackedVector2Array([Vector2(-500,-500),Vector2(6500,-500),Vector2(6500,720),Vector2(-500,720)])
-	sky.color = Color("#163d62")
-	sky.z_index = -10
-	add_child(sky)
+	var skies := [Color("#7b4f80"), Color("#247a86"), Color("#163d62"), Color("#071326"), Color("#29485c")]
+	var sky: Color = skies[stage_index]
+	if GameSession.high_contrast: sky = Color("#00152b")
+	var sky_node := Polygon2D.new()
+	sky_node.polygon = PackedVector2Array([Vector2(-500,-500),Vector2(6500,-500),Vector2(6500,720),Vector2(-500,720)])
+	sky_node.color = sky
+	sky_node.z_index = -10
+	add_child(sky_node)
 	for i in range(12):
 		var mountain := Polygon2D.new()
 		var x := float(i * 560 - 300)
 		mountain.polygon = PackedVector2Array([Vector2(x,560),Vector2(x+280,170+(i%3)*55),Vector2(x+600,560)])
-		mountain.color = Color("#285574") if i % 2 == 0 else Color("#376984")
+		mountain.color = sky.lightened(0.10 if i % 2 == 0 else 0.18)
 		mountain.z_index = -8
 		add_child(mountain)
 
 func build_level() -> void:
+	if stage_index == 0: build_midnight_sun()
+	elif stage_index == 1: build_salmon_rush()
+	elif stage_index == 2: build_moose_pass()
+	elif stage_index == 3: build_dark_winter()
+	else: build_bear_country()
+
+func build_midnight_sun() -> void:
+	platform(Rect2(0, 540, 920, 180), Color("#f6e0a4"))
+	platform(Rect2(1020, 500, 520, 220), Color("#f0d58d"))
+	platform(Rect2(1660, 450, 420, 270), Color("#f6e0a4"))
+	platform(Rect2(2200, 520, 610, 200), Color("#f0d58d"))
+	platform(Rect2(2940, 430, 540, 290), Color("#f6e0a4"))
+	platform(Rect2(3600, 520, 720, 200), Color("#f0d58d"))
+	platform(Rect2(4440, 500, 1270, 220), Color("#f6e0a4"))
+	moving_platform(Vector2(930, 390), Vector2(0, -100), 3.0)
+	launch_pad(Vector2(2320, 510)); trick_ring_line(Vector2(2400, 420))
+	collectible(Vector2(1280, 440), "key"); collectible(Vector2(1900, 390), "survivor"); collectible(Vector2(4020, 460), "survivor")
+	enemy(Vector2(1460, 450), 130, "wolf"); enemy(Vector2(3300, 370), 150, "wolf")
+	checkpoint(Vector2(2980, 370)); finalize_stage()
+
+func build_salmon_rush() -> void:
+	platform(Rect2(0, 540, 760, 180), Color("#b8e2ce"))
+	platform(Rect2(900, 500, 500, 220), Color("#c9ead8"))
+	platform(Rect2(1580, 540, 520, 180), Color("#b8e2ce"))
+	platform(Rect2(2280, 470, 580, 250), Color("#c9ead8"))
+	platform(Rect2(3040, 540, 520, 180), Color("#b8e2ce"))
+	platform(Rect2(3740, 460, 540, 260), Color("#c9ead8"))
+	platform(Rect2(4460, 520, 1250, 200), Color("#b8e2ce"))
+	for x in [820.0, 1480.0, 2180.0, 2940.0, 3640.0]:
+		var water := FreezableWater.new(); water.position = Vector2(x, 550); water.size = Vector2(120, 48); register_debug_item(water, "WT", "river"); add_child(water)
+	collectible(Vector2(1240, 440), "key"); collectible(Vector2(2500, 410), "survivor"); collectible(Vector2(3980, 400), "survivor")
+	enemy(Vector2(1800, 480), 110, "salmon"); enemy(Vector2(3280, 480), 110, "salmon")
+	checkpoint(Vector2(3100, 480)); finalize_stage()
+
+func build_moose_pass() -> void:
 	platform(Rect2(0, 540, 900, 180), Color("#e8f4f5"))
 	slope(PackedVector2Array([Vector2(900,540),Vector2(1260,420),Vector2(1260,720),Vector2(900,720)]), Color("#d9ecef"))
 	platform(Rect2(1260, 420, 460, 300), Color("#e8f4f5"))
@@ -81,6 +125,43 @@ func build_level() -> void:
 	# stacked extra geometry and enemies over the same spaces.
 	var title := Label.new()
 	title.text = "CHUGACH RUN · FIND THE KEY · REACH THE RESCUE BEACON"
+	title.position = Vector2(120, 92)
+	title.add_theme_font_size_override("font_size", 24)
+	title.add_theme_color_override("font_color", Color("#fff1b8"))
+	add_child(title)
+
+func build_dark_winter() -> void:
+	platform(Rect2(0, 550, 780, 170), Color("#8eb9ca"))
+	platform(Rect2(920, 470, 360, 250), Color("#a4cbd8"))
+	platform(Rect2(1420, 380, 420, 340), Color("#8eb9ca"))
+	platform(Rect2(1990, 520, 440, 200), Color("#a4cbd8"))
+	platform(Rect2(2600, 420, 430, 300), Color("#8eb9ca"))
+	platform(Rect2(3200, 540, 450, 180), Color("#a4cbd8"))
+	platform(Rect2(3820, 400, 430, 320), Color("#8eb9ca"))
+	platform(Rect2(4420, 510, 1290, 210), Color("#a4cbd8"))
+	moving_platform(Vector2(800, 360), Vector2(180, 0), 2.8); moving_platform(Vector2(3070, 330), Vector2(0, 150), 2.5)
+	collectible(Vector2(1600, 320), "key"); collectible(Vector2(2190, 460), "survivor"); collectible(Vector2(4000, 340), "survivor")
+	enemy(Vector2(1150, 410), 120, "eagle"); enemy(Vector2(3420, 480), 130, "wolf")
+	checkpoint(Vector2(2650, 350)); finalize_stage()
+
+func build_bear_country() -> void:
+	platform(Rect2(0, 540, 860, 180), Color("#eef6f7"))
+	slope(PackedVector2Array([Vector2(860,540),Vector2(1320,360),Vector2(1320,720),Vector2(860,720)]), Color("#dcebed"))
+	platform(Rect2(1320, 360, 560, 360), Color("#eef6f7"))
+	platform(Rect2(2040, 500, 520, 220), Color("#dcebed"))
+	platform(Rect2(2730, 400, 620, 320), Color("#eef6f7"))
+	platform(Rect2(3520, 520, 580, 200), Color("#dcebed"))
+	platform(Rect2(4280, 470, 1430, 250), Color("#eef6f7"))
+	launch_pad(Vector2(2160, 490)); trick_ring_line(Vector2(2250, 400)); moving_platform(Vector2(3380, 350), Vector2(220, 0), 2.4)
+	collectible(Vector2(1520, 300), "key"); collectible(Vector2(2320, 440), "survivor"); collectible(Vector2(3800, 460), "survivor")
+	enemy(Vector2(1780, 300), 170, "bear"); enemy(Vector2(3050, 340), 180, "bear"); enemy(Vector2(4560, 410), 150, "wolf")
+	checkpoint(Vector2(2780, 330)); finalize_stage()
+
+func finalize_stage() -> void:
+	boss(Vector2(5160, 448))
+	goal(Vector2(5480, 450))
+	var title := Label.new()
+	title.text = "%s · KEY · 2 RESCUES · %s" % [GameSession.STAGES[stage_index].name, GameSession.STAGES[stage_index].boss]
 	title.position = Vector2(120, 92)
 	title.add_theme_font_size_override("font_size", 24)
 	title.add_theme_color_override("font_color", Color("#fff1b8"))
@@ -174,9 +255,12 @@ func enemy(at: Vector2, distance: float, kind: String) -> void:
 func boss(at: Vector2) -> void:
 	var encounter := TrailBoss.new()
 	encounter.position = at
-	register_debug_item(encounter, "BOSS", "Chugach guardian")
+	encounter.max_health = [8, 8, 10, 12, 16][stage_index]
+	encounter.boss_name = GameSession.STAGES[stage_index].boss
+	encounter.boss_variant = stage_index
+	register_debug_item(encounter, "BOSS", encounter.boss_name)
 	encounter.defeated.connect(_on_boss_defeated)
-	encounter.feedback.connect(func(message): checkpoint_label.text = message)
+	encounter.feedback.connect(func(message): checkpoint_label.text = message; FeedbackService.cue(message))
 	add_child(encounter)
 
 func _on_boss_defeated() -> void:
@@ -294,6 +378,7 @@ func finish_level(body: Node) -> void:
 	player.velocity = Vector2.ZERO
 	best_score = maxi(best_score, player.score)
 	save_profile()
+	stage_completed.emit(stage_index, player.score)
 
 func spawn_snowball(origin: Vector2, direction: float) -> void:
 	var shot := SnowballProjectile.new()
@@ -306,16 +391,23 @@ func build_hud() -> void:
 	add_child(layer)
 	hud_label = Label.new()
 	hud_label.position = Vector2(24, 20)
-	hud_label.add_theme_font_size_override("font_size", 22)
+	hud_label.add_theme_font_size_override("font_size", 27 if GameSession.large_text else 22)
 	hud_label.add_theme_color_override("font_color", Color.WHITE)
 	layer.add_child(hud_label)
 	checkpoint_label = Label.new()
 	checkpoint_label.position = Vector2(410, 22)
 	checkpoint_label.size = Vector2(620, 40)
 	checkpoint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	checkpoint_label.add_theme_font_size_override("font_size", 22)
+	checkpoint_label.add_theme_font_size_override("font_size", 27 if GameSession.large_text else 22)
 	checkpoint_label.add_theme_color_override("font_color", Color("#ffda79"))
 	layer.add_child(checkpoint_label)
+	var menu_button := Button.new()
+	menu_button.text = "MAP"
+	menu_button.position = Vector2(1064, 12)
+	menu_button.size = Vector2(92, 48)
+	menu_button.process_mode = Node.PROCESS_MODE_ALWAYS
+	menu_button.pressed.connect(func(): get_tree().paused = false; exit_requested.emit())
+	layer.add_child(menu_button)
 
 func _process(_delta: float) -> void:
 	if Input.is_action_just_pressed("debug_note") and notebook: notebook.toggle()
@@ -331,7 +423,8 @@ func _process(_delta: float) -> void:
 func register_debug_item(item: Node, prefix: String, label: String) -> void:
 	debug_item_counter += 1
 	item.add_to_group("debug_item")
-	item.set_meta("debug_id", "CHUGACH-%s-%d" % [prefix, debug_item_counter])
+	var short_stage := String(GameSession.STAGES[stage_index].name).replace(" ", "-")
+	item.set_meta("debug_id", "%s-%s-%d" % [short_stage, prefix, debug_item_counter])
 	item.set_meta("debug_label", label.to_upper())
 	if item is Node2D:
 		var badge := Label.new()
@@ -348,15 +441,10 @@ func debug_note_context() -> String:
 	for item in get_tree().get_nodes_in_group("debug_item"):
 		if item is Node2D and absf(item.global_position.x - player.global_position.x) <= 700.0:
 			visible.append(String(item.get_meta("debug_id", "UNSET")))
-	return "stage=CHUGACH | x=%d | score=%d | combo=%d | key=%s | rescues=%d/2 | visible=%s" % [player.global_position.x, player.score, player.combo, key_collected, survivors_found, ", ".join(visible)]
+	return "stage=%s | x=%d | score=%d | combo=%d | key=%s | rescues=%d/2 | visible=%s" % [GameSession.STAGES[stage_index].name, player.global_position.x, player.score, player.combo, key_collected, survivors_found, ", ".join(visible)]
 
 func load_profile() -> void:
-	var config := ConfigFile.new()
-	if config.load("user://profile.cfg") == OK:
-		best_score = int(config.get_value("chugach", "best_score", 0))
+	best_score = GameSession.best_scores[stage_index]
 
 func save_profile() -> void:
-	var config := ConfigFile.new()
-	config.set_value("chugach", "best_score", best_score)
-	config.set_value("chugach", "cleared", true)
-	config.save("user://profile.cfg")
+	GameSession.complete_stage(stage_index, best_score)
