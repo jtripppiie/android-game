@@ -56,7 +56,9 @@ Salmon Rush precision and ground cards can now cut holes in the normal ground
 line with moving water. The player can clear the gap, take an upper platform, or
 shoot the water to create a brittle ice bridge. The bridge remains interactive:
 it can be cracked by shots or deliberately smashed by holding aim-down during a
-hard fall.
+hard fall. Destroying a water-owned bridge restores the lethal current, and the
+player can spend another snowball to freeze it again. Wildlife and boss lasers
+participate in the same reversible terrain loop.
 
 Aim-down now doubles as fast-fall control while airborne. It tightens jump arcs,
 enables stomp-through shortcuts, and creates a faster but riskier response to

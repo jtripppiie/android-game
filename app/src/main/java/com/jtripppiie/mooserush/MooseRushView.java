@@ -1596,7 +1596,7 @@ public class MooseRushView extends View {
         RoutePlatform landedPlatform = landingRoutePlatform(previousPlayerY, playerY);
         if (landedPlatform != null && landedPlatform.brittle && aimDownPressed
                 && playerVelocityY > dp(360)) {
-            landedPlatform.broken = true;
+            breakRoutePlatform(landedPlatform);
             landedPlatform = null;
             playerVelocityY = dp(210);
             gameState.addCombo();
@@ -2072,7 +2072,7 @@ public class MooseRushView extends View {
             if (!platform.brittle || platform.broken) continue;
             if (hazard.x + hazard.radius >= platform.x && hazard.x - hazard.radius <= platform.x + platform.width
                     && Math.abs(hazard.y - platform.y) < hazard.radius * 2f) {
-                platform.broken = true;
+                breakRoutePlatform(platform);
                 hazard.environmentHit = true;
                 effects.spawnScorePopup("BEAR BREAK", platform.x + platform.width / 2f,
                         platform.y - dp(18), Color.rgb(255, 166, 84));
@@ -2365,7 +2365,7 @@ public class MooseRushView extends View {
     private void freezeWaterPatch(WaterPatch water, Shot shot) {
         water.frozen = true;
         routePlatforms.add(new RoutePlatform(water.x, getGroundY() - dp(8), water.width,
-                false, true, random.nextFloat() * 6f));
+                false, true, random.nextFloat() * 6f, water));
         int awarded = addScore(shot.empowered ? 34 : 22, "Ice bridge created");
         effects.spawnScorePopup("ICE BRIDGE +" + awarded, water.x + water.width / 2f,
                 getGroundY() - dp(30), Color.rgb(132, 213, 232));
@@ -2380,7 +2380,7 @@ public class MooseRushView extends View {
             effects.spawnSparkBurst(shot.x, platform.y, 10, Color.WHITE);
             return;
         }
-        platform.broken = true;
+        breakRoutePlatform(platform);
         int awarded = addScore(shot.empowered ? 30 : 20, "Brittle route shattered");
         effects.spawnScorePopup("ROUTE SHATTER +" + awarded, platform.x + platform.width / 2f,
                 platform.y - dp(18), Color.rgb(77, 219, 184));
@@ -2712,7 +2712,7 @@ public class MooseRushView extends View {
             }
         }
         if (target == null) return;
-        target.broken = true;
+        breakRoutePlatform(target);
         effects.spawnScorePopup("ARENA BREAK", target.x + target.width / 2f,
                 target.y - dp(16), Color.rgb(255, 98, 84));
         effects.spawnDustBurst(target.x + target.width / 2f, target.y, 22, Color.argb(190, 235, 245, 248));
@@ -2826,7 +2826,7 @@ public class MooseRushView extends View {
                     platform.x + platform.width + margin, platform.y + dp(18) + margin)) continue;
             platform.hits++;
             if (platform.hits >= 2 || bossEnraged()) {
-                platform.broken = true;
+                breakRoutePlatform(platform);
                 effects.spawnScorePopup("LASER SHATTER", platform.x + platform.width / 2f,
                         platform.y - dp(16), Color.rgb(255, 98, 84));
                 effects.spawnSparkBurst(platform.x + platform.width / 2f, platform.y, 24, Color.WHITE);
@@ -2834,6 +2834,19 @@ public class MooseRushView extends View {
                 effects.spawnScorePopup("ICE CRACK", platform.x + platform.width / 2f,
                         platform.y - dp(16), Color.rgb(132, 213, 232));
             }
+        }
+    }
+
+    private void breakRoutePlatform(RoutePlatform platform) {
+        if (platform.broken) return;
+        platform.broken = true;
+        if (platform.sourceWater != null && platform.sourceWater.frozen) {
+            platform.sourceWater.frozen = false;
+            effects.spawnScorePopup("RIVER REOPENED", platform.x + platform.width / 2f,
+                    getGroundY() - dp(28), Color.rgb(255, 98, 84));
+            effects.spawnSparkBurst(platform.x + platform.width / 2f, getGroundY(),
+                    18, Color.rgb(132, 213, 232));
+            showRunCallout("ICE GONE · CLEAR THE WATER", 0.9f);
         }
     }
 
@@ -7703,12 +7716,18 @@ public class MooseRushView extends View {
         final boolean moving;
         final boolean brittle;
         final float phase;
+        final WaterPatch sourceWater;
         float age = 0f;
         boolean broken = false;
         boolean visited = false;
         int hits = 0;
 
         RoutePlatform(float x, float y, float width, boolean moving, boolean brittle, float phase) {
+            this(x, y, width, moving, brittle, phase, null);
+        }
+
+        RoutePlatform(float x, float y, float width, boolean moving, boolean brittle, float phase,
+                      WaterPatch sourceWater) {
             this.x = x;
             this.y = y;
             this.baseY = y;
@@ -7716,6 +7735,7 @@ public class MooseRushView extends View {
             this.moving = moving;
             this.brittle = brittle;
             this.phase = phase;
+            this.sourceWater = sourceWater;
         }
     }
 

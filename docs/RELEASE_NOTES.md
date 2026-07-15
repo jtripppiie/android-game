@@ -6,6 +6,28 @@ Current release details are tracked in `docs/VERSIONING.md` and the root
 ## Latest Beta
 
 ```text
+3.16.0-beta
+versionCode 384
+ALASKA PASSPORT v3.84 BETA
+```
+
+Reactive-river highlights:
+
+- Frozen-water bridges retain ownership of their source river.
+- Stomps, snowballs, committed wildlife and boss lasers can reopen the current
+  when they destroy that bridge.
+- Reopened water immediately restores its visible current and lethal collision,
+  with explicit `RIVER REOPENED` and route-clear feedback.
+- The player can freeze the same water again, creating a repeatable tactical
+  terrain loop instead of a permanent one-time safety conversion.
+- Godot `FreezableWater` now disables itself while its `ReactiveIce` bridge is
+  active and restores itself from the bridge's `shattered` signal.
+
+See [the complete 3.16 release note](RELEASE_3_16_BETA_REACTIVE_RIVER.md).
+
+## Previous Beta
+
+```text
 3.15.0-beta
 versionCode 383
 ALASKA PASSPORT v3.83 BETA

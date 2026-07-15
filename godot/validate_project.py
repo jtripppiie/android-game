@@ -53,6 +53,9 @@ for marker in ("build_directed_encounters", "encounter_sequence", "ReactiveIce",
 projectile = (root / "scripts/projectile.gd").read_text()
 assert 'has_method("snowball_hit")' in projectile
 assert "area_entered.connect" in projectile
+freezable_water = (root / "scripts/freezable_water.gd").read_text()
+for marker in ("bridge.shattered.connect", "_on_bridge_shattered", 'set_deferred("disabled", false)'):
+    assert marker in freezable_water, marker
 
 godot = shutil.which("godot4") or shutil.which("godot")
 if godot:
