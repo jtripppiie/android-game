@@ -146,11 +146,11 @@ public class MooseRushView extends View {
      * Changing these numbers is one of the safest ways to design new levels.
      */
     private static final StageConfig[] STAGES = {
-            new StageConfig("Midnight Sun Run", "Vault driftwood logs before the eclipse.", SEASON_MIDNIGHT_SUN, "Midnight Sun", "WOLF", "DRIFTWOOD LOGS", 5, 14, 160, 2.22f, 0),
-            new StageConfig("Salmon Rush", "Vault slick river logs while salmon arc in.", SEASON_SUMMER, "Salmon Boss", "SALMON", "RIVER LOGS", 7, 3, 165, 2.15f, 1),
-            new StageConfig("Moose Pass", "Vault antler barricades and dodge real moose.", SEASON_SUMMER, "Moose Boss", "MOOSE", "ANTLER BARRICADES", 8, 4, 178, 2.05f, 2),
-            new StageConfig("Dark Winter", "Leap jagged icebergs through low light.", SEASON_DARKNESS, "Eagle Boss", "EAGLE", "ICEBERGS", 9, 4, 188, 1.95f, 3),
-            new StageConfig("Bear Country", "Survive snowbank barricades and winter wildlife.", SEASON_WINTER, "Polar Bear Boss", "BEAR", "SNOWBANKS", 10, 12, 198, 1.85f, 4)
+            new StageConfig("Midnight Sun Run", "Vault driftwood logs before the eclipse.", SEASON_MIDNIGHT_SUN, "Midnight Sun", "WOLF", "DRIFTWOOD LOGS", 8, 18, 160, 2.22f, 0),
+            new StageConfig("Salmon Rush", "Vault slick river logs while salmon arc in.", SEASON_SUMMER, "Salmon Boss", "SALMON", "RIVER LOGS", 10, 8, 165, 2.15f, 1),
+            new StageConfig("Moose Pass", "Vault antler barricades and dodge real moose.", SEASON_SUMMER, "Moose Boss", "MOOSE", "ANTLER BARRICADES", 12, 10, 178, 2.05f, 2),
+            new StageConfig("Dark Winter", "Leap jagged icebergs through low light.", SEASON_DARKNESS, "Eagle Boss", "EAGLE", "ICEBERGS", 14, 12, 188, 1.95f, 3),
+            new StageConfig("Bear Country", "Survive snowbank barricades and winter wildlife.", SEASON_WINTER, "Polar Bear Boss", "BEAR", "SNOWBANKS", 16, 20, 198, 1.85f, 4)
     };
     private static final int SPRITE_SHEET_FRAMES = 6;
     private static final float PLAYER_START_X_FRACTION = 0.265f;
@@ -1145,6 +1145,10 @@ public class MooseRushView extends View {
 
     private void startGame() {
         StageConfig stage = STAGES[selectedStage];
+        // Custom seasons are a menu preview choice. Actual expeditions always
+        // use their authored biome so icebergs cannot appear on summer grass.
+        selectedSeason = stage.season;
+        backdropCacheKey = Integer.MIN_VALUE;
         /*
          * Starting a run is mostly cleaning the table:
          * remove old obstacles, reset timers, reset score, and place the
@@ -3810,7 +3814,7 @@ public class MooseRushView extends View {
 
     private void drawAlaskaBackdrop(Canvas canvas) {
         boolean dark = selectedSeason == SEASON_DARKNESS || STAGES[selectedStage].season == SEASON_DARKNESS;
-        boolean winter = selectedSeason == SEASON_WINTER || STAGES[selectedStage].season == SEASON_WINTER || selectedStage == 4;
+        boolean winter = selectedSeason == SEASON_WINTER || STAGES[selectedStage].season == SEASON_WINTER || selectedStage >= 3;
         ensureBackdropCache(dark, winter);
         if (backdropCache != null) {
             canvas.drawBitmap(backdropCache, 0, 0, null);
@@ -3965,7 +3969,7 @@ public class MooseRushView extends View {
 
     private void drawGround(Canvas canvas, int width) {
         float groundY = getGroundY();
-        boolean winter = selectedSeason == SEASON_WINTER || STAGES[selectedStage].season == SEASON_WINTER || selectedStage == 4;
+        boolean winter = selectedSeason == SEASON_WINTER || STAGES[selectedStage].season == SEASON_WINTER || selectedStage >= 3;
         paint.setStyle(Paint.Style.FILL);
         paint.setColor(winter ? Color.rgb(225, 235, 238) : Color.rgb(46, 119, 82));
         canvas.drawRect(0, groundY, width, getHeight(), paint);
@@ -4953,18 +4957,24 @@ public class MooseRushView extends View {
     }
 
     private void drawBossLaserEyeEmitter(Canvas canvas, float x, float y, float pulse) {
-        // A charging orb at the eye: additive warm glow, a molten inner core, and
-        // a white-hot pinpoint so the beam clearly originates from the boss.
+        // Compact mechanical aperture. The old additive fireball obscured the
+        // boss face and made the beam appear detached from its true origin.
         paint.setShader(null);
         paint.setStyle(Paint.Style.FILL);
-        paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.ADD));
-        paint.setColor(Color.argb(Math.round(66 + 60 * pulse), 255, 110, 70));
-        canvas.drawCircle(x, y, dp(6.4f + 2.2f * pulse), paint);
-        paint.setColor(Color.argb(Math.round(150 + 80 * pulse), 255, 172, 92));
-        canvas.drawCircle(x, y, dp(3.3f + 0.8f * pulse), paint);
-        paint.setColor(Color.rgb(255, 252, 236));
-        canvas.drawCircle(x, y, dp(1.5f), paint);
         paint.setXfermode(null);
+        paint.setColor(Color.argb(245, 20, 7, 14));
+        canvas.drawCircle(x, y, dp(4.6f), paint);
+        paint.setColor(Color.rgb(184, 20, 42));
+        canvas.drawCircle(x, y, dp(3.25f), paint);
+        paint.setColor(Color.rgb(255, 118, 38));
+        canvas.drawCircle(x, y, dp(2.05f), paint);
+        paint.setColor(Color.rgb(255, 252, 224));
+        canvas.drawCircle(x, y, dp(0.95f), paint);
+
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setStrokeWidth(dp(1.1f));
+        paint.setColor(Color.argb(Math.round(135 + pulse * 90), 255, 70, 58));
+        canvas.drawCircle(x, y, dp(5.7f + pulse * 0.8f), paint);
         paint.setStyle(Paint.Style.FILL);
     }
 

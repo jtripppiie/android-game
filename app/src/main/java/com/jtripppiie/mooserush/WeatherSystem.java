@@ -32,7 +32,7 @@ final class WeatherSystem {
     }
 
     void update(float dt, int stage, int season, boolean flowActive, float worldSpeed) {
-        boolean winter = season == 1 || stage == 4;
+        boolean winter = season == 1 || stage >= 3;
         boolean sun = stage == 0;
 
         int targetCount = flowActive ? 80 : 40;
@@ -75,7 +75,7 @@ final class WeatherSystem {
     }
 
     void draw(Canvas canvas, int stage, int season, boolean flowActive) {
-        boolean winter = season == 1 || stage == 4;
+        boolean winter = season == 1 || stage >= 3;
         boolean sun = stage == 0;
 
         for (WeatherParticle p : particles) {

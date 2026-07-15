@@ -11,7 +11,7 @@ package com.jtripppiie.mooserush;
  */
 final class BossTuning {
     // Normal play must defeat the boss before this timer runs out.
-    static final float BOSS_SURVIVAL_SECONDS = 32f;
+    static final float BOSS_SURVIVAL_SECONDS = 48f;
 
     private BossTuning() {
     }

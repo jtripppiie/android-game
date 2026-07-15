@@ -8,6 +8,11 @@ import org.junit.Test;
 public class BossTuningTest {
 
     @Test
+    public void bossClockSupportsLongerMultiPhaseFights() {
+        assertTrue(BossTuning.BOSS_SURVIVAL_SECONDS >= 48f);
+    }
+
+    @Test
     public void phasePressureAndEnrageSpeedUpBossStates() {
         float opening = BossTuning.stateSpeed(false, 12, 12, false);
         float phaseTwo = BossTuning.stateSpeed(false, 6, 12, false);
