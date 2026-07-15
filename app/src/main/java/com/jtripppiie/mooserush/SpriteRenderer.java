@@ -105,7 +105,9 @@ final class SpriteRenderer {
         if (!fullBody && !drawRunnerSheetBody(canvas, frame, headY, true)) {
             drawRunningBody(canvas, frame, headY);
         }
-        if (!fullBody || frame.playerPhoto != null) {
+        // If we are using a headless body or replacing the head with a photo,
+        // draw the head on top.
+        if (frame.bodyStyle == BODY_STYLE_PHOTO || frame.playerPhoto != null) {
             drawHead(canvas, frame.x, headY, frame.radius, frame.playerPhoto);
         }
     }
@@ -115,7 +117,7 @@ final class SpriteRenderer {
         if (!fullBody && !drawRunnerSheetBody(canvas, frame, frame.y, false)) {
             drawStandingBody(canvas, frame);
         }
-        if (!fullBody || frame.playerPhoto != null) {
+        if (frame.bodyStyle == BODY_STYLE_PHOTO || frame.playerPhoto != null) {
             drawHead(canvas, frame.x, frame.y, frame.radius, frame.playerPhoto);
         }
     }
@@ -174,18 +176,37 @@ final class SpriteRenderer {
         if (crop == null || crop.width() <= 0 || crop.height() <= 0) {
             return false;
         }
+
+        int sheetWidth = runnerBodySheet.getWidth();
+        int rawLeft = Math.round(sheetWidth * (frameIndex / (float) RUNNER_FRAMES));
+        int rawRight = Math.round(sheetWidth * ((frameIndex + 1) / (float) RUNNER_FRAMES));
+        int cellWidth = rawRight - rawLeft;
+
         sourceRect.set(crop.left, crop.top, crop.right, crop.bottom);
 
-        float sourceWidth = sourceRect.width();
-        float sourceHeight = sourceRect.height();
         float bodyHeight = runnerSheetBodyHeight(frame.radius, animated);
-        float bodyWidth = bodyHeight * (sourceWidth / sourceHeight) * RUNNER_BODY_WIDTH_SCALE;
-        float top = headY + frame.radius * RUNNER_BODY_TOP_FROM_HEAD;
-        float centerX = frame.x + frame.radius * 0.10f;
+        // Use fixed cell width for scaling to prevent horizontal stretch jitter.
+        float bodyWidth = bodyHeight * (cellWidth / (float) runnerBodySheet.getHeight()) * RUNNER_BODY_WIDTH_SCALE;
 
-        tempRect.set(centerX - bodyWidth * 0.50f, top, centerX + bodyWidth * 0.50f, top + bodyHeight);
+        // Calculate relative offset of the crop within the cell to keep placement stable.
+        float relCenterX = ((crop.left + crop.right) / 2f - (rawLeft + rawRight) / 2f) / (float) cellWidth;
+        float relCenterY = ((crop.top + crop.bottom) / 2f - (runnerBodySheet.getHeight() / 2f)) / (float) runnerBodySheet.getHeight();
+
+        float centerX = frame.x + frame.radius * 0.10f + relCenterX * bodyWidth;
+        float centerY = headY + frame.radius * RUNNER_BODY_TOP_FROM_HEAD + bodyHeight * 0.5f + relCenterY * bodyHeight;
+
+        tempRect.set(centerX - (bodyHeight * sourceRect.width() / sourceRect.height()) * 0.5f,
+                centerY - bodyHeight * 0.5f,
+                centerX + (bodyHeight * sourceRect.width() / sourceRect.height()) * 0.5f,
+                centerY + bodyHeight * 0.5f);
+
+        // Re-adjust tempRect to match the crop's aspect ratio properly while maintaining the stable center.
+        float actualDrawWidth = bodyHeight * (sourceRect.width() / (float) sourceRect.height());
+        tempRect.set(centerX - actualDrawWidth * 0.5f, centerY - bodyHeight * 0.5f, centerX + actualDrawWidth * 0.5f, centerY + bodyHeight * 0.5f);
+
         boolean previousFilter = bitmapPaint.isFilterBitmap();
-        bitmapPaint.setFilterBitmap(false);
+        bitmapPaint.setFilterBitmap(true);
+        bitmapPaint.setAntiAlias(true);
         canvas.drawBitmap(runnerBodySheet, sourceRect, tempRect, bitmapPaint);
         bitmapPaint.setFilterBitmap(previousFilter);
         return true;
@@ -212,13 +233,24 @@ final class SpriteRenderer {
             return false;
         }
 
-        float bodyHeight = frame.radius * (animated ? 4.08f : 4.02f);
-        float bodyWidth = bodyHeight * (sourceRect.width() / (float) sourceRect.height());
-        float centerX = frame.x + frame.radius * 0.04f;
-        float top = headY - frame.radius * 1.12f;
-        tempRect.set(centerX - bodyWidth * 0.50f, top, centerX + bodyWidth * 0.50f, top + bodyHeight);
+        int rawLeft = Math.round(sheet.getWidth() * (frameIndex / (float) RUNNER_FRAMES));
+        int rawRight = Math.round(sheet.getWidth() * ((frameIndex + 1) / (float) RUNNER_FRAMES));
+        int cellWidth = rawRight - rawLeft;
+
+        float baseHeight = frame.radius * (animated ? 4.08f : 4.02f);
+        float baseWidth = baseHeight * (cellWidth / (float) sheet.getHeight());
+
+        float relCenterX = ((sourceRect.left + sourceRect.right) / 2f - (rawLeft + rawRight) / 2f) / (float) cellWidth;
+        float relCenterY = ((sourceRect.top + sourceRect.bottom) / 2f - (sheet.getHeight() / 2f)) / (float) sheet.getHeight();
+
+        float centerX = frame.x + frame.radius * 0.04f + relCenterX * baseWidth;
+        float centerY = headY + frame.radius * (-1.12f + 2.04f) + relCenterY * baseHeight;
+
+        float actualDrawWidth = baseHeight * (sourceRect.width() / (float) sourceRect.height());
+        tempRect.set(centerX - actualDrawWidth * 0.5f, centerY - baseHeight * 0.5f, centerX + actualDrawWidth * 0.5f, centerY + baseHeight * 0.5f);
+
         boolean previousFilter = bitmapPaint.isFilterBitmap();
-        bitmapPaint.setFilterBitmap(false);
+        bitmapPaint.setFilterBitmap(true);
         canvas.drawBitmap(sheet, sourceRect, tempRect, bitmapPaint);
         bitmapPaint.setFilterBitmap(previousFilter);
         return true;
@@ -560,6 +592,73 @@ final class SpriteRenderer {
 
     private float dp(float value) {
         return value * density;
+    }
+
+    void drawAnimatedHazard(Canvas canvas, Bitmap sheet, String label, float x, float y, float yRadius, float phase, float animationRate, boolean roaring) {
+        int frame = Math.floorMod((int) (phase * animationRate), RUNNER_FRAMES);
+        if (roaring) {
+            frame = 3;
+        }
+        float centerY = y;
+        float height = yRadius * 2.35f;
+        float rotation = 0f;
+        boolean groundAnchored = false;
+
+        if ("SALMON".equals(label)) {
+            centerY += (float) Math.sin(phase * 7.0f) * dp(3.0f);
+            height = yRadius * 2.0f;
+            rotation = (float) Math.sin(phase * 6.0f) * 9.0f;
+        } else if ("EAGLE".equals(label) || "DARK".equals(label)) {
+            centerY += (float) Math.sin(phase * 1.8f) * dp(4.5f);
+            height = yRadius * 2.55f;
+            rotation = (float) Math.sin(phase * 1.4f) * 2.2f;
+        } else if ("BEAR".equals(label)) {
+            height = yRadius * 2.45f;
+            groundAnchored = true;
+        } else if ("POLAR".equals(label)) {
+            height = yRadius * 2.35f;
+            groundAnchored = true;
+        } else if ("WOLF".equals(label)) {
+            height = yRadius * 2.30f;
+            rotation = (float) Math.sin(phase * 10.0f) * 2.0f;
+            groundAnchored = true;
+        } else if ("MOOSE".equals(label)) {
+            height = yRadius * 2.45f;
+            groundAnchored = true;
+        } else {
+            groundAnchored = true;
+        }
+
+        if (roaring) {
+            // Note: Caller must provide the intended groundY if anchored
+            height = yRadius * ("POLAR".equals(label) ? 3.35f : 3.22f);
+            rotation = (float) Math.sin(phase * 18.0f) * 3.5f;
+        }
+
+        drawFrameInternal(canvas, sheet, frame, x, centerY, height, rotation);
+    }
+
+    private void drawFrameInternal(Canvas canvas, Bitmap sheet, int frameIndex, float centerX, float centerY, float height, float rotationDegrees) {
+        if (sheet == null || sheet.getWidth() <= 0) return;
+        int frameWidth = sheet.getWidth() / RUNNER_FRAMES;
+        int safeFrame = Math.floorMod(frameIndex, RUNNER_FRAMES);
+
+        int rawLeft = safeFrame * frameWidth;
+        int rawRight = (safeFrame + 1) * frameWidth;
+        sourceRect.set(rawLeft, 0, rawRight, sheet.getHeight());
+
+        float width = height * (sourceRect.width() / (float) sourceRect.height());
+        tempRect.set(centerX - width * 0.50f, centerY - height * 0.50f, centerX + width * 0.50f, centerY + height * 0.50f);
+
+        int saved = canvas.save();
+        if (Math.abs(rotationDegrees) > 0.01f) {
+            canvas.rotate(rotationDegrees, centerX, centerY);
+        }
+        boolean previousFilter = bitmapPaint.isFilterBitmap();
+        bitmapPaint.setFilterBitmap(true);
+        canvas.drawBitmap(sheet, sourceRect, tempRect, bitmapPaint);
+        bitmapPaint.setFilterBitmap(previousFilter);
+        canvas.restoreToCount(saved);
     }
 
     static final class PlayerFrame {

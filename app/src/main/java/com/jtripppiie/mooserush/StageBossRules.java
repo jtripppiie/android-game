@@ -11,6 +11,13 @@ final class StageBossRules {
 
     static int nextPattern(int stage, int health, int maxHealth, int patternCount,
                            int lunge, int snowWave, int summon, int laser) {
+        if (stage == 0) {
+            // The Midnight Sun is primarily a laser-based boss.
+            int step = patternCount % 4;
+            if (step == 0) return laser;
+            if (step == 2) return laser;
+            return step == 1 ? lunge : snowWave;
+        }
         if (stage == 3) {
             return patternCount % 3 == 2 ? summon : lunge;
         }

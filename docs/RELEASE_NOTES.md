@@ -6,29 +6,48 @@ Current release details are tracked in `docs/VERSIONING.md` and the root
 ## Latest Beta
 
 ```text
-3.5.0-beta
-versionCode 373
-ALASKA PASSPORT v3.73 BETA
+3.6.0-beta
+versionCode 374
+ALASKA PASSPORT v3.74 BETA
 ```
 
-Depth + fidelity highlights:
+Game-feel + Climax highlights:
 
-- Added an Expedition Perk draft. Before every run you pick one of three perks
-  that stay active for the stage: Trailblazer (+25% score), Avalanche Arm
-  (faster snowballs), Spring Step (higher jump), Glacier Guard (start shielded),
-  or Spray Canister (+1 bear spray). Each attempt is now a small build choice.
-- Fixed snowballs and bear spray launching from the runner's ankles. The throw
-  and spray origin is now derived from the drawn sprite's hands/chest instead of
-  the low collision center.
-- The Polar Bear Boss now rears up and fights standing on its hind legs, using
-  the dedicated standing sprite (ground-anchored) instead of the all-fours walk
-  sheet. Its eye-beam origin was realigned to the standing head.
-- Removed the confusing bear "transformation." Wildlife now keeps one consistent
-  walking stance and hitbox for the whole pass instead of briefly rearing up and
-  swelling its hitbox mid-approach.
-- Reworked the boss eye beam again: calmer flicker, the sun's twin rays now
-  converge on a single point, and a bright impact bloom marks where it lands.
-- Cleaned up a confusing bear-spray status callout.
+- **The "Juice" Pass**: Added several classic game-feel techniques to increase
+  responsiveness and impact.
+  - **Hit Freeze**: The world now briefly freezes for a few frames whenever the
+    player is hit or shatters a boss projectile, adding weight to collisions.
+  - **Procedural Squash and Stretch**: The runner's body now dynamically
+    stretches when jumping/falling and squashes upon landing, making movement feel
+    more springy and grounded.
+  - **Visual Near-Miss Feedback**: Narrowly dodging a hazard now triggers a
+    subtle teal energy flash around the screen border for instant skill
+    confirmation.
+  - **Camera Juice**: Added subtle camera leaning that tilts the view into the
+    direction of horizontal movement, grounding the character in the world.
+  - **Flow Mode Motion Blur**: FLOW now features horizontal speed streaks trailing
+    the runner to intensify the sense of momentum.
+- **Finished the Runner Roster**: Fully integrated the preset hero body styles.
+  Players can now cycle between the Photo Runner, Female Runner (Mom), Male
+  Runner (Dad), and Trail Runner 2.0 in the Customize menu.
+- **Final Boss Climax (Bear Country)**: Added a multi-phase "Final Stand" to the
+  Polar Bear boss.
+  - **Blizzard Phase**: Heavy white-out blizzard effect activates at low health,
+    dramatically reducing visibility for a final challenge.
+  - **Ice Spike Summon**: The boss now calls down falling icicles that track the
+    player, creating a bullet-hell style overhead threat.
+- **Refined Energy Lasers**: Replaced the "blocky" Midnight Sun lasers with
+  concentrated, multi-layered energy beams. They now feature an additive glow, a
+  hot core, and twin-eye emitters with energy flickering.
+- **Alaska Passport Viewer**: Added a dedicated screen to view earned Trail
+  Passport badges, accessible via the map. This completes the local collection
+  loop for the Alaska region.
+- **Global Bridge**: Added the "ENTER GLOBAL EXPEDITION" gateway on the map.
+  Clearing Alaska now unlocks a persistent transition flag, signaling readiness
+  for the upcoming Godot-powered Global Overhaul.
+- **Refined Asset Rendering**: Enabled bilinear filtering and stabilized frame-
+  scaling in the SpriteRenderer to remove horizontal jitter and pixelation
+  artifacts.
 
 ## Previous Beta
 

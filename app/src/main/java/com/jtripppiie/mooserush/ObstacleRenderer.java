@@ -43,15 +43,17 @@ final class ObstacleRenderer {
         float top = ground - spriteHeight;
 
         paint.setStyle(Paint.Style.FILL);
-        paint.setColor(Color.argb(stage == 4 ? 96 : 112, 0, 0, 0));
-        canvas.drawOval(left + spriteWidth * 0.08f, ground - dp(7), right - spriteWidth * 0.08f, ground + dp(8), paint);
+        // Note: We skip the procedural shadow here because the high-quality
+        // vector and raster obstacle assets have their own soft shadows baked in.
         drawDrawable(canvas, sprite, left, top, right, ground + dp(2));
         drawNameplate(canvas, x, width, top, label);
         return true;
     }
 
     private Drawable obstacleSpriteForStage(int stage) {
-        // Stages 0 and 1 use hand-drawn/other obstacle paths in MooseRushView.
+        if (stage == 0 || stage == 1) {
+            return assets.obstacleRiverLog();
+        }
         if (stage == 2) {
             return assets.obstacleAntlerBarricade();
         }
@@ -84,6 +86,11 @@ final class ObstacleRenderer {
     }
 
     private void drawDrawable(Canvas canvas, Drawable drawable, float left, float top, float right, float bottom) {
+        if (drawable instanceof android.graphics.drawable.BitmapDrawable) {
+            android.graphics.drawable.BitmapDrawable bitmapDrawable = (android.graphics.drawable.BitmapDrawable) drawable;
+            bitmapDrawable.setFilterBitmap(true);
+            bitmapDrawable.setAntiAlias(true);
+        }
         drawable.setBounds(Math.round(left), Math.round(top), Math.round(right), Math.round(bottom));
         drawable.draw(canvas);
     }
