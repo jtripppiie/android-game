@@ -47,3 +47,10 @@ Prompt summary: an original side-view mechanical snow springboard with a wide
 blue pressure plate, orange coil springs, cyan aurora core and snow-capped feet,
 designed for readable classic-platformer bounce behavior without copying an
 existing franchise, isolated on flat `#ff00ff` with no character, text or scene.
+
+## `aurora_supply_block.png`
+
+Prompt summary: an original square Alaska trail cache with reinforced blue metal,
+wood panels, snow cap, cyan corner lights and a golden aurora compass emblem,
+designed as a readable jump-hit or snowball secret block without franchise
+symbols, isolated on flat `#ff00ff` with no characters, text or scenery.

@@ -122,6 +122,7 @@ func build_directed_encounters() -> void:
 	for index in range(encounter_sequence.size()):
 		var card := encounter_sequence[index]
 		var x := DIRECTED_START_X + index * DIRECTED_SPACING
+		supply_block(Vector2(x + 285, 330 if card.route == TrailEncounterCard.Route.HIGH else 405))
 		if card.route == TrailEncounterCard.Route.HIGH:
 			platform(Rect2(x, 275, 145, 24), Color("#dff8fb"))
 			launch_pad(Vector2(x + 42, 275))
@@ -204,6 +205,17 @@ func launch_pad(at: Vector2) -> void:
 	var pad := AuroraLaunchPad.new()
 	pad.position = at
 	add_child(pad)
+
+func supply_block(at: Vector2) -> void:
+	var block := AuroraSupplyBlock.new()
+	block.position = at
+	block.opened.connect(_on_supply_block_opened)
+	add_child(block)
+
+func _on_supply_block_opened(at: Vector2) -> void:
+	checkpoint_label.text = "SECRET CACHE · REWARD ARC"
+	for offset in [-46.0, 0.0, 46.0]:
+		collectible(at + Vector2(offset, -52.0 - absf(offset) * 0.22), "coin")
 
 func collectible(at: Vector2, kind: String) -> void:
 	var item := Area2D.new()

@@ -42,6 +42,7 @@ final class GameAssets {
     private final Bitmap bossLaserEmitter;
     private final Bitmap laserIceImpact;
     private final Bitmap arcticLaunchPad;
+    private final Bitmap auroraSupplyBlock;
     private final Bitmap brandingLogo;
 
     GameAssets(Context context) {
@@ -73,6 +74,7 @@ final class GameAssets {
         bossLaserEmitter = BitmapFactory.decodeResource(context.getResources(), R.drawable.boss_laser_emitter);
         laserIceImpact = BitmapFactory.decodeResource(context.getResources(), R.drawable.laser_ice_impact);
         arcticLaunchPad = BitmapFactory.decodeResource(context.getResources(), R.drawable.arctic_launch_pad);
+        auroraSupplyBlock = BitmapFactory.decodeResource(context.getResources(), R.drawable.aurora_supply_block);
         brandingLogo = decodeOptionalAsset(context, BRANDING_LOGO_ASSET);
     }
 
@@ -170,6 +172,10 @@ final class GameAssets {
 
     Bitmap arcticLaunchPad() {
         return arcticLaunchPad;
+    }
+
+    Bitmap auroraSupplyBlock() {
+        return auroraSupplyBlock;
     }
 
     Bitmap brandingLogo() {

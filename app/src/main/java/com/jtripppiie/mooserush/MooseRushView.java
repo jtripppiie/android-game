@@ -268,6 +268,7 @@ public class MooseRushView extends View {
     private final List<RoutePlatform> routePlatforms = new ArrayList<>();
     private final List<WaterPatch> waterPatches = new ArrayList<>();
     private final List<LaunchPad> launchPads = new ArrayList<>();
+    private final List<BonusBlock> bonusBlocks = new ArrayList<>();
     private final List<Hazard> hazards = new ArrayList<>();
     private final List<Star> stars = new ArrayList<>();
     private final List<PowerUp> powerUps = new ArrayList<>();
@@ -345,6 +346,8 @@ public class MooseRushView extends View {
     private int runRescueKits = 0;
     private int runBearSprays = 0;
     private int runCleanVaults = 0;
+    private int airStompChain = 0;
+    private int supplyBlocksOpened = 0;
     private int cleanVaultStreak = 0;
     private int bestCleanVaultStreak = 0;
     private int activePerk = PERK_NONE;
@@ -1169,6 +1172,7 @@ public class MooseRushView extends View {
         gates.clear();
         routePlatforms.clear();
         launchPads.clear();
+        bonusBlocks.clear();
         waterPatches.clear();
         hazards.clear();
         stars.clear();
@@ -1221,6 +1225,8 @@ public class MooseRushView extends View {
         runRescueKits = 0;
         runBearSprays = 0;
         runCleanVaults = 0;
+        airStompChain = 0;
+        supplyBlocksOpened = 0;
         cleanVaultStreak = 0;
         bestCleanVaultStreak = 0;
         activePerk = PERK_NONE;
@@ -1594,6 +1600,13 @@ public class MooseRushView extends View {
         updateRoutePlatforms(dt, bossActive ? 0f : gateSpeed);
         updateWaterPatches(dt, bossActive ? 0f : gateSpeed);
         updateLaunchPads(dt, bossActive ? 0f : gateSpeed);
+        updateBonusBlocks(dt, bossActive ? 0f : gateSpeed);
+
+        BonusBlock bumpedBlock = headBumpedBonusBlock(previousPlayerY, playerY);
+        if (bumpedBlock != null) {
+            openBonusBlock(bumpedBlock, false);
+            playerVelocityY = dp(90);
+        }
 
         LaunchPad hitPad = landingLaunchPad(previousPlayerY, playerY);
         if (hitPad != null) triggerLaunchPad(hitPad);
@@ -1634,6 +1647,7 @@ public class MooseRushView extends View {
             jumpsUsed = 0;
             coyoteTimer = RunnerTuning.COYOTE_SECONDS;
             if (!wasGrounded) {
+                airStompChain = 0;
                 effects.spawnDustBurst(playerX, restY + playerRadius, 9, Color.argb(185, 235, 245, 248));
                 screenShake = Math.max(screenShake, 0.035f);
                 squashY = 0.65f; // Hard squash on landing
@@ -1754,16 +1768,28 @@ public class MooseRushView extends View {
     private void stompHazard(Hazard hazard) {
         boolean heavy = "BEAR".equals(hazard.label) || "POLAR".equals(hazard.label)
                 || "MOOSE".equals(hazard.label);
+        airStompChain++;
         playerY = Math.min(playerY, hazard.y - hazard.radius - playerRadius * 0.72f);
-        playerVelocityY = -dp(heavy ? 540f : 475f) * perkJumpMultiplier();
+        float rebound = (heavy ? 540f : 475f) + Math.min(3, airStompChain - 1) * 42f;
+        playerVelocityY = -dp(rebound) * perkJumpMultiplier();
         grounded = false;
         jumpsUsed = 1;
         gameState.addCombo();
-        int awarded = addScore(heavy ? 42 : 26, "Wildlife stomp");
-        effects.spawnScorePopup((heavy ? "POWER STOMP +" : "STOMP +") + awarded,
+        int awarded = addScore((heavy ? 42 : 26) + (airStompChain - 1) * 12, "Wildlife stomp chain");
+        String chainLabel = airStompChain > 1 ? " x" + airStompChain : "";
+        effects.spawnScorePopup((heavy ? "POWER STOMP" : "STOMP") + chainLabel + " +" + awarded,
                 hazard.x, hazard.y - hazard.radius, Color.rgb(255, 218, 121));
         effects.spawnSparkBurst(hazard.x, hazard.y, heavy ? 32 : 22, Color.WHITE);
-        addAuroraMeter(heavy ? 18f : 12f, "Wildlife stomp");
+        addAuroraMeter((heavy ? 18f : 12f) + Math.min(12, airStompChain * 3f), "Wildlife stomp");
+        int rewardStars = Math.min(5, 1 + airStompChain);
+        for (int i = 0; i < rewardStars; i++) {
+            float offset = (i - (rewardStars - 1) * 0.5f) * dp(18);
+            stars.add(new Star(hazard.x + offset, hazard.y - hazard.radius - dp(24 + Math.abs(offset) * 0.18f),
+                    gameplayDp(7.5f)));
+        }
+        if (airStompChain == 3 && !flowActive()) {
+            activateFlow(hazard.x, hazard.y - hazard.radius);
+        }
         if (flowActive()) flowTimer = Math.min(FLOW_TIMER_SECONDS + 2f, flowTimer + 0.55f);
         screenShake = Math.max(screenShake, heavy ? 0.15f : 0.09f);
         haptic(HapticFeedbackConstants.LONG_PRESS);
@@ -1844,6 +1870,29 @@ public class MooseRushView extends View {
             pad.pulse = Math.max(0f, pad.pulse - dt);
             if (pad.x + pad.width < -dp(40)) iterator.remove();
         }
+    }
+
+    private void updateBonusBlocks(float dt, float speed) {
+        Iterator<BonusBlock> iterator = bonusBlocks.iterator();
+        while (iterator.hasNext()) {
+            BonusBlock block = iterator.next();
+            block.x -= speed * dt;
+            block.bump = Math.max(0f, block.bump - dt);
+            if (block.x + block.size < -dp(40)) iterator.remove();
+        }
+    }
+
+    private BonusBlock headBumpedBonusBlock(float oldY, float newY) {
+        if (playerVelocityY >= 0f) return null;
+        float oldTop = oldY - playerRadius;
+        float newTop = newY - playerRadius;
+        for (BonusBlock block : bonusBlocks) {
+            if (block.opened || playerX + playerRadius * 0.42f < block.x
+                    || playerX - playerRadius * 0.42f > block.x + block.size) continue;
+            float underside = block.y + block.size;
+            if (oldTop >= underside - dp(4) && newTop <= underside + dp(3)) return block;
+        }
+        return null;
     }
 
     private LaunchPad landingLaunchPad(float oldY, float newY) {
@@ -2243,6 +2292,13 @@ public class MooseRushView extends View {
                 continue;
             }
 
+            BonusBlock hitBlock = hitBonusBlockForShot(shot);
+            if (hitBlock != null) {
+                iterator.remove();
+                openBonusBlock(hitBlock, shot.empowered);
+                continue;
+            }
+
             WaterPatch hitWater = hitWaterForShot(shot);
             if (hitWater != null) {
                 iterator.remove();
@@ -2315,6 +2371,43 @@ public class MooseRushView extends View {
             return false;
         }
         return circleHitsCircle(playerX, playerY, playerRadius * CollisionTuning.PLAYER_BOSS_ATTACK_RADIUS_SCALE, attack.x, attack.y, attack.radius);
+    }
+
+    private BonusBlock hitBonusBlockForShot(Shot shot) {
+        for (BonusBlock block : bonusBlocks) {
+            if (block.opened) continue;
+            if (GameMath.circleHitsRect(shot.x, shot.y, shot.radius,
+                    block.x, block.y, block.x + block.size, block.y + block.size)) return block;
+        }
+        return null;
+    }
+
+    private void openBonusBlock(BonusBlock block, boolean empowered) {
+        if (block.opened) return;
+        block.opened = true;
+        block.bump = 0.24f;
+        supplyBlocksOpened++;
+        gameState.addCombo();
+        int rewardCount = empowered ? 7 : 5;
+        for (int i = 0; i < rewardCount; i++) {
+            float centered = i - (rewardCount - 1) * 0.5f;
+            float arc = Math.abs(centered) * dp(5);
+            stars.add(new Star(block.x + block.size / 2f + centered * dp(20),
+                    block.y - dp(24) - arc, gameplayDp(8)));
+        }
+        if (supplyBlocksOpened % 3 == 0) {
+            String reward = bearSprayCharges < SprayTuning.MAX_CHARGES ? "SPRAY" : "CACHE";
+            powerUps.add(new PowerUp(block.x + block.size / 2f,
+                    block.y - dp(58), gameplayDp(10), reward));
+        }
+        int awarded = addScore(empowered ? 38 : 24, "Aurora supply block");
+        effects.spawnScorePopup("SECRET CACHE +" + awarded, block.x + block.size / 2f,
+                block.y - dp(18), Color.rgb(255, 218, 121));
+        effects.spawnSparkBurst(block.x + block.size / 2f, block.y, 28,
+                empowered ? Color.rgb(77, 219, 184) : Color.rgb(255, 218, 121));
+        addAuroraMeter(empowered ? 18f : 12f, "Secret cache");
+        screenShake = Math.max(screenShake, 0.08f);
+        haptic(HapticFeedbackConstants.CLOCK_TICK);
     }
 
     private Hazard hitHazardForShot(Shot shot) {
@@ -2587,6 +2680,7 @@ public class MooseRushView extends View {
         gates.clear();
         routePlatforms.clear();
         launchPads.clear();
+        bonusBlocks.clear();
         hazards.clear();
         stars.clear();
         powerUps.clear();
@@ -3551,6 +3645,10 @@ public class MooseRushView extends View {
     private void spawnRouteGeometry(EncounterCard encounter, float anchorX) {
         if (encounter == null) return;
         float ground = getGroundY();
+        float blockX = anchorX + gameplayDp(encounter.route == EncounterCard.ROUTE_PRECISION ? 300 : 218);
+        float blockY = ground - gameplayDp(encounter.route == EncounterCard.ROUTE_HIGH ? 190
+                : encounter.route == EncounterCard.ROUTE_PRECISION ? 142 : 108);
+        bonusBlocks.add(new BonusBlock(blockX, blockY, gameplayDp(38)));
         if (encounter.route == EncounterCard.ROUTE_HIGH) {
             routePlatforms.add(new RoutePlatform(anchorX + gameplayDp(32), ground - gameplayDp(92),
                     gameplayDp(92), false, flowActive(), random.nextFloat() * 6f));
@@ -4268,6 +4366,9 @@ public class MooseRushView extends View {
         for (LaunchPad pad : launchPads) {
             drawLaunchPad(canvas, pad);
         }
+        for (BonusBlock block : bonusBlocks) {
+            drawBonusBlock(canvas, block);
+        }
         for (Hazard hazard : hazards) {
             drawHazard(canvas, hazard);
         }
@@ -4653,6 +4754,29 @@ public class MooseRushView extends View {
             paint.setColor(Color.argb(Math.round(220 * pad.pulse / 0.22f), 132, 213, 232));
             canvas.drawOval(pad.x - dp(7), pad.y - height - dp(8),
                     pad.x + pad.width + dp(7), pad.y + dp(8), paint);
+            paint.setStyle(Paint.Style.FILL);
+        }
+    }
+
+    private void drawBonusBlock(Canvas canvas, BonusBlock block) {
+        Bitmap sprite = assets.auroraSupplyBlock();
+        float bumpOffset = block.bump > 0f
+                ? (float) Math.sin(block.bump / 0.24f * Math.PI) * dp(7) : 0f;
+        tempRect.set(block.x, block.y - bumpOffset,
+                block.x + block.size, block.y + block.size - bumpOffset);
+        if (sprite != null) {
+            int previousAlpha = spriteBitmapPaint.getAlpha();
+            spriteBitmapPaint.setAlpha(block.opened ? 105 : 255);
+            canvas.drawBitmap(sprite, null, tempRect, spriteBitmapPaint);
+            spriteBitmapPaint.setAlpha(previousAlpha);
+        }
+        if (block.opened) {
+            paint.setColor(Color.argb(150, 8, 18, 30));
+            canvas.drawRoundRect(tempRect, dp(5), dp(5), paint);
+            paint.setStyle(Paint.Style.STROKE);
+            paint.setStrokeWidth(dp(1.5f));
+            paint.setColor(Color.argb(175, 132, 213, 232));
+            canvas.drawRoundRect(tempRect, dp(5), dp(5), paint);
             paint.setStyle(Paint.Style.FILL);
         }
     }
@@ -7877,6 +8001,20 @@ public class MooseRushView extends View {
             this.x = x;
             this.y = y;
             this.width = width;
+        }
+    }
+
+    private static class BonusBlock {
+        float x;
+        final float y;
+        final float size;
+        boolean opened = false;
+        float bump = 0f;
+
+        BonusBlock(float x, float y, float size) {
+            this.x = x;
+            this.y = y;
+            this.size = size;
         }
     }
 

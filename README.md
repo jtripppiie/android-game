@@ -9,10 +9,10 @@ wildlife encounters through stage runs and boss fights.
 ## Current Build
 
 ```text
-versionCode: 385
-versionName: 3.17.0-beta
-build badge: ALASKA PASSPORT v3.85 BETA
-APK: app/build/outputs/apk/debug/you-rush-alaska-3.17.0-beta-385-debug.apk
+versionCode: 386
+versionName: 3.18.0-beta
+build badge: ALASKA PASSPORT v3.86 BETA
+APK: app/build/outputs/apk/debug/you-rush-alaska-3.18.0-beta-386-debug.apk
 ```
 
 This is a beta package for device testing and gameplay tuning. It is not a
@@ -30,6 +30,10 @@ signed public-store release.
   heavy wildlife requires FLOW or an intentional aim-down power stomp.
 - Aurora launch pads turn ground, precision, high, and boss routes into aerial
   combo lines, with stronger launches and rewards during FLOW.
+- Consecutive wildlife stomps build an airborne chain with increasing rebounds,
+  reward arcs and a three-stomp FLOW ignition.
+- Hidden Aurora supply blocks can be jump-hit or shot open; every third cache
+  adds gear to its collectible burst.
 - Bear spray is a scarce pickup with its own SPRAY button to stun close wildlife
   and interrupt close boss lunges.
 - Clean vault streaks trigger FLOW, a short momentum state with bonus scoring,
@@ -109,6 +113,7 @@ Start with [docs/README.md](docs/README.md).
 
 Key active docs:
 
+- [3.18 secrets and chains release](docs/RELEASE_3_18_BETA_SECRETS_AND_CHAINS.md)
 - [3.17 arcade joy release](docs/RELEASE_3_17_BETA_ARCADE_JOY.md)
 - [3.16 reactive river release](docs/RELEASE_3_16_BETA_REACTIVE_RIVER.md)
 - [3.15 system integrity release](docs/RELEASE_3_15_BETA_SYSTEM_INTEGRITY.md)

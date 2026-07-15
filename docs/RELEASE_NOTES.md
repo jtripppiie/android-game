@@ -6,6 +6,29 @@ Current release details are tracked in `docs/VERSIONING.md` and the root
 ## Latest Beta
 
 ```text
+3.18.0-beta
+versionCode 386
+ALASKA PASSPORT v3.86 BETA
+```
+
+Secrets-and-chains highlights:
+
+- Consecutive airborne stomps now increase rebound force, score, Aurora energy
+  and the number of reward stars released from defeated wildlife.
+- A three-stomp chain activates FLOW, turning enemy placement into a deliberate
+  traversal and momentum opportunity.
+- Added original Aurora supply blocks to authored encounters.
+- Blocks can be struck from below or opened with snowballs; empowered shots
+  release larger reward arcs.
+- Every third opened block releases bear spray or a supply cache in addition to
+  stars, while opened blocks visibly remain spent.
+- Added matching reactive supply blocks and reward arcs to Godot.
+
+See [the complete 3.18 release note](RELEASE_3_18_BETA_SECRETS_AND_CHAINS.md).
+
+## Previous Beta
+
+```text
 3.17.0-beta
 versionCode 385
 ALASKA PASSPORT v3.85 BETA
