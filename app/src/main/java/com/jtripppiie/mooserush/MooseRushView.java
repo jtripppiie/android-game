@@ -255,6 +255,9 @@ public class MooseRushView extends View {
     private final Paint textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint spriteBitmapPaint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.DITHER_FLAG);
     private final Random random = new Random();
+    private EncounterDirector encounterDirector;
+    private EncounterCard activeEncounter;
+    private long runSeed;
     /*
      * These lists are the moving things currently alive in the level.
      * Spawning adds objects to a list. Updating moves them. Drawing shows them.
@@ -1149,6 +1152,9 @@ public class MooseRushView extends View {
         // use their authored biome so icebergs cannot appear on summer grass.
         selectedSeason = stage.season;
         backdropCacheKey = Integer.MIN_VALUE;
+        runSeed = System.currentTimeMillis() ^ ((long) selectedStage << 32);
+        encounterDirector = new EncounterDirector(runSeed);
+        activeEncounter = null;
         /*
          * Starting a run is mostly cleaning the table:
          * remove old obstacles, reset timers, reset score, and place the
@@ -1261,6 +1267,7 @@ public class MooseRushView extends View {
         missionStarsComplete = false;
         missionComboComplete = false;
         logEvent("Missions: " + stageActionVerb(selectedStage).toLowerCase(Locale.ROOT) + " " + stage.goalGates + ", collect " + missionStarGoal + " stars, combo " + missionComboGoal + ".");
+        logEvent("Encounter seed " + Long.toUnsignedString(runSeed, 36).toUpperCase(Locale.ROOT) + ".");
     }
 
     private void requestJump() {
@@ -1995,14 +2002,14 @@ public class MooseRushView extends View {
             Gate hitGate = hitDestructibleGateForShot(shot);
             if (hitGate != null) {
                 iterator.remove();
-                destroyGateWithShot(hitGate);
+                destroyGateWithShot(hitGate, shot);
                 continue;
             }
 
             Hazard hitHazard = hitHazardForShot(shot);
             if (hitHazard != null) {
                 iterator.remove();
-                stunHazard(hitHazard);
+                stunHazard(hitHazard, shot);
                 continue;
             }
 
@@ -2106,7 +2113,8 @@ public class MooseRushView extends View {
     }
 
     private Gate hitDestructibleGateForShot(Shot shot) {
-        if (selectedStage != 1 || bossActive) {
+        boolean breakable = selectedStage == 1 || (shot.empowered && (selectedStage == 3 || selectedStage == 4));
+        if (!breakable || bossActive) {
             return null;
         }
         for (Gate gate : gates) {
@@ -2136,7 +2144,7 @@ public class MooseRushView extends View {
         return nearest;
     }
 
-    private void destroyGateWithShot(Gate gate) {
+    private void destroyGateWithShot(Gate gate, Shot shot) {
         gates.remove(gate);
         if (!gate.passed) {
             gate.passed = true;
@@ -2144,10 +2152,11 @@ public class MooseRushView extends View {
             gameState.gatesPassed = gatesPassed;
         }
         gameState.addCombo();
-        int awarded = addScore(18, "River log blasted");
+        String reaction = selectedStage == 3 ? "ICE SHATTER" : selectedStage == 4 ? "SNOW ROUTE" : "LOG BOOM";
+        int awarded = addScore(shot.empowered ? 28 : 18, reaction);
         float x = gate.x + gate.width * 0.5f;
         float y = riverLogTop(gate) + riverLogHeight(gate) * 0.5f;
-        effects.spawnScorePopup("LOG BOOM +" + awarded, x, y - dp(28), Color.rgb(255, 218, 121));
+        effects.spawnScorePopup(reaction + " +" + awarded, x, y - dp(28), Color.rgb(255, 218, 121));
         effects.spawnSparkBurst(x, y, 24, Color.rgb(226, 169, 83));
         effects.spawnDustBurst(x, getGroundY(), 12, Color.argb(185, 132, 213, 232));
         runLogsBlasted++;
@@ -2155,13 +2164,20 @@ public class MooseRushView extends View {
         screenShake = Math.max(screenShake, 0.10f);
         worldFlash = Math.max(worldFlash, 0.08f);
         checkMissionProgress();
-        showRunCallout("LOG BLASTED", 0.85f);
+        showRunCallout(selectedStage >= 3 ? "FLOW ROUTE OPEN" : "LOG BLASTED", 0.85f);
         showComboCallout();
         playSound("hit");
         logEvent("River log blasted " + gatesPassed + "/" + STAGES[selectedStage].goalGates + ".");
     }
 
     private void stunHazard(Hazard hazard) {
+        stunHazard(hazard, null);
+    }
+
+    private void stunHazard(Hazard hazard, Shot shot) {
+        float impactX = hazard.x;
+        float impactY = hazard.y;
+        String impactLabel = hazard.label;
         hazards.remove(hazard);
         gameState.addCombo();
         int awarded = addScore(12, hazard.label + " stunned");
@@ -2171,6 +2187,60 @@ public class MooseRushView extends View {
         showRunCallout("STUN, THEN MOVE", 0.95f);
         playSound("hit");
         checkMissionProgress();
+
+        if (shot == null) return;
+
+        // Bears carry momentum into nearby wildlife; lining up the shot turns
+        // one defensive snowball into a deliberate chain reaction.
+        if ("BEAR".equals(impactLabel) || "POLAR".equals(impactLabel)) {
+            Hazard collision = nearestHazardToPoint(impactX, impactY, dp(150));
+            if (collision != null) {
+                hazards.remove(collision);
+                gameState.addCombo();
+                int chainAward = addScore(shot.empowered ? 34 : 24, "Wildlife collision");
+                effects.spawnScorePopup("WILDLIFE COLLISION +" + chainAward,
+                        collision.x, collision.y - collision.radius, Color.rgb(255, 218, 121));
+                effects.spawnSparkBurst(collision.x, collision.y, 22, Color.rgb(255, 166, 84));
+                screenShake = Math.max(screenShake, 0.11f);
+            }
+        }
+
+        // In Dark Winter, interrupting a dive drops an icicle into the ground
+        // lane. It can clear space, but the player must still read its fall.
+        if (selectedStage == 3 && ("EAGLE".equals(impactLabel) || "DARK".equals(impactLabel))) {
+            hazards.add(new Hazard(impactX, -dp(32), gameplayDp(13), 0.8f,
+                    random.nextFloat(), "ICE SPIKE", null));
+            effects.spawnScorePopup("DROP!", impactX, impactY, Color.rgb(132, 213, 232));
+        }
+
+        // FLOW shots bank their remaining force into one nearby target.
+        if (shot.empowered) {
+            Hazard ricochet = nearestHazardToPoint(impactX, impactY, dp(230));
+            if (ricochet != null) {
+                hazards.remove(ricochet);
+                gameState.addCombo();
+                int bankAward = addScore(30, "Flow ricochet");
+                effects.spawnScorePopup("RICOCHET +" + bankAward, ricochet.x,
+                        ricochet.y - ricochet.radius, Color.rgb(77, 219, 184));
+                effects.spawnSparkBurst(ricochet.x, ricochet.y, 20, Color.rgb(77, 219, 184));
+                flowTimer = Math.min(FLOW_TIMER_SECONDS + 2f, flowTimer + 0.45f);
+            }
+        }
+    }
+
+    private Hazard nearestHazardToPoint(float x, float y, float maxDistance) {
+        Hazard nearest = null;
+        float bestDistanceSq = maxDistance * maxDistance;
+        for (Hazard candidate : hazards) {
+            float dx = candidate.x - x;
+            float dy = candidate.y - y;
+            float distanceSq = dx * dx + dy * dy;
+            if (distanceSq < bestDistanceSq) {
+                nearest = candidate;
+                bestDistanceSq = distanceSq;
+            }
+        }
+        return nearest;
     }
 
     private void startBossPhase() {
@@ -3003,10 +3073,21 @@ public class MooseRushView extends View {
     }
 
     private void spawnGate() {
+        if (encounterDirector != null) {
+            activeEncounter = encounterDirector.next(selectedStage, gatesPassed, flowActive());
+        }
         float gateWidth = gameplayDp(34) + random.nextFloat() * gameplayDp(18);
         float hurdleHeight = RunnerTuning.gateHeight(getResources().getDisplayMetrics().density, selectedStage, gatesPassed, random.nextFloat());
+        if (activeEncounter != null) {
+            if (activeEncounter.route == EncounterCard.ROUTE_HIGH) {
+                hurdleHeight *= 1.18f;
+            } else if (activeEncounter.route == EncounterCard.ROUTE_GROUND) {
+                hurdleHeight *= 0.76f;
+            }
+        }
         gates.add(new Gate(getWidth() + gateWidth, hurdleHeight, gateWidth));
-        int starCount = RushDirector.starTrailCount(gatesPassed);
+        int starCount = activeEncounter == null
+                ? RushDirector.starTrailCount(gatesPassed) : activeEncounter.starCount;
         if (random.nextFloat() < 0.88f) {
             float baseStarY = getGroundY() - hurdleHeight - gameplayDp(30 + random.nextFloat() * 12);
             for (int i = 0; i < starCount; i++) {
@@ -3218,19 +3299,26 @@ public class MooseRushView extends View {
     }
 
     private void spawnHazardWave() {
-        int count = RushDirector.hazardWaveSize(selectedStage, gatesPassed);
+        EncounterCard encounter = activeEncounter;
+        int count = encounter == null
+                ? RushDirector.hazardWaveSize(selectedStage, gatesPassed) : encounter.hazards.length;
         float x = hazardSpawnX();
         for (int i = 0; i < count; i++) {
-            String label = selectHazardLabel();
-            if (i == 1 && selectedStage == 3) {
-                label = "WOLF";
-            } else if (i == 1 && selectedStage == 4) {
-                label = "BEAR";
+            String label;
+            if (encounter != null) {
+                label = encounter.hazards[i];
+                if ("STAGE".equals(label)) label = selectHazardLabel();
+            } else {
+                label = selectHazardLabel();
+                if (i == 1 && selectedStage == 3) label = "WOLF";
+                else if (i == 1 && selectedStage == 4) label = "BEAR";
             }
             spawnHazardAt(x, label);
             x += gameplayDp(RushDirector.hazardWaveSpacingDp(i));
         }
-        if (count > 1) {
+        if (encounter != null) {
+            showRunCallout(encounter.routeLabel() + " · " + encounter.id.replace('_', ' ').toUpperCase(Locale.ROOT), 0.94f);
+        } else if (count > 1) {
             showRunCallout(count == 3 ? "THREAT CHAIN x3" : "COMBO THREAT", 0.82f);
         }
     }

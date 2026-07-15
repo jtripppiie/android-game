@@ -7,9 +7,15 @@ var checkpoint_label: Label
 var key_collected := false
 var finished := false
 var survivors_found := 0
+var run_seed := 1776
+var encounter_director: TrailEncounterDirector
+var encounter_sequence: Array[TrailEncounterCard] = []
 
 func _ready() -> void:
 	RenderingServer.set_default_clear_color(Color("#102d4b"))
+	encounter_director = TrailEncounterDirector.new(run_seed)
+	for gate in range(8):
+		encounter_sequence.append(encounter_director.next(3, gate, gate >= 5))
 	build_background()
 	build_level()
 	spawn_player()
@@ -208,4 +214,8 @@ func build_hud() -> void:
 
 func _process(_delta: float) -> void:
 	if player:
-		hud_label.text = "HP %d  COINS %d  KEY %s  RESCUE %d/2  COMBO %d  %s" % [player.health, player.coins, "YES" if key_collected else "NO", survivors_found, player.combo, player.state.to_upper()]
+		var route := "PRECISION"
+		if not encounter_sequence.is_empty():
+			var route_type := encounter_sequence[mini(player.coins, encounter_sequence.size() - 1)].route
+			route = "HIGH" if route_type == TrailEncounterCard.Route.HIGH else "GROUND" if route_type == TrailEncounterCard.Route.GROUND else "PRECISION"
+		hud_label.text = "HP %d  COINS %d  KEY %s  RESCUE %d/2  COMBO %d  %s  ROUTE %s" % [player.health, player.coins, "YES" if key_collected else "NO", survivors_found, player.combo, player.state.to_upper(), route]

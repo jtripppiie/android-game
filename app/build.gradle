@@ -24,13 +24,13 @@ android {
         // targetSdk tells Android which modern behavior rules we expect.
         targetSdk 35
         // versionCode must increase for every installable release build.
-        versionCode 377
+        versionCode 378
         // versionName is the human-readable version shown to testers.
-        versionName "3.9.0-beta"
+        versionName "3.10.0-beta"
 
         // These constants appear in BuildConfig and can be shown inside the app.
         buildConfigField "String", "BUILD_CHANNEL", '"ALASKA BETA"'
-        buildConfigField "String", "BUILD_BADGE", '"ALASKA PASSPORT v3.77 BETA"'
+        buildConfigField "String", "BUILD_BADGE", '"ALASKA PASSPORT v3.78 BETA"'
         // Screens already include the build badge in their own layout. A second
         // floating badge overlaps the HUD and briefing on small displays.
         buildConfigField "boolean", "SHOW_VERSION_BADGE", "false"
