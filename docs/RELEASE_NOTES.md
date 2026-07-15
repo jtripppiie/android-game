@@ -3,7 +3,27 @@
 Current release details are tracked in `docs/VERSIONING.md` and the root
 `README.md`.
 
-## Stable Update
+## Current Stable Update
+
+```text
+4.1.0
+versionCode 410
+ALASKA RELEASE
+ALASKA PASSPORT v4.10
+```
+
+Debug-tuning highlights:
+
+- Debug APKs automatically show hitboxes and stable identifiers.
+- Identifiers survive object removal and do not renumber during a run.
+- Compact stage/category IDs cover obstacles, animals, platforms, pads,
+  blocks, rings, water, pickups, and boss attacks.
+- Transient particles, stars, and snowballs remain unlabeled to limit clutter.
+- Every visible ID is also mapped to its type in Android logcat.
+
+See [the complete 4.1 release record](RELEASE_4_1_DEBUG_TUNING_OVERHAUL.md).
+
+## Previous Stable Update
 
 ```text
 4.0.1

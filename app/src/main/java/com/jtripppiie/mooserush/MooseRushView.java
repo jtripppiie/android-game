@@ -468,6 +468,15 @@ public class MooseRushView extends View {
     private int bossPatternCount = 0;
     private int bearSprayCharges = 0;
     private int chaseBearStartCleanVaults = 0;
+    private int debugObstacleSequence = 0;
+    private int debugAnimalSequence = 0;
+    private int debugPlatformSequence = 0;
+    private int debugPadSequence = 0;
+    private int debugBlockSequence = 0;
+    private int debugRingSequence = 0;
+    private int debugWaterSequence = 0;
+    private int debugPickupSequence = 0;
+    private int debugAttackSequence = 0;
     private String runCallout = "";
     private String mapNotice = "";
     private float mapNoticeTimer = 0f;
@@ -512,7 +521,9 @@ public class MooseRushView extends View {
         if (!isOutfitUnlocked(selectedOutfit)) {
             selectedOutfit = firstUnlockedOutfit();
         }
-        debugOverlay = false;
+        // Debug APKs are tuning builds: stable item IDs and hitboxes are on by
+        // default. The five-tap title gesture can still hide them for captures.
+        debugOverlay = BuildConfig.DEBUG;
         gameState.muted = prefs.getBoolean(PREF_MUTED, false);
         gameState.xp = prefs.getInt(PREF_XP, 0);
         gameState.updateLevel();
@@ -1244,6 +1255,7 @@ public class MooseRushView extends View {
         bossEnrageAnnounced = false;
         runNewBest = false;
         runCallout = "";
+        resetDebugItemSequences();
         routeMilestoneTimer = 0f;
         state = STATE_READY;
         readyTimer = 0f;
@@ -1270,6 +1282,38 @@ public class MooseRushView extends View {
         chaseBearStartCleanVaults = 0;
         stageAttempts++;
         logEvent("Start stage: " + stage.name + ". Goal " + stage.goalGates + " " + stage.obstacleName + ", boss HP " + stage.bossHealth + ".");
+    }
+
+    private void resetDebugItemSequences() {
+        debugObstacleSequence = 0;
+        debugAnimalSequence = 0;
+        debugPlatformSequence = 0;
+        debugPadSequence = 0;
+        debugBlockSequence = 0;
+        debugRingSequence = 0;
+        debugWaterSequence = 0;
+        debugPickupSequence = 0;
+        debugAttackSequence = 0;
+    }
+
+    private String nextDebugItemId(String category) {
+        int sequence;
+        if ("OB".equals(category)) sequence = ++debugObstacleSequence;
+        else if ("AN".equals(category)) sequence = ++debugAnimalSequence;
+        else if ("PF".equals(category)) sequence = ++debugPlatformSequence;
+        else if ("PD".equals(category)) sequence = ++debugPadSequence;
+        else if ("BL".equals(category)) sequence = ++debugBlockSequence;
+        else if ("RG".equals(category)) sequence = ++debugRingSequence;
+        else if ("WT".equals(category)) sequence = ++debugWaterSequence;
+        else if ("PU".equals(category)) sequence = ++debugPickupSequence;
+        else sequence = ++debugAttackSequence;
+        return DebugItemIds.format(selectedStage, category, sequence);
+    }
+
+    private String registerDebugItem(String category, String detail) {
+        String id = nextDebugItemId(category);
+        Log.d(TAG, "DEBUG ITEM " + id + " = " + detail);
+        return id;
     }
 
     private void setupRunMissions(StageConfig stage) {
@@ -6834,10 +6878,11 @@ public class MooseRushView extends View {
         textPaint.setTextAlign(Paint.Align.LEFT);
         textPaint.setTextSize(dp(8.8f));
         textPaint.setColor(Color.rgb(255, 218, 121));
-        canvas.drawText("DEBUG IDS  L/P/G/H/*/U/T/A/B", left + dp(8), top + dp(14), textPaint);
+        canvas.drawText("IDS OB/AN/PF/PD/BL/RG/WT/PU/AT", left + dp(8), top + dp(14), textPaint);
         textPaint.setColor(Color.WHITE);
         canvas.drawText(stateName() + " score=" + score + " boss=" + bossActive + " hp=" + bossHealth, left + dp(8), top + dp(29), textPaint);
-        canvas.drawText("shots=" + shots.size() + " hazards=" + hazards.size() + " x=" + Math.round(playerX), left + dp(8), top + dp(43), textPaint);
+        String encounterId = activeEncounter == null ? "none" : activeEncounter.id;
+        canvas.drawText("enc=" + encounterId + " hazards=" + hazards.size() + " x=" + Math.round(playerX), left + dp(8), top + dp(43), textPaint);
 
         int max = Math.min(3, debugEvents.size());
         for (int i = 0; i < max; i++) {
@@ -6851,41 +6896,76 @@ public class MooseRushView extends View {
             return;
         }
         drawDebugHitboxes(canvas);
-        int number = 1;
-        drawDebugObjectBadge(canvas, number++, "P", "PLAYER", playerX, playerY - playerRadius - dp(24), Color.rgb(132, 213, 232));
+        drawDebugObjectBadge(canvas, DebugItemIds.player(selectedStage), playerX,
+                playerY - playerRadius - dp(24), Color.rgb(132, 213, 232));
         for (Gate gate : gates) {
             if (isDebugMarkerVisible(gate.x + gate.width * 0.5f, getGroundY() - gate.height * 0.5f, gate.width)) {
-                drawDebugObjectBadge(canvas, number++, "G", debugGateDetail(gate), gate.x + gate.width * 0.5f, getGroundY() - gate.height - dp(34), Color.rgb(255, 218, 121));
+                if (gate.debugId.length() == 0) gate.debugId = registerDebugItem("OB", STAGES[selectedStage].obstacleName);
+                drawDebugObjectBadge(canvas, gate.debugId, gate.x + gate.width * 0.5f,
+                        getGroundY() - gate.height - dp(24), Color.rgb(255, 218, 121));
             }
         }
         for (Hazard hazard : hazards) {
             float yRadius = hazard.radius * hazardVerticalScale(hazard.label);
             if (isDebugMarkerVisible(hazard.x, hazard.y, hazard.radius * 2f)) {
-                drawDebugObjectBadge(canvas, number++, "H", debugHazardSpriteDetail(hazard), hazard.x, hazard.y - yRadius - dp(24), Color.rgb(255, 98, 84));
+                if (hazard.debugId.length() == 0) hazard.debugId = registerDebugItem("AN", hazard.label);
+                drawDebugObjectBadge(canvas, hazard.debugId, hazard.x,
+                        hazard.y - yRadius - dp(16), Color.rgb(255, 98, 84));
             }
         }
-        for (Star star : stars) {
-            if (isDebugMarkerVisible(star.x, star.y, star.radius * 2f)) {
-                drawDebugObjectBadge(canvas, number++, "*", "STAR", star.x, star.y - star.radius - dp(18), Color.rgb(255, 218, 121));
+        for (RoutePlatform platform : routePlatforms) {
+            if (isDebugMarkerVisible(platform.x + platform.width * 0.5f, platform.y, platform.width)) {
+                if (platform.debugId.length() == 0) platform.debugId = registerDebugItem("PF",
+                        platform.moving ? "MOVING PLATFORM" : platform.brittle ? "BRITTLE PLATFORM" : "PLATFORM");
+                drawDebugObjectBadge(canvas, platform.debugId, platform.x + platform.width * 0.5f,
+                        platform.y - dp(8), Color.rgb(132, 213, 232));
+            }
+        }
+        for (LaunchPad pad : launchPads) {
+            if (isDebugMarkerVisible(pad.x + pad.width * 0.5f, pad.y, pad.width)) {
+                if (pad.debugId.length() == 0) pad.debugId = registerDebugItem("PD", "LAUNCH PAD");
+                drawDebugObjectBadge(canvas, pad.debugId, pad.x + pad.width * 0.5f,
+                        pad.y - dp(8), Color.rgb(77, 219, 184));
+            }
+        }
+        for (BonusBlock block : bonusBlocks) {
+            if (isDebugMarkerVisible(block.x + block.size * 0.5f, block.y, block.size)) {
+                if (block.debugId.length() == 0) block.debugId = registerDebugItem("BL", "SUPPLY BLOCK");
+                drawDebugObjectBadge(canvas, block.debugId, block.x + block.size * 0.5f,
+                        block.y - dp(8), Color.rgb(255, 177, 70));
+            }
+        }
+        for (TrickRing ring : trickRings) {
+            if (isDebugMarkerVisible(ring.x, ring.y, ring.radius * 2f)) {
+                if (ring.debugId.length() == 0) ring.debugId = registerDebugItem("RG", "TRICK RING");
+                drawDebugObjectBadge(canvas, ring.debugId, ring.x,
+                        ring.y - ring.radius - dp(6), Color.rgb(77, 219, 184));
+            }
+        }
+        for (WaterPatch water : waterPatches) {
+            if (isDebugMarkerVisible(water.x + water.width * 0.5f, getGroundY(), water.width)) {
+                if (water.debugId.length() == 0) water.debugId = registerDebugItem("WT", "WATER");
+                drawDebugObjectBadge(canvas, water.debugId, water.x + water.width * 0.5f,
+                        getGroundY() - dp(12), Color.rgb(132, 213, 232));
             }
         }
         for (PowerUp powerUp : powerUps) {
             if (isDebugMarkerVisible(powerUp.x, powerUp.y, powerUp.radius * 2f)) {
-                drawDebugObjectBadge(canvas, number++, "U", debugPowerUpDetail(powerUp), powerUp.x, powerUp.y - powerUp.radius - dp(22), Color.rgb(77, 219, 184));
-            }
-        }
-        for (Shot shot : shots) {
-            if (isDebugMarkerVisible(shot.x, shot.y, shot.radius * 2f)) {
-                drawDebugObjectBadge(canvas, number++, "T", shot.empowered ? "POWER" : "SNOW", shot.x, shot.y - shot.radius - dp(18), shot.empowered ? Color.rgb(255, 218, 121) : Color.rgb(132, 213, 232));
+                if (powerUp.debugId.length() == 0) powerUp.debugId = registerDebugItem("PU", powerUp.type);
+                drawDebugObjectBadge(canvas, powerUp.debugId, powerUp.x,
+                        powerUp.y - powerUp.radius - dp(8), Color.rgb(77, 219, 184));
             }
         }
         for (BossAttack attack : bossAttacks) {
             if (isDebugMarkerVisible(attack.x, attack.y, attack.radius * 2f)) {
-                drawDebugObjectBadge(canvas, number++, "A", debugBossAttackDetail(attack), attack.x, attack.y - attack.radius - dp(20), Color.rgb(210, 232, 238));
+                if (attack.debugId.length() == 0) attack.debugId = registerDebugItem("AT", attack.label);
+                drawDebugObjectBadge(canvas, attack.debugId, attack.x,
+                        attack.y - attack.radius - dp(8), Color.rgb(210, 232, 238));
             }
         }
         if (bossActive) {
-            drawDebugObjectBadge(canvas, number, "B", debugBossSpriteDetail(), bossX, bossY - bossRadius() - dp(28), Color.rgb(255, 98, 84));
+            drawDebugObjectBadge(canvas, DebugItemIds.boss(selectedStage), bossX,
+                    bossY - bossRadius() - dp(14), Color.rgb(255, 98, 84));
         }
     }
 
@@ -6918,6 +6998,35 @@ public class MooseRushView extends View {
         for (PowerUp powerUp : powerUps) {
             if (isDebugMarkerVisible(powerUp.x, powerUp.y, powerUp.radius * 2f)) {
                 drawDebugCircle(canvas, powerUp.x, powerUp.y, powerUp.radius * CollisionTuning.POWERUP_RADIUS_SCALE, Color.rgb(77, 219, 184));
+            }
+        }
+        for (RoutePlatform platform : routePlatforms) {
+            if (isDebugMarkerVisible(platform.x + platform.width * 0.5f, platform.y, platform.width)) {
+                tempRect.set(platform.x, platform.y - dp(3), platform.x + platform.width, platform.y + dp(4));
+                drawDebugRect(canvas, tempRect, Color.rgb(132, 213, 232));
+            }
+        }
+        for (LaunchPad pad : launchPads) {
+            if (isDebugMarkerVisible(pad.x + pad.width * 0.5f, pad.y, pad.width)) {
+                tempRect.set(pad.x, pad.y - dp(4), pad.x + pad.width, pad.y + dp(5));
+                drawDebugRect(canvas, tempRect, Color.rgb(77, 219, 184));
+            }
+        }
+        for (BonusBlock block : bonusBlocks) {
+            if (isDebugMarkerVisible(block.x + block.size * 0.5f, block.y, block.size)) {
+                tempRect.set(block.x, block.y, block.x + block.size, block.y + block.size);
+                drawDebugRect(canvas, tempRect, Color.rgb(255, 177, 70));
+            }
+        }
+        for (WaterPatch water : waterPatches) {
+            if (isDebugMarkerVisible(water.x + water.width * 0.5f, getGroundY(), water.width)) {
+                tempRect.set(water.x, getGroundY() - dp(18), water.x + water.width, getGroundY() + dp(4));
+                drawDebugRect(canvas, tempRect, Color.rgb(132, 213, 232));
+            }
+        }
+        for (TrickRing ring : trickRings) {
+            if (isDebugMarkerVisible(ring.x, ring.y, ring.radius * 2f)) {
+                drawDebugCircle(canvas, ring.x, ring.y, ring.radius * 0.72f, Color.rgb(77, 219, 184));
             }
         }
         for (Shot shot : shots) {
@@ -6956,74 +7065,13 @@ public class MooseRushView extends View {
         debugOverlayRenderer.drawRect(canvas, rect, color);
     }
 
-    private String debugHazardSpriteDetail(Hazard hazard) {
-        if (hazard.roaring && roarSpriteForHazard(hazard.label) != null) {
-            return hazard.label + " roar png";
-        }
-        if (sheetForHazard(hazard.label) != null) {
-            return hazard.label + " sheet f" + debugHazardFrame(hazard) + " T";
-        }
-        return hazard.label + " drawn";
-    }
-
-    private String debugGateDetail(Gate gate) {
-        if (selectedStage == 0 || selectedStage == 1) {
-            return "LOG FIRE";
-        }
-        return obstacleHudName(selectedStage);
-    }
-
-    private String debugPowerUpDetail(PowerUp powerUp) {
-        return powerUp.type;
-    }
-
-    private int debugHazardFrame(Hazard hazard) {
-        int frame = Math.floorMod((int) (hazardVisualPhase(hazard) * hazardAnimationRate(hazard.label)), SPRITE_SHEET_FRAMES);
-        return hazard.roaring ? 3 : frame;
-    }
-
-    private String debugBossSpriteDetail() {
-        if (sheetForBoss(selectedStage) == null) {
-            return STAGES[selectedStage].bossName;
-        }
-        float phase = bossTimer + selectedStage * 0.37f;
-        float rate = selectedStage == 3 ? 1.85f : selectedStage == 1 ? 2.70f : selectedStage == 4 ? 2.45f : 2.35f;
-        if (bossState == BOSS_STATE_TELL) {
-            rate *= 0.45f;
-        } else if (bossState == BOSS_STATE_ATTACK) {
-            rate *= 1.55f;
-        }
-        int frame = Math.floorMod((int) (phase * rate), SPRITE_SHEET_FRAMES);
-        if (bossStunTimer > 0f) {
-            frame = Math.floorMod(frame + 2, SPRITE_SHEET_FRAMES);
-        }
-        return sheetForBoss(selectedStage) == null ? "BOSS drawn" : "BOSS sheet f" + frame + " T";
-    }
-
-    private String debugBossAttackDetail(BossAttack attack) {
-        if (attack.type == ATTACK_ICE) {
-            return "ICE FIRE";
-        }
-        if (attack.type == ATTACK_LASER) {
-            return "BEAM DODGE";
-        }
-        if (attack.type == ATTACK_SHOCKWAVE) {
-            return "WAVE DODGE";
-        }
-        return attack.label;
-    }
-
     private boolean isDebugMarkerVisible(float x, float y, float pad) {
         return x + pad >= -dp(72) && x - pad <= getWidth() + dp(72)
                 && y + pad >= -dp(72) && y - pad <= getHeight() + dp(72);
     }
 
-    private void drawDebugObjectBadge(Canvas canvas, int number, String type, float x, float y, int accentColor) {
-        drawDebugObjectBadge(canvas, number, type, "", x, y, accentColor);
-    }
-
-    private void drawDebugObjectBadge(Canvas canvas, int number, String type, String detail, float x, float y, int accentColor) {
-        debugOverlayRenderer.drawObjectBadge(canvas, getWidth(), getHeight(), number, type, detail, x, y, accentColor);
+    private void drawDebugObjectBadge(Canvas canvas, String id, float x, float y, int accentColor) {
+        debugOverlayRenderer.drawObjectBadge(canvas, getWidth(), getHeight(), id, "", x, y, accentColor);
     }
 
     private void initAudio() {
@@ -8012,6 +8060,7 @@ public class MooseRushView extends View {
     }
 
     private static class Gate {
+        String debugId = "";
         // x moves left every frame until the gate leaves the screen.
         float x;
         // height and width define the rectangle the player must jump over.
@@ -8028,6 +8077,7 @@ public class MooseRushView extends View {
     }
 
     private static class RoutePlatform {
+        String debugId = "";
         float x;
         float y;
         final float baseY;
@@ -8059,6 +8109,7 @@ public class MooseRushView extends View {
     }
 
     private static class WaterPatch {
+        String debugId = "";
         float x;
         final float width;
         float phase = 0f;
@@ -8071,6 +8122,7 @@ public class MooseRushView extends View {
     }
 
     private static class LaunchPad {
+        String debugId = "";
         float x;
         final float y;
         final float width;
@@ -8084,6 +8136,7 @@ public class MooseRushView extends View {
     }
 
     private static class BonusBlock {
+        String debugId = "";
         float x;
         final float y;
         final float size;
@@ -8098,6 +8151,7 @@ public class MooseRushView extends View {
     }
 
     private static class TrickRing {
+        String debugId = "";
         float x;
         final float y;
         final float radius;
@@ -8111,6 +8165,7 @@ public class MooseRushView extends View {
     }
 
     private static class Hazard {
+        String debugId = "";
         // Current center position of the hazard.
         float x;
         float y;
@@ -8173,6 +8228,7 @@ public class MooseRushView extends View {
     }
 
     private static class BossAttack {
+        String debugId = "";
         float x;
         float y;
         float vx;
@@ -8208,6 +8264,7 @@ public class MooseRushView extends View {
     }
 
     private static class PowerUp {
+        String debugId = "";
         float x;
         float y;
         final float radius;

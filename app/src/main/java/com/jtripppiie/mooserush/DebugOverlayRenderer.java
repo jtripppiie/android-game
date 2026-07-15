@@ -29,7 +29,7 @@ final class DebugOverlayRenderer {
         paint.setColor(Color.argb(190, 255, 218, 121));
         canvas.drawLine(0, ground, width, ground, paint);
         paint.setStyle(Paint.Style.FILL);
-        drawObjectBadge(canvas, width, canvas.getHeight(), 0, "L", "GROUND", dp(42), ground - dp(8), Color.rgb(255, 218, 121));
+        drawObjectBadge(canvas, width, canvas.getHeight(), "GROUND", "", dp(42), ground - dp(8), Color.rgb(255, 218, 121));
     }
 
     void drawCircle(Canvas canvas, float x, float y, float radius, int color) {
@@ -56,9 +56,9 @@ final class DebugOverlayRenderer {
         paint.setStyle(Paint.Style.FILL);
     }
 
-    void drawObjectBadge(Canvas canvas, float viewWidth, float viewHeight, int number, String type, String detail, float x, float y, int accentColor) {
+    void drawObjectBadge(Canvas canvas, float viewWidth, float viewHeight, String id, String detail, float x, float y, int accentColor) {
         // Badges are clamped so labels stay on screen even near the edges.
-        String label = number > 0 ? number + type : type;
+        String label = id == null || id.length() == 0 ? "ITEM" : id;
         float clampedX = clamp(x, dp(18), viewWidth - dp(18));
         float clampedY = clamp(y, dp(54), viewHeight - dp(18));
         textPaint.setTextAlign(Paint.Align.CENTER);
