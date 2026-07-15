@@ -1667,7 +1667,8 @@ public class MooseRushView extends View {
         if (rightPressed) {
             playerX += horizontalSpeed * dt;
         }
-        playerX = clamp(playerX, playerRadius + dp(6), getWidth() - playerRadius - dp(6));
+        playerX = clamp(playerX, playerRadius + dp(6),
+                PresentationTuning.runnerMaxX(getWidth(), playerRadius + dp(6), bossActive));
 
         /*
          * Vertical movement is physics-style:
@@ -1679,10 +1680,8 @@ public class MooseRushView extends View {
         if (!grounded && aimDownPressed && playerVelocityY > 0f) {
             playerVelocityY += gravity * 1.35f * dt;
         }
-        if (!grounded && selectedStage == 3) {
-            float wind = (float) Math.sin(spriteClock * 1.7f + gatesPassed * 0.8f) * dp(74) * dt;
-            playerX = clamp(playerX + wind, playerRadius + dp(6), getWidth() - playerRadius - dp(6));
-        }
+        // Winter wind is visual weather only. Uncommanded lateral drift made
+        // identical steering input produce different obstacle approaches.
         playerY += playerVelocityY * dt;
 
         // Squash and stretch: stretch when falling/jumping fast, squash on impact.
@@ -1690,8 +1689,8 @@ public class MooseRushView extends View {
         squashY = 1.0f + (playerVelocityY < 0 ? stretchFactor : -stretchFactor * 0.5f);
         squashX = 1.0f / squashY;
         // Ease back to normal
-        squashY = 1.0f + (squashY - 1.0f) * 0.8f;
-        squashX = 1.0f + (squashX - 1.0f) * 0.8f;
+        squashY = PresentationTuning.visualSquashY(1.0f + (squashY - 1.0f) * 0.8f);
+        squashX = 1.0f / squashY;
 
         groundScroll = (groundScroll + gateSpeed * dt) % dp(48);
         sceneryScroll = (sceneryScroll + gateSpeed * dt) % dp(3600);
@@ -1748,9 +1747,8 @@ public class MooseRushView extends View {
             if (!wasGrounded) {
                 airStompChain = 0;
                 effects.spawnDustBurst(playerX, restY + playerRadius, 9, Color.argb(185, 235, 245, 248));
-                screenShake = Math.max(screenShake, 0.035f);
-                squashY = 0.65f; // Hard squash on landing
-                squashX = 1.4f;
+                squashY = 0.90f;
+                squashX = 1f / squashY;
             }
             tryConsumeJumpBuffer();
         } else {
@@ -4508,18 +4506,14 @@ public class MooseRushView extends View {
     private void drawWorld(Canvas canvas) {
         int saved = canvas.save();
 
-        // Camera juice: subtle lean based on horizontal movement
-        float lean = 0f;
-        if (leftPressed) lean = -1.2f;
-        if (rightPressed) lean = 1.2f;
-        if (Math.abs(lean) > 0.1f) {
-            canvas.rotate(lean, getWidth() / 2f, getHeight());
-        }
+        // Steering must never rotate the horizon. Obstacles, gaps, and jump arcs
+        // are judged against the ground plane, so left/right moves only the
+        // runner. Short event-driven impact shake remains below.
 
         if (screenShake > 0f) {
             float power = screenShake / 0.18f;
-            float shakeX = (float) Math.sin(spriteClock * 19.0f) * dp(4.0f) * power;
-            float shakeY = (float) Math.cos(spriteClock * 23.0f) * dp(2.4f) * power;
+            float shakeX = (float) Math.sin(spriteClock * 19.0f) * dp(2.0f) * power;
+            float shakeY = (float) Math.cos(spriteClock * 23.0f) * dp(1.2f) * power;
             canvas.translate(shakeX, shakeY);
         }
 
@@ -4531,9 +4525,10 @@ public class MooseRushView extends View {
         }
 
         if (bossPhaseThreeAnnounced && selectedStage == 4) {
-            // Draw a heavy blizzard overlay during final boss phase
+            // Weather may tint the arena, but must never hide attacks.
             paint.setStyle(Paint.Style.FILL);
-            paint.setColor(Color.argb(Math.round(140 + 40 * (float) Math.sin(spriteClock * 12f)), 255, 255, 255));
+            float pulse = 0.5f + 0.5f * (float) Math.sin(spriteClock * 3.2f);
+            paint.setColor(Color.argb(PresentationTuning.blizzardAlpha(pulse), 230, 248, 255));
             canvas.drawRect(0, 0, getWidth(), getHeight(), paint);
         }
         drawChaseBearWarning(canvas);
@@ -5236,15 +5231,6 @@ public class MooseRushView extends View {
         paint.setColor(Color.argb(52 + Math.round(42 * pulse), 255, 246, 207));
         canvas.drawOval(playerX - playerRadius * 1.10f, ground - dp(6), playerX + playerRadius * 1.10f, ground + dp(5), paint);
 
-        if (state == STATE_RUNNING && grounded) {
-            paint.setColor(Color.argb(70, 210, 232, 238));
-            for (int i = 0; i < 3; i++) {
-                float width = playerRadius * (1.4f + i * 0.45f);
-                float y = ground - dp(21 + i * 7);
-                float left = playerX - playerRadius * (2.1f + i * 0.58f) - (groundScroll * 0.24f % dp(18));
-                canvas.drawRoundRect(left, y, left + width, y + dp(3), dp(2), dp(2), paint);
-            }
-        }
     }
 
     private void drawAuroraRushTrail(Canvas canvas) {
@@ -5993,7 +5979,7 @@ public class MooseRushView extends View {
         }
         paint.setShader(null);
         paint.setStyle(Paint.Style.FILL);
-        paint.setColor(Color.argb(Math.round(120f * (worldFlash / 0.24f)), 255, 246, 207));
+        paint.setColor(Color.argb(PresentationTuning.worldFlashAlpha(worldFlash), 255, 246, 207));
         canvas.drawRect(0, 0, getWidth(), getHeight(), paint);
     }
 

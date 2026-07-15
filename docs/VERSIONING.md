@@ -5,10 +5,10 @@ You Rush uses explicit Android version metadata.
 ## Current version
 
 ```text
-versionCode: 420
-versionName: 4.2.0
+versionCode: 421
+versionName: 4.2.1
 build channel: ALASKA RELEASE
-badge: ALASKA PASSPORT v4.20
+badge: ALASKA PASSPORT v4.21
 ```
 
 ## File
@@ -22,11 +22,11 @@ app/build.gradle
 ## Current fields
 
 ```gradle
-versionCode 420
-versionName "4.2.0"
+versionCode 421
+versionName "4.2.1"
 
 buildConfigField "String", "BUILD_CHANNEL", '"ALASKA RELEASE"'
-buildConfigField "String", "BUILD_BADGE", '"ALASKA PASSPORT v4.20"'
+buildConfigField "String", "BUILD_BADGE", '"ALASKA PASSPORT v4.21"'
 buildConfigField "boolean", "SHOW_VERSION_BADGE", "false"
 ```
 
@@ -39,6 +39,7 @@ Turn it off for a public store package.
 ## Version path
 
 ```text
+4.2.1        stable steering camera with no input-driven horizon rotation
 4.2.0        score, boss, obstacle, spacing, and respawn gameplay rebuild
 4.1.2        one-tap spoken review notes with automatic save and resume
 4.1.1        persistent in-game review notebook with captured debug context

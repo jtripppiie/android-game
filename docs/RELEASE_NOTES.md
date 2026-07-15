@@ -6,6 +6,26 @@ Current release details are tracked in `docs/VERSIONING.md` and the root
 ## Current Stable Update
 
 ```text
+4.2.1
+versionCode 421
+ALASKA RELEASE
+ALASKA PASSPORT v4.21
+```
+
+Stable-camera correction:
+
+- Removed the input-driven world rotation from left/right steering.
+- Removed uncommanded Dark Winter lateral drift.
+- Preserved reaction distance with a defined runner lane.
+- Capped full-screen flashes and final-boss weather opacity.
+- Reduced impact shake and removed routine landing shake/deformation.
+- Left collision sizes, input speed, spacing, and jump physics unchanged.
+
+See [the complete 4.2.1 release record](RELEASE_4_2_1_STABLE_CAMERA.md).
+
+## Previous Stable Update
+
+```text
 4.2.0
 versionCode 420
 ALASKA RELEASE
