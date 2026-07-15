@@ -6,6 +6,8 @@ testing, and release preparation.
 
 ## Active Docs
 
+- [4.2.2 compact notes](RELEASE_4_2_2_COMPACT_NOTES.md): shallow undimmed
+  composer with an opt-in keyboard and preserved gameplay frame.
 - [4.2.1 stable camera](RELEASE_4_2_1_STABLE_CAMERA.md): removes steering-driven
   world rotation while retaining short event-driven impact feedback.
 - [4.2 gameplay rebuild](RELEASE_4_2_GAMEPLAY_REBUILD.md): timed skill chains,

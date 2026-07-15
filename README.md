@@ -9,16 +9,16 @@ wildlife encounters through stage runs and boss fights.
 ## Current Build
 
 ```text
-versionCode: 421
-versionName: 4.2.1
+versionCode: 422
+versionName: 4.2.2
 build channel: ALASKA RELEASE
-build badge: ALASKA PASSPORT v4.21
-APK: app/build/outputs/apk/debug/you-rush-alaska-4.2.1-421-debug.apk
+build badge: ALASKA PASSPORT v4.22
+APK: app/build/outputs/apk/debug/you-rush-alaska-4.2.2-422-debug.apk
 ```
 
-Version 4.2.1 restores deterministic steering, a stable horizon, readable
-full-screen effects, and forward reaction space on top of the 4.2 gameplay
-rebuild while retaining the field-review tools. The APK is
+Version 4.2.2 replaces the screen-dominating note dialog with a shallow,
+undimmed quick-note strip and opt-in keyboard. It includes the 4.2.1 stable
+control/readability pass and the 4.2 gameplay rebuild. The APK is
 developer-signed for direct device testing; an app-store upload still requires
 the owner's private release key and store submission.
 

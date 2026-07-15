@@ -1,7 +1,7 @@
 package com.jtripppiie.mooserush;
 
 import android.app.Activity;
-import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.ActivityNotFoundException;
 import android.content.ClipData;
 import android.content.ClipboardManager;
@@ -29,8 +29,8 @@ import android.view.Window;
 import android.view.WindowInsets;
 import android.view.WindowInsetsController;
 import android.view.WindowManager;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.CheckBox;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
@@ -205,40 +205,79 @@ public class MainActivity extends Activity {
     }
 
     private void showDebugNoteDialog(String context) {
+        final Dialog dialog = new Dialog(this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+
         LinearLayout layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.VERTICAL);
-        int padding = dp(18);
-        layout.setPadding(padding, dp(8), padding, 0);
+        int padding = dp(10);
+        layout.setPadding(padding, dp(7), padding, dp(7));
+
+        GradientDrawable panel = new GradientDrawable();
+        panel.setColor(Color.argb(248, 8, 18, 30));
+        panel.setCornerRadius(dp(10));
+        panel.setStroke(dp(1), Color.rgb(77, 219, 184));
+        layout.setBackground(panel);
 
         TextView contextView = new TextView(this);
-        contextView.setText("Scene and visible item IDs will be attached automatically.");
-        contextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 11);
-        contextView.setTextColor(Color.rgb(70, 82, 92));
+        contextView.setText("QUICK NOTE · scene IDs attach automatically");
+        contextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 9);
+        contextView.setTextColor(Color.rgb(132, 213, 232));
         contextView.setMaxLines(1);
         layout.addView(contextView, new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
 
         EditText noteInput = new EditText(this);
-        noteInput.setHint("What feels wrong? Include an item ID if possible.");
-        noteInput.setMinLines(3);
-        noteInput.setMaxLines(5);
-        noteInput.setGravity(Gravity.TOP | Gravity.START);
-        noteInput.setSingleLine(false);
+        noteInput.setHint("Tap and type what feels wrong…");
+        noteInput.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+        noteInput.setSingleLine(true);
+        noteInput.setMaxLines(1);
+        noteInput.setSelectAllOnFocus(false);
         layout.addView(noteInput, new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+                LinearLayout.LayoutParams.MATCH_PARENT, dp(38)));
+
+        LinearLayout actions = new LinearLayout(this);
+        actions.setOrientation(LinearLayout.HORIZONTAL);
+        actions.setGravity(Gravity.CENTER_VERTICAL | Gravity.END);
 
         CheckBox priority = new CheckBox(this);
-        priority.setText("Priority fix");
-        layout.addView(priority);
+        priority.setText("FIX FIRST");
+        priority.setTextSize(TypedValue.COMPLEX_UNIT_SP, 9);
+        actions.addView(priority, new LinearLayout.LayoutParams(0, dp(34), 1f));
 
-        AlertDialog dialog = new AlertDialog.Builder(this)
-                .setTitle("Game review note")
-                .setView(layout)
-                .setPositiveButton("Save", (ignored, which) -> saveDebugNote(context,
-                        noteInput.getText().toString(), priority.isChecked()))
-                .setNegativeButton("Cancel", null)
-                .setNeutralButton("Copy all", (ignored, which) -> copyAllDebugNotes())
-                .create();
+        Button copy = new Button(this);
+        copy.setText("COPY");
+        copy.setTextSize(TypedValue.COMPLEX_UNIT_SP, 9);
+        copy.setMinWidth(0);
+        copy.setOnClickListener(ignored -> copyAllDebugNotes());
+        actions.addView(copy, new LinearLayout.LayoutParams(dp(64), dp(34)));
+
+        Button cancel = new Button(this);
+        cancel.setText("CANCEL");
+        cancel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 9);
+        cancel.setMinWidth(0);
+        cancel.setOnClickListener(ignored -> dialog.dismiss());
+        actions.addView(cancel, new LinearLayout.LayoutParams(dp(72), dp(34)));
+
+        Button save = new Button(this);
+        save.setText("SAVE");
+        save.setTextSize(TypedValue.COMPLEX_UNIT_SP, 9);
+        save.setMinWidth(0);
+        save.setOnClickListener(ignored -> {
+            String note = noteInput.getText().toString();
+            if (note.trim().length() == 0) {
+                Toast.makeText(this, "Type a note first.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            saveDebugNote(context, note, priority.isChecked());
+            dialog.dismiss();
+        });
+        actions.addView(save, new LinearLayout.LayoutParams(dp(68), dp(34)));
+        layout.addView(actions, new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, dp(34)));
+
+        dialog.setContentView(layout);
+        dialog.setCanceledOnTouchOutside(true);
         dialog.setOnDismissListener(ignored -> {
             if (gameView != null) gameView.finishDebugNote();
             enableImmersiveMode();
@@ -247,22 +286,24 @@ public class MainActivity extends Activity {
             Window dialogWindow = dialog.getWindow();
             if (dialogWindow != null) {
                 int screenWidth = getResources().getDisplayMetrics().widthPixels;
+                int screenHeight = getResources().getDisplayMetrics().heightPixels;
+                boolean landscape = screenWidth > screenHeight;
                 WindowManager.LayoutParams params = dialogWindow.getAttributes();
-                params.width = Math.min(Math.round(screenWidth * 0.42f), dp(360));
-                params.height = WindowManager.LayoutParams.WRAP_CONTENT;
+                params.width = landscape
+                        ? Math.min(Math.round(screenWidth * 0.38f), dp(390))
+                        : Math.round(screenWidth * 0.92f);
+                params.height = dp(112);
                 params.gravity = Gravity.TOP | Gravity.END;
-                params.x = dp(12);
-                params.y = dp(48);
-                params.dimAmount = 0.08f;
+                params.x = dp(8);
+                params.y = dp(8);
+                params.dimAmount = 0f;
                 dialogWindow.setAttributes(params);
-                dialogWindow.addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
+                dialogWindow.clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
+                dialogWindow.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING
+                        | WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
             }
-            noteInput.requestFocus();
-            if (dialogWindow != null) {
-                dialogWindow.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
-            }
-            InputMethodManager keyboard = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
-            if (keyboard != null) keyboard.showSoftInput(noteInput, InputMethodManager.SHOW_IMPLICIT);
+            layout.setFocusableInTouchMode(true);
+            layout.requestFocus();
         });
         dialog.show();
     }

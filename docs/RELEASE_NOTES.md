@@ -6,6 +6,23 @@ Current release details are tracked in `docs/VERSIONING.md` and the root
 ## Current Stable Update
 
 ```text
+4.2.2
+versionCode 422
+ALASKA RELEASE
+ALASKA PASSPORT v4.22
+```
+
+Compact-note correction:
+
+- Replaced standard dialog chrome with a 112 dp top-edge strip.
+- Removed background dimming and automatic keyboard display.
+- Preserved save, cancel, priority, copy, context, and voice workflows.
+
+See [the complete 4.2.2 release record](RELEASE_4_2_2_COMPACT_NOTES.md).
+
+## Previous Stable Update
+
+```text
 4.2.1
 versionCode 421
 ALASKA RELEASE
