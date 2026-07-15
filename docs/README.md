@@ -6,6 +6,8 @@ testing, and release preparation.
 
 ## Active Docs
 
+- [4.2 gameplay rebuild](RELEASE_4_2_GAMEPLAY_REBUILD.md): timed skill chains,
+  honest score banking, readable armored bosses, durable logs, and atomic respawn.
 - [4.1.2 quick voice notes](RELEASE_4_1_2_QUICK_VOICE_NOTES.md): one-tap
   speech capture, automatic contextual save, and immediate gameplay resume.
 - [4.1.1 review notebook](RELEASE_4_1_1_REVIEW_NOTEBOOK.md): pause-and-type

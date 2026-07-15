@@ -6,6 +6,26 @@ Current release details are tracked in `docs/VERSIONING.md` and the root
 ## Current Stable Update
 
 ```text
+4.2.0
+versionCode 420
+ALASKA RELEASE
+ALASKA PASSPORT v4.20
+```
+
+Gameplay rebuild highlights:
+
+- Replaced permanent combo inflation with short, tested action chains.
+- Banked completion rewards independently of live multipliers.
+- Made boss recovery the sole direct-damage window and lengthened readable beats.
+- Removed automatic boss crossfire and impossible-looking three-lane snow walls.
+- Made log shooting a lower-value two-hit safety choice.
+- Made respawn discard and rebuild the entire owned encounter atomically.
+
+See [the complete 4.2 release record](RELEASE_4_2_GAMEPLAY_REBUILD.md).
+
+## Previous Stable Update
+
+```text
 4.1.2
 versionCode 412
 ALASKA RELEASE
@@ -17,29 +37,10 @@ Quick-note highlights:
 - Added a dedicated `MIC` control beside `NOTE`.
 - One tap freezes the frame and starts Android speech recognition.
 - Recognized speech saves immediately with hidden scene context, then resumes.
-- Text entry remains available but no longer fills the editor with debug data.
-- Devices without a speech recognizer automatically fall back to the text note.
+- Text entry remains available without obscuring the captured frame.
+- Devices without a speech recognizer fall back to the text note.
 
 See [the complete 4.1.2 release record](RELEASE_4_1_2_QUICK_VOICE_NOTES.md).
-
-## Previous Stable Update
-
-```text
-4.1.1
-versionCode 411
-ALASKA RELEASE
-ALASKA PASSPORT v4.11
-```
-
-Field-review highlights:
-
-- Added a `NOTE` button to the live debug overlay.
-- Opening the notebook freezes the run and opens a multiline Android text box.
-- Notes capture stage, encounter, gate progress, score, run seed, and visible IDs.
-- Notes can be marked as priority, persist locally, and display a saved count.
-- `Copy all` places the complete review log on the clipboard for sharing.
-
-See [the complete 4.1.1 release record](RELEASE_4_1_1_REVIEW_NOTEBOOK.md).
 
 ## Previous Stable Update
 

@@ -9,14 +9,15 @@ wildlife encounters through stage runs and boss fights.
 ## Current Build
 
 ```text
-versionCode: 412
-versionName: 4.1.2
+versionCode: 420
+versionName: 4.2.0
 build channel: ALASKA RELEASE
-build badge: ALASKA PASSPORT v4.12
-APK: app/build/outputs/apk/debug/you-rush-alaska-4.1.2-412-debug.apk
+build badge: ALASKA PASSPORT v4.20
+APK: app/build/outputs/apk/debug/you-rush-alaska-4.2.0-420-debug.apk
 ```
 
-Version 4.1.2 adds one-tap voice review notes. The listed debug APK is
+Version 4.2 rebuilds score integrity, boss readability, obstacle choices, and
+respawn encounter ownership while retaining the field-review tools. The APK is
 developer-signed for direct device testing; an app-store upload still requires
 the owner's private release key and store submission.
 
@@ -29,8 +30,8 @@ the owner's private release key and store submission.
   tallest/longest ground animal.
 - Platform-runner controls: left-thumb D-pad movement/aim, jump, double jump,
   fire, and spray.
-- Snowballs can damage bosses, clear specific threats, and destroy Salmon Rush
-  river logs.
+- Snowballs damage bosses during recovery, clear specific threats, and crack
+  Salmon Rush river logs; ordinary shots require two hits to break a log.
 - Falling attacks stomp ordinary wildlife and rebound into follow-up jumps;
   heavy wildlife requires FLOW or an intentional aim-down power stomp.
 - Aurora launch pads turn ground, precision, high, and boss routes into aerial
@@ -50,6 +51,8 @@ the owner's private release key and store submission.
   and Jackpot Line—with distinct pacing and curved multi-star trails.
 - Customize lets players choose a photo/default body style, including female
   and male runner bodies.
+- Timed action chains unlock x2/x3/x4 scoring while flat completion rewards
+  prevent end-of-stage multiplier exploits.
 - Progression includes stage unlocks, XP, Trail Tokens, Daily Rush, Trail
   Passport badges, Expedition Logs, cosmetics, combo scoring, near-miss rewards,
   and local best scores.

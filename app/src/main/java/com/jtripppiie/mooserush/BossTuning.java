@@ -11,7 +11,7 @@ package com.jtripppiie.mooserush;
  */
 final class BossTuning {
     // Normal play must defeat the boss before this timer runs out.
-    static final float BOSS_SURVIVAL_SECONDS = 48f;
+    static final float BOSS_SURVIVAL_SECONDS = 65f;
 
     private BossTuning() {
     }
@@ -22,7 +22,7 @@ final class BossTuning {
          * speed up near defeat, which feels like a phase change.
          */
         float phasePressure = maxHealth <= 0 ? 0f : 1f - health / (float) maxHealth;
-        return 1f + phasePressure * (finalStage ? 0.55f : 0.35f) + (enraged ? 0.22f : 0f);
+        return 1f + phasePressure * (finalStage ? 0.30f : 0.22f) + (enraged ? 0.12f : 0f);
     }
 
     static int nextPattern(boolean finalStage, int health, int maxHealth, int patternCount, int lunge, int snowWave, int summon, int laser) {
@@ -49,7 +49,7 @@ final class BossTuning {
 
     static float tellDuration(boolean finalStage, boolean enraged) {
         // Tell is the warning window before the attack.
-        return (finalStage ? 0.98f : 0.78f) * (enraged ? 0.90f : 1f);
+        return (finalStage ? 1.30f : 1.12f) * (enraged ? 0.94f : 1f);
     }
 
     static float attackDuration(boolean finalStage, boolean enraged, boolean lunge, boolean laser) {
@@ -65,6 +65,19 @@ final class BossTuning {
 
     static float recoverDuration(boolean finalStage, boolean enraged) {
         // Recovery gives the player a breather after an attack.
-        return (finalStage ? 0.92f : 0.72f) * (enraged ? 0.82f : 1f);
+        return (finalStage ? 1.28f : 1.12f) * (enraged ? 0.92f : 1f);
+    }
+
+    static int shotDamage(boolean weakWindow, boolean empowered) {
+        if (!weakWindow) return 0;
+        return empowered ? 2 : 1;
+    }
+
+    static int logShotDamage(boolean empowered) {
+        return empowered ? 2 : 1;
+    }
+
+    static int logShotsRequired() {
+        return 2;
     }
 }

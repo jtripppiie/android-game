@@ -9,7 +9,20 @@ public class BossTuningTest {
 
     @Test
     public void bossClockSupportsLongerMultiPhaseFights() {
-        assertTrue(BossTuning.BOSS_SURVIVAL_SECONDS >= 48f);
+        assertTrue(BossTuning.BOSS_SURVIVAL_SECONDS >= 60f);
+    }
+
+    @Test public void armorForcesPlayersToReadTheRecoveryWindow() {
+        assertEquals(0, BossTuning.shotDamage(false, false));
+        assertEquals(0, BossTuning.shotDamage(false, true));
+        assertEquals(1, BossTuning.shotDamage(true, false));
+        assertEquals(2, BossTuning.shotDamage(true, true));
+    }
+
+    @Test public void ordinaryShotsNeedTwoHitsToBreakAResourceLog() {
+        assertEquals(2, BossTuning.logShotsRequired());
+        assertEquals(1, BossTuning.logShotDamage(false));
+        assertEquals(2, BossTuning.logShotDamage(true));
     }
 
     @Test

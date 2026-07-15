@@ -35,9 +35,10 @@ public class SpriteSheetTrimTest {
     public void scoreMultiplierRewardsRealCombos() {
         assertEquals(1, ArcadeScoring.scoreMultiplierForCombo(0));
         assertEquals(1, ArcadeScoring.scoreMultiplierForCombo(2));
-        assertEquals(2, ArcadeScoring.scoreMultiplierForCombo(3));
+        assertEquals(1, ArcadeScoring.scoreMultiplierForCombo(3));
+        assertEquals(2, ArcadeScoring.scoreMultiplierForCombo(4));
         assertEquals(3, ArcadeScoring.scoreMultiplierForCombo(7));
-        assertEquals(4, ArcadeScoring.scoreMultiplierForCombo(12));
+        assertEquals(4, ArcadeScoring.scoreMultiplierForCombo(10));
         assertEquals(4, ArcadeScoring.scoreMultiplierForCombo(99));
     }
 

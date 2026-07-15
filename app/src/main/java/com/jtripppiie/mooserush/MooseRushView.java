@@ -263,6 +263,8 @@ public class MooseRushView extends View {
     private EncounterDirector encounterDirector;
     private EncounterCard activeEncounter;
     private boolean activeEncounterGeometrySpawned;
+    private float comboTimer;
+    private int observedCombo;
     private long runSeed;
     /*
      * These lists are the moving things currently alive in the level.
@@ -1599,6 +1601,19 @@ public class MooseRushView extends View {
             return;
         }
 
+        if (gameState.combo > observedCombo) {
+            comboTimer = ArcadeScoring.comboWindowSeconds(gameState.combo);
+        }
+        observedCombo = gameState.combo;
+        if (comboTimer > 0f) {
+            comboTimer = Math.max(0f, comboTimer - dt);
+            if (comboTimer == 0f && gameState.combo > 0) {
+                gameState.breakCombo();
+                observedCombo = 0;
+                showRunCallout("CHAIN ENDED", 0.55f);
+            }
+        }
+
         StageConfig stage = STAGES[selectedStage];
         /*
          * Difficulty is a curve, not a switch. As the runner passes more gates,
@@ -2456,15 +2471,19 @@ public class MooseRushView extends View {
 
             if (bossActive && circleHitsCircle(shot.x, shot.y, shot.radius, bossX, bossY, bossRadius())) {
                 iterator.remove();
-                int damage = bossWeakWindowActive() ? (shot.empowered ? 3 : 2) : (shot.empowered ? 2 : 1);
+                int damage = BossTuning.shotDamage(bossWeakWindowActive(), shot.empowered);
+                if (damage == 0) {
+                    effects.spawnScorePopup("ARMORED · WAIT FOR WEAK", bossX, bossY - bossRadius(), Color.rgb(132, 213, 232));
+                    effects.spawnSparkBurst(bossX, bossY, 10, Color.WHITE);
+                    screenShake = Math.max(screenShake, 0.035f);
+                    logEvent("Boss armor deflected shot.");
+                    continue;
+                }
                 bossHealth -= damage;
                 bossStunTimer = Math.max(bossStunTimer, selectedStage == 4 ? 0.28f : 0.18f);
                 damageFlash = shot.empowered ? 0.22f : 0.16f;
                 screenShake = Math.max(screenShake, shot.empowered ? 0.16f : 0.12f);
                 worldFlash = Math.max(worldFlash, shot.empowered ? 0.15f : 0.10f);
-                if (damage >= 3 && bossState != BOSS_STATE_RECOVER) {
-                    enterBossRecover();
-                }
                 int awarded = addScore(25 + damage * 5, "Boss hit");
                 effects.spawnScorePopup((damage >= 3 ? "POWER WEAK +" : damage > 1 ? "WEAK x2 +" : "HIT +") + awarded, bossX, bossY - bossRadius(), damage > 1 ? Color.rgb(255, 218, 121) : Color.rgb(255, 246, 207));
                 effects.spawnSparkBurst(bossX, bossY, damage > 1 ? 28 : 14, damage > 1 ? Color.rgb(255, 218, 121) : Color.rgb(255, 98, 84));
@@ -2705,6 +2724,12 @@ public class MooseRushView extends View {
     }
 
     private void destroyGateWithShot(Gate gate, Shot shot) {
+        gate.shotDamage += BossTuning.logShotDamage(shot.empowered);
+        if (gate.shotDamage < BossTuning.logShotsRequired()) {
+            effects.spawnScorePopup("LOG CRACK · FIRE AGAIN", shot.x, shot.y - dp(16), Color.rgb(132, 213, 232));
+            effects.spawnSparkBurst(shot.x, shot.y, 10, Color.WHITE);
+            return;
+        }
         gates.remove(gate);
         if (!gate.passed) {
             gate.passed = true;
@@ -2713,7 +2738,7 @@ public class MooseRushView extends View {
         }
         gameState.addCombo();
         String reaction = selectedStage == 3 ? "ICE SHATTER" : selectedStage == 4 ? "SNOW ROUTE" : "LOG BOOM";
-        int awarded = addScore(shot.empowered ? 28 : 18, reaction);
+        int awarded = addScore(shot.empowered ? 12 : 8, reaction);
         float x = gate.x + gate.width * 0.5f;
         float y = riverLogTop(gate) + riverLogHeight(gate) * 0.5f;
         effects.spawnScorePopup(reaction + " +" + awarded, x, y - dp(28), Color.rgb(255, 218, 121));
@@ -2983,24 +3008,13 @@ public class MooseRushView extends View {
             }
         }
 
-        if (selectedStage == 4 && bossPhaseThreeAnnounced) {
+        if (selectedStage == 4 && bossPhaseThreeAnnounced && bossPattern == BOSS_PATTERN_SUMMON) {
             // Final boss bonus pressure: spawn additional icicle hazards from top
             float rx = playerX + (random.nextFloat() - 0.5f) * dp(100);
             hazards.add(new Hazard(rx, -dp(40), gameplayDp(14), 0.8f, random.nextFloat(), "ICE SPIKE", null));
             logEvent("Polar Bear summoned Ice Spike!");
         }
 
-        // Phase-two attacks overlap with a fast wildlife lane. Boss fights now
-        // test positioning and prioritization instead of presenting one isolated
-        // mechanic at a time.
-        if (bossPhaseTwoAnnounced && bossPattern != BOSS_PATTERN_SUMMON && bossPatternCount % 2 == 1) {
-            String pressureLabel = selectedStage >= 3 ? "WOLF" : STAGES[selectedStage].hazardLabel;
-            float pressureRadius = gameplayDp(hazardRadiusDp(pressureLabel));
-            hazards.add(new Hazard(getWidth() + dp(42), hazardSpawnY(pressureLabel, pressureRadius),
-                    pressureRadius, hazardSpeedMultiplier(pressureLabel) + 0.12f,
-                    random.nextFloat() * 4f, pressureLabel, null));
-            showRunCallout("CROSSFIRE", 0.72f);
-        }
     }
 
     private void collapseBossPlatform() {
@@ -3079,12 +3093,9 @@ public class MooseRushView extends View {
 
     private void spawnBossSnowWave() {
         float baseY = getGroundY() - dp(22);
-        int count = bossHealth <= bossMaxHealth / 2 ? 3 : 2;
+        int count = 2;
         for (int i = 0; i < count; i++) {
             float y = i == 1 ? baseY - dp(54) : baseY;
-            if (i == 2) {
-                y = baseY - dp(98);
-            }
             bossAttacks.add(new BossAttack(bossX - bossRadius() * 0.75f - i * dp(18), y, dp(i == 0 ? 13 : 11), -dp(250 + selectedStage * 24 + i * 34), i == 0 ? -dp(8) : dp(0), ATTACK_ICE, "Ice"));
         }
         effects.spawnDustBurst(bossX - bossRadius(), getGroundY(), 12, Color.argb(185, 235, 245, 248));
@@ -3100,7 +3111,7 @@ public class MooseRushView extends View {
             String secondLabel = selectedStage == 4 ? STAGES[selectedStage].hazardLabel : "WOLF";
             float secondRadius = gameplayDp(hazardRadiusDp(secondLabel));
             float secondY = hazardSpawnY(secondLabel, secondRadius);
-            hazards.add(new Hazard(getWidth() + dp(96), secondY, secondRadius, hazardSpeedMultiplier(secondLabel) + 0.02f, random.nextFloat() * 4f, secondLabel, null));
+            hazards.add(new Hazard(getWidth() + gameplayDp(188), secondY, secondRadius, hazardSpeedMultiplier(secondLabel) + 0.02f, random.nextFloat() * 4f, secondLabel, null));
         }
         bossAttacks.add(new BossAttack(bossX - bossRadius(), getGroundY() - dp(14), dp(18), -dp(210), 0f, ATTACK_SHOCKWAVE, "Shockwave"));
         screenShake = Math.max(screenShake, 0.12f);
@@ -3193,7 +3204,7 @@ public class MooseRushView extends View {
         bossActive = false;
         bossDefeated = true;
         int clearBonus = stageClearBonus(selectedStage, gameState.bestCombo, gameState.stars);
-        int awarded = addScore(clearBonus, "Stage clear bonus");
+        int awarded = addBankedScore(clearBonus, "Stage clear bonus");
         effects.spawnScorePopup("CLEAR +" + awarded, getWidth() / 2f, getHeight() * 0.38f, Color.rgb(255, 218, 121));
         effects.spawnSparkBurst(getWidth() / 2f, getHeight() * 0.38f, 26, Color.rgb(255, 218, 121));
         showRunCallout("STAGE CLEAR", 2.0f);
@@ -3248,7 +3259,7 @@ public class MooseRushView extends View {
         int newLogs = 1 + (gradeScore >= 7 ? 1 : 0);
         expeditionLogs += newLogs;
         runExpeditionBonusTokens += newLogs * 2;
-        int awarded = addScore(45 + selectedStage * 8, "Expedition bonus");
+        int awarded = addBankedScore(45 + selectedStage * 8, "Expedition bonus");
         effects.spawnScorePopup("EXPEDITION +" + newLogs + " LOG", getWidth() / 2f, getHeight() * 0.40f, Color.rgb(77, 219, 184));
         effects.spawnSparkBurst(getWidth() / 2f, getHeight() * 0.40f, 24, Color.rgb(77, 219, 184));
         showRunCallout("EXPEDITION GRADE " + expeditionGrade(true), 1.55f);
@@ -3392,11 +3403,18 @@ public class MooseRushView extends View {
 
     private void resetAfterHit() {
         gates.clear();
+        routePlatforms.clear();
+        waterPatches.clear();
+        launchPads.clear();
+        bonusBlocks.clear();
+        trickRings.clear();
         hazards.clear();
         stars.clear();
         powerUps.clear();
         shots.clear();
         bossAttacks.clear();
+        activeEncounter = null;
+        activeEncounterGeometrySpawned = false;
         effects.clearParticles();
         playerX = playerStartX();
         playerY = getGroundY() - playerRadius;
@@ -3406,20 +3424,30 @@ public class MooseRushView extends View {
         coyoteTimer = RunnerTuning.COYOTE_SECONDS;
         jumpBufferTimer = 0f;
         cleanVaultStreak = 0;
+        comboTimer = 0f;
+        observedCombo = 0;
+        gameState.breakCombo();
         flowTimer = 0f;
-        spawnCooldown = 0.75f;
-        hazardCooldown = 1.25f;
+        spawnCooldown = 1.05f;
+        hazardCooldown = 1.65f;
         respawnGraceTimer = 1.35f;
         damageFlash = 0.18f;
         screenShake = Math.max(screenShake, 0.16f);
         worldFlash = Math.max(worldFlash, 0.16f);
         effects.spawnDustBurst(playerX, getGroundY(), 14, Color.argb(190, 255, 255, 255));
         showRunCallout("RESPAWN GRACE", 1.0f);
+        if (bossActive) {
+            buildBossArena();
+            bossState = BOSS_STATE_TELL;
+            bossStateTimer = 0f;
+            bossPattern = BOSS_PATTERN_LUNGE;
+        }
     }
 
     private int addScore(int amount, String reason) {
         int multiplier = activeScoreMultiplier();
-        int awarded = Math.round(amount * multiplier * perkScoreMultiplier());
+        int awarded = ArcadeScoring.actionAward(amount, gameState.combo,
+                auroraRushTimer > 0f || flowActive(), perkScoreMultiplier());
         score += awarded;
         runStageScore += awarded;
         gameState.addScore(awarded);
@@ -3430,14 +3458,18 @@ public class MooseRushView extends View {
         return awarded;
     }
 
+    private int addBankedScore(int amount, String reason) {
+        int awarded = ArcadeScoring.bankedAward(amount);
+        score += awarded;
+        runStageScore += awarded;
+        gameState.addScore(awarded);
+        logEvent(reason + " +" + awarded + " (banked).");
+        return awarded;
+    }
+
     private int activeScoreMultiplier() {
         int multiplier = scoreMultiplierForCombo(gameState.combo);
-        if (auroraRushTimer > 0f) {
-            multiplier = Math.min(5, multiplier + 1);
-        }
-        if (flowActive()) {
-            multiplier = Math.min(5, multiplier + 1);
-        }
+        if (auroraRushTimer > 0f || flowActive()) multiplier = Math.min(4, multiplier + 1);
         return multiplier;
     }
 
@@ -3699,7 +3731,7 @@ public class MooseRushView extends View {
             return;
         }
         missionsCompleted++;
-        int awarded = addScore(35 + selectedStage * 5, "Mission " + label);
+        int awarded = addBankedScore(35 + selectedStage * 5, "Mission " + label);
         effects.spawnScorePopup(label + " +" + awarded, getWidth() / 2f, getHeight() * 0.34f, Color.rgb(132, 213, 232));
         effects.spawnSparkBurst(getWidth() / 2f, getHeight() * 0.34f, 18, Color.rgb(132, 213, 232));
         totalMissionsCompleted++;
@@ -8025,7 +8057,7 @@ public class MooseRushView extends View {
             return "SUMMON";
         }
         if (bossState == BOSS_STATE_RECOVER) {
-            return bossWeakWindowActive() ? "WEAK x2" : "RECOVER";
+            return bossWeakWindowActive() ? "WEAK · FIRE" : "RECOVER";
         }
         return "ENTER";
     }
@@ -8174,6 +8206,7 @@ public class MooseRushView extends View {
         final float width;
         // passed prevents awarding score more than once for the same gate.
         boolean passed = false;
+        int shotDamage = 0;
 
         Gate(float x, float height, float width) {
             this.x = x;
