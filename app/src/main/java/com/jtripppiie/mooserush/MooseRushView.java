@@ -265,6 +265,7 @@ public class MooseRushView extends View {
      */
     private final List<Gate> gates = new ArrayList<>();
     private final List<RoutePlatform> routePlatforms = new ArrayList<>();
+    private final List<WaterPatch> waterPatches = new ArrayList<>();
     private final List<Hazard> hazards = new ArrayList<>();
     private final List<Star> stars = new ArrayList<>();
     private final List<PowerUp> powerUps = new ArrayList<>();
@@ -1164,6 +1165,7 @@ public class MooseRushView extends View {
          */
         gates.clear();
         routePlatforms.clear();
+        waterPatches.clear();
         hazards.clear();
         stars.clear();
         powerUps.clear();
@@ -1566,6 +1568,13 @@ public class MooseRushView extends View {
          */
         float previousPlayerY = playerY;
         playerVelocityY += gravity * dt;
+        if (!grounded && aimDownPressed && playerVelocityY > 0f) {
+            playerVelocityY += gravity * 1.35f * dt;
+        }
+        if (!grounded && selectedStage == 3) {
+            float wind = (float) Math.sin(spriteClock * 1.7f + gatesPassed * 0.8f) * dp(74) * dt;
+            playerX = clamp(playerX + wind, playerRadius + dp(6), getWidth() - playerRadius - dp(6));
+        }
         playerY += playerVelocityY * dt;
 
         // Squash and stretch: stretch when falling/jumping fast, squash on impact.
@@ -1579,9 +1588,22 @@ public class MooseRushView extends View {
         groundScroll = (groundScroll + gateSpeed * dt) % dp(48);
         sceneryScroll = (sceneryScroll + gateSpeed * dt) % dp(3600);
         updateRoutePlatforms(dt, bossActive ? 0f : gateSpeed);
+        updateWaterPatches(dt, bossActive ? 0f : gateSpeed);
 
         float restY = getGroundY() - playerRadius;
         RoutePlatform landedPlatform = landingRoutePlatform(previousPlayerY, playerY);
+        if (landedPlatform != null && landedPlatform.brittle && aimDownPressed
+                && playerVelocityY > dp(360)) {
+            landedPlatform.broken = true;
+            landedPlatform = null;
+            playerVelocityY = dp(210);
+            gameState.addCombo();
+            int stompAward = addScore(28, "Ice stomp route");
+            effects.spawnScorePopup("STOMP THROUGH +" + stompAward, playerX,
+                    playerY - playerRadius * 1.8f, Color.rgb(77, 219, 184));
+            effects.spawnSparkBurst(playerX, playerY + playerRadius, 28, Color.WHITE);
+            screenShake = Math.max(screenShake, 0.14f);
+        }
         if (landedPlatform != null) {
             restY = landedPlatform.y - playerRadius;
         }
@@ -1593,6 +1615,14 @@ public class MooseRushView extends View {
             playerY = restY;
             playerVelocityY = 0f;
             grounded = true;
+            if (landedPlatform != null && !landedPlatform.visited) {
+                landedPlatform.visited = true;
+                gameState.addCombo();
+                int routeAward = addScore(landedPlatform.y < getGroundY() - dp(88) ? 22 : 12, "Route landing");
+                effects.spawnScorePopup((landedPlatform.moving ? "MOVING LINE +" : "ROUTE +") + routeAward,
+                        playerX, restY - playerRadius, Color.rgb(77, 219, 184));
+                if (flowActive()) flowTimer = Math.min(FLOW_TIMER_SECONDS + 2f, flowTimer + 0.35f);
+            }
             jumpsUsed = 0;
             coyoteTimer = RunnerTuning.COYOTE_SECONDS;
             if (!wasGrounded) {
@@ -1659,6 +1689,15 @@ public class MooseRushView extends View {
             for (Gate gate : gates) {
                 if (hitsGate(gate)) {
                     endGame(STAGES[selectedStage].obstacleName + " bonk.");
+                    return;
+                }
+            }
+
+            for (WaterPatch water : waterPatches) {
+                if (!water.frozen && playerX + playerRadius * 0.45f > water.x
+                        && playerX - playerRadius * 0.45f < water.x + water.width
+                        && playerY + playerRadius * 0.72f >= getGroundY() - dp(5)) {
+                    endGame("River current swept you away.");
                     return;
                 }
             }
@@ -1740,6 +1779,16 @@ public class MooseRushView extends View {
             platform.y = platform.baseY + (platform.moving
                     ? (float) Math.sin(platform.age * 2.15f + platform.phase) * dp(20) : 0f);
             if (platform.x + platform.width < -dp(40)) iterator.remove();
+        }
+    }
+
+    private void updateWaterPatches(float dt, float speed) {
+        Iterator<WaterPatch> iterator = waterPatches.iterator();
+        while (iterator.hasNext()) {
+            WaterPatch water = iterator.next();
+            water.x -= speed * dt;
+            water.phase += dt;
+            if (water.x + water.width < -dp(40)) iterator.remove();
         }
     }
 
@@ -2111,6 +2160,13 @@ public class MooseRushView extends View {
                 continue;
             }
 
+            WaterPatch hitWater = hitWaterForShot(shot);
+            if (hitWater != null) {
+                iterator.remove();
+                freezeWaterPatch(hitWater, shot);
+                continue;
+            }
+
             RoutePlatform hitPlatform = hitRoutePlatformForShot(shot);
             if (hitPlatform != null) {
                 iterator.remove();
@@ -2272,6 +2328,26 @@ public class MooseRushView extends View {
             if (circleHitsRect(shot.x, shot.y, shot.radius, tempRect)) return platform;
         }
         return null;
+    }
+
+    private WaterPatch hitWaterForShot(Shot shot) {
+        for (WaterPatch water : waterPatches) {
+            if (water.frozen) continue;
+            tempRect.set(water.x, getGroundY() - dp(18), water.x + water.width, getGroundY() + dp(12));
+            if (circleHitsRect(shot.x, shot.y, shot.radius * 1.4f, tempRect)) return water;
+        }
+        return null;
+    }
+
+    private void freezeWaterPatch(WaterPatch water, Shot shot) {
+        water.frozen = true;
+        routePlatforms.add(new RoutePlatform(water.x, getGroundY() - dp(8), water.width,
+                false, true, random.nextFloat() * 6f));
+        int awarded = addScore(shot.empowered ? 34 : 22, "Ice bridge created");
+        effects.spawnScorePopup("ICE BRIDGE +" + awarded, water.x + water.width / 2f,
+                getGroundY() - dp(30), Color.rgb(132, 213, 232));
+        effects.spawnSparkBurst(water.x + water.width / 2f, getGroundY(), 24, Color.WHITE);
+        addAuroraMeter(12f, "Ice bridge");
     }
 
     private void damageRoutePlatform(RoutePlatform platform, Shot shot) {
@@ -3359,11 +3435,16 @@ public class MooseRushView extends View {
         } else if (encounter.route == EncounterCard.ROUTE_PRECISION) {
             routePlatforms.add(new RoutePlatform(anchorX + gameplayDp(116), ground - gameplayDp(70),
                     gameplayDp(82), selectedStage >= 2, false, random.nextFloat() * 6f));
+            if (selectedStage == 1) {
+                waterPatches.add(new WaterPatch(anchorX + gameplayDp(214), gameplayDp(118)));
+            }
         } else if (flowActive()) {
             // A low FLOW bridge lets skilled players stay aggressive beneath
             // aerial threats without turning the safe route into a free pass.
             routePlatforms.add(new RoutePlatform(anchorX + gameplayDp(120), ground - gameplayDp(42),
                     gameplayDp(132), false, true, random.nextFloat() * 6f));
+        } else if (selectedStage == 1) {
+            waterPatches.add(new WaterPatch(anchorX + gameplayDp(86), gameplayDp(132)));
         }
     }
 
@@ -4024,6 +4105,9 @@ public class MooseRushView extends View {
         drawAlaskaBackdrop(canvas);
         weather.draw(canvas, selectedStage, selectedSeason, flowActive());
         drawGround(canvas, getWidth());
+        for (WaterPatch water : waterPatches) {
+            drawWaterPatch(canvas, water);
+        }
 
         if (bossPhaseThreeAnnounced && selectedStage == 4) {
             // Draw a heavy blizzard overlay during final boss phase
@@ -4391,6 +4475,22 @@ public class MooseRushView extends View {
             canvas.drawLine(mid, platform.y + dp(10), mid + dp(18), platform.y + dp(3), paint);
         }
         paint.setStyle(Paint.Style.FILL);
+    }
+
+    private void drawWaterPatch(Canvas canvas, WaterPatch water) {
+        if (water.frozen) return;
+        float ground = getGroundY();
+        paint.setStyle(Paint.Style.FILL);
+        paint.setColor(Color.rgb(18, 92, 130));
+        canvas.drawRect(water.x, ground - dp(4), water.x + water.width, getHeight(), paint);
+        paint.setColor(Color.argb(210, 132, 213, 232));
+        for (float x = water.x - (water.phase * dp(38)) % dp(38); x < water.x + water.width; x += dp(38)) {
+            canvas.drawOval(x, ground - dp(8), x + dp(24), ground + dp(1), paint);
+        }
+        textPaint.setTextAlign(Paint.Align.CENTER);
+        textPaint.setTextSize(dp(8.5f));
+        textPaint.setColor(Color.WHITE);
+        canvas.drawText("FREEZE OR CLEAR", water.x + water.width / 2f, ground - dp(15), textPaint);
     }
 
     private int gateDarkColor() {
@@ -7518,6 +7618,7 @@ public class MooseRushView extends View {
         final float phase;
         float age = 0f;
         boolean broken = false;
+        boolean visited = false;
         int hits = 0;
 
         RoutePlatform(float x, float y, float width, boolean moving, boolean brittle, float phase) {
@@ -7528,6 +7629,18 @@ public class MooseRushView extends View {
             this.moving = moving;
             this.brittle = brittle;
             this.phase = phase;
+        }
+    }
+
+    private static class WaterPatch {
+        float x;
+        final float width;
+        float phase = 0f;
+        boolean frozen = false;
+
+        WaterPatch(float x, float width) {
+            this.x = x;
+            this.width = width;
         }
     }
 

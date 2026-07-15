@@ -51,6 +51,25 @@ moving, fixed, or brittle footing. FLOW shots can reflect active lasers, shatter
 ice projectiles can create temporary platforms, lasers damage brittle platforms,
 and enraged Moose/Polar Bear charges collapse arena footing.
 
+Salmon Rush precision and ground cards can now cut holes in the normal ground
+line with moving water. The player can clear the gap, take an upper platform, or
+shoot the water to create a brittle ice bridge. The bridge remains interactive:
+it can be cracked by shots or deliberately smashed by holding aim-down during a
+hard fall.
+
+Aim-down now doubles as fast-fall control while airborne. It tightens jump arcs,
+enables stomp-through shortcuts, and creates a faster but riskier response to
+wind. Dark Winter applies oscillating lateral wind only while airborne, keeping
+ground movement predictable while making its high routes stage-specific.
+
+First-time landings on authored route platforms award active execution. Moving
+and high-line landings score more, increase combo, and extend an already-active
+FLOW state. Falling from a missed platform returns to the ground route.
+
+The Java deck contains at least 24 authored recipes spanning stage onboarding,
+ground gambits, precision routes, high lines, multi-wildlife interactions, and
+four FLOW-only cards. Tests enforce minimum route and FLOW vocabulary.
+
 ## Godot parity
 
 `TrailEncounterCard` and `TrailEncounterDirector` mirror the same route types,
@@ -59,6 +78,8 @@ The Chugach slice prebuilds a seeded encounter sequence and exposes its current
 route in the HUD. It now includes an upper moving-platform chain, precision line
 with snowball-reactive ice, lower wildlife route, fallbacks, and convergence
 section. `ReactiveIce` provides a reusable two-hit destructible terrain body.
+`FreezableWater` is a lethal route volume that converts into `ReactiveIce` when
+hit by a snowball, matching the Salmon Rush decision in the Android game.
 
 ## Extension rule
 

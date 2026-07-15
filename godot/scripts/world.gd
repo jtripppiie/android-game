@@ -93,6 +93,11 @@ func build_route_branches() -> void:
 	ice.shattered.connect(func(_at): checkpoint_label.text = "ICE ROUTE SHATTERED")
 	add_child(ice)
 	collectible(Vector2(2890, 340), "coin")
+	var water := FreezableWater.new()
+	water.position = Vector2(2145, 535)
+	water.size = Vector2(105, 42)
+	add_child(water)
+	route_sign(Vector2(2070, 485), "FREEZE · JUMP · FALL")
 
 	# LOW: safer cave line, but a bear owns the exit and must be outplayed.
 	platform(Rect2(3320, 650, 620, 70), Color("#8cb9c4"))

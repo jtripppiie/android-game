@@ -15,6 +15,7 @@ func _ready() -> void:
 	collision.shape = shape
 	add_child(collision)
 	body_entered.connect(_on_body_entered)
+	area_entered.connect(_on_area_entered)
 	queue_redraw()
 
 func _physics_process(delta: float) -> void:
@@ -35,3 +36,8 @@ func _on_body_entered(body: Node) -> void:
 		if is_instance_valid(player): player.enemy_defeated(false)
 		body.queue_free()
 	queue_free()
+
+func _on_area_entered(area: Area2D) -> void:
+	if area.has_method("snowball_hit"):
+		area.snowball_hit(self)
+		queue_free()

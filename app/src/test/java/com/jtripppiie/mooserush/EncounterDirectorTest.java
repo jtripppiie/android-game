@@ -34,4 +34,23 @@ public class EncounterDirectorTest {
                 > EncounterDirector.threatBudget(3, 8, false));
         assertTrue(EncounterDirector.threatBudget(99, 99, true) <= 8);
     }
+
+    @Test
+    public void deckHasEnoughAuthoredVocabularyForDistinctRuns() {
+        EncounterCard[] cards = EncounterDeck.cards();
+        assertTrue(cards.length >= 24);
+        int flowCards = 0;
+        int highRoutes = 0;
+        int groundRoutes = 0;
+        for (EncounterCard card : cards) {
+            assertTrue(card.hazards.length > 0);
+            assertTrue(card.starCount > 0);
+            if (card.flowVariant) flowCards++;
+            if (card.route == EncounterCard.ROUTE_HIGH) highRoutes++;
+            if (card.route == EncounterCard.ROUTE_GROUND) groundRoutes++;
+        }
+        assertTrue(flowCards >= 4);
+        assertTrue(highRoutes >= 6);
+        assertTrue(groundRoutes >= 6);
+    }
 }

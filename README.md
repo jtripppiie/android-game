@@ -9,10 +9,10 @@ wildlife encounters through stage runs and boss fights.
 ## Current Build
 
 ```text
-versionCode: 379
-versionName: 3.11.0-beta
-build badge: ALASKA PASSPORT v3.79 BETA
-APK: app/build/outputs/apk/debug/you-rush-alaska-3.11.0-beta-379-debug.apk
+versionCode: 380
+versionName: 3.12.0-beta
+build badge: ALASKA PASSPORT v3.80 BETA
+APK: app/build/outputs/apk/debug/you-rush-alaska-3.12.0-beta-380-debug.apk
 ```
 
 This is a beta package for device testing and gameplay tuning. It is not a
