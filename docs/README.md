@@ -6,6 +6,11 @@ testing, and release preparation.
 
 ## Active Docs
 
+- [3.14 visual gameplay release](RELEASE_3_14_BETA_VISUAL_GAMEPLAY_PASS.md):
+  current artwork integration, implementation map, verification, and device QA.
+- [Release notes](RELEASE_NOTES.md): current and previous beta highlights.
+- [Generated assets](GENERATED_ASSETS.md): raster-art prompt summaries and
+  transparency pipeline provenance.
 - [Versioning](VERSIONING.md): Android version fields, build badge rules, and
   release checklist.
 - [Android test checklist](ANDROID_TEST_CHECKLIST.md): phone QA checklist for
@@ -40,6 +45,7 @@ source of truth for the current beta.
 
 - Version metadata: `app/build.gradle`
 - Current build summary: root `README.md`
+- Current implementation release: `docs/RELEASE_3_14_BETA_VISUAL_GAMEPLAY_PASS.md`
 - QA checklist: `docs/ANDROID_TEST_CHECKLIST.md`
 - Offline visual debugging: `docs/OFFLINE_DEBUG_PREVIEWS.md`
 - Privacy/store readiness: `docs/PRIVACY.md` and `docs/STORE_LISTING_DRAFT.md`

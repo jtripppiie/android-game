@@ -6,6 +6,27 @@ Current release details are tracked in `docs/VERSIONING.md` and the root
 ## Latest Beta
 
 ```text
+3.14.0-beta
+versionCode 382
+ALASKA PASSPORT v3.82 BETA
+```
+
+Visual gameplay highlights:
+
+- Added distinct production sprites for snow routes and mechanical moving
+  platforms, eliminating the generic shared route appearance.
+- Replaced procedural water shapes with a readable glacial-current surface that
+  retains the existing freeze-or-clear interaction.
+- Added a rotating red laser/ice impact effect with a precise stable collision
+  core at the beam endpoint.
+- Added the mechanical moving-platform art to the Godot slice without changing
+  its collision or movement contract.
+- Preserved generated-asset prompts and implementation details in
+  [the complete 3.14 release note](RELEASE_3_14_BETA_VISUAL_GAMEPLAY_PASS.md).
+
+## Previous Beta
+
+```text
 3.6.0-beta
 versionCode 374
 ALASKA PASSPORT v3.74 BETA

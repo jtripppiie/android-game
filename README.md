@@ -105,6 +105,9 @@ Start with [docs/README.md](docs/README.md).
 
 Key active docs:
 
+- [3.14 visual gameplay release](docs/RELEASE_3_14_BETA_VISUAL_GAMEPLAY_PASS.md)
+- [Release notes](docs/RELEASE_NOTES.md)
+- [Generated raster assets](docs/GENERATED_ASSETS.md)
 - [Versioning](docs/VERSIONING.md)
 - [Android test checklist](docs/ANDROID_TEST_CHECKLIST.md)
 - [Gameplay revamp contract](docs/GAMEPLAY_REVAMP.md)
