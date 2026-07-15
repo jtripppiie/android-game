@@ -81,6 +81,22 @@ section. `ReactiveIce` provides a reusable two-hit destructible terrain body.
 `FreezableWater` is a lethal route volume that converts into `ReactiveIce` when
 hit by a snowball, matching the Salmon Rush decision in the Android game.
 
+## Raster presentation
+
+Physical route platforms now use `route_platform_ice.png`, a transparent,
+hand-painted blue-ice sprite rather than procedural rounded rectangles. Android
+scales the sprite to the collision width while retaining explicit crack overlays
+for brittle state. The Godot route builder uses the same source for thin route
+platforms.
+
+Laser attacks use `boss_laser_emitter.png`, a compact mechanical aperture with a
+contained red iris and white pupil. The emitter center, beam start, collision
+segment, tell line, reflection target, and debug origin all call the same
+`bossLaserEyeX/Y` functions. Polar Bear coordinates were measured against the
+actual standing sprite: `-0.48 radius` horizontally and `0.895 sprite height`
+above its bottom anchor. The emitter is repainted over the boss during the tell;
+previously the tell was drawn first and then hidden underneath the boss sprite.
+
 ## Extension rule
 
 Add complexity by authoring a new relationship or route choice. Do not add a card

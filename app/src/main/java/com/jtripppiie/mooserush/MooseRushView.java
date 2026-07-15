@@ -4458,7 +4458,16 @@ public class MooseRushView extends View {
 
     private void drawRoutePlatform(Canvas canvas, RoutePlatform platform) {
         if (platform.broken) return;
-        float bottom = platform.y + dp(13);
+        float bottom = platform.y + dp(30);
+        Bitmap platformSprite = assets.routePlatformIce();
+        if (platformSprite != null) {
+            tempRect.set(platform.x - dp(3), platform.y - dp(7),
+                    platform.x + platform.width + dp(3), bottom);
+            boolean previousFilter = spriteBitmapPaint.isFilterBitmap();
+            spriteBitmapPaint.setFilterBitmap(true);
+            canvas.drawBitmap(platformSprite, null, tempRect, spriteBitmapPaint);
+            spriteBitmapPaint.setFilterBitmap(previousFilter);
+        } else {
         paint.setStyle(Paint.Style.FILL);
         paint.setColor(Color.argb(105, 0, 0, 0));
         canvas.drawOval(platform.x + dp(5), bottom - dp(2), platform.x + platform.width - dp(5), bottom + dp(7), paint);
@@ -4469,7 +4478,11 @@ public class MooseRushView extends View {
         paint.setStrokeWidth(dp(platform.brittle ? 2.2f : 1.4f));
         paint.setColor(platform.brittle ? Color.WHITE : Color.rgb(35, 86, 108));
         canvas.drawRoundRect(platform.x, platform.y, platform.x + platform.width, bottom, dp(7), dp(7), paint);
+        }
         if (platform.brittle) {
+            paint.setStyle(Paint.Style.STROKE);
+            paint.setStrokeWidth(dp(2.2f));
+            paint.setColor(Color.rgb(18, 74, 108));
             float mid = platform.x + platform.width * 0.52f;
             canvas.drawLine(mid - dp(14), platform.y + dp(2), mid, platform.y + dp(10), paint);
             canvas.drawLine(mid, platform.y + dp(10), mid + dp(18), platform.y + dp(3), paint);
@@ -5414,8 +5427,8 @@ public class MooseRushView extends View {
             return bossX - bossRadius() * 0.28f;
         }
         if (selectedStage == 4) {
-            // Head of the standing polar bear, biased toward the player it faces.
-            return bossX - bossRadius() * 0.40f;
+            // Measured from the visible eye in sprite_polar_bear_roar.png.
+            return bossX - bossRadius() * 0.48f;
         }
         return bossX - bossRadius() * 0.62f;
     }
@@ -5425,14 +5438,24 @@ public class MooseRushView extends View {
             return bossY - bossRadius() * 0.36f;
         }
         if (selectedStage == 4) {
-            // Eye level near the top of the standing (bottom-anchored) bear sprite.
+            // Measured normalized eye height from the bottom-anchored sprite.
             float bottom = getGroundY() + dp(2);
-            return bottom - polarBearBossSpriteHeight(bossRadius()) * 0.82f;
+            return bottom - polarBearBossSpriteHeight(bossRadius()) * 0.895f;
         }
         return bossY - bossRadius() * 0.28f;
     }
 
     private void drawBossLaserEyeEmitter(Canvas canvas, float x, float y, float pulse) {
+        Bitmap emitter = assets.bossLaserEmitter();
+        if (emitter != null) {
+            float halfSize = dp(8.6f + pulse * 0.9f);
+            tempRect.set(x - halfSize, y - halfSize, x + halfSize, y + halfSize);
+            boolean previousFilter = spriteBitmapPaint.isFilterBitmap();
+            spriteBitmapPaint.setFilterBitmap(true);
+            canvas.drawBitmap(emitter, null, tempRect, spriteBitmapPaint);
+            spriteBitmapPaint.setFilterBitmap(previousFilter);
+            return;
+        }
         // Compact mechanical aperture. The old additive fireball obscured the
         // boss face and made the beam appear detached from its true origin.
         paint.setShader(null);
@@ -5524,6 +5547,17 @@ public class MooseRushView extends View {
             paint.setStyle(Paint.Style.FILL);
             paint.setColor(Color.rgb(255, 218, 121));
             canvas.drawCircle(bossX, bossY, radius, paint);
+        }
+
+        // Tell geometry is painted behind the boss so its lane remains readable.
+        // Repaint the physical emitter over the sprite at the exact beam/collision
+        // origin; otherwise the bear artwork completely hides the charging eye.
+        if (bossState == BOSS_STATE_TELL && bossPattern == BOSS_PATTERN_LASER) {
+            float charge = Math.min(1f, bossStateTimer / Math.max(0.01f, bossTellDuration()));
+            drawBossLaserEyeEmitter(canvas, bossLaserEyeX(), bossLaserEyeY(), charge);
+            if (selectedStage == 0) {
+                drawBossLaserEyeEmitter(canvas, bossX + radius * 0.28f, bossLaserEyeY(), charge);
+            }
         }
 
         drawBossHealthBar(canvas);

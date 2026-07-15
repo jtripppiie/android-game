@@ -130,10 +130,17 @@ func platform(rect: Rect2, color: Color) -> void:
 	collision.shape = shape
 	collision.position = rect.size * 0.5
 	body.add_child(collision)
-	var art := Polygon2D.new()
-	art.polygon = PackedVector2Array([Vector2.ZERO,Vector2(rect.size.x,0),rect.size,Vector2(0,rect.size.y)])
-	art.color = color
-	body.add_child(art)
+	if rect.size.y <= 30.0:
+		var art := Sprite2D.new()
+		art.texture = load("res://assets/route_platform_ice.png")
+		art.position = Vector2(rect.size.x * 0.5, 14)
+		art.scale = Vector2(rect.size.x / art.texture.get_width(), 0.16)
+		body.add_child(art)
+	else:
+		var art := Polygon2D.new()
+		art.polygon = PackedVector2Array([Vector2.ZERO,Vector2(rect.size.x,0),rect.size,Vector2(0,rect.size.y)])
+		art.color = color
+		body.add_child(art)
 	add_child(body)
 
 func slope(points: PackedVector2Array, color: Color) -> void:

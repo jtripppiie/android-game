@@ -35,6 +35,8 @@ final class GameAssets {
     private final Bitmap polarBearRoarSprite;
     private final Bitmap salmonSwimSheet;
     private final Bitmap eagleFlySheet;
+    private final Bitmap routePlatformIce;
+    private final Bitmap bossLaserEmitter;
     private final Bitmap brandingLogo;
 
     GameAssets(Context context) {
@@ -59,6 +61,8 @@ final class GameAssets {
         polarBearRoarSprite = BitmapFactory.decodeResource(context.getResources(), R.drawable.sprite_polar_bear_roar);
         salmonSwimSheet = BitmapFactory.decodeResource(context.getResources(), R.drawable.sheet_salmon_swim);
         eagleFlySheet = BitmapFactory.decodeResource(context.getResources(), R.drawable.sheet_eagle_fly);
+        routePlatformIce = BitmapFactory.decodeResource(context.getResources(), R.drawable.route_platform_ice);
+        bossLaserEmitter = BitmapFactory.decodeResource(context.getResources(), R.drawable.boss_laser_emitter);
         brandingLogo = decodeOptionalAsset(context, BRANDING_LOGO_ASSET);
     }
 
@@ -128,6 +132,14 @@ final class GameAssets {
 
     Bitmap eagleFlySheet() {
         return eagleFlySheet;
+    }
+
+    Bitmap routePlatformIce() {
+        return routePlatformIce;
+    }
+
+    Bitmap bossLaserEmitter() {
+        return bossLaserEmitter;
     }
 
     Bitmap brandingLogo() {
