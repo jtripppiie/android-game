@@ -267,6 +267,7 @@ public class MooseRushView extends View {
     private final List<Gate> gates = new ArrayList<>();
     private final List<RoutePlatform> routePlatforms = new ArrayList<>();
     private final List<WaterPatch> waterPatches = new ArrayList<>();
+    private final List<LaunchPad> launchPads = new ArrayList<>();
     private final List<Hazard> hazards = new ArrayList<>();
     private final List<Star> stars = new ArrayList<>();
     private final List<PowerUp> powerUps = new ArrayList<>();
@@ -1167,6 +1168,7 @@ public class MooseRushView extends View {
          */
         gates.clear();
         routePlatforms.clear();
+        launchPads.clear();
         waterPatches.clear();
         hazards.clear();
         stars.clear();
@@ -1591,6 +1593,10 @@ public class MooseRushView extends View {
         sceneryScroll = (sceneryScroll + gateSpeed * dt) % dp(3600);
         updateRoutePlatforms(dt, bossActive ? 0f : gateSpeed);
         updateWaterPatches(dt, bossActive ? 0f : gateSpeed);
+        updateLaunchPads(dt, bossActive ? 0f : gateSpeed);
+
+        LaunchPad hitPad = landingLaunchPad(previousPlayerY, playerY);
+        if (hitPad != null) triggerLaunchPad(hitPad);
 
         float restY = getGroundY() - playerRadius;
         RoutePlatform landedPlatform = landingRoutePlatform(previousPlayerY, playerY);
@@ -1704,7 +1710,9 @@ public class MooseRushView extends View {
                 }
             }
 
-            for (Hazard hazard : hazards) {
+            Iterator<Hazard> hazardIterator = hazards.iterator();
+            while (hazardIterator.hasNext()) {
+                Hazard hazard = hazardIterator.next();
                 if ("THIN ICE".equals(hazard.label)) {
                     tempRect.set(hazard.x - hazard.radius * 1.35f, getGroundY() - dp(18), hazard.x + hazard.radius * 1.35f, getGroundY() + dp(4));
                     if (circleHitsRect(playerX, playerY, playerRadius * CollisionTuning.PLAYER_THIN_ICE_RADIUS_SCALE, tempRect)) {
@@ -1716,6 +1724,11 @@ public class MooseRushView extends View {
                 float hazardHitRadius = hazard.radius * CollisionTuning.hazardRadiusScale(hazard.roaring);
                 float hazardHitY = CollisionTuning.hazardHitY(hazard.y, hazard.radius, hazard.roaring);
                 if (circleHitsCircle(playerX, playerY, playerRadius * CollisionTuning.PLAYER_HAZARD_RADIUS_SCALE, hazard.x, hazardHitY, hazardHitRadius)) {
+                    if (canStompHazard(hazard, hazardHitY, hazardHitRadius)) {
+                        hazardIterator.remove();
+                        stompHazard(hazard);
+                        continue;
+                    }
                     endGame(hazard.label + " got you.");
                     return;
                 }
@@ -1725,6 +1738,35 @@ public class MooseRushView extends View {
                 return;
             }
         }
+    }
+
+    private boolean canStompHazard(Hazard hazard, float hitY, float hitRadius) {
+        if (playerVelocityY < dp(115) || hazard.roaring || "ICE SPIKE".equals(hazard.label)
+                || "AVALANCHE".equals(hazard.label)) return false;
+        boolean heavy = "BEAR".equals(hazard.label) || "POLAR".equals(hazard.label)
+                || "MOOSE".equals(hazard.label);
+        if (heavy && !aimDownPressed && !flowActive()) return false;
+        float feet = playerY + playerRadius * 0.82f;
+        float top = hitY - hitRadius;
+        return playerY < hitY && feet >= top - dp(12) && feet <= hitY + dp(8);
+    }
+
+    private void stompHazard(Hazard hazard) {
+        boolean heavy = "BEAR".equals(hazard.label) || "POLAR".equals(hazard.label)
+                || "MOOSE".equals(hazard.label);
+        playerY = Math.min(playerY, hazard.y - hazard.radius - playerRadius * 0.72f);
+        playerVelocityY = -dp(heavy ? 540f : 475f) * perkJumpMultiplier();
+        grounded = false;
+        jumpsUsed = 1;
+        gameState.addCombo();
+        int awarded = addScore(heavy ? 42 : 26, "Wildlife stomp");
+        effects.spawnScorePopup((heavy ? "POWER STOMP +" : "STOMP +") + awarded,
+                hazard.x, hazard.y - hazard.radius, Color.rgb(255, 218, 121));
+        effects.spawnSparkBurst(hazard.x, hazard.y, heavy ? 32 : 22, Color.WHITE);
+        addAuroraMeter(heavy ? 18f : 12f, "Wildlife stomp");
+        if (flowActive()) flowTimer = Math.min(FLOW_TIMER_SECONDS + 2f, flowTimer + 0.55f);
+        screenShake = Math.max(screenShake, heavy ? 0.15f : 0.09f);
+        haptic(HapticFeedbackConstants.LONG_PRESS);
     }
 
     private void updateGates(float dt, float gateSpeed) {
@@ -1792,6 +1834,43 @@ public class MooseRushView extends View {
             water.phase += dt;
             if (water.x + water.width < -dp(40)) iterator.remove();
         }
+    }
+
+    private void updateLaunchPads(float dt, float speed) {
+        Iterator<LaunchPad> iterator = launchPads.iterator();
+        while (iterator.hasNext()) {
+            LaunchPad pad = iterator.next();
+            pad.x -= speed * dt;
+            pad.pulse = Math.max(0f, pad.pulse - dt);
+            if (pad.x + pad.width < -dp(40)) iterator.remove();
+        }
+    }
+
+    private LaunchPad landingLaunchPad(float oldY, float newY) {
+        if (playerVelocityY < 0f) return null;
+        float oldFeet = oldY + playerRadius;
+        float newFeet = newY + playerRadius;
+        for (LaunchPad pad : launchPads) {
+            if (playerX + playerRadius * 0.45f < pad.x
+                    || playerX - playerRadius * 0.45f > pad.x + pad.width) continue;
+            if (oldFeet <= pad.y + dp(5) && newFeet >= pad.y - dp(3)) return pad;
+        }
+        return null;
+    }
+
+    private void triggerLaunchPad(LaunchPad pad) {
+        playerY = pad.y - playerRadius;
+        playerVelocityY = -dp(flowActive() ? 760f : 680f) * perkJumpMultiplier();
+        grounded = false;
+        jumpsUsed = 1;
+        pad.pulse = 0.22f;
+        gameState.addCombo();
+        int awarded = addScore(flowActive() ? 32 : 20, "Launch pad");
+        effects.spawnScorePopup("AURORA LAUNCH +" + awarded, pad.x + pad.width / 2f,
+                pad.y - dp(32), Color.rgb(77, 219, 184));
+        effects.spawnSparkBurst(pad.x + pad.width / 2f, pad.y, 26, Color.rgb(132, 213, 232));
+        screenShake = Math.max(screenShake, 0.10f);
+        haptic(HapticFeedbackConstants.LONG_PRESS);
     }
 
     private RoutePlatform landingRoutePlatform(float oldY, float newY) {
@@ -2507,6 +2586,7 @@ public class MooseRushView extends View {
     private void startBossPhase() {
         gates.clear();
         routePlatforms.clear();
+        launchPads.clear();
         hazards.clear();
         stars.clear();
         powerUps.clear();
@@ -2533,6 +2613,7 @@ public class MooseRushView extends View {
 
     private void buildBossArena() {
         float ground = getGroundY();
+        launchPads.add(new LaunchPad(getWidth() * 0.16f, ground - dp(2), dp(64)));
         if (selectedStage == 0) {
             routePlatforms.add(new RoutePlatform(getWidth() * 0.34f, ground - dp(72), dp(86), true, false, 0.4f));
             routePlatforms.add(new RoutePlatform(getWidth() * 0.58f, ground - dp(116), dp(78), true, false, 2.2f));
@@ -3477,19 +3558,29 @@ public class MooseRushView extends View {
                     gameplayDp(88), true, false, random.nextFloat() * 6f));
             routePlatforms.add(new RoutePlatform(anchorX + gameplayDp(278), ground - gameplayDp(104),
                     gameplayDp(104), false, selectedStage >= 3, random.nextFloat() * 6f));
+            launchPads.add(new LaunchPad(anchorX + gameplayDp(48),
+                    ground - gameplayDp(92), gameplayDp(58)));
         } else if (encounter.route == EncounterCard.ROUTE_PRECISION) {
             routePlatforms.add(new RoutePlatform(anchorX + gameplayDp(116), ground - gameplayDp(70),
                     gameplayDp(82), selectedStage >= 2, false, random.nextFloat() * 6f));
             if (selectedStage == 1) {
                 waterPatches.add(new WaterPatch(anchorX + gameplayDp(214), gameplayDp(118)));
             }
+            // Keep the launch pad on stable ground; the precision platform can
+            // move vertically on later stages and must not drift away from it.
+            launchPads.add(new LaunchPad(anchorX + gameplayDp(82),
+                    ground - dp(2), gameplayDp(56)));
         } else if (flowActive()) {
             // A low FLOW bridge lets skilled players stay aggressive beneath
             // aerial threats without turning the safe route into a free pass.
             routePlatforms.add(new RoutePlatform(anchorX + gameplayDp(120), ground - gameplayDp(42),
                     gameplayDp(132), false, true, random.nextFloat() * 6f));
+            launchPads.add(new LaunchPad(anchorX + gameplayDp(148),
+                    ground - gameplayDp(42), gameplayDp(58)));
         } else if (selectedStage == 1) {
             waterPatches.add(new WaterPatch(anchorX + gameplayDp(86), gameplayDp(132)));
+        } else {
+            launchPads.add(new LaunchPad(anchorX + gameplayDp(104), ground - dp(2), gameplayDp(58)));
         }
     }
 
@@ -4174,6 +4265,9 @@ public class MooseRushView extends View {
         for (RoutePlatform platform : routePlatforms) {
             drawRoutePlatform(canvas, platform);
         }
+        for (LaunchPad pad : launchPads) {
+            drawLaunchPad(canvas, pad);
+        }
         for (Hazard hazard : hazards) {
             drawHazard(canvas, hazard);
         }
@@ -4539,6 +4633,28 @@ public class MooseRushView extends View {
             canvas.drawLine(mid, platform.y + dp(10), mid + dp(18), platform.y + dp(3), paint);
         }
         paint.setStyle(Paint.Style.FILL);
+    }
+
+    private void drawLaunchPad(Canvas canvas, LaunchPad pad) {
+        Bitmap sprite = assets.arcticLaunchPad();
+        float squash = pad.pulse > 0f ? 0.72f + 0.28f * (1f - pad.pulse / 0.22f) : 1f;
+        float height = pad.width * 0.50f * squash;
+        if (sprite != null) {
+            tempRect.set(pad.x, pad.y - height, pad.x + pad.width, pad.y + dp(5));
+            canvas.drawBitmap(sprite, null, tempRect, spriteBitmapPaint);
+        } else {
+            paint.setColor(Color.rgb(77, 219, 184));
+            canvas.drawRoundRect(pad.x, pad.y - dp(10), pad.x + pad.width, pad.y + dp(4),
+                    dp(6), dp(6), paint);
+        }
+        if (pad.pulse > 0f) {
+            paint.setStyle(Paint.Style.STROKE);
+            paint.setStrokeWidth(dp(2.4f));
+            paint.setColor(Color.argb(Math.round(220 * pad.pulse / 0.22f), 132, 213, 232));
+            canvas.drawOval(pad.x - dp(7), pad.y - height - dp(8),
+                    pad.x + pad.width + dp(7), pad.y + dp(8), paint);
+            paint.setStyle(Paint.Style.FILL);
+        }
     }
 
     private void drawWaterPatch(Canvas canvas, WaterPatch water) {
@@ -7747,6 +7863,19 @@ public class MooseRushView extends View {
 
         WaterPatch(float x, float width) {
             this.x = x;
+            this.width = width;
+        }
+    }
+
+    private static class LaunchPad {
+        float x;
+        final float y;
+        final float width;
+        float pulse = 0f;
+
+        LaunchPad(float x, float y, float width) {
+            this.x = x;
+            this.y = y;
             this.width = width;
         }
     }

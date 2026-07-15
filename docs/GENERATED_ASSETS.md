@@ -40,3 +40,10 @@ flat `#ff00ff`; no land, characters, text, or scenery.
 Prompt summary: a compact red eye-laser impact VFX with a white-hot core, crimson
 starburst, tight energy ring, and cyan ice shards, isolated on flat `#00ff00`; no
 beam, characters, text, scenery, or frame.
+
+## `arctic_launch_pad.png`
+
+Prompt summary: an original side-view mechanical snow springboard with a wide
+blue pressure plate, orange coil springs, cyan aurora core and snow-capped feet,
+designed for readable classic-platformer bounce behavior without copying an
+existing franchise, isolated on flat `#ff00ff` with no character, text or scene.

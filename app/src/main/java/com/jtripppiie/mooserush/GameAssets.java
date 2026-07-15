@@ -41,6 +41,7 @@ final class GameAssets {
     private final Bitmap glacialWaterSurface;
     private final Bitmap bossLaserEmitter;
     private final Bitmap laserIceImpact;
+    private final Bitmap arcticLaunchPad;
     private final Bitmap brandingLogo;
 
     GameAssets(Context context) {
@@ -71,6 +72,7 @@ final class GameAssets {
         glacialWaterSurface = BitmapFactory.decodeResource(context.getResources(), R.drawable.glacial_water_surface);
         bossLaserEmitter = BitmapFactory.decodeResource(context.getResources(), R.drawable.boss_laser_emitter);
         laserIceImpact = BitmapFactory.decodeResource(context.getResources(), R.drawable.laser_ice_impact);
+        arcticLaunchPad = BitmapFactory.decodeResource(context.getResources(), R.drawable.arctic_launch_pad);
         brandingLogo = decodeOptionalAsset(context, BRANDING_LOGO_ASSET);
     }
 
@@ -164,6 +166,10 @@ final class GameAssets {
 
     Bitmap laserIceImpact() {
         return laserIceImpact;
+    }
+
+    Bitmap arcticLaunchPad() {
+        return arcticLaunchPad;
     }
 
     Bitmap brandingLogo() {

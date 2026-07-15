@@ -9,10 +9,10 @@ wildlife encounters through stage runs and boss fights.
 ## Current Build
 
 ```text
-versionCode: 384
-versionName: 3.16.0-beta
-build badge: ALASKA PASSPORT v3.84 BETA
-APK: app/build/outputs/apk/debug/you-rush-alaska-3.16.0-beta-384-debug.apk
+versionCode: 385
+versionName: 3.17.0-beta
+build badge: ALASKA PASSPORT v3.85 BETA
+APK: app/build/outputs/apk/debug/you-rush-alaska-3.17.0-beta-385-debug.apk
 ```
 
 This is a beta package for device testing and gameplay tuning. It is not a
@@ -26,6 +26,10 @@ signed public-store release.
   fire, and spray.
 - Snowballs can damage bosses, clear specific threats, and destroy Salmon Rush
   river logs.
+- Falling attacks stomp ordinary wildlife and rebound into follow-up jumps;
+  heavy wildlife requires FLOW or an intentional aim-down power stomp.
+- Aurora launch pads turn ground, precision, high, and boss routes into aerial
+  combo lines, with stronger launches and rewards during FLOW.
 - Bear spray is a scarce pickup with its own SPRAY button to stun close wildlife
   and interrupt close boss lunges.
 - Clean vault streaks trigger FLOW, a short momentum state with bonus scoring,
@@ -105,6 +109,7 @@ Start with [docs/README.md](docs/README.md).
 
 Key active docs:
 
+- [3.17 arcade joy release](docs/RELEASE_3_17_BETA_ARCADE_JOY.md)
 - [3.16 reactive river release](docs/RELEASE_3_16_BETA_REACTIVE_RIVER.md)
 - [3.15 system integrity release](docs/RELEASE_3_15_BETA_SYSTEM_INTEGRITY.md)
 - [3.14 visual gameplay release](docs/RELEASE_3_14_BETA_VISUAL_GAMEPLAY_PASS.md)

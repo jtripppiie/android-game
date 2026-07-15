@@ -6,6 +6,8 @@ testing, and release preparation.
 
 ## Active Docs
 
+- [3.17 arcade joy release](RELEASE_3_17_BETA_ARCADE_JOY.md): wildlife
+  stomps, rebound chains, launch pads, aerial routes, and Godot parity.
 - [3.16 reactive river release](RELEASE_3_16_BETA_REACTIVE_RIVER.md):
   reversible freezing, bridge destruction, reopened currents, and refreezing.
 - [3.15 system integrity release](RELEASE_3_15_BETA_SYSTEM_INTEGRITY.md):
@@ -49,7 +51,7 @@ source of truth for the current beta.
 
 - Version metadata: `app/build.gradle`
 - Current build summary: root `README.md`
-- Current implementation release: `docs/RELEASE_3_16_BETA_REACTIVE_RIVER.md`
+- Current implementation release: `docs/RELEASE_3_17_BETA_ARCADE_JOY.md`
 - QA checklist: `docs/ANDROID_TEST_CHECKLIST.md`
 - Offline visual debugging: `docs/OFFLINE_DEBUG_PREVIEWS.md`
 - Privacy/store readiness: `docs/PRIVACY.md` and `docs/STORE_LISTING_DRAFT.md`

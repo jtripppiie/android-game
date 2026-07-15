@@ -6,6 +6,27 @@ Current release details are tracked in `docs/VERSIONING.md` and the root
 ## Latest Beta
 
 ```text
+3.17.0-beta
+versionCode 385
+ALASKA PASSPORT v3.85 BETA
+```
+
+Arcade-joy highlights:
+
+- Added top-down wildlife stomps with automatic aerial rebounds, combo growth,
+  score bursts, Aurora meter rewards, FLOW extensions, particles and haptics.
+- Heavy bears, polar bears and moose require FLOW or an intentional aim-down
+  stomp, preserving their threat while adding a high-skill offensive answer.
+- Added original arctic launch pads to ground, precision, high and boss routes.
+- Launch pads preserve one air jump, launch higher during FLOW, animate their
+  compression, and create risky airborne reward lines.
+- Added the same launch-pad interaction and artwork to the Godot slice.
+
+See [the complete 3.17 release note](RELEASE_3_17_BETA_ARCADE_JOY.md).
+
+## Previous Beta
+
+```text
 3.16.0-beta
 versionCode 384
 ALASKA PASSPORT v3.84 BETA

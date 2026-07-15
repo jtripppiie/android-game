@@ -124,6 +124,7 @@ func build_directed_encounters() -> void:
 		var x := DIRECTED_START_X + index * DIRECTED_SPACING
 		if card.route == TrailEncounterCard.Route.HIGH:
 			platform(Rect2(x, 275, 145, 24), Color("#dff8fb"))
+			launch_pad(Vector2(x + 42, 275))
 			collectible(Vector2(x + 52, 230), "coin")
 			collectible(Vector2(x + 108, 215), "coin")
 		elif card.route == TrailEncounterCard.Route.PRECISION:
@@ -133,8 +134,10 @@ func build_directed_encounters() -> void:
 			ice.shattered.connect(func(_at): checkpoint_label.text = "DIRECTED ICE SHATTERED")
 			add_child(ice)
 			collectible(Vector2(x + 70, 340), "coin")
+			launch_pad(Vector2(x + 22, 385))
 		else:
 			collectible(Vector2(x + 55, 485), "coin")
+			launch_pad(Vector2(x + 115, 520))
 
 		var hazard_count := mini(2, card.hazards.size())
 		for hazard_index in range(hazard_count):
@@ -196,6 +199,11 @@ func moving_platform(at: Vector2, travel: Vector2, seconds: float) -> void:
 	mover.travel = travel
 	mover.cycle_seconds = seconds
 	add_child(mover)
+
+func launch_pad(at: Vector2) -> void:
+	var pad := AuroraLaunchPad.new()
+	pad.position = at
+	add_child(pad)
 
 func collectible(at: Vector2, kind: String) -> void:
 	var item := Area2D.new()
