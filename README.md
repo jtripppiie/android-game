@@ -6,7 +6,22 @@ Players choose an Alaska stage, optionally personalize the runner with a local
 photo, then move, jump, throw snowballs, collect rewards, and survive regional
 wildlife encounters through stage runs and boss fights.
 
-## Current Build
+## Primary Engine Build
+
+```text
+engine: Godot 4.7.1
+versionCode: 500
+versionName: 5.0.0-engine-alpha
+package: com.jtripppiie.mooserush.overhaul
+APK: app/build/outputs/apk/debug/you-rush-alaska-5.0.0-engine-alpha-debug.apk
+```
+
+Version 5.0 is the primary gameplay development target. Its first migration
+milestone is a complete authored Chugach rescue stage with engine-native physics,
+camera, combat, boss flow, scoring, persistence, debug IDs, and compact notes.
+It installs beside the Java build for direct device comparison.
+
+## Java Rollback Build
 
 ```text
 versionCode: 422
@@ -16,7 +31,7 @@ build badge: ALASKA PASSPORT v4.22
 APK: app/build/outputs/apk/debug/you-rush-alaska-4.2.2-422-debug.apk
 ```
 
-Version 4.2.2 replaces the screen-dominating note dialog with a shallow,
+Version 4.2.2 is retained as the rollback/reference build. It replaces the screen-dominating note dialog with a shallow,
 undimmed quick-note strip and opt-in keyboard. It includes the 4.2.1 stable
 control/readability pass and the 4.2 gameplay rebuild. The APK is
 developer-signed for direct device testing; an app-store upload still requires

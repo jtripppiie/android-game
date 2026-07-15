@@ -24,7 +24,6 @@ func _physics_process(delta: float) -> void:
 func _on_body_entered(body: Node) -> void:
 	if body is AlaskaRunner and cooldown <= 0.0 and body.velocity.y >= 0.0:
 		body.velocity.y = -launch_velocity
-		body.combo += 1
+		body.chain_action(20)
 		body.action_feedback.emit("AURORA LAUNCH · AIR ROUTE")
 		cooldown = 0.22
-

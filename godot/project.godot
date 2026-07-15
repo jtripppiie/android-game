@@ -2,6 +2,7 @@
 config/name="You Rush: Alaska Overhaul"
 run/main_scene="res://scenes/main.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
+config/icon="res://icon.svg"
 
 [display]
 window/size/viewport_width=1280
@@ -14,6 +15,7 @@ window/stretch/mode="canvas_items"
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
 textures/default_filters/use_nearest_mipmap_filter=false
+textures/vram_compression/import_etc2_astc=true
 
 [input]
 move_left={"deadzone":0.2,"events":[Object(InputEventKey,"physical_keycode":65),Object(InputEventKey,"physical_keycode":4194311)]}
@@ -23,3 +25,5 @@ crouch={"deadzone":0.2,"events":[Object(InputEventKey,"physical_keycode":83),Obj
 fire={"deadzone":0.2,"events":[Object(InputEventKey,"physical_keycode":70)]}
 sprint={"deadzone":0.2,"events":[Object(InputEventKey,"physical_keycode":4194325)]}
 dash={"deadzone":0.2,"events":[Object(InputEventKey,"physical_keycode":69)]}
+debug_note={"deadzone":0.2,"events":[Object(InputEventKey,"physical_keycode":78)]}
+debug_ids={"deadzone":0.2,"events":[Object(InputEventKey,"physical_keycode":4194334)]}

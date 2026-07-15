@@ -6,7 +6,7 @@ from PIL import Image
 
 root = Path(__file__).resolve().parent
 required = [
-    "project.godot", "export_presets.cfg", "scenes/main.tscn",
+    "project.godot", "export_presets.cfg", "icon.svg", "scenes/main.tscn",
     "scripts/world.gd", "scripts/player.gd", "scripts/enemy.gd",
     "scripts/projectile.gd", "scripts/touch_controls.gd",
     "scripts/moving_platform.gd",
@@ -15,6 +15,7 @@ required = [
     "scripts/launch_pad.gd",
     "scripts/supply_block.gd",
     "scripts/trick_ring.gd",
+    "scripts/trail_boss.gd", "scripts/review_notebook.gd",
     "assets/runner_overhaul.png",
     "assets/route_platform_ice.png", "assets/route_platform_moving.png",
     "assets/route_platform_snow.png", "assets/glacial_water_surface.png",
@@ -55,8 +56,19 @@ for asset_name in (
     assert asset.mode == "RGBA", (asset_name, asset.mode)
     assert asset.getbbox() is not None, asset_name
 
-for marker in ("build_directed_encounters", "encounter_sequence", "ReactiveIce", "card.hazards", "launch_pad", "supply_block", "trick_ring_line"):
+for marker in ("ReactiveIce", "launch_pad", "supply_block", "trick_ring_line"):
     assert marker in world, marker
+assert "build_directed_encounters()" not in world
+for marker in ("TrailBoss", "ReviewNotebook", "debug_note_context", "save_profile", "boss_defeated"):
+    assert marker in world, marker
+for marker in ("combo_timer", "chain_action", "score"):
+    assert marker in player, marker
+boss = (root / "scripts/trail_boss.gd").read_text()
+for marker in ("TELL_SECONDS", "RECOVER_SECONDS", "ARMORED", "WEAK · FIRE"):
+    assert marker in boss, marker
+notebook = (root / "scripts/review_notebook.gd").read_text()
+for marker in ("user://debug-review-notes.txt", "FIX FIRST", "context_provider"):
+    assert marker in notebook, marker
 projectile = (root / "scripts/projectile.gd").read_text()
 assert 'has_method("snowball_hit")' in projectile
 assert "area_entered.connect" in projectile

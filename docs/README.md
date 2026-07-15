@@ -6,6 +6,8 @@ testing, and release preparation.
 
 ## Active Docs
 
+- [5.0 engine alpha](RELEASE_5_0_ENGINE_ALPHA.md): primary Godot development
+  build, complete Chugach migration slice, validation, and cutover gates.
 - [4.2.2 compact notes](RELEASE_4_2_2_COMPACT_NOTES.md): shallow undimmed
   composer with an opt-in keyboard and preserved gameplay frame.
 - [4.2.1 stable camera](RELEASE_4_2_1_STABLE_CAMERA.md): removes steering-driven

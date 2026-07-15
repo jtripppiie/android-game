@@ -1,31 +1,34 @@
 extends Node2D
 
-const LEVEL_END := 5600.0
-const DIRECTED_START_X := 720.0
-const DIRECTED_SPACING := 610.0
 var player: AlaskaRunner
 var hud_label: Label
 var checkpoint_label: Label
 var key_collected := false
 var finished := false
 var survivors_found := 0
-var run_seed := 1776
-var encounter_director: TrailEncounterDirector
-var encounter_sequence: Array[TrailEncounterCard] = []
+var boss_defeated := false
+var best_score := 0
+var notebook: ReviewNotebook
+var debug_item_counter := 0
+var debug_ids_visible := true
 
 func _ready() -> void:
 	RenderingServer.set_default_clear_color(Color("#102d4b"))
-	encounter_director = TrailEncounterDirector.new(run_seed)
-	for gate in range(8):
-		encounter_sequence.append(encounter_director.next(3, gate, gate >= 5))
 	build_background()
+	build_hud()
 	build_level()
 	spawn_player()
-	build_hud()
+	load_profile()
 	var touch_layer := CanvasLayer.new()
 	touch_layer.layer = 20
 	add_child(touch_layer)
 	touch_layer.add_child(TouchControls.new())
+	var note_layer := CanvasLayer.new()
+	note_layer.layer = 30
+	add_child(note_layer)
+	notebook = ReviewNotebook.new()
+	notebook.context_provider = debug_note_context
+	note_layer.add_child(notebook)
 
 func spawn_player() -> void:
 	player = AlaskaRunner.new()
@@ -71,9 +74,11 @@ func build_level() -> void:
 	enemy(Vector2(2350, 370), 155, "bear")
 	enemy(Vector2(3520, 500), 120, "wolf")
 	enemy(Vector2(4520, 460), 180, "bear")
+	boss(Vector2(5160, 448))
 	goal(Vector2(5480, 450))
 	build_route_branches()
-	build_directed_encounters()
+	# This vertical slice is deliberately authored. The old directed layer
+	# stacked extra geometry and enemies over the same spaces.
 	var title := Label.new()
 	title.text = "CHUGACH RUN · FIND THE KEY · REACH THE RESCUE BEACON"
 	title.position = Vector2(120, 92)
@@ -116,39 +121,6 @@ func build_route_branches() -> void:
 	route_sign(Vector2(2750, 440), "PRECISION · BREAKABLE")
 	route_sign(Vector2(3300, 625), "LOW · WILDLIFE")
 
-func build_directed_encounters() -> void:
-	# The seeded cards now change physical footing, rewards, and enemy pressure.
-	# The handcrafted terrain remains the readable fallback beneath every route.
-	for index in range(encounter_sequence.size()):
-		var card := encounter_sequence[index]
-		var x := DIRECTED_START_X + index * DIRECTED_SPACING
-		supply_block(Vector2(x + 285, 330 if card.route == TrailEncounterCard.Route.HIGH else 405))
-		if card.route == TrailEncounterCard.Route.HIGH:
-			platform(Rect2(x, 275, 145, 24), Color("#dff8fb"))
-			launch_pad(Vector2(x + 42, 275))
-			trick_ring_line(Vector2(x + 100, 215))
-			collectible(Vector2(x + 52, 230), "coin")
-			collectible(Vector2(x + 108, 215), "coin")
-		elif card.route == TrailEncounterCard.Route.PRECISION:
-			var ice := ReactiveIce.new()
-			ice.position = Vector2(x + 70, 385)
-			ice.size = Vector2(140, 24)
-			ice.shattered.connect(func(_at): checkpoint_label.text = "DIRECTED ICE SHATTERED")
-			add_child(ice)
-			collectible(Vector2(x + 70, 340), "coin")
-			launch_pad(Vector2(x + 22, 385))
-			trick_ring_line(Vector2(x + 82, 325))
-		else:
-			collectible(Vector2(x + 55, 485), "coin")
-			launch_pad(Vector2(x + 115, 520))
-			trick_ring_line(Vector2(x + 175, 455))
-
-		var hazard_count := mini(2, card.hazards.size())
-		for hazard_index in range(hazard_count):
-			var authored_kind := String(card.hazards[hazard_index])
-			var enemy_kind := "bear" if authored_kind in ["bear", "polar"] else "wolf"
-			enemy(Vector2(x + 180 + hazard_index * 72, 300), 85 + hazard_index * 25, enemy_kind)
-
 func route_sign(at: Vector2, message: String) -> void:
 	var label := Label.new()
 	label.position = at
@@ -160,6 +132,7 @@ func route_sign(at: Vector2, message: String) -> void:
 func platform(rect: Rect2, color: Color) -> void:
 	var body := StaticBody2D.new()
 	body.position = rect.position
+	register_debug_item(body, "PF", "platform")
 	var collision := CollisionShape2D.new()
 	var shape := RectangleShape2D.new()
 	shape.size = rect.size
@@ -195,23 +168,40 @@ func enemy(at: Vector2, distance: float, kind: String) -> void:
 	foe.position = at
 	foe.patrol_distance = distance
 	foe.kind = kind
+	register_debug_item(foe, "AN", kind)
 	add_child(foe)
+
+func boss(at: Vector2) -> void:
+	var encounter := TrailBoss.new()
+	encounter.position = at
+	register_debug_item(encounter, "BOSS", "Chugach guardian")
+	encounter.defeated.connect(_on_boss_defeated)
+	encounter.feedback.connect(func(message): checkpoint_label.text = message)
+	add_child(encounter)
+
+func _on_boss_defeated() -> void:
+	boss_defeated = true
+	checkpoint_label.text = "BOSS DEFEATED · REACH THE BEACON"
+	player.chain_action(100)
 
 func moving_platform(at: Vector2, travel: Vector2, seconds: float) -> void:
 	var mover := MovingTrailPlatform.new()
 	mover.position = at
 	mover.travel = travel
 	mover.cycle_seconds = seconds
+	register_debug_item(mover, "PF", "moving platform")
 	add_child(mover)
 
 func launch_pad(at: Vector2) -> void:
 	var pad := AuroraLaunchPad.new()
 	pad.position = at
+	register_debug_item(pad, "PD", "launch pad")
 	add_child(pad)
 
 func supply_block(at: Vector2) -> void:
 	var block := AuroraSupplyBlock.new()
 	block.position = at
+	register_debug_item(block, "BL", "supply block")
 	block.opened.connect(_on_supply_block_opened)
 	add_child(block)
 
@@ -220,6 +210,7 @@ func trick_ring_line(at: Vector2) -> void:
 	for index in range(heights.size()):
 		var ring := AuroraTrickRing.new()
 		ring.position = at + Vector2(index * 54.0, heights[index])
+		register_debug_item(ring, "RG", "aurora ring")
 		add_child(ring)
 
 func _on_supply_block_opened(at: Vector2) -> void:
@@ -231,6 +222,7 @@ func collectible(at: Vector2, kind: String) -> void:
 	var item := Area2D.new()
 	item.position = at
 	item.set_meta("kind", kind)
+	register_debug_item(item, "PU", kind)
 	var collision := CollisionShape2D.new()
 	var shape := CircleShape2D.new()
 	shape.radius = 18
@@ -247,14 +239,15 @@ func collect(body: Node, item: Area2D) -> void:
 	if body != player: return
 	if item.get_meta("kind") == "key":
 		key_collected = true
+		player.chain_action(40)
 		checkpoint_label.text = "RESCUE KEY FOUND"
 	elif item.get_meta("kind") == "survivor":
 		survivors_found += 1
-		player.combo += 2
+		player.chain_action(60)
 		checkpoint_label.text = "SURVIVOR %d/2" % survivors_found
 	else:
 		player.coins += 1
-		player.combo += 1
+		player.chain_action(12)
 		checkpoint_label.text = "TRAIL COMBO x%d" % player.combo
 	item.queue_free()
 
@@ -293,12 +286,14 @@ func goal(at: Vector2) -> void:
 
 func finish_level(body: Node) -> void:
 	if body != player or finished: return
-	if not key_collected or survivors_found < 2:
-		checkpoint_label.text = "NEED KEY + %d SURVIVORS" % (2 - survivors_found)
+	if not key_collected or survivors_found < 2 or not boss_defeated:
+		checkpoint_label.text = "NEED KEY · %d RESCUES · BOSS %s" % [2 - survivors_found, "DONE" if boss_defeated else "ALIVE"]
 		return
 	finished = true
 	checkpoint_label.text = "LEVEL CLEAR · CHUGACH RESCUE COMPLETE"
 	player.velocity = Vector2.ZERO
+	best_score = maxi(best_score, player.score)
+	save_profile()
 
 func spawn_snowball(origin: Vector2, direction: float) -> void:
 	var shot := SnowballProjectile.new()
@@ -323,10 +318,45 @@ func build_hud() -> void:
 	layer.add_child(checkpoint_label)
 
 func _process(_delta: float) -> void:
+	if Input.is_action_just_pressed("debug_note") and notebook: notebook.toggle()
+	if Input.is_action_just_pressed("debug_ids"):
+		debug_ids_visible = not debug_ids_visible
+		for item in get_tree().get_nodes_in_group("debug_item"):
+			var label := item.get_node_or_null("DebugId")
+			if label: label.visible = debug_ids_visible
 	if player:
-		var route := "PRECISION"
-		if not encounter_sequence.is_empty():
-			var encounter_index := clampi(int((player.global_position.x - DIRECTED_START_X) / DIRECTED_SPACING), 0, encounter_sequence.size() - 1)
-			var route_type := encounter_sequence[encounter_index].route
-			route = "HIGH" if route_type == TrailEncounterCard.Route.HIGH else "GROUND" if route_type == TrailEncounterCard.Route.GROUND else "PRECISION"
-		hud_label.text = "HP %d  COINS %d  KEY %s  RESCUE %d/2  COMBO %d  %s  ROUTE %s" % [player.health, player.coins, "YES" if key_collected else "NO", survivors_found, player.combo, player.state.to_upper(), route]
+		var route := "HIGH" if player.global_position.y < 350.0 else "LOW" if player.global_position.y > 575.0 else "PRECISION"
+		hud_label.text = "HP %d  SCORE %d  BEST %d  KEY %s  RESCUE %d/2  COMBO %d  %s  %s" % [player.health, player.score, best_score, "YES" if key_collected else "NO", survivors_found, player.combo, player.state.to_upper(), route]
+
+func register_debug_item(item: Node, prefix: String, label: String) -> void:
+	debug_item_counter += 1
+	item.add_to_group("debug_item")
+	item.set_meta("debug_id", "CHUGACH-%s-%d" % [prefix, debug_item_counter])
+	item.set_meta("debug_label", label.to_upper())
+	if item is Node2D:
+		var badge := Label.new()
+		badge.name = "DebugId"
+		badge.text = String(item.get_meta("debug_id"))
+		badge.position = Vector2(-48, -82)
+		badge.add_theme_font_size_override("font_size", 12)
+		badge.add_theme_color_override("font_color", Color("#ffda79"))
+		badge.visible = debug_ids_visible
+		item.add_child(badge)
+
+func debug_note_context() -> String:
+	var visible: Array[String] = []
+	for item in get_tree().get_nodes_in_group("debug_item"):
+		if item is Node2D and absf(item.global_position.x - player.global_position.x) <= 700.0:
+			visible.append(String(item.get_meta("debug_id", "UNSET")))
+	return "stage=CHUGACH | x=%d | score=%d | combo=%d | key=%s | rescues=%d/2 | visible=%s" % [player.global_position.x, player.score, player.combo, key_collected, survivors_found, ", ".join(visible)]
+
+func load_profile() -> void:
+	var config := ConfigFile.new()
+	if config.load("user://profile.cfg") == OK:
+		best_score = int(config.get_value("chugach", "best_score", 0))
+
+func save_profile() -> void:
+	var config := ConfigFile.new()
+	config.set_value("chugach", "best_score", best_score)
+	config.set_value("chugach", "cleared", true)
+	config.save("user://profile.cfg")

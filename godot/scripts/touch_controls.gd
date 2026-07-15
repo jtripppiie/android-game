@@ -9,7 +9,8 @@ var controls := {
 	"jump": Rect2(1028, 602, 76, 76),
 	"fire": Rect2(1120, 572, 76, 76),
 	"sprint": Rect2(934, 626, 70, 54),
-	"dash": Rect2(860, 642, 62, 48)
+	"dash": Rect2(860, 642, 62, 48),
+	"debug_note": Rect2(1168, 18, 92, 42)
 }
 
 func _ready() -> void:
@@ -60,4 +61,5 @@ func label_for(action: String) -> String:
 	if action == "jump": return "JUMP"
 	if action == "fire": return "FIRE"
 	if action == "dash": return "DASH"
+	if action == "debug_note": return "NOTE"
 	return "RUN"

@@ -33,6 +33,8 @@ var dash_cooldown := 0.0
 var invulnerability := 0.0
 var was_on_floor := false
 var combo := 0
+var combo_timer := 0.0
+var score := 0
 var ring_chain := 0
 var ring_chain_timer := 0.0
 var ring_rush_timer := 0.0
@@ -71,6 +73,8 @@ func _physics_process(delta: float) -> void:
 	dash_timer = maxf(0.0, dash_timer - delta)
 	ring_chain_timer = maxf(0.0, ring_chain_timer - delta)
 	ring_rush_timer = maxf(0.0, ring_rush_timer - delta)
+	combo_timer = maxf(0.0, combo_timer - delta)
+	if combo_timer <= 0.0: combo = 0
 	if ring_chain_timer <= 0.0: ring_chain = 0
 	if is_on_floor(): coyote = COYOTE_TIME
 	else:
@@ -149,7 +153,7 @@ func take_hit(from_x: float) -> void:
 	if health <= 0: respawn()
 
 func enemy_defeated(stomp: bool) -> void:
-	combo += 1
+	chain_action(42 if stomp else 24)
 	if stomp:
 		velocity.y = -420.0
 		action_feedback.emit("STOMP COMBO x%d" % combo)
@@ -160,7 +164,7 @@ func collect_aurora_ring() -> void:
 	ring_chain_timer = 1.65
 	ring_rush_timer = minf(4.2, 1.8 + ring_chain * 0.38)
 	velocity.y = minf(velocity.y, -115.0 - mini(3, ring_chain) * 22.0)
-	combo += 1
+	chain_action(18 + ring_chain * 4)
 	action_feedback.emit("AURORA RING x%d · SPEED SURGE" % ring_chain)
 
 func respawn() -> void:
@@ -169,3 +173,9 @@ func respawn() -> void:
 	invulnerability = 1.2
 	velocity = Vector2.ZERO
 	global_position = spawn_point
+
+func chain_action(base_score: int) -> void:
+	combo += 1
+	combo_timer = maxf(2.15, 2.8 - maxf(0.0, combo - 1) * 0.045)
+	var multiplier := 4 if combo >= 10 else 3 if combo >= 7 else 2 if combo >= 4 else 1
+	score += base_score * multiplier
