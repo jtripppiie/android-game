@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Random;
 
 public class MooseRushView extends View {
@@ -358,6 +359,8 @@ public class MooseRushView extends View {
     private boolean bossActive = false;
     private boolean bossDefeated = false;
     private boolean debugOverlay = false;
+    private int debugUnlockTaps = 0;
+    private long debugUnlockLastTapMs = 0L;
     private boolean leftPressed = false;
     private boolean rightPressed = false;
     private boolean jumpPressed = false;
@@ -423,6 +426,7 @@ public class MooseRushView extends View {
     private float bearSprayOriginX = 0f;
     private float bearSprayOriginY = 0f;
     private float bearSprayDirection = 1f;
+    private boolean bearSprayBossHit = false;
     private float chaseBearCooldown = 0f;
     private float chaseBearTimer = 0f;
     private float chaseBearX = 0f;
@@ -462,12 +466,12 @@ public class MooseRushView extends View {
         obstacleRenderer = new ObstacleRenderer(context, assets);
         debugOverlayRenderer = new DebugOverlayRenderer(context);
         effects = new VisualEffects(context);
-        mooseFrameCrops = SpriteFrameCropper.computeFrameCrops(assets.mooseWalkSheet(), SPRITE_SHEET_FRAMES);
-        bearFrameCrops = SpriteFrameCropper.computeFrameCrops(assets.bearWalkSheet(), SPRITE_SHEET_FRAMES);
-        polarBearFrameCrops = SpriteFrameCropper.computeFrameCrops(assets.polarBearWalkSheet(), SPRITE_SHEET_FRAMES);
-        wolfFrameCrops = SpriteFrameCropper.computeFrameCrops(assets.wolfRunSheet(), SPRITE_SHEET_FRAMES);
-        salmonFrameCrops = SpriteFrameCropper.computeFrameCrops(assets.salmonSwimSheet(), SPRITE_SHEET_FRAMES);
-        eagleFrameCrops = SpriteFrameCropper.computeFrameCrops(assets.eagleFlySheet(), SPRITE_SHEET_FRAMES);
+        mooseFrameCrops = completeFrameCrops(assets.mooseWalkSheet());
+        bearFrameCrops = completeFrameCrops(assets.bearWalkSheet());
+        polarBearFrameCrops = completeFrameCrops(assets.polarBearWalkSheet());
+        wolfFrameCrops = completeFrameCrops(assets.wolfRunSheet());
+        salmonFrameCrops = completeFrameCrops(assets.salmonSwimSheet());
+        eagleFrameCrops = completeFrameCrops(assets.eagleFlySheet());
         bestScore = prefs.getInt(PREF_BEST_SCORE, 0);
         selectedStage = clampInt(prefs.getInt(PREF_SELECTED_STAGE, 0), 0, STAGES.length - 1);
         selectedSeason = clampInt(prefs.getInt(PREF_SELECTED_SEASON, STAGES[selectedStage].season), 0, SEASONS.length - 1);
@@ -484,7 +488,7 @@ public class MooseRushView extends View {
         if (!isOutfitUnlocked(selectedOutfit)) {
             selectedOutfit = firstUnlockedOutfit();
         }
-        debugOverlay = prefs.getBoolean(PREF_DEBUG_OVERLAY, false);
+        debugOverlay = false;
         gameState.muted = prefs.getBoolean(PREF_MUTED, false);
         gameState.xp = prefs.getInt(PREF_XP, 0);
         gameState.updateLevel();
@@ -616,8 +620,9 @@ public class MooseRushView extends View {
         } else if (state == STATE_CUSTOMIZE) {
             drawCustomizeScreen(canvas);
         } else if (state == STATE_READY) {
-            drawWorld(canvas);
-            drawHud(canvas);
+            // Keep the pre-run briefing readable: the live runner, hazards, HUD,
+            // and controls belong to gameplay and only create visual noise here.
+            drawAlaskaBackdrop(canvas);
             drawReadyScreen(canvas);
         } else if (state == STATE_PAUSED) {
             drawWorld(canvas);
@@ -817,7 +822,17 @@ public class MooseRushView extends View {
 
     private boolean handleTap(float x, float y) {
         if (state == STATE_MENU) {
-            if (primaryButtonBounds.contains(x, y)) {
+            if (y <= (isLandscape() ? dp(32) : dp(40))
+                    && x >= getWidth() * 0.20f && x <= getWidth() * 0.80f) {
+                long now = System.currentTimeMillis();
+                debugUnlockTaps = now - debugUnlockLastTapMs <= 900L ? debugUnlockTaps + 1 : 1;
+                debugUnlockLastTapMs = now;
+                if (debugUnlockTaps >= 5) {
+                    debugOverlay = !debugOverlay;
+                    debugUnlockTaps = 0;
+                    logEvent("Developer debug overlay " + (debugOverlay ? "enabled" : "disabled") + ".");
+                }
+            } else if (primaryButtonBounds.contains(x, y)) {
                 demoMode = false;
                 dailyRushMode = false;
                 startGame();
@@ -831,10 +846,6 @@ public class MooseRushView extends View {
                 startDailyRush();
             } else if (demoButtonBounds.contains(x, y)) {
                 startComputerDemo();
-            } else if (debugButtonBounds.contains(x, y)) {
-                debugOverlay = !debugOverlay;
-                prefs.edit().putBoolean(PREF_DEBUG_OVERLAY, debugOverlay).apply();
-                logEvent("Debug overlay " + (debugOverlay ? "on" : "off") + ".");
             } else if (muteButtonBounds.contains(x, y)) {
                 gameState.muted = !gameState.muted;
                 prefs.edit().putBoolean(PREF_MUTED, gameState.muted).apply();
@@ -1189,11 +1200,12 @@ public class MooseRushView extends View {
         jumpsUsed = 0;
         coyoteTimer = RunnerTuning.COYOTE_SECONDS;
         jumpBufferTimer = 0f;
-        bearSprayCharges = selectedStage >= 4 ? 1 : 0;
+        bearSprayCharges = 1;
         fireHoldTimer = 0f;
         bearSprayCooldown = 0f;
         bearSprayTimer = 0f;
         bearSprayDirection = 1f;
+        bearSprayBossHit = false;
         chaseBearActive = false;
         chaseBearCooldown = 5.5f + random.nextFloat() * 3.5f;
         chaseBearTimer = 0f;
@@ -1213,7 +1225,7 @@ public class MooseRushView extends View {
         missionHurdlesComplete = false;
         missionStarsComplete = false;
         missionComboComplete = false;
-        logEvent("Missions: " + stageActionVerb(selectedStage).toLowerCase() + " " + stage.goalGates + ", collect " + missionStarGoal + " stars, combo " + missionComboGoal + ".");
+        logEvent("Missions: " + stageActionVerb(selectedStage).toLowerCase(Locale.ROOT) + " " + stage.goalGates + ", collect " + missionStarGoal + " stars, combo " + missionComboGoal + ".");
     }
 
     private void requestJump() {
@@ -1283,6 +1295,12 @@ public class MooseRushView extends View {
     private void updateBearSpray(float dt) {
         bearSprayCooldown = Math.max(0f, bearSprayCooldown - dt);
         bearSprayTimer = Math.max(0f, bearSprayTimer - dt);
+        // The visible plume lasts several frames, so targets entering it during
+        // that window must be affected instead of passing through harmlessly.
+        if (state == STATE_RUNNING && bearSprayTimer > 0f) {
+            sprayStunWildlife();
+            sprayInterruptBoss();
+        }
     }
 
     private void useBearSpray() {
@@ -1295,6 +1313,7 @@ public class MooseRushView extends View {
         bearSprayCooldown = SprayTuning.COOLDOWN_SECONDS;
         bearSprayTimer = SprayTuning.CONE_SECONDS;
         bearSprayDirection = rearSpray ? -1f : 1f;
+        bearSprayBossHit = false;
         bearSprayOriginX = rearSpray ? runnerBackX() : runnerHandX();
         bearSprayOriginY = runnerHandY();
 
@@ -1343,9 +1362,10 @@ public class MooseRushView extends View {
     }
 
     private boolean sprayInterruptBoss() {
-        if (!bossActive || !sprayHitsPoint(bossX, bossHurtCenterY(), bossContactRadius())) {
+        if (bearSprayBossHit || !bossActive || !sprayHitsPoint(bossX, bossHurtCenterY(), bossContactRadius())) {
             return false;
         }
+        bearSprayBossHit = true;
         bossStunTimer = Math.max(bossStunTimer, selectedStage == 4 ? 0.62f : 0.42f);
         damageFlash = Math.max(damageFlash, 0.18f);
         worldFlash = Math.max(worldFlash, 0.10f);
@@ -3347,7 +3367,6 @@ public class MooseRushView extends View {
         drawButton(canvas, thirdButtonBounds, "ALASKA MAP");
         drawMenuStats(canvas);
         drawSmallButton(canvas, demoButtonBounds, demoMode ? "DEMO: ON" : "COMPUTER RUN");
-        drawSmallButton(canvas, debugButtonBounds, "DEBUG: " + (debugOverlay ? "ON" : "OFF"));
         drawSmallButton(canvas, muteButtonBounds, gameState.muted ? "MUTED" : "AUDIO");
     }
 
@@ -3361,7 +3380,8 @@ public class MooseRushView extends View {
         float minHeadY = topLimit + radius;
         float maxHeadY = bottomLimit - radius * 3.30f;
         float headY = maxHeadY < minHeadY ? desiredHeadY : clamp(desiredHeadY, minHeadY, maxHeadY);
-        drawCharacterPreview(canvas, x, headY, radius);
+        SpriteRenderer.PlayerFrame previewFrame = playerFrame(x, headY, radius);
+        spriteRenderer.drawStanding(canvas, previewFrame);
     }
 
     private void drawMenuStats(Canvas canvas) {
@@ -3469,7 +3489,7 @@ public class MooseRushView extends View {
         textPaint.setTextAlign(Paint.Align.CENTER);
         textPaint.setTextSize(isLandscape() ? dp(9.5f) : dp(11));
         textPaint.setColor(Color.rgb(220, 235, 239));
-        canvas.drawText("Selected: " + stageActionVerb(selectedStage).toLowerCase() + " " + selected.obstacleName + " · stun " + selected.hazardLabel
+        canvas.drawText("Selected: " + stageActionVerb(selectedStage).toLowerCase(Locale.ROOT) + " " + selected.obstacleName + " · stun " + selected.hazardLabel
                 + " · boss " + selected.bossName, getWidth() / 2f, getHeight() - dp(24), textPaint);
     }
 
@@ -3945,7 +3965,7 @@ public class MooseRushView extends View {
         int ringDark = driftwood ? Color.rgb(95, 82, 61) : Color.rgb(82, 54, 33);
 
         Drawable logSprite = assets.obstacleRiverLog();
-        if (!driftwood && logSprite != null) {
+        if (logSprite != null) {
             drawDrawable(canvas, logSprite, logLeft - dp(10), logTop - dp(10), logRight + dp(8), logBottom + dp(11));
             drawRiverLogTarget(canvas, logLeft, logRight, logTop, logHeight);
             drawObstacleNameplate(canvas, gate, top);
@@ -4689,28 +4709,30 @@ public class MooseRushView extends View {
         paint.setStyle(Paint.Style.STROKE);
         paint.setStrokeCap(Paint.Cap.ROUND);
         paint.setShader(null);
-        paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.ADD));
-
-        paint.setStrokeWidth(height * 4.6f * intensity);
-        paint.setColor(Color.argb(Math.round(32 * alpha * intensity), 255, 96, 60));
+        // A crisp dark casing and solid danger band remain readable over every
+        // backdrop. The old additive layers produced a fuzzy neon smear whose
+        // apparent width did not match the collision lane.
+        paint.setXfermode(null);
+        paint.setStrokeWidth(height * 3.0f * intensity);
+        paint.setColor(Color.argb(Math.round(210 * alpha), 55, 8, 18));
         canvas.drawLine(x1, y1, x2, y2, paint);
 
-        paint.setStrokeWidth(height * 2.7f * intensity);
-        paint.setColor(Color.argb(Math.round(70 * alpha * intensity), 255, 122, 68));
+        paint.setStrokeWidth(height * 2.15f * intensity);
+        paint.setColor(Color.argb(Math.round(245 * alpha), 238, 42, 52));
         canvas.drawLine(x1, y1, x2, y2, paint);
 
         LinearGradient gradient = new LinearGradient(
                 x1, y1, x2, y2,
                 new int[]{
-                        Color.argb(Math.round(255 * alpha), 255, 214, 140),
-                        Color.argb(Math.round(238 * alpha), 255, 96, 66),
-                        Color.argb(Math.round(150 * alpha), 236, 62, 54)
+                        Color.argb(Math.round(255 * alpha), 255, 236, 160),
+                        Color.argb(Math.round(255 * alpha), 255, 88, 58),
+                        Color.argb(Math.round(230 * alpha), 220, 24, 44)
                 },
                 new float[]{0f, 0.35f, 1f},
                 Shader.TileMode.CLAMP
         );
         paint.setShader(gradient);
-        paint.setStrokeWidth(height * (1.5f + pulse * 0.25f) * intensity);
+        paint.setStrokeWidth(height * (1.25f + pulse * 0.12f) * intensity);
         canvas.drawLine(x1, y1, x2, y2, paint);
         paint.setShader(null);
 
@@ -4718,7 +4740,6 @@ public class MooseRushView extends View {
         paint.setColor(Color.argb(Math.round(235 * alpha), 255, 252, 236));
         canvas.drawLine(x1, y1, x2, y2, paint);
 
-        paint.setXfermode(null);
         paint.setStrokeCap(Paint.Cap.BUTT);
         paint.setStyle(Paint.Style.FILL);
     }
@@ -4738,18 +4759,16 @@ public class MooseRushView extends View {
     }
 
     private void drawBeamImpact(Canvas canvas, float x, float y, float beamHeight, float alpha, float pulse) {
-        // Bright additive bloom where the beam lands, so the danger point is
-        // obvious and the ray feels like it is burning into the ground.
+        // Concentric impact rings show the exact endpoint without a large halo.
         paint.setShader(null);
         paint.setStyle(Paint.Style.FILL);
-        paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.ADD));
-        paint.setColor(Color.argb(Math.round(90 * alpha), 255, 150, 90));
-        canvas.drawCircle(x, y, beamHeight * (1.7f + pulse * 0.6f), paint);
-        paint.setColor(Color.argb(Math.round(150 * alpha), 255, 190, 120));
-        canvas.drawCircle(x, y, beamHeight * (1.0f + pulse * 0.3f), paint);
+        paint.setXfermode(null);
+        paint.setColor(Color.argb(Math.round(230 * alpha), 55, 8, 18));
+        canvas.drawCircle(x, y, beamHeight * (1.45f + pulse * 0.2f), paint);
+        paint.setColor(Color.argb(Math.round(245 * alpha), 255, 74, 54));
+        canvas.drawCircle(x, y, beamHeight * (0.95f + pulse * 0.15f), paint);
         paint.setColor(Color.argb(Math.round(220 * alpha), 255, 252, 236));
         canvas.drawCircle(x, y, beamHeight * 0.6f, paint);
-        paint.setXfermode(null);
     }
 
     private void laserAttackRect(BossAttack attack, RectF out) {
@@ -5159,6 +5178,12 @@ public class MooseRushView extends View {
         return null;
     }
 
+    private static Rect[] completeFrameCrops(Bitmap sheet) {
+        Rect[] crops = SpriteFrameCropper.computeCellContentCrops(sheet, SPRITE_SHEET_FRAMES, 2);
+        SpriteFrameCropper.retainFullCellRight(crops, sheet, SPRITE_SHEET_FRAMES);
+        return crops;
+    }
+
     private int[] spriteSheetTrim(Bitmap sheet, int safeFrame) {
         if (sheet == assets.mooseWalkSheet()) return MOOSE_FRAME_TRIMS[safeFrame];
         if (sheet == assets.bearWalkSheet()) return BEAR_FRAME_TRIMS[safeFrame];
@@ -5293,10 +5318,11 @@ public class MooseRushView extends View {
 
     private void drawReadyScreen(Canvas canvas) {
         StageConfig stage = STAGES[selectedStage];
+        boolean compact = getHeight() < dp(420);
         float panelWidth = Math.min(getWidth() - dp(56), dp(462));
-        float panelHeight = dp(204);
+        float panelHeight = dp(compact ? 180 : 204);
         float left = (getWidth() - panelWidth) / 2f;
-        float top = Math.max(dp(84), getHeight() * 0.26f);
+        float top = compact ? dp(70) : Math.max(dp(84), getHeight() * 0.26f);
         RectF panel = new RectF(left, top, left + panelWidth, top + panelHeight);
         float pulse = 0.5f + 0.5f * (float) Math.sin(readyTimer * 4.0f);
 
@@ -5312,17 +5338,17 @@ public class MooseRushView extends View {
         textPaint.setTextAlign(Paint.Align.CENTER);
         textPaint.setColor(Color.rgb(255, 218, 121));
         textPaint.setTextSize(dp(13));
-        canvas.drawText(BuildConfig.BUILD_BADGE + " · LEVEL " + (selectedStage + 1), getWidth() / 2f, top + dp(28), textPaint);
+        canvas.drawText(BuildConfig.BUILD_BADGE + " · LEVEL " + (selectedStage + 1), getWidth() / 2f, top + dp(compact ? 23 : 28), textPaint);
 
         textPaint.setColor(Color.WHITE);
         textPaint.setTextSize(dp(28));
-        canvas.drawText(stage.name, getWidth() / 2f, top + dp(64), textPaint);
+        canvas.drawText(stage.name, getWidth() / 2f, top + dp(compact ? 54 : 64), textPaint);
 
         textPaint.setTextSize(dp(13));
         textPaint.setColor(Color.rgb(210, 232, 238));
-        canvas.drawText(stage.line, getWidth() / 2f, top + dp(94), textPaint);
+        canvas.drawText(stage.line, getWidth() / 2f, top + dp(compact ? 80 : 94), textPaint);
 
-        float chipTop = top + dp(112);
+        float chipTop = top + dp(compact ? 94 : 112);
         float chipWidth = (panelWidth - dp(52)) / 3f;
         drawBriefingChip(canvas, left + dp(16), chipTop, chipWidth, stageActionVerb(selectedStage), stage.obstacleName);
         drawBriefingChip(canvas, left + dp(26) + chipWidth, chipTop, chipWidth, "BOSS", stage.bossName);
@@ -5330,24 +5356,21 @@ public class MooseRushView extends View {
 
         textPaint.setTextSize(dp(10));
         textPaint.setColor(Color.rgb(210, 232, 238));
-        canvas.drawText(stageRuleLine(stage), getWidth() / 2f, top + dp(162), textPaint);
-        canvas.drawText("Tap FIRE for snowballs; tap SPRAY to stun close wildlife.", getWidth() / 2f, top + dp(176), textPaint);
+        canvas.drawText(stageRuleLine(stage), getWidth() / 2f, top + dp(compact ? 143 : 162), textPaint);
+        canvas.drawText("Tap FIRE for snowballs; tap SPRAY to stun close wildlife.", getWidth() / 2f, top + dp(compact ? 156 : 176), textPaint);
 
         textPaint.setTextSize(dp(11));
         textPaint.setColor(Color.rgb(255, 218, 121));
-        canvas.drawText("DRAFT A PERK", getWidth() / 2f, top + dp(192), textPaint);
+        canvas.drawText("DRAFT A PERK", getWidth() / 2f, top + dp(compact ? 173 : 192), textPaint);
 
-        drawPerkDraft(canvas, left, top + panelHeight + dp(12), panelWidth);
-
-        textPaint.setTextSize(dp(10));
-        textPaint.setColor(Color.rgb(210, 232, 238));
-        canvas.drawText("Pick a perk, or tap anywhere to launch", getWidth() / 2f, top + panelHeight + dp(98), textPaint);
+        drawPerkDraft(canvas, left, top + panelHeight + dp(compact ? 7 : 12), panelWidth);
     }
 
     private void drawPerkDraft(Canvas canvas, float left, float cardsTop, float width) {
         float gap = dp(10);
         float cardWidth = (width - gap * 2f) / 3f;
-        float cardHeight = dp(70);
+        float availableHeight = getHeight() - cardsTop - dp(6);
+        float cardHeight = Math.min(dp(70), Math.max(dp(42), availableHeight));
         for (int i = 0; i < perkCardBounds.length; i++) {
             float cardLeft = left + i * (cardWidth + gap);
             perkCardBounds[i].set(cardLeft, cardsTop, cardLeft + cardWidth, cardsTop + cardHeight);
@@ -5466,7 +5489,6 @@ public class MooseRushView extends View {
         drawHudIcons(canvas);
         drawPauseButton(canvas);
         drawActionOverlay(canvas);
-        drawJourneyTracker(canvas);
         drawMissionTracker(canvas);
 
         if (debugOverlay) {
@@ -5517,8 +5539,10 @@ public class MooseRushView extends View {
             canvas.drawCircle(lifeX + i * dp(14), lifeY, dp(4.8f), paint);
         }
 
+        // Keep stars on their own lower row; the BEST/LV/T summary occupies
+        // the middle row and previously drew directly through this icon.
         float starX = getWidth() - dp(104);
-        float starY = dp(42);
+        float starY = dp(59);
         paint.setColor(Color.rgb(255, 218, 121));
         PathCompat.star(canvas, paint, starX, starY - dp(1), dp(6));
         textPaint.setTextAlign(Paint.Align.LEFT);
@@ -5650,8 +5674,8 @@ public class MooseRushView extends View {
         if (bossWarningTimer > 0f || runCalloutTimer > 0f) {
             return;
         }
-        float width = Math.min(getWidth() - dp(70), dp(430));
-        float height = dp(22);
+        float width = Math.min(getWidth() - dp(70), dp(500));
+        float height = dp(24);
         float left = (getWidth() - width) / 2f;
         float top = dp(69);
         paint.setStyle(Paint.Style.FILL);
@@ -5666,7 +5690,9 @@ public class MooseRushView extends View {
         textPaint.setTextAlign(Paint.Align.CENTER);
         textPaint.setTextSize(dp(8.5f));
         textPaint.setColor(Color.rgb(220, 235, 239));
-        drawTextFit(canvas, missionProgressLine(), getWidth() / 2f, top + dp(14.5f), width - dp(12), dp(8.5f), dp(7.2f), Paint.Align.CENTER);
+        String route = routeMilestoneLabel(selectedStage, clampInt(routeMilestoneIndex, 0, 2));
+        String status = route + "  ·  " + missionProgressLine();
+        drawTextFit(canvas, status, getWidth() / 2f, top + dp(15.5f), width - dp(16), dp(8.8f), dp(7.2f), Paint.Align.CENTER);
     }
 
     private void drawActionOverlay(Canvas canvas) {
@@ -5918,20 +5944,15 @@ public class MooseRushView extends View {
         debugOverlayRenderer.drawObjectBadge(canvas, getWidth(), getHeight(), number, type, detail, x, y, accentColor);
     }
 
-    @SuppressWarnings("deprecation")
     private void initAudio() {
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-            AudioAttributes attributes = new AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_GAME)
-                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                    .build();
-            soundPool = new SoundPool.Builder()
-                    .setAudioAttributes(attributes)
-                    .setMaxStreams(4)
-                    .build();
-        } else {
-            soundPool = new SoundPool(4, android.media.AudioManager.STREAM_MUSIC, 0);
-        }
+        AudioAttributes attributes = new AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_GAME)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                .build();
+        soundPool = new SoundPool.Builder()
+                .setAudioAttributes(attributes)
+                .setMaxStreams(4)
+                .build();
         soundJump = loadGeneratedSound("jump");
         soundDoubleJump = loadGeneratedSound("double_jump");
         soundThrow = loadGeneratedSound("throw");
@@ -6081,7 +6102,7 @@ public class MooseRushView extends View {
         firePadBounds.set(getWidth() - dp(74), bottom - size, getWidth() - dp(74) + size, bottom);
 
         drawDpad(canvas);
-        drawControlButton(canvas, sprayPadBounds, "SPRAY", sprayPressed || bearSprayCooldown > 0f);
+        drawControlButton(canvas, sprayPadBounds, "SPRAY " + bearSprayCharges, sprayPressed || bearSprayCooldown > 0f);
         drawControlButton(canvas, jumpPadBounds, "JUMP", jumpPressed);
         drawControlButton(canvas, firePadBounds, "FIRE", firePressed || shotCooldown > 0f);
     }
@@ -6285,7 +6306,8 @@ public class MooseRushView extends View {
         textPaint.setTextAlign(Paint.Align.CENTER);
         textPaint.setColor(Color.rgb(255, 218, 121));
         textPaint.setTextSize(isLandscape() ? dp(8.5f) : dp(9.5f));
-        canvas.drawText("TRIPPERDEE LABS · " + BuildConfig.BUILD_BADGE, getWidth() / 2f, isLandscape() ? dp(18) : dp(25), textPaint);
+        canvas.drawText("TRIPPERDEE LABS · " + BuildConfig.BUILD_BADGE + (debugOverlay ? " · DEBUG" : ""),
+                getWidth() / 2f, isLandscape() ? dp(18) : dp(25), textPaint);
 
         textPaint.setColor(Color.WHITE);
         textPaint.setTextSize(isLandscape() ? dp(20) : dp(26));
@@ -6606,7 +6628,7 @@ public class MooseRushView extends View {
             return "Next: S rank, perfect clear, passport badges.";
         }
         if (gatesPassed < STAGES[selectedStage].goalGates) {
-            return "Next: " + stageActionVerb(selectedStage).toLowerCase() + " " + STAGES[selectedStage].goalGates + " " + STAGES[selectedStage].obstacleName + ".";
+            return "Next: " + stageActionVerb(selectedStage).toLowerCase(Locale.ROOT) + " " + STAGES[selectedStage].goalGates + " " + STAGES[selectedStage].obstacleName + ".";
         }
         return "Next: fire during RECOVER for weak-window double damage.";
     }

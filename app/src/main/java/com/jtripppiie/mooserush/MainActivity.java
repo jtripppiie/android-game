@@ -158,7 +158,8 @@ public class MainActivity extends Activity {
                     FrameLayout.LayoutParams.WRAP_CONTENT,
                     Gravity.BOTTOM | Gravity.START
             );
-            badgeParams.setMargins(dp(12), 0, 0, dp(88));
+            // Keep the build badge above the on-screen directional controls.
+            badgeParams.setMargins(dp(12), 0, 0, dp(156));
             root.addView(versionBadge, badgeParams);
         }
 

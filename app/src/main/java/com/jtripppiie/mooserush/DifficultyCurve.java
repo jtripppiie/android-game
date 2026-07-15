@@ -20,17 +20,17 @@ final class DifficultyCurve {
     }
 
     static float speedMultiplier(float tension) {
-        // At full tension, speed is 16% higher than normal.
-        return 1f + Math.min(1f, Math.max(0f, tension)) * 0.16f;
+        // At full tension, speed is 28% higher than normal.
+        return 1f + Math.min(1f, Math.max(0f, tension)) * 0.28f;
     }
 
     static float gateCooldown(float baseCooldown, float tension) {
         // Higher tension means less waiting between gates.
-        return Math.max(1.32f, baseCooldown * (1f - Math.min(1f, Math.max(0f, tension)) * 0.14f));
+        return Math.max(1.32f, baseCooldown * (1f - Math.min(1f, Math.max(0f, tension)) * 0.22f));
     }
 
     static float hazardCooldown(float baseCooldown, float tension) {
         // Hazards ramp a little more than gates because they are stage flavor.
-        return Math.max(1.52f, baseCooldown * (1f - Math.min(1f, Math.max(0f, tension)) * 0.22f));
+        return Math.max(1.52f, baseCooldown * (1f - Math.min(1f, Math.max(0f, tension)) * 0.32f));
     }
 }

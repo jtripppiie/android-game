@@ -151,6 +151,9 @@
     const ctx = canvas.getContext("2d");
     const bg = new Image();
     bg.src = "../app/src/main/res/drawable-nodpi/background_dark_winter_art.png";
+    const runner = new Image();
+    runner.src = "../app/src/main/res/drawable-nodpi/sheet_runner_overhaul_fixed.png";
+    let runnerCrop = { left: 0, top: 0, right: 362, bottom: 724 };
 
     const ui = {
       preset: document.getElementById("preset"),
@@ -203,16 +206,21 @@
       const desiredHeadY = landscape ? h * 0.45 : h * 0.33;
       const topLimit = landscape ? dp(10) : dp(82);
       const bottomLimit = landscape ? h - dp(8) : h * 0.50;
-      let radius = landscape ? Math.min(dp(25), h * 0.16) : dp(28);
-      radius = Math.min(radius, Math.max(dp(10), (bottomLimit - topLimit) / 4.25));
+      let radius = landscape ? Math.min(dp(30), h * 0.19) : dp(34);
+      radius = Math.min(radius, Math.max(dp(10), (bottomLimit - topLimit) / 4.0));
       const minHeadY = topLimit + radius;
       const maxHeadY = bottomLimit - radius * 3.30;
       const headY = maxHeadY < minHeadY ? desiredHeadY : clamp(desiredHeadY, minHeadY, maxHeadY);
+      const spriteHeight = radius * 4.02;
+      const spriteWidth = spriteHeight * ((runnerCrop.right - runnerCrop.left) / (runnerCrop.bottom - runnerCrop.top));
+      const centerX = x + radius * 0.04;
+      const spriteTop = headY - radius * 1.12;
       return {
-        left: x - radius * 1.7,
-        top: headY - radius,
-        right: x + radius * 1.7,
-        bottom: headY + radius * 3.30,
+        left: centerX - spriteWidth / 2,
+        top: spriteTop,
+        right: centerX + spriteWidth / 2 + 10,
+        spriteRight: centerX + spriteWidth / 2,
+        bottom: spriteTop + spriteHeight,
         name: "Avatar",
         x,
         headY,
@@ -340,6 +348,15 @@
     }
 
     function drawAvatar(box) {
+      if (runner.complete && runner.naturalWidth > 0) {
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(runner,
+          runnerCrop.left, runnerCrop.top,
+          runnerCrop.right - runnerCrop.left, runnerCrop.bottom - runnerCrop.top,
+          box.left, box.top, box.spriteRight - box.left, box.bottom - box.top);
+        return;
+      }
+
       const cx = box.x || (box.left + box.right) / 2;
       const headY = box.headY || (box.top + box.bottom) / 2 - dp(28);
       const radius = box.radius || dp(26);
@@ -379,6 +396,38 @@
       ctx.beginPath();
       ctx.roundRect(cx - headRadius * 0.32, headY + headRadius * 0.28, headRadius * 0.64, headRadius * 0.11, dp(4));
       ctx.fill();
+    }
+
+    function drawSpriteBounds(box) {
+      ctx.save();
+      ctx.strokeStyle = "#ff00ff";
+      ctx.lineWidth = dp(2);
+      ctx.strokeRect(box.left, box.top, box.right - box.left, box.bottom - box.top);
+      ctx.fillStyle = "#ff00ff";
+      ctx.font = `${dp(9)}px Arial, Helvetica, sans-serif`;
+      ctx.textAlign = "left";
+      ctx.textBaseline = "bottom";
+      ctx.fillText("SPRITE BOUNDS", box.left, box.top - dp(3));
+      ctx.restore();
+    }
+
+    function drawVersionBadge() {
+      const label = "ALASKA PASSPORT v3.41 BETA";
+      const left = dp(12);
+      const bottom = canvas.height - dp(156);
+      const height = dp(24);
+      ctx.save();
+      ctx.font = `bold ${dp(10)}px Arial, Helvetica, sans-serif`;
+      const width = ctx.measureText(label).width + dp(18);
+      ctx.fillStyle = "rgba(255, 218, 121, 0.92)";
+      ctx.strokeStyle = "#fff";
+      ctx.lineWidth = dp(1);
+      ctx.beginPath();
+      ctx.roundRect(left, bottom - height, width, height, dp(14));
+      ctx.fill();
+      ctx.stroke();
+      centerText(label, left + width / 2, bottom - height / 2, dp(10), "#071629");
+      ctx.restore();
     }
 
     function drawButton(box, label, small) {
@@ -528,6 +577,7 @@
       const boxes = layoutNew();
       drawTopBrand(boxes);
       drawAvatar(boxes.avatar);
+      drawSpriteBounds(boxes.avatar);
       drawDaily(boxes.daily);
       drawButton(boxes.primary, `Play ${state.stageName}`, false);
       drawButton(boxes.secondary, "Create Your Sprite", false);
@@ -535,6 +585,7 @@
       drawStats(boxes);
       drawButton(boxes.debug, "DEBUG: OFF", true);
       drawButton(boxes.audio, "AUDIO", true);
+      drawVersionBadge();
 
       if (ui.showOld.checked) {
         drawBounds(layoutOld(), "rgba(255, 80, 80, 0.92)");
@@ -555,6 +606,37 @@
       draw();
     });
     bg.addEventListener("load", draw);
+    runner.addEventListener("load", () => {
+      const frameRight = Math.round(runner.naturalWidth / 6);
+      const scan = document.createElement("canvas");
+      scan.width = frameRight;
+      scan.height = runner.naturalHeight;
+      const scanCtx = scan.getContext("2d", { willReadFrequently: true });
+      scanCtx.drawImage(runner, 0, 0);
+      const pixels = scanCtx.getImageData(0, 0, scan.width, scan.height).data;
+      let minX = scan.width;
+      let minY = scan.height;
+      let maxX = -1;
+      let maxY = -1;
+      for (let y = 0; y < scan.height; y += 1) {
+        for (let x = 0; x < scan.width; x += 1) {
+          if (pixels[(y * scan.width + x) * 4 + 3] <= 12) continue;
+          minX = Math.min(minX, x);
+          minY = Math.min(minY, y);
+          maxX = Math.max(maxX, x);
+          maxY = Math.max(maxY, y);
+        }
+      }
+      if (maxX >= minX && maxY >= minY) {
+        runnerCrop = {
+          left: Math.max(0, minX - 2),
+          top: Math.max(0, minY - 2),
+          right: frameRight,
+          bottom: Math.min(runner.naturalHeight, maxY + 3)
+        };
+      }
+      draw();
+    });
     applyPreset();
   </script>
 </body>

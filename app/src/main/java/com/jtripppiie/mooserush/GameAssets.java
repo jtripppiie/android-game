@@ -47,7 +47,7 @@ final class GameAssets {
         backgroundDarkWinter = context.getDrawable(R.drawable.background_dark_winter_art);
         treeSummer = context.getDrawable(R.drawable.sprite_tree_summer);
         treeWinter = context.getDrawable(R.drawable.sprite_tree_winter);
-        obstacleRiverLog = context.getDrawable(R.drawable.obstacle_river_log);
+        obstacleRiverLog = context.getDrawable(R.drawable.obstacle_river_log_raster);
         obstacleSnowbank = context.getDrawable(R.drawable.obstacle_snowbank);
         obstacleIceberg = context.getDrawable(R.drawable.obstacle_iceberg);
         obstacleAntlerBarricade = context.getDrawable(R.drawable.obstacle_antler_barricade);

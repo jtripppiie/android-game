@@ -17,7 +17,7 @@ public class SprayTuningTest {
     @Test
     public void coneRejectsTargetsBehindOrPastRange() {
         assertFalse(SprayTuning.coneHitsPoint(100f, 200f, 80f, 200f, 10f, 1f));
-        assertFalse(SprayTuning.coneHitsPoint(100f, 200f, 325f, 200f, 10f, 1f));
+        assertFalse(SprayTuning.coneHitsPoint(100f, 200f, 350f, 200f, 10f, 1f));
     }
 
     @Test

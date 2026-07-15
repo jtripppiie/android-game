@@ -5,9 +5,9 @@ final class SprayTuning {
     static final float HOLD_SECONDS = 0.36f;
     static final float COOLDOWN_SECONDS = 1.45f;
     static final float CONE_SECONDS = 0.34f;
-    static final float RANGE_DP = 210f;
-    static final float HALF_HEIGHT_DP = 68f;
-    static final float BASE_HALF_HEIGHT_DP = 18f;
+    static final float RANGE_DP = 235f;
+    static final float HALF_HEIGHT_DP = 76f;
+    static final float BASE_HALF_HEIGHT_DP = 24f;
     static final float BACK_REACH_RADIUS_SCALE = 0.35f;
     static final float HIT_RADIUS_Y_SCALE = 0.65f;
 

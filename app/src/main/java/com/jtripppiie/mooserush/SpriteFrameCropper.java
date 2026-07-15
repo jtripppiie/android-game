@@ -79,6 +79,15 @@ final class SpriteFrameCropper {
         return crops;
     }
 
+    static void retainFullCellRight(Rect[] crops, Bitmap sheet, int frames) {
+        if (crops == null || sheet == null || frames <= 0) return;
+        for (int frame = 0; frame < Math.min(crops.length, frames); frame++) {
+            if (crops[frame] != null) {
+                crops[frame].right = Math.round(sheet.getWidth() * ((frame + 1) / (float) frames));
+            }
+        }
+    }
+
     private static Rect[] computeFrameCrops(Bitmap sheet, int frames, int seamGuardPx, boolean mainComponentOnly) {
         /*
          * Divide the sheet into equal frame cells, crop each cell, then clamp the

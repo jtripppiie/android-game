@@ -58,7 +58,7 @@ final class SpriteRenderer {
         runnerBodySheet = BitmapFactory.decodeResource(context.getResources(), R.drawable.sheet_player_run_headless);
         femaleRunnerSheet = BitmapFactory.decodeResource(context.getResources(), R.drawable.sheet_mom_run);
         maleRunnerSheet = BitmapFactory.decodeResource(context.getResources(), R.drawable.sheet_dad_run);
-        overhaulRunnerSheet = BitmapFactory.decodeResource(context.getResources(), R.drawable.sheet_runner_overhaul_candidate);
+        overhaulRunnerSheet = BitmapFactory.decodeResource(context.getResources(), R.drawable.sheet_runner_overhaul_fixed);
         /*
          * Crops remove empty transparent pixels around each frame. Without crop
          * rectangles, sprites can look offset, tiny, or like they have artifacts.
@@ -71,11 +71,30 @@ final class SpriteRenderer {
          * clipped. Cell-content crops keep the whole silhouette and still never
          * bleed across a cell seam.
          */
-        runnerBodyCrops = SpriteFrameCropper.computeFrameCrops(runnerBodySheet, RUNNER_FRAMES, FULL_RUNNER_FRAME_GUARD_PX);
+        runnerBodyCrops = headlessRunnerCrops(runnerBodySheet);
         femaleRunnerCrops = SpriteFrameCropper.computeCellContentCrops(femaleRunnerSheet, RUNNER_FRAMES, RUNNER_CELL_CROP_PAD_PX);
         maleRunnerCrops = SpriteFrameCropper.computeCellContentCrops(maleRunnerSheet, RUNNER_FRAMES, RUNNER_CELL_CROP_PAD_PX);
         overhaulRunnerCrops = SpriteFrameCropper.computeCellContentCrops(overhaulRunnerSheet, RUNNER_FRAMES, RUNNER_CELL_CROP_PAD_PX);
+        SpriteFrameCropper.retainFullCellRight(femaleRunnerCrops, femaleRunnerSheet, RUNNER_FRAMES);
+        SpriteFrameCropper.retainFullCellRight(maleRunnerCrops, maleRunnerSheet, RUNNER_FRAMES);
+        SpriteFrameCropper.retainFullCellRight(overhaulRunnerCrops, overhaulRunnerSheet, RUNNER_FRAMES);
         bitmapPaint.setFilterBitmap(false);
+    }
+
+    private static Rect[] headlessRunnerCrops(Bitmap sheet) {
+        if (sheet == null || sheet.getWidth() != 1972 || sheet.getHeight() != 798) {
+            return SpriteFrameCropper.computeCellContentCrops(sheet, RUNNER_FRAMES, RUNNER_CELL_CROP_PAD_PX);
+        }
+        // This sheet was authored with unequal, overlapping atlas cells. These
+        // are the measured alpha bounds of each complete pose plus 2 px padding.
+        return new Rect[]{
+                new Rect(22, 196, 374, 645),
+                new Rect(387, 205, 658, 640),
+                new Rect(711, 219, 983, 640),
+                new Rect(1000, 171, 1275, 626),
+                new Rect(1313, 220, 1594, 644),
+                new Rect(1638, 216, 1949, 641)
+        };
     }
 
     void drawRunner(Canvas canvas, PlayerFrame frame) {
@@ -99,6 +118,41 @@ final class SpriteRenderer {
         if (!fullBody || frame.playerPhoto != null) {
             drawHead(canvas, frame.x, frame.y, frame.radius, frame.playerPhoto);
         }
+    }
+
+    void drawStandingBounds(Canvas canvas, PlayerFrame frame) {
+        Bitmap sheet = fullRunnerSheet(frame.bodyStyle);
+        RectF bounds = tempRect;
+        if (sheet != null && sheet.getWidth() > 0 && sheet.getHeight() > 0) {
+            Rect[] crops = fullRunnerCrops(frame.bodyStyle);
+            int[] source = fullRunnerSourceValues(sheet.getWidth(), sheet.getHeight(), 0, crops);
+            float sourceWidth = source[2] - source[0];
+            float sourceHeight = source[3] - source[1];
+            float height = frame.radius * 4.02f;
+            float width = sourceHeight > 0f ? height * sourceWidth / sourceHeight : frame.radius * 2f;
+            float centerX = frame.x + frame.radius * 0.04f;
+            float top = frame.y - frame.radius * 1.12f;
+            bounds.set(centerX - width * 0.5f, top, centerX + width * 0.5f, top + height);
+        } else if (runnerBodySheet != null) {
+            Rect crop = runnerBodyCrop(0);
+            float height = runnerSheetBodyHeight(frame.radius, false);
+            float width = height * (crop.width() / (float) crop.height()) * RUNNER_BODY_WIDTH_SCALE;
+            float top = frame.y + frame.radius * RUNNER_BODY_TOP_FROM_HEAD;
+            float centerX = frame.x + frame.radius * 0.10f;
+            bounds.set(centerX - width * 0.5f, top, centerX + width * 0.5f, top + height);
+            bounds.union(frame.x - frame.radius, frame.y - frame.radius,
+                    frame.x + frame.radius, frame.y + frame.radius);
+        } else {
+            bounds.set(frame.x - frame.radius, frame.y - frame.radius,
+                    frame.x + frame.radius, frame.y + frame.radius * 3.3f);
+        }
+
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setStrokeWidth(dp(2f));
+        paint.setColor(Color.MAGENTA);
+        bounds.right += 10f;
+        canvas.drawRect(bounds, paint);
+        paint.setStyle(Paint.Style.FILL);
     }
 
     private void drawHead(Canvas canvas, float x, float headY, float radius, Bitmap playerPhoto) {
