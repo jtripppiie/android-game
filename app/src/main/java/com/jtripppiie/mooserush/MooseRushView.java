@@ -4459,7 +4459,8 @@ public class MooseRushView extends View {
     private void drawRoutePlatform(Canvas canvas, RoutePlatform platform) {
         if (platform.broken) return;
         float bottom = platform.y + dp(30);
-        Bitmap platformSprite = assets.routePlatformIce();
+        Bitmap platformSprite = platform.moving ? assets.routePlatformMoving()
+                : selectedStage == 4 ? assets.routePlatformSnow() : assets.routePlatformIce();
         if (platformSprite != null) {
             tempRect.set(platform.x - dp(3), platform.y - dp(7),
                     platform.x + platform.width + dp(3), bottom);
@@ -4493,12 +4494,19 @@ public class MooseRushView extends View {
     private void drawWaterPatch(Canvas canvas, WaterPatch water) {
         if (water.frozen) return;
         float ground = getGroundY();
-        paint.setStyle(Paint.Style.FILL);
-        paint.setColor(Color.rgb(18, 92, 130));
-        canvas.drawRect(water.x, ground - dp(4), water.x + water.width, getHeight(), paint);
-        paint.setColor(Color.argb(210, 132, 213, 232));
-        for (float x = water.x - (water.phase * dp(38)) % dp(38); x < water.x + water.width; x += dp(38)) {
-            canvas.drawOval(x, ground - dp(8), x + dp(24), ground + dp(1), paint);
+        Bitmap waterSprite = assets.glacialWaterSurface();
+        if (waterSprite != null) {
+            int sourceTop = Math.round(waterSprite.getHeight() * 0.24f);
+            int sourceBottom = Math.round(waterSprite.getHeight() * 0.78f);
+            spriteSourceRect.set(0, sourceTop, waterSprite.getWidth(), sourceBottom);
+            float waveBob = (float) Math.sin(water.phase * Math.PI * 2.0) * dp(2);
+            tempRect.set(water.x, ground - dp(16) + waveBob,
+                    water.x + water.width, Math.max(getHeight(), ground + dp(74)));
+            canvas.drawBitmap(waterSprite, spriteSourceRect, tempRect, spriteBitmapPaint);
+        } else {
+            paint.setStyle(Paint.Style.FILL);
+            paint.setColor(Color.rgb(18, 92, 130));
+            canvas.drawRect(water.x, ground - dp(4), water.x + water.width, getHeight(), paint);
         }
         textPaint.setTextAlign(Paint.Align.CENTER);
         textPaint.setTextSize(dp(8.5f));
@@ -5398,16 +5406,24 @@ public class MooseRushView extends View {
     }
 
     private void drawBeamImpact(Canvas canvas, float x, float y, float beamHeight, float alpha, float pulse) {
-        // Concentric impact rings show the exact endpoint without a large halo.
+        Bitmap impact = assets.laserIceImpact();
+        if (impact != null) {
+            float radius = beamHeight * (2.35f + pulse * 0.28f);
+            tempRect.set(x - radius, y - radius, x + radius, y + radius);
+            int previousAlpha = spriteBitmapPaint.getAlpha();
+            spriteBitmapPaint.setAlpha(Math.round(255 * alpha));
+            canvas.save();
+            canvas.rotate((bossTimer * 72f) % 360f, x, y);
+            canvas.drawBitmap(impact, null, tempRect, spriteBitmapPaint);
+            canvas.restore();
+            spriteBitmapPaint.setAlpha(previousAlpha);
+        }
+        // Stable collision core keeps the exact endpoint readable under the animated art.
         paint.setShader(null);
         paint.setStyle(Paint.Style.FILL);
         paint.setXfermode(null);
-        paint.setColor(Color.argb(Math.round(230 * alpha), 55, 8, 18));
-        canvas.drawCircle(x, y, beamHeight * (1.45f + pulse * 0.2f), paint);
-        paint.setColor(Color.argb(Math.round(245 * alpha), 255, 74, 54));
-        canvas.drawCircle(x, y, beamHeight * (0.95f + pulse * 0.15f), paint);
         paint.setColor(Color.argb(Math.round(220 * alpha), 255, 252, 236));
-        canvas.drawCircle(x, y, beamHeight * 0.6f, paint);
+        canvas.drawCircle(x, y, beamHeight * 0.42f, paint);
     }
 
     private void laserAttackRect(BossAttack attack, RectF out) {

@@ -13,13 +13,13 @@ func _ready() -> void:
 	shape.size = Vector2(150, 24)
 	collision.shape = shape
 	add_child(collision)
-	queue_redraw()
+	var art := Sprite2D.new()
+	art.texture = load("res://assets/route_platform_moving.png")
+	art.scale = Vector2(150.0 / art.texture.get_width(), 0.23)
+	art.position = Vector2(0, 5)
+	add_child(art)
 
 func _physics_process(delta: float) -> void:
 	clock += delta
 	var pct := (sin(clock * TAU / cycle_seconds) + 1.0) * 0.5
 	position = origin + travel * pct
-
-func _draw() -> void:
-	draw_rect(Rect2(-75, -12, 150, 24), Color("#7b5135"))
-	draw_line(Vector2(-65,-5), Vector2(65,-5), Color("#d9b680"), 3)
