@@ -30,6 +30,16 @@ func _ready() -> void:
 	add_child(collision)
 	body_entered.connect(_on_body_entered)
 	build_art()
+	var name_label := Label.new()
+	name_label.text = boss_name
+	name_label.position = Vector2(-130, -148)
+	name_label.size = Vector2(260, 28)
+	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	name_label.add_theme_font_size_override("font_size", 18)
+	name_label.add_theme_color_override("font_color", Color("#fff0b0"))
+	name_label.add_theme_constant_override("outline_size", 5)
+	name_label.add_theme_color_override("font_outline_color", Color("#071326"))
+	add_child(name_label)
 	feedback.emit("BOSS · READ THE TELL · FIRE DURING RECOVERY")
 	queue_redraw()
 
@@ -86,6 +96,8 @@ func _on_body_entered(body: Node) -> void:
 
 func _draw() -> void:
 	if is_instance_valid(art):
+		draw_rect(Rect2(-72, -114, 144, 12), Color(0.02, 0.06, 0.10, 0.88), true)
+		draw_rect(Rect2(-69, -111, 138.0 * health / float(max_health), 6), Color("#ff6254") if state != State.RECOVER else Color("#ffda79"), true)
 		if state == State.TELL: draw_arc(Vector2.ZERO, 78.0, 0.0, TAU, 40, Color(1.0, 0.38, 0.33, 0.82), 6.0)
 		elif state == State.RECOVER: draw_arc(Vector2.ZERO, 78.0, 0.0, TAU, 40, Color(1.0, 0.85, 0.47, 0.92), 7.0)
 		return

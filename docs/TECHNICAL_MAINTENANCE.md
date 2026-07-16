@@ -40,8 +40,8 @@ Repeat for 0 through 4. Android export requires the matching Godot 4.7.1 binary,
 templates, Java 17, SDK/target 36, and Gradle network cache. Inspect the result:
 
 ```bash
-aapt dump badging app/build/outputs/apk/debug/you-rush-alaska-5.0.1-debug.apk
-apksigner verify --verbose app/build/outputs/apk/debug/you-rush-alaska-5.0.1-debug.apk
+aapt dump badging app/build/outputs/apk/debug/you-rush-alaska-5.0.2-debug.apk
+apksigner verify --verbose app/build/outputs/apk/debug/you-rush-alaska-5.0.2-debug.apk
 ```
 
 ## Release rules

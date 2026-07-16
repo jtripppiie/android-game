@@ -6,6 +6,7 @@ signal exit_requested
 
 var player: AlaskaRunner
 var hud_label: Label
+var hud_secondary: Label
 var checkpoint_label: Label
 var key_collected := false
 var finished := false
@@ -361,6 +362,9 @@ func collectible(at: Vector2, kind: String) -> void:
 	art.texture = atlas
 	art.scale = Vector2.ONE * (0.115 if kind == "survivor" else 0.10)
 	item.add_child(art)
+	var float_tween := item.create_tween().set_loops()
+	float_tween.tween_property(art, "position:y", -7.0, 0.55).set_trans(Tween.TRANS_SINE)
+	float_tween.tween_property(art, "position:y", 2.0, 0.55).set_trans(Tween.TRANS_SINE)
 	item.body_entered.connect(func(body): collect(body, item))
 	add_child(item)
 
@@ -391,10 +395,8 @@ func checkpoint(at: Vector2) -> void:
 	zone.body_entered.connect(func(body):
 		if body == player: player.set_checkpoint(at + Vector2(0,-30)))
 	add_child(zone)
-	var marker := Polygon2D.new()
-	marker.position = at
-	marker.polygon = PackedVector2Array([Vector2(-6,40),Vector2(6,40),Vector2(6,-90),Vector2(50,-65),Vector2(6,-40)])
-	marker.color = Color("#4ddbb8")
+	var marker := atlas_object_sprite(0, 0.24)
+	marker.position = at + Vector2(0, -38)
 	add_child(marker)
 
 func goal(at: Vector2) -> void:
@@ -407,11 +409,22 @@ func goal(at: Vector2) -> void:
 	zone.add_child(collision)
 	zone.body_entered.connect(func(body): finish_level(body))
 	add_child(zone)
-	var beacon := Polygon2D.new()
-	beacon.position = at
-	beacon.polygon = PackedVector2Array([Vector2(-24,90),Vector2(24,90),Vector2(14,-70),Vector2(-14,-70)])
-	beacon.color = Color("#ff6254")
+	var beacon := atlas_object_sprite(1, 0.30)
+	beacon.position = at + Vector2(0, -24)
 	add_child(beacon)
+	var pulse := create_tween().set_loops()
+	pulse.tween_property(beacon, "modulate", Color(1.18, 1.12, 0.88), 0.55)
+	pulse.tween_property(beacon, "modulate", Color.WHITE, 0.55)
+
+func atlas_object_sprite(index: int, display_scale: float) -> Sprite2D:
+	var sprite := Sprite2D.new()
+	var atlas := AtlasTexture.new()
+	atlas.atlas = load("res://assets/trail_objects_atlas.png")
+	var cell_width := atlas.atlas.get_width() / 3.0
+	atlas.region = Rect2(cell_width * index, 0, cell_width, atlas.atlas.get_height())
+	sprite.texture = atlas
+	sprite.scale = Vector2.ONE * display_scale
+	return sprite
 
 func finish_level(body: Node) -> void:
 	if body != player or finished: return
@@ -440,13 +453,20 @@ func build_hud() -> void:
 	layer.layer = 10
 	add_child(layer)
 	hud_label = Label.new()
-	hud_label.position = Vector2(24, 20)
+	hud_label.position = Vector2(24, 10)
+	hud_label.size = Vector2(440, 34)
 	hud_label.add_theme_font_size_override("font_size", 27 if GameSession.large_text else 22)
 	hud_label.add_theme_color_override("font_color", Color.WHITE)
 	layer.add_child(hud_label)
+	hud_secondary = Label.new()
+	hud_secondary.position = Vector2(24, 42)
+	hud_secondary.size = Vector2(440, 28)
+	hud_secondary.add_theme_font_size_override("font_size", 20 if GameSession.large_text else 17)
+	hud_secondary.add_theme_color_override("font_color", Color("#84d5e8"))
+	layer.add_child(hud_secondary)
 	checkpoint_label = Label.new()
-	checkpoint_label.position = Vector2(410, 22)
-	checkpoint_label.size = Vector2(620, 40)
+	checkpoint_label.position = Vector2(470, 14)
+	checkpoint_label.size = Vector2(570, 48)
 	checkpoint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	checkpoint_label.add_theme_font_size_override("font_size", 27 if GameSession.large_text else 22)
 	checkpoint_label.add_theme_color_override("font_color", Color("#ffda79"))
@@ -469,7 +489,8 @@ func _process(_delta: float) -> void:
 			if label: label.visible = debug_ids_visible
 	if player:
 		var route := "HIGH" if player.global_position.y < 350.0 else "LOW" if player.global_position.y > 575.0 else "PRECISION"
-		hud_label.text = "HP %d  SCORE %d  BEST %d  KEY %s  RESCUE %d/2  COMBO %d  %s  %s" % [player.health, player.score, best_score, "YES" if key_collected else "NO", survivors_found, player.combo, player.state.to_upper(), route]
+		hud_label.text = "HP %d   SCORE %d   KEY %s   RESCUE %d/2" % [player.health, player.score, "YES" if key_collected else "NO", survivors_found]
+		hud_secondary.text = "BEST %d   COMBO x%d   %s · %s" % [best_score, player.combo, player.state.to_upper(), route]
 
 func run_autoplay_audit(delta: float) -> void:
 	if not is_instance_valid(player): return

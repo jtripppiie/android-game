@@ -24,6 +24,7 @@ required = [
     "assets/arctic_launch_pad.png",
     "assets/aurora_supply_block.png",
     "assets/collectibles_atlas.png",
+    "assets/trail_objects_atlas.png",
     "assets/background_midnight_sun.png", "assets/background_dark_winter.png",
     "assets/scenery_tree_summer.png", "assets/scenery_tree_winter.png",
     "assets/wildlife_bear_walk.png", "assets/wildlife_eagle_fly.png",
@@ -88,6 +89,7 @@ for marker in ("user://debug-review-notes.txt", "FIX FIRST", "context_provider")
 projectile = (root / "scripts/projectile.gd").read_text()
 assert 'has_method("snowball_hit")' in projectile
 assert "area_entered.connect" in projectile
+assert "trail_objects_atlas.png" in projectile
 freezable_water = (root / "scripts/freezable_water.gd").read_text()
 for marker in ("bridge.shattered.connect", "_on_bridge_shattered", 'set_deferred("disabled", false)'):
     assert marker in freezable_water, marker
