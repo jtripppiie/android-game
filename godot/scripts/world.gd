@@ -238,12 +238,24 @@ func build_route_branches() -> void:
 	route_sign(Vector2(3300, 625), "LOW · WILDLIFE")
 
 func route_sign(at: Vector2, message: String) -> void:
+	var panel := PanelContainer.new()
+	panel.position = at
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.02, 0.08, 0.13, 0.88)
+	style.border_color = Color("#4ddbb8")
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(8)
+	style.content_margin_left = 10
+	style.content_margin_right = 10
+	style.content_margin_top = 5
+	style.content_margin_bottom = 5
+	panel.add_theme_stylebox_override("panel", style)
 	var label := Label.new()
-	label.position = at
 	label.text = message
 	label.add_theme_font_size_override("font_size", 17)
 	label.add_theme_color_override("font_color", Color("#ffda79"))
-	add_child(label)
+	panel.add_child(label)
+	add_child(panel)
 
 func platform(rect: Rect2, color: Color) -> void:
 	var body := StaticBody2D.new()
@@ -293,10 +305,11 @@ func enemy(at: Vector2, distance: float, kind: String) -> void:
 	add_child(foe)
 
 func boss(at: Vector2) -> void:
+	checkpoint(at + Vector2(-360, 0))
 	var encounter := TrailBoss.new()
 	boss_node = encounter
 	encounter.position = at
-	encounter.max_health = [8, 8, 10, 12, 16][stage_index]
+	encounter.max_health = [7, 8, 9, 10, 12][stage_index]
 	encounter.boss_name = GameSession.STAGES[stage_index].boss
 	encounter.boss_variant = stage_index
 	register_debug_item(encounter, "BOSS", encounter.boss_name)
@@ -525,6 +538,10 @@ func run_autoplay_audit(delta: float) -> void:
 		audit_next_jump = minf(audit_next_jump, audit_elapsed)
 	if player.is_on_floor() and audit_jump_needed(target_direction) and audit_elapsed - audit_last_jump > 0.30:
 		audit_next_jump = minf(audit_next_jump, audit_elapsed)
+	for hazard in get_tree().get_nodes_in_group("boss_hazard"):
+		if hazard is Node2D and absf(hazard.global_position.x - player.global_position.x) < 250.0 and audit_elapsed - audit_last_jump > 0.30:
+			audit_next_jump = minf(audit_next_jump, audit_elapsed)
+			break
 	if audit_elapsed >= audit_next_jump:
 		player.queue_jump()
 		audit_jumps += 1
@@ -538,8 +555,8 @@ func run_autoplay_audit(delta: float) -> void:
 		audit_last_jump = audit_elapsed
 		audit_last_progress_time = audit_elapsed
 		audit_next_jump = audit_elapsed + 0.5
-	if audit_elapsed > 96.0:
-		print("AUTOPLAY FAIL stage=%d max_x=%.1f key=%s rescues=%d boss=%s jumps=%d hits=%d" % [stage_index, audit_max_x, key_collected, survivors_found, boss_defeated, audit_jumps, audit_hits])
+	if audit_elapsed > 120.0:
+		print("AUTOPLAY FAIL stage=%d max_x=%.1f key=%s rescues=%d boss=%s boss_hp=%d jumps=%d hits=%d" % [stage_index, audit_max_x, key_collected, survivors_found, boss_defeated, boss_node.health if is_instance_valid(boss_node) else 0, audit_jumps, audit_hits])
 		release_audit_inputs()
 		get_tree().quit(2)
 

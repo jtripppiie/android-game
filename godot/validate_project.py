@@ -16,7 +16,7 @@ required = [
     "scripts/launch_pad.gd",
     "scripts/supply_block.gd",
     "scripts/trick_ring.gd",
-    "scripts/trail_boss.gd", "scripts/review_notebook.gd",
+    "scripts/trail_boss.gd", "scripts/boss_hazard.gd", "scripts/review_notebook.gd",
     "assets/runner_overhaul.png",
     "assets/route_platform_ice.png", "assets/route_platform_moving.png",
     "assets/route_platform_snow.png", "assets/glacial_water_surface.png",
@@ -83,6 +83,11 @@ for marker in ("TELL_SECONDS", "RECOVER_SECONDS", "ARMORED", "WEAK · FIRE"):
     assert marker in boss, marker
 for marker in ("wildlife_moose_walk.png", "wildlife_polar_bear_walk.png", "boss_laser_emitter.png"):
     assert marker in boss, marker
+for marker in ("SUN FLARE", "SALMON SPLASH", "ANTLER SHOCKWAVE", "FEATHER SPREAD", "SNOW BARRAGE"):
+    assert marker in boss, marker
+boss_hazard = (root / "scripts/boss_hazard.gd").read_text()
+for marker in ("class_name BossHazard", "fall_acceleration", "_on_body_entered", "trail_objects_atlas.png"):
+    assert marker in boss_hazard, marker
 notebook = (root / "scripts/review_notebook.gd").read_text()
 for marker in ("user://debug-review-notes.txt", "FIX FIRST", "context_provider"):
     assert marker in notebook, marker
@@ -93,6 +98,11 @@ assert "trail_objects_atlas.png" in projectile
 freezable_water = (root / "scripts/freezable_water.gd").read_text()
 for marker in ("bridge.shattered.connect", "_on_bridge_shattered", 'set_deferred("disabled", false)'):
     assert marker in freezable_water, marker
+for marker in ("glacial_water_surface.png", "current_tween", "art.visible = false"):
+    assert marker in freezable_water, marker
+reactive_ice = (root / "scripts/reactive_ice.gd").read_text()
+for marker in ("route_platform_ice.png", "laser_ice_impact.png", "spawn_hit_flash"):
+    assert marker in reactive_ice, marker
 
 godot = shutil.which("godot4") or shutil.which("godot")
 if godot:

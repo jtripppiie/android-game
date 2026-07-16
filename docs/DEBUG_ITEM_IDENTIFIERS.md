@@ -1,74 +1,35 @@
 # Debug Item Identifiers
 
-Debug APKs show a compact, stable ID beside each gameplay object. Use that ID
-when requesting a tweak, ideally with a screenshot and the encounter name from
-the upper-left debug panel.
+Debug builds place a compact stable label beside gameplay objects. The current
+format is:
+
+```text
+LEVEL-NAME-CATEGORY-NUMBER
+```
 
 Examples:
 
 ```text
-SUN-OB01  first Midnight Sun obstacle
-RIV-AN02  second visible Salmon Rush animal
-MOO-PF03  third Moose Pass route platform
-DRK-RG01  first Dark Winter trick ring
-BER-PU02  second Bear Country utility pickup
+MIDNIGHT-SUN-RUN-PF-4
+SALMON-RUSH-WT-9
+MOOSE-PASS-AN-18
+DARK-WINTER-BOSS-21
+BEAR-COUNTRY-PU-12
 ```
 
-Stage prefixes:
+Categories: `PF` platform, `AN` animal, `WT` water, `PD` launch pad, `BL`
+supply block, `RG` ring, `PU` pickup, and `BOSS` boss. Numbers are stable for
+that authored run and intentionally short enough for screenshots and spoken
+notes.
 
-- `SUN`: Midnight Sun Run
-- `RIV`: Salmon Rush
-- `MOO`: Moose Pass
-- `DRK`: Dark Winter
-- `BER`: Bear Country
+Tap `NOTE` to pause into the shallow top-right notebook. Type or use `MIC`, mark
+`FIX FIRST` only for a blocker, then save. The note automatically includes stage,
+position, score, combo, objectives, and nearby IDs. `COPY` copies the local log.
+Press N with a keyboard to open notes and F10 to hide/show labels.
 
-Item categories:
-
-- `OB`: gate or grounded obstacle
-- `AN`: wildlife or stage hazard
-- `PF`: route platform
-- `PD`: launch pad
-- `BL`: supply block
-- `RG`: trick ring
-- `WT`: water patch
-- `PU`: utility pickup
-- `AT`: boss attack
-- `PL`: player
-- `BOSS`: current stage boss
-
-IDs are assigned once and never renumber while that run is active. A new run
-restarts each category at `01`. Ordinary stars, player snowballs, particles,
-and score popups intentionally have no badges.
-
-The debug APK enables the overlay automatically. Tap the menu title five times
-within the existing gesture window to hide or restore it. Android logcat also
-records mappings such as:
+Useful report:
 
 ```text
-DEBUG ITEM BER-AN02 = POLAR
-DEBUG ITEM BER-PF03 = BRITTLE PLATFORM
+Dark Winter: DARK-WINTER-PF-7 hides the landing behind DARK-WINTER-AN-11.
+I was sprinting and used one full jump, no air jump.
 ```
-
-Useful feedback format:
-
-```text
-Bear Country, encounter bear_country_chain:
-BER-AN02 is too close to BER-PF03 and BER-PU01 is too high.
-```
-
-## In-game notebook
-
-For the easiest walking workflow, tap `MIC`, speak the problem, and stop. The
-game automatically saves the transcription with scene context and resumes.
-
-Tap `NOTE` in the debug overlay to freeze the run and open the review notebook.
-The note automatically includes the stage, encounter, progress, score, run
-seed, and currently visible IDs. Check `Priority fix` for urgent items. The
-number on the `NOTE` button is the locally saved note count.
-
-The compact editor stays on the right side and suppresses the normal pause
-panel so the gameplay scene remains visible while describing it.
-
-Use `Copy all` in the notebook to place the complete persistent log on the
-Android clipboard. Notes remain on the device in the app's private storage and
-are never uploaded.

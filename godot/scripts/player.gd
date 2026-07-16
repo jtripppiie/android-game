@@ -128,6 +128,7 @@ func _physics_process(delta: float) -> void:
 		action_feedback.emit("PERFECT LAND" if absf(velocity.x) > 280.0 else "LAND")
 	was_on_floor = is_on_floor()
 	if global_position.y > 850: respawn()
+	modulate = Color(1, 1, 1, 0.42 if invulnerability > 0.0 and int(invulnerability * 16.0) % 2 == 0 else 1.0)
 	update_animation(delta, axis)
 
 func update_animation(delta: float, axis: float) -> void:

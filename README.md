@@ -10,10 +10,10 @@ wildlife encounters through stage runs and boss fights.
 
 ```text
 engine: Godot 4.7.1
-versionCode: 502
-versionName: 5.0.2
+versionCode: 510
+versionName: 5.1.0
 package: com.jtripppiie.mooserush
-APK: app/build/outputs/apk/debug/you-rush-alaska-5.0.2-debug.apk
+APK: app/build/outputs/apk/debug/you-rush-alaska-5.1.0-debug.apk
 ```
 
 Version 5.0 is the Godot replacement build. It contains all five authored
@@ -143,31 +143,17 @@ Start with [docs/README.md](docs/README.md).
 
 Key active docs:
 
+- [5.1 distinct boss encounters](docs/RELEASE_5_1_BOSS_OVERHAUL.md)
+- [5.0.3 reactive environment polish](docs/RELEASE_5_0_3_ENVIRONMENT.md)
 - [5.0.2 interface and trail-object polish](docs/RELEASE_5_0_2_VISUAL_POLISH.md)
 - [5.0.1 graphics and jump refinement](docs/RELEASE_5_0_1_GRAPHICS_AND_JUMP.md)
-- [4.1.2 quick voice notes](docs/RELEASE_4_1_2_QUICK_VOICE_NOTES.md)
-- [4.1.1 review notebook](docs/RELEASE_4_1_1_REVIEW_NOTEBOOK.md)
-- [4.1 debug tuning overhaul](docs/RELEASE_4_1_DEBUG_TUNING_OVERHAUL.md)
+- [Kid owner handbook](docs/KID_OWNER_HANDBOOK.md)
+- [Device acceptance checklist](docs/DEVICE_ACCEPTANCE_CHECKLIST.md)
+- [Technical maintenance](docs/TECHNICAL_MAINTENANCE.md)
 - [Debug item identifiers](docs/DEBUG_ITEM_IDENTIFIERS.md)
-- [4.0.1 gameplay fairness update](docs/RELEASE_4_0_1_GAMEPLAY_FAIRNESS.md)
-- [4.0 stable release](docs/RELEASE_4_0_STABLE.md)
-- [3.19 aerial ring routes](docs/RELEASE_3_19_BETA_AERIAL_RING_ROUTES.md)
-- [3.18 secrets and chains release](docs/RELEASE_3_18_BETA_SECRETS_AND_CHAINS.md)
-- [3.17 arcade joy release](docs/RELEASE_3_17_BETA_ARCADE_JOY.md)
-- [3.16 reactive river release](docs/RELEASE_3_16_BETA_REACTIVE_RIVER.md)
-- [3.15 system integrity release](docs/RELEASE_3_15_BETA_SYSTEM_INTEGRITY.md)
-- [3.14 visual gameplay release](docs/RELEASE_3_14_BETA_VISUAL_GAMEPLAY_PASS.md)
-- [Release notes](docs/RELEASE_NOTES.md)
 - [Generated raster assets](docs/GENERATED_ASSETS.md)
 - [Versioning](docs/VERSIONING.md)
-- [Android test checklist](docs/ANDROID_TEST_CHECKLIST.md)
-- [Gameplay revamp contract](docs/GAMEPLAY_REVAMP.md)
-- [Godot overhaul vertical slice](docs/GODOT_OVERHAUL.md)
-- [Offline debug previews](docs/OFFLINE_DEBUG_PREVIEWS.md)
 - [Privacy notes](docs/PRIVACY.md)
-- [Store listing draft](docs/STORE_LISTING_DRAFT.md)
-- [Sprite sheet asset pipeline](docs/SPRITE_SHEET_ASSET_PIPELINE.md)
-- [Region replication playbook](docs/REGION_REPLICATION_PLAYBOOK.md)
 
 Historical release notes and rapid-iteration logs are preserved in
 [docs/archive](docs/archive/).

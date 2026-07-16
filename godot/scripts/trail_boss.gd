@@ -57,7 +57,7 @@ func _physics_process(delta: float) -> void:
 			state = State.ATTACK
 			state_timer = 0.0
 			target_x = player.global_position.x if is_instance_valid(player) else rest_position.x - 260.0
-			feedback.emit("CHARGE · MOVE")
+			launch_variant_attack()
 	elif state == State.ATTACK:
 		var pct := minf(1.0, state_timer / ATTACK_SECONDS)
 		var reach: float = [300.0, 250.0, 390.0, 440.0, 520.0][boss_variant]
@@ -123,3 +123,28 @@ func build_art() -> void:
 	art.scale = Vector2.ONE * scales[boss_variant]
 	art.position.y = -30.0
 	add_child(art)
+
+func launch_variant_attack() -> void:
+	var names := ["SUN FLARE · JUMP", "SALMON SPLASH · MOVE", "ANTLER SHOCKWAVE · JUMP", "FEATHER SPREAD · FIND THE GAP", "SNOW BARRAGE · KEEP MOVING"]
+	feedback.emit(names[boss_variant])
+	if boss_variant == 0:
+		spawn_hazard("sun", Vector2(-330, -140))
+		spawn_hazard("sun", Vector2(-390, -40))
+	elif boss_variant == 1:
+		spawn_hazard("splash", Vector2(-310, -330))
+		spawn_hazard("splash", Vector2(-390, -270))
+	elif boss_variant == 2:
+		spawn_hazard("shockwave", Vector2(-430, 0), Vector2(0, 48))
+	elif boss_variant == 3:
+		spawn_hazard("feather", Vector2(-390, -130))
+		spawn_hazard("feather", Vector2(-430, -20))
+		spawn_hazard("feather", Vector2(-360, 90))
+	else:
+		spawn_hazard("snow", Vector2(-330, -300))
+		spawn_hazard("snow", Vector2(-390, -235))
+		spawn_hazard("snow", Vector2(-450, -170))
+
+func spawn_hazard(kind: String, velocity: Vector2, offset := Vector2.ZERO) -> void:
+	var hazard := BossHazard.new()
+	hazard.setup(kind, global_position + offset, velocity)
+	get_parent().add_child(hazard)

@@ -30,12 +30,20 @@ The app stores simple local preferences, including:
 - Selected image reference
 - Local XP, levels, Trail Tokens, Trail Passport badges, Daily Rush streak, and Expedition Logs
 
+The Godot build stores campaign progress, five best scores, total score,
+accessibility options, a local photo path, and a one-time Java migration flag.
+
 ## Permissions and network
 
 The current app declares no network permission.
 
 The photo picker uses Android's system document picker. The selected image is
 decoded locally, sampled down for memory safety, and never uploaded by the app.
+
+Voice notes launch the speech-recognition provider installed on the Android
+device. That provider may process speech according to its own privacy policy.
+You Rush receives only the returned transcription and saves review notes in
+local app storage; it does not upload them itself.
 
 ## Public release note
 
