@@ -1,7 +1,8 @@
 # Debug Item Identifiers
 
-Debug builds place a compact stable label beside gameplay objects. The current
-format is:
+Turn on `ACCESSIBILITY > REVIEW MODE · IDS + NOTES`. Normal play now has no
+identifier clutter and no review buttons. Review Mode persists after restarting
+the game and places compact labels beside gameplay objects. The format is:
 
 ```text
 LEVEL-NAME-CATEGORY-NUMBER
@@ -18,14 +19,18 @@ BEAR-COUNTRY-PU-12
 ```
 
 Categories: `PF` platform, `AN` animal, `WT` water, `PD` launch pad, `BL`
-supply block, `RG` ring, `PU` pickup, and `BOSS` boss. Numbers are stable for
-that authored run and intentionally short enough for screenshots and spoken
-notes.
+supply block, `RG` ring, `PU` pickup, and `BOSS` boss. Each category has its own
+short sequence, so the first animal is `AN-1` even if platforms were authored
+before it. Numbers are stable for that authored run. Only items near the player
+are labeled, and the nearest item is highlighted in green for readable
+screenshots.
 
-Tap `NOTE` to pause into the shallow top-right notebook. Type or use `MIC`, mark
-`FIX FIRST` only for a blocker, then save. The note automatically includes stage,
-position, score, combo, objectives, and nearby IDs. `COPY` copies the local log.
-Press N with a keyboard to open notes and F10 to hide/show labels.
+In Review Mode, tap `IDS` to hide/show labels and `NOTE` to pause into the small
+top-right notebook. The notebook names the nearest item automatically. Tap
+`FEEL`, `JUMP`, `SPACE`, `ART`, or `BUG`, type a short note (or use `MIC`), and
+mark `FIX FIRST` only for a blocker. Saving attaches stage, position, score,
+combo, objectives, and nearby IDs. `COPY ALL` copies the local log. Press N with
+a keyboard to open notes and F10 to hide/show labels.
 
 Useful report:
 

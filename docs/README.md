@@ -18,6 +18,7 @@ developer should normally need.
   Android bridge, migration, build, QA, signing, and recovery.
 - [Versioning](VERSIONING.md): current version and release rules.
 - [Debug identifiers](DEBUG_ITEM_IDENTIFIERS.md): how to report a specific item.
+- [5.2 Review Mode](RELEASE_5_2_REVIEW_MODE.md): optional IDs and compact tagged notes.
 - [Generated assets](GENERATED_ASSETS.md): asset provenance and transparency.
 - [Wildlife scale contract](WILDLIFE_SCALE_CONTRACT.md): gameplay silhouette
   hierarchy.

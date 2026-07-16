@@ -17,6 +17,7 @@ var haptics := true
 var large_text := false
 var reduced_motion := false
 var high_contrast := false
+var review_mode := false
 var photo_path := ""
 var legacy_imported := false
 
@@ -39,6 +40,7 @@ func load_profile() -> void:
 	large_text = bool(config.get_value("accessibility", "large_text", false))
 	reduced_motion = bool(config.get_value("accessibility", "reduced_motion", false))
 	high_contrast = bool(config.get_value("accessibility", "high_contrast", false))
+	review_mode = bool(config.get_value("review", "enabled", false))
 	photo_path = String(config.get_value("customization", "photo_path", ""))
 	legacy_imported = bool(config.get_value("migration", "java_profile_imported", false))
 	for index in range(STAGES.size()): best_scores[index] = int(config.get_value("scores", str(index), 0))
@@ -52,6 +54,7 @@ func save_profile() -> void:
 	config.set_value("accessibility", "large_text", large_text)
 	config.set_value("accessibility", "reduced_motion", reduced_motion)
 	config.set_value("accessibility", "high_contrast", high_contrast)
+	config.set_value("review", "enabled", review_mode)
 	config.set_value("customization", "photo_path", photo_path)
 	config.set_value("migration", "java_profile_imported", legacy_imported)
 	for index in range(STAGES.size()): config.set_value("scores", str(index), best_scores[index])

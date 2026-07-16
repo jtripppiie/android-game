@@ -16,7 +16,8 @@ var boss_node: TrailBoss
 var best_score := 0
 var notebook: ReviewNotebook
 var debug_item_counter := 0
-var debug_ids_visible := true
+var debug_category_counters := {}
+var debug_ids_visible := false
 var stage_index := 0
 var autoplay_audit := false
 var audit_elapsed := 0.0
@@ -33,6 +34,7 @@ var audit_last_progress_time := 0.0
 
 func _ready() -> void:
 	stage_index = GameSession.selected_stage
+	debug_ids_visible = GameSession.review_mode
 	for argument in OS.get_cmdline_user_args():
 		if argument.begins_with("--autoplay-audit="): autoplay_audit = true
 	RenderingServer.set_default_clear_color(Color("#102d4b"))
@@ -50,6 +52,7 @@ func _ready() -> void:
 	add_child(note_layer)
 	notebook = ReviewNotebook.new()
 	notebook.context_provider = debug_note_context
+	notebook.nearest_id_provider = nearest_debug_id
 	note_layer.add_child(notebook)
 
 func spawn_player() -> void:
@@ -494,12 +497,13 @@ func build_hud() -> void:
 
 func _process(_delta: float) -> void:
 	if autoplay_audit: run_autoplay_audit(_delta)
-	if Input.is_action_just_pressed("debug_note") and notebook: notebook.toggle()
-	if Input.is_action_just_pressed("debug_ids"):
+	if Input.is_action_just_pressed("debug_note") and notebook and GameSession.review_mode: notebook.toggle()
+	if Input.is_action_just_pressed("debug_ids") and GameSession.review_mode:
 		debug_ids_visible = not debug_ids_visible
 		for item in get_tree().get_nodes_in_group("debug_item"):
 			var label := item.get_node_or_null("DebugId")
-			if label: label.visible = debug_ids_visible
+			if label: label.visible = false
+	if GameSession.review_mode: update_debug_labels()
 	if player:
 		var route := "HIGH" if player.global_position.y < 350.0 else "LOW" if player.global_position.y > 575.0 else "PRECISION"
 		hud_label.text = "HP %d   SCORE %d   KEY %s   RESCUE %d/2" % [player.health, player.score, "YES" if key_collected else "NO", survivors_found]
@@ -516,16 +520,28 @@ func run_autoplay_audit(delta: float) -> void:
 		audit_last_x = player.global_position.x
 		audit_last_progress_time = audit_elapsed
 	var objective := audit_target_objective()
+	var boss_engaged := not boss_defeated and objective == null and is_instance_valid(boss_node) and player.global_position.x > boss_node.rest_position.x - 700.0
+	var objective_dx := objective.global_position.x - player.global_position.x if is_instance_valid(objective) else INF
 	var target_direction := 1.0
-	if is_instance_valid(objective): target_direction = signf(objective.global_position.x - player.global_position.x)
-	elif is_instance_valid(boss_node) and not boss_defeated:
+	if is_instance_valid(objective): target_direction = signf(objective_dx)
+	elif boss_engaged:
 		target_direction = signf((boss_node.rest_position.x - 250.0) - player.global_position.x)
-	var waiting_for_boss := not boss_defeated and objective == null and absf((boss_node.rest_position.x - 250.0) - player.global_position.x) < 34.0
-	if waiting_for_boss or target_direction < 0.0: Input.action_release("move_right")
-	else: Input.action_press("move_right")
-	if target_direction < 0.0: Input.action_press("move_left")
-	else: Input.action_release("move_left")
-	Input.action_press("sprint")
+	var waiting_for_boss := boss_engaged and absf((boss_node.rest_position.x - 250.0) - player.global_position.x) < 90.0
+	if is_instance_valid(objective) and absf(objective_dx) < 28.0:
+		Input.action_release("move_right")
+		Input.action_release("move_left")
+	elif waiting_for_boss:
+		Input.action_release("move_right")
+		Input.action_release("move_left")
+		player.facing = 1.0
+	elif target_direction < 0.0:
+		Input.action_release("move_right")
+		Input.action_press("move_left")
+	else:
+		Input.action_press("move_right")
+		Input.action_release("move_left")
+	if is_instance_valid(objective) and absf(objective_dx) < 180.0: Input.action_release("sprint")
+	else: Input.action_press("sprint")
 	Input.action_press("fire")
 	if audit_release_jump:
 		Input.action_release("jump")
@@ -534,20 +550,20 @@ func run_autoplay_audit(delta: float) -> void:
 		Input.action_release("dash")
 		audit_release_dash = false
 	var stuck := audit_elapsed - audit_last_progress_time > 1.3
-	if is_instance_valid(objective) and absf(objective.global_position.x - player.global_position.x) < 175.0 and audit_elapsed - audit_last_jump > 0.30:
+	if is_instance_valid(objective) and player.is_on_floor() and absf(objective_dx) < 175.0 and audit_elapsed - audit_last_jump > 0.30:
 		audit_next_jump = minf(audit_next_jump, audit_elapsed)
-	if player.is_on_floor() and audit_jump_needed(target_direction) and audit_elapsed - audit_last_jump > 0.30:
+	if not boss_engaged and player.is_on_floor() and audit_jump_needed(target_direction) and audit_elapsed - audit_last_jump > 0.30:
 		audit_next_jump = minf(audit_next_jump, audit_elapsed)
 	for hazard in get_tree().get_nodes_in_group("boss_hazard"):
-		if hazard is Node2D and absf(hazard.global_position.x - player.global_position.x) < 250.0 and audit_elapsed - audit_last_jump > 0.30:
+		if not boss_engaged and player.is_on_floor() and hazard is Node2D and absf(hazard.global_position.x - player.global_position.x) < 250.0 and audit_elapsed - audit_last_jump > 0.30:
 			audit_next_jump = minf(audit_next_jump, audit_elapsed)
 			break
 	if audit_elapsed >= audit_next_jump:
 		player.queue_jump()
 		audit_jumps += 1
 		audit_last_jump = audit_elapsed
-		audit_next_jump = audit_elapsed + (0.43 if not player.is_on_floor() else 1.05)
-	if stuck:
+		audit_next_jump = INF
+	if stuck and not boss_engaged:
 		player.queue_jump()
 		Input.action_press("dash")
 		audit_release_dash = true
@@ -589,9 +605,10 @@ func audit_jump_needed(direction: float) -> bool:
 
 func register_debug_item(item: Node, prefix: String, label: String) -> void:
 	debug_item_counter += 1
+	debug_category_counters[prefix] = int(debug_category_counters.get(prefix, 0)) + 1
 	item.add_to_group("debug_item")
 	var short_stage := String(GameSession.STAGES[stage_index].name).replace(" ", "-")
-	item.set_meta("debug_id", "%s-%s-%d" % [short_stage, prefix, debug_item_counter])
+	item.set_meta("debug_id", "%s-%s-%d" % [short_stage, prefix, debug_category_counters[prefix]])
 	item.set_meta("debug_label", label.to_upper())
 	if item is Node2D:
 		var badge := Label.new()
@@ -600,8 +617,32 @@ func register_debug_item(item: Node, prefix: String, label: String) -> void:
 		badge.position = Vector2(-48, -82)
 		badge.add_theme_font_size_override("font_size", 12)
 		badge.add_theme_color_override("font_color", Color("#ffda79"))
+		badge.add_theme_constant_override("outline_size", 4)
+		badge.add_theme_color_override("font_outline_color", Color(0.02, 0.06, 0.10, 0.95))
 		badge.visible = debug_ids_visible
 		item.add_child(badge)
+
+func update_debug_labels() -> void:
+	if not is_instance_valid(player): return
+	var nearest: Node2D
+	var nearest_distance := INF
+	for item in get_tree().get_nodes_in_group("debug_item"):
+		if not item is Node2D: continue
+		var distance: float = item.global_position.distance_to(player.global_position)
+		var badge := item.get_node_or_null("DebugId") as Label
+		if badge:
+			badge.visible = debug_ids_visible and distance <= 760.0
+			badge.modulate = Color.WHITE
+			badge.scale = Vector2.ONE
+		if distance < nearest_distance:
+			nearest = item
+			nearest_distance = distance
+	if debug_ids_visible and is_instance_valid(nearest):
+		var nearest_badge := nearest.get_node_or_null("DebugId") as Label
+		if nearest_badge:
+			nearest_badge.visible = true
+			nearest_badge.modulate = Color("#4ddbb8")
+			nearest_badge.scale = Vector2.ONE * 1.14
 
 func debug_note_context() -> String:
 	var visible: Array[String] = []
@@ -609,6 +650,18 @@ func debug_note_context() -> String:
 		if item is Node2D and absf(item.global_position.x - player.global_position.x) <= 700.0:
 			visible.append(String(item.get_meta("debug_id", "UNSET")))
 	return "stage=%s | x=%d | score=%d | combo=%d | key=%s | rescues=%d/2 | visible=%s" % [GameSession.STAGES[stage_index].name, player.global_position.x, player.score, player.combo, key_collected, survivors_found, ", ".join(visible)]
+
+func nearest_debug_id() -> String:
+	if not is_instance_valid(player): return "NO TARGET"
+	var closest := "NO ITEM NEARBY"
+	var closest_distance := INF
+	for item in get_tree().get_nodes_in_group("debug_item"):
+		if item is Node2D:
+			var distance: float = item.global_position.distance_to(player.global_position)
+			if distance < closest_distance:
+				closest_distance = distance
+				closest = String(item.get_meta("debug_id", "UNSET"))
+	return "%s · %dm" % [closest, roundi(closest_distance / 100.0)]
 
 func load_profile() -> void:
 	best_score = GameSession.best_scores[stage_index]

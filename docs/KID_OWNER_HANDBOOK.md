@@ -20,11 +20,14 @@ On the map, choose one of the five Alaska stages. A stage is complete only after
 you find its key, rescue both people, defeat its boss, and reach the beacon.
 Progress and scores save on the device.
 
-During a run, tap `NOTE`. The game pauses but leaves almost all of the play area
-visible. Type a short note, or tap `MIC` and speak. Tap `FIX FIRST` only for a
-problem that blocks play. Tap `SAVE`; the note includes the date, player
-position, game state, and nearby item IDs. `COPY` copies the full notebook so it
-can be pasted into an email or issue.
+Turn on `ACCESSIBILITY > REVIEW MODE · IDS + NOTES` when you want to review the
+game. Normal play stays clean. During a review run, tap `IDS` to control labels
+or `NOTE` to pause. The small notebook stays in the top-right so the play area
+remains visible and shows the nearest item automatically. Choose `FEEL`, `JUMP`,
+`SPACE`, `ART`, or `BUG`, type a short note (or tap `MIC` and speak), then save.
+Use `FIX FIRST` only for a problem that blocks play. Every note includes the
+date, player position, game state, and nearby item IDs. `COPY ALL` copies the
+full notebook so it can be pasted into an email or issue.
 
 Examples of useful notes:
 
@@ -33,7 +36,8 @@ Examples of useful notes:
 - `DARK-WINTER-BOSS-18 recovery is too short`
 
 The letters mean: `PF` platform, `AN` animal, `WT` water, and `BOSS` boss. Press
-F10 with a keyboard to hide/show IDs. Press N to open the notebook.
+F10 with a keyboard to hide/show IDs. Press N to open the notebook. These
+shortcuts only work while Review Mode is enabled.
 
 ## Controls
 

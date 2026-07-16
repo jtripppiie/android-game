@@ -5,8 +5,8 @@ The active Godot Android package is `com.jtripppiie.mooserush`.
 Current development version:
 
 ```text
-versionCode: 510
-versionName: 5.1.0
+versionCode: 520
+versionName: 5.2.0
 engine: Godot 4.7.1
 metadata: godot/export_presets.cfg
 ```

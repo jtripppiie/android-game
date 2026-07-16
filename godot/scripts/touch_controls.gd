@@ -2,6 +2,7 @@ class_name TouchControls
 extends Control
 
 var active_touches := {}
+var review_mode := false
 var controls := {
 	"move_left": Rect2(24, 572, 72, 72),
 	"move_right": Rect2(104, 572, 72, 72),
@@ -9,11 +10,14 @@ var controls := {
 	"jump": Rect2(1028, 602, 76, 76),
 	"fire": Rect2(1120, 572, 76, 76),
 	"sprint": Rect2(934, 626, 70, 54),
-	"dash": Rect2(860, 642, 62, 48),
-	"debug_note": Rect2(1168, 18, 92, 42)
+	"dash": Rect2(860, 642, 62, 48)
 }
 
 func _ready() -> void:
+	review_mode = GameSession.review_mode
+	if review_mode:
+		controls["debug_note"] = Rect2(1168, 18, 92, 42)
+		controls["debug_ids"] = Rect2(1068, 18, 92, 42)
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	queue_redraw()
@@ -62,4 +66,5 @@ func label_for(action: String) -> String:
 	if action == "fire": return "FIRE"
 	if action == "dash": return "DASH"
 	if action == "debug_note": return "NOTE"
+	if action == "debug_ids": return "IDS"
 	return "RUN"

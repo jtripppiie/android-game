@@ -69,7 +69,7 @@ for marker in ("ReactiveIce", "launch_pad", "supply_block", "trick_ring_line"):
 assert "build_directed_encounters()" not in world
 for marker in ("run_autoplay_audit", "audit_target_objective", "audit_jump_needed", "AUTOPLAY PASS"):
     assert marker in world, marker
-for marker in ("TrailBoss", "ReviewNotebook", "debug_note_context", "save_profile", "boss_defeated"):
+for marker in ("TrailBoss", "ReviewNotebook", "debug_note_context", "save_profile", "boss_defeated", "update_debug_labels", "debug_category_counters"):
     assert marker in world, marker
 for marker in ("combo_timer", "chain_action", "score"):
     assert marker in player, marker
@@ -89,7 +89,7 @@ boss_hazard = (root / "scripts/boss_hazard.gd").read_text()
 for marker in ("class_name BossHazard", "fall_acceleration", "_on_body_entered", "trail_objects_atlas.png"):
     assert marker in boss_hazard, marker
 notebook = (root / "scripts/review_notebook.gd").read_text()
-for marker in ("user://debug-review-notes.txt", "FIX FIRST", "context_provider"):
+for marker in ("user://debug-review-notes.txt", "FIX FIRST", "context_provider", "nearest_id_provider", "note_count", '"JUMP", "SPACE", "ART", "BUG"'):
     assert marker in notebook, marker
 projectile = (root / "scripts/projectile.gd").read_text()
 assert 'has_method("snowball_hit")' in projectile

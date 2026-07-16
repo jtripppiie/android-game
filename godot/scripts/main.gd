@@ -102,7 +102,7 @@ func show_accessibility() -> void:
 	title.text = "ACCESSIBILITY"
 	title.add_theme_font_size_override("font_size", 30)
 	panel.add_child(title)
-	for spec in [["MUTE AUDIO", "muted"], ["HAPTICS", "haptics"], ["LARGE TEXT", "large_text"], ["REDUCED MOTION", "reduced_motion"], ["HIGH CONTRAST", "high_contrast"]]:
+	for spec in [["MUTE AUDIO", "muted"], ["HAPTICS", "haptics"], ["LARGE TEXT", "large_text"], ["REDUCED MOTION", "reduced_motion"], ["HIGH CONTRAST", "high_contrast"], ["REVIEW MODE · IDS + NOTES", "review_mode"]]:
 		var toggle := CheckButton.new()
 		toggle.text = spec[0]
 		toggle.button_pressed = GameSession.get(spec[1])
