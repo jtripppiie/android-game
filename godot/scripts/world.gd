@@ -20,6 +20,8 @@ var debug_category_counters := {}
 var debug_ids_visible := false
 var stage_index := 0
 var autoplay_audit := false
+var visual_audit := false
+var visual_capture_x := 500.0
 var audit_elapsed := 0.0
 var audit_next_jump := 0.35
 var audit_last_jump := -1.0
@@ -37,6 +39,9 @@ func _ready() -> void:
 	debug_ids_visible = GameSession.review_mode
 	for argument in OS.get_cmdline_user_args():
 		if argument.begins_with("--autoplay-audit="): autoplay_audit = true
+		elif argument.begins_with("--visual-audit="):
+			autoplay_audit = true
+			visual_audit = true
 	RenderingServer.set_default_clear_color(Color("#102d4b"))
 	build_background()
 	build_hud()
@@ -497,6 +502,8 @@ func build_hud() -> void:
 
 func _process(_delta: float) -> void:
 	if autoplay_audit: run_autoplay_audit(_delta)
+	if visual_audit and is_instance_valid(player) and player.global_position.x >= visual_capture_x:
+		capture_visual_audit()
 	if Input.is_action_just_pressed("debug_note") and notebook and GameSession.review_mode: notebook.toggle()
 	if Input.is_action_just_pressed("debug_ids") and GameSession.review_mode:
 		debug_ids_visible = not debug_ids_visible
@@ -575,6 +582,13 @@ func run_autoplay_audit(delta: float) -> void:
 		print("AUTOPLAY FAIL stage=%d max_x=%.1f key=%s rescues=%d boss=%s boss_hp=%d jumps=%d hits=%d" % [stage_index, audit_max_x, key_collected, survivors_found, boss_defeated, boss_node.health if is_instance_valid(boss_node) else 0, audit_jumps, audit_hits])
 		release_audit_inputs()
 		get_tree().quit(2)
+
+func capture_visual_audit() -> void:
+	var capture_at := visual_capture_x
+	visual_capture_x += 800.0
+	await RenderingServer.frame_post_draw
+	var image := get_viewport().get_texture().get_image()
+	image.save_png("user://visual-audit-s%d-x%d.png" % [stage_index, roundi(capture_at)])
 
 func release_audit_inputs() -> void:
 	for action in ["move_left", "move_right", "sprint", "fire", "jump", "dash"]: Input.action_release(action)

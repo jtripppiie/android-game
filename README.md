@@ -10,10 +10,10 @@ wildlife encounters through stage runs and boss fights.
 
 ```text
 engine: Godot 4.7.1
-versionCode: 520
-versionName: 5.2.0
+versionCode: 521
+versionName: 5.2.1
 package: com.jtripppiie.mooserush
-APK: app/build/outputs/apk/debug/you-rush-alaska-5.2.0-debug.apk
+APK: app/build/outputs/apk/debug/you-rush-alaska-5.2.1-debug.apk
 ```
 
 Version 5.0 is the Godot replacement build. It contains all five authored

@@ -119,9 +119,9 @@ func build_art() -> void:
 	var files := ["boss_laser_emitter.png", "wildlife_salmon_swim.png", "wildlife_moose_walk.png", "wildlife_eagle_fly.png", "wildlife_polar_bear_walk.png"]
 	art.texture = load("res://assets/%s" % files[boss_variant])
 	art.hframes = 1 if boss_variant == 0 else 6
-	var scales := [0.30, 0.58, 0.62, 0.58, 0.64]
+	var scales := [0.30, 0.58, 0.62, 0.58, 0.90]
 	art.scale = Vector2.ONE * scales[boss_variant]
-	art.position.y = -30.0
+	art.position.y = [-30.0, -6.0, -31.0, -74.0, -82.0][boss_variant]
 	add_child(art)
 
 func launch_variant_attack() -> void:

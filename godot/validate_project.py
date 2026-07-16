@@ -67,13 +67,13 @@ for asset_name in (
 for marker in ("ReactiveIce", "launch_pad", "supply_block", "trick_ring_line"):
     assert marker in world, marker
 assert "build_directed_encounters()" not in world
-for marker in ("run_autoplay_audit", "audit_target_objective", "audit_jump_needed", "AUTOPLAY PASS"):
+for marker in ("run_autoplay_audit", "audit_target_objective", "audit_jump_needed", "AUTOPLAY PASS", "capture_visual_audit"):
     assert marker in world, marker
 for marker in ("TrailBoss", "ReviewNotebook", "debug_note_context", "save_profile", "boss_defeated", "update_debug_labels", "debug_category_counters"):
     assert marker in world, marker
 for marker in ("combo_timer", "chain_action", "score"):
     assert marker in player, marker
-for marker in ("JUMP_SPEED := 750.0", "air_jumps_left := 1", '"AIR JUMP"'):
+for marker in ("JUMP_SPEED := 750.0", "air_jumps_left := 1", '"AIR JUMP"', "capsule.height = 96.0", "Vector2(0, -90)"):
     assert marker in player, marker
 enemy_source = (root / "scripts/enemy.gd").read_text()
 for marker in ("wildlife_bear_walk.png", "wildlife_eagle_fly.png", "wildlife_salmon_swim.png"):

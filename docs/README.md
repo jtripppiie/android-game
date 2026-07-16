@@ -19,6 +19,7 @@ developer should normally need.
 - [Versioning](VERSIONING.md): current version and release rules.
 - [Debug identifiers](DEBUG_ITEM_IDENTIFIERS.md): how to report a specific item.
 - [5.2 Review Mode](RELEASE_5_2_REVIEW_MODE.md): optional IDs and compact tagged notes.
+- [5.2.1 Scale alignment](RELEASE_5_2_1_SCALE_ALIGNMENT.md): measured sprite, ground-line, hitbox, and jump corrections.
 - [Generated assets](GENERATED_ASSETS.md): asset provenance and transparency.
 - [Wildlife scale contract](WILDLIFE_SCALE_CONTRACT.md): gameplay silhouette
   hierarchy.

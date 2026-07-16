@@ -24,8 +24,8 @@ func _ready() -> void:
 	var files := {"bear":"wildlife_bear_walk.png", "wolf":"wildlife_wolf_run.png", "eagle":"wildlife_eagle_fly.png", "salmon":"wildlife_salmon_swim.png"}
 	art.texture = load("res://assets/%s" % files.get(kind, "wildlife_wolf_run.png"))
 	art.hframes = 6
-	art.scale = Vector2.ONE * float({"bear":0.39, "wolf":0.30, "eagle":0.34, "salmon":0.25}.get(kind, 0.30))
-	art.position.y = -36.0 if kind == "bear" else -28.0
+	art.scale = Vector2.ONE * float({"bear":0.48, "wolf":0.30, "eagle":0.34, "salmon":0.25}.get(kind, 0.30))
+	art.position.y = float({"bear":-68.0, "wolf":-32.0, "eagle":-80.0, "salmon":-34.0}.get(kind, -32.0))
 	add_child(art)
 
 func _physics_process(delta: float) -> void:

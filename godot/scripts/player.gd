@@ -47,15 +47,15 @@ func _ready() -> void:
 	var shape := CollisionShape2D.new()
 	var capsule := CapsuleShape2D.new()
 	capsule.radius = 22.0
-	capsule.height = 76.0
+	capsule.height = 96.0
 	shape.shape = capsule
-	shape.position = Vector2(0, -39)
+	shape.position = Vector2(0, -48)
 	add_child(shape)
 	sprite = Sprite2D.new()
 	sprite.texture = load("res://assets/runner_overhaul.png")
 	sprite.hframes = 6
 	sprite.scale = Vector2(0.34, 0.34)
-	sprite.position = Vector2(0, -55)
+	sprite.position = Vector2(0, -90)
 	add_child(sprite)
 	apply_photo_head()
 	var camera := Camera2D.new()

@@ -1,29 +1,33 @@
-# Wildlife Scale Contract
+# Visual Scale and Clearance Contract
 
-Animated wildlife uses one source of truth: `WildlifeScale.java`. Values are
-gameplay dp before responsive viewport scaling.
+Godot sprite scales are checked from each frame's visible alpha bounds rather
+than the transparent atlas size. Version 5.2.1 establishes these approximate
+on-screen ranges at the 1280-by-720 reference viewport:
 
-| Wildlife | Collision radius | Visible height | Silhouette half-width | Read |
-|---|---:|---:|---:|---|
-| Salmon | 16 | 30 | 32 | Small, long swimming threat |
-| Wolf | 21 | 56 | 42 | Fast low predator |
-| Eagle | 17 | 50 | 44 | Compact body with readable wingspan |
-| Brown bear | 36 | 104 | 74 | Heavy quadruped, roughly runner height |
-| Polar bear | 40 | 116 | 82 | Largest bear and greater than runner height |
-| Moose | 42 | 132 | 92 | Clearly taller/longer than the human runner |
+| Subject | Visible width | Visible height | Collision body |
+|---|---:|---:|---:|
+| Runner | 75–118 px | 156–180 px | 44 × 96 px capsule |
+| Salmon | 82–90 px | 35–49 px | 66 × 34 px |
+| Wolf | 100–109 px | 56–61 px | 74 × 46 px |
+| Brown bear | 162–173 px | 100–113 px | 92 × 68 px |
+| Moose boss | 208–224 px | 183–193 px | 116 px diameter |
+| Polar boss | 298–316 px | 181–183 px | 116 px diameter |
 
-## Rendering contract
+The runner, wolf, bear, moose, and polar-bear feet align to their collision
+ground line. The hitboxes remain smaller than the painted silhouettes to allow
+fair near misses. Moose is the tallest/longest wildlife silhouette; the polar
+bear is approximately runner height but substantially wider; the brown bear is
+clearly heavier than the wolf without obscuring its platform.
 
-- Each animation frame is cropped to its visible alpha content before scaling.
-- Visible height comes from the table, not transparent sprite-sheet padding.
-- Ground wildlife is bottom-anchored to the same ground line.
-- Eagle and salmon preserve their authored airborne/swimming centers.
-- Shadows, warning effects and badges derive from the same width/height scales.
-- Collision remains smaller than visible art for fair near misses, but its base
-  radius comes from the same species entry.
+## Jump and route envelope
 
-## Regression coverage
+The first jump uses speed 750 and gravity 1450. Ignoring early release, its
+calculated apex is about 194 px above takeoff and its same-height sprint range is
+about 445 px. The single 88% air jump contributes another potential 150 px of
+rise. Coyote time is 0.14 seconds and input buffering is 0.16 seconds.
 
-`WildlifeScaleTest` enforces the major relationships: bears and moose are larger
-than wolves, polar bears exceed brown bears, moose owns the longest ground
-silhouette, and eagle/salmon mass stays below heavy ground wildlife.
+Every authored stage must complete through the real controller/collision path
+after a scale or hitbox change. A completion proves mechanical clearance, not
+artistic quality. Pixel-level approval still requires a rendered desktop or
+physical-device review because the server's dummy headless renderer cannot
+produce viewport captures.
