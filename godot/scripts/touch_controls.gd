@@ -1,25 +1,36 @@
 class_name TouchControls
 extends Control
 
+const MIN_SIZE := Vector2(92, 78)
+const SAFE_MARGIN := Vector2(30, 26)
+
 var active_touches := {}
 var review_mode := false
-var controls := {
-	"move_left": Rect2(24, 572, 72, 72),
-	"move_right": Rect2(104, 572, 72, 72),
-	"crouch": Rect2(64, 652, 72, 52),
-	"jump": Rect2(1028, 602, 76, 76),
-	"fire": Rect2(1120, 572, 76, 76),
-	"sprint": Rect2(934, 626, 70, 54),
-	"dash": Rect2(860, 642, 62, 48)
-}
+var controls := {}
 
 func _ready() -> void:
 	review_mode = GameSession.review_mode
-	if review_mode:
-		controls["debug_note"] = Rect2(1168, 18, 92, 42)
-		controls["debug_ids"] = Rect2(1068, 18, 92, 42)
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	resized.connect(layout_controls)
+	call_deferred("layout_controls")
+
+func layout_controls() -> void:
+	var view := size
+	if view.x < 600.0 or view.y < 360.0: view = get_viewport_rect().size
+	var bottom := view.y - SAFE_MARGIN.y
+	controls = {
+		"move_left": Rect2(Vector2(SAFE_MARGIN.x, bottom - 116), Vector2(104, 96)),
+		"move_right": Rect2(Vector2(SAFE_MARGIN.x + 116, bottom - 116), Vector2(104, 96)),
+		"crouch": Rect2(Vector2(SAFE_MARGIN.x + 58, bottom - 220), Vector2(104, 82)),
+		"jump": Rect2(Vector2(view.x - SAFE_MARGIN.x - 116, bottom - 126), Vector2(116, 106)),
+		"fire": Rect2(Vector2(view.x - SAFE_MARGIN.x - 226, bottom - 224), Vector2(104, 88)),
+		"sprint": Rect2(Vector2(view.x - SAFE_MARGIN.x - 342, bottom - 118), MIN_SIZE),
+		"dash": Rect2(Vector2(view.x - SAFE_MARGIN.x - 330, bottom - 218), MIN_SIZE)
+	}
+	if review_mode:
+		controls["debug_note"] = Rect2(Vector2(view.x - SAFE_MARGIN.x - 104, SAFE_MARGIN.y), Vector2(104, 52))
+		controls["debug_ids"] = Rect2(Vector2(view.x - SAFE_MARGIN.x - 218, SAFE_MARGIN.y), Vector2(104, 52))
 	queue_redraw()
 
 func _input(event: InputEvent) -> void:
@@ -27,13 +38,20 @@ func _input(event: InputEvent) -> void:
 		if event.pressed: active_touches[event.index] = action_at(event.position)
 		else: active_touches.erase(event.index)
 		sync_actions()
-	if event is InputEventScreenDrag:
+	elif event is InputEventScreenDrag:
 		active_touches[event.index] = action_at(event.position)
+		sync_actions()
+	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+		if event.pressed: active_touches[-1] = action_at(event.position)
+		else: active_touches.erase(-1)
+		sync_actions()
+	elif event is InputEventMouseMotion and -1 in active_touches and Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+		active_touches[-1] = action_at(event.position)
 		sync_actions()
 
 func action_at(point: Vector2) -> String:
 	for action in controls:
-		if controls[action].has_point(point): return action
+		if (controls[action] as Rect2).has_point(point): return action
 	return ""
 
 func sync_actions() -> void:
@@ -42,20 +60,31 @@ func sync_actions() -> void:
 		if action != "": Input.action_press(action)
 	queue_redraw()
 
+func _exit_tree() -> void:
+	for action in controls: Input.action_release(action)
+
 func _draw() -> void:
+	if controls.is_empty(): return
+	var left_group: Rect2 = controls["move_left"]
+	var right_group: Rect2 = controls["move_right"]
+	draw_style_box(make_box(Color(0.01, 0.04, 0.08, 0.64), Color(0.55, 0.92, 1.0, 0.55), 24), left_group.merge(right_group).grow(10))
 	for action in controls:
 		var box: Rect2 = controls[action]
 		var active: bool = action in active_touches.values()
-		var fill := Color(1.0, 0.84, 0.42, 0.46) if active else Color(0.04, 0.08, 0.13, 0.24)
-		draw_style_box(make_box(fill), box)
-		draw_string(ThemeDB.fallback_font, box.position + Vector2(box.size.x * 0.5, box.size.y * 0.58), label_for(action), HORIZONTAL_ALIGNMENT_CENTER, box.size.x, 14, Color(1,1,1,0.72))
+		var fill := Color(1.0, 0.78, 0.20, 0.96) if active else Color(0.02, 0.10, 0.17, 0.88)
+		var border := Color("#fff0a8") if active else Color("#84d5e8")
+		draw_style_box(make_box(fill, border, 22), box)
+		var font_size := 30 if action in ["move_left", "move_right"] else 19
+		var text_color := Color("#071326") if active else Color.WHITE
+		var baseline := box.position + Vector2(0, box.size.y * 0.62 + font_size * 0.25)
+		draw_string(ThemeDB.fallback_font, baseline, label_for(action), HORIZONTAL_ALIGNMENT_CENTER, box.size.x, font_size, text_color)
 
-func make_box(color: Color) -> StyleBoxFlat:
+func make_box(color: Color, border: Color, radius: int) -> StyleBoxFlat:
 	var box := StyleBoxFlat.new()
 	box.bg_color = color
-	box.border_color = Color(1,1,1,0.28)
-	box.set_border_width_all(2)
-	box.set_corner_radius_all(18)
+	box.border_color = border
+	box.set_border_width_all(3)
+	box.set_corner_radius_all(radius)
 	return box
 
 func label_for(action: String) -> String:

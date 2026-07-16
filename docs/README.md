@@ -20,6 +20,7 @@ developer should normally need.
 - [Debug identifiers](DEBUG_ITEM_IDENTIFIERS.md): how to report a specific item.
 - [5.2 Review Mode](RELEASE_5_2_REVIEW_MODE.md): optional IDs and compact tagged notes.
 - [5.2.1 Scale alignment](RELEASE_5_2_1_SCALE_ALIGNMENT.md): measured sprite, ground-line, hitbox, and jump corrections.
+- [5.2.2 Touch controls](RELEASE_5_2_2_TOUCH_CONTROLS.md): responsive, readable mobile controls and multi-touch regression test.
 - [Generated assets](GENERATED_ASSETS.md): asset provenance and transparency.
 - [Wildlife scale contract](WILDLIFE_SCALE_CONTRACT.md): gameplay silhouette
   hierarchy.
@@ -27,14 +28,12 @@ developer should normally need.
 ## Current Godot release history
 
 - [5.1 distinct boss encounters](RELEASE_5_1_BOSS_OVERHAUL.md)
-- [5.0 stable migration](RELEASE_5_0_STABLE.md)
-- [5.0.1 graphics and jump](RELEASE_5_0_1_GRAPHICS_AND_JUMP.md)
-- [5.0.2 interface and trail objects](RELEASE_5_0_2_VISUAL_POLISH.md)
-- [5.0.3 reactive environments](RELEASE_5_0_3_ENVIRONMENT.md)
+- [5.2 Review Mode](RELEASE_5_2_REVIEW_MODE.md)
+- [5.2.1 scale alignment](RELEASE_5_2_1_SCALE_ALIGNMENT.md)
+- [5.2.2 touch controls](RELEASE_5_2_2_TOUCH_CONTROLS.md)
 
 ## Historical archive
 
-Everything under [archive](archive/) describes an older Java build, experiment,
-beta, abandoned plan, or previous release. It is retained for archaeology and
-rollback context, but it is not current instruction. If an archived file
-disagrees with this page, the active documents above win.
+Everything under [archive](archive/) describes an older build, experiment,
+work log, beta, abandoned plan, or superseded release. It is retained for
+archaeology and rollback context, but it is not current instruction.

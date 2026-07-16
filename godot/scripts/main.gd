@@ -6,12 +6,43 @@ var ui := CanvasLayer.new()
 func _ready() -> void:
 	add_child(ui)
 	var smoke_stage := -1
+	var touch_audit := false
 	for argument in OS.get_cmdline_user_args():
 		if argument.begins_with("--stage-smoke="): smoke_stage = int(argument.get_slice("=", 1))
 		elif argument.begins_with("--autoplay-audit="): smoke_stage = int(argument.get_slice("=", 1))
 		elif argument.begins_with("--visual-audit="): smoke_stage = int(argument.get_slice("=", 1))
+		elif argument == "--touch-audit": touch_audit = true
+	if touch_audit:
+		run_touch_audit.call_deferred()
+		return
 	if smoke_stage >= 0: start_stage(clampi(smoke_stage, 0, 4))
 	else: show_menu()
+
+func run_touch_audit() -> void:
+	var controls := TouchControls.new()
+	controls.size = Vector2(1280, 720)
+	add_child(controls)
+	controls.layout_controls()
+	var right: Rect2 = controls.controls["move_right"]
+	var jump: Rect2 = controls.controls["jump"]
+	assert(jump.size == Vector2(116, 106))
+	var move_press := InputEventScreenTouch.new()
+	move_press.index = 1; move_press.position = right.get_center(); move_press.pressed = true
+	controls._input(move_press)
+	var jump_press := InputEventScreenTouch.new()
+	jump_press.index = 2; jump_press.position = jump.get_center(); jump_press.pressed = true
+	controls._input(jump_press)
+	assert(Input.is_action_pressed("move_right") and Input.is_action_pressed("jump"))
+	var jump_release := InputEventScreenTouch.new()
+	jump_release.index = 2; jump_release.position = jump.get_center(); jump_release.pressed = false
+	controls._input(jump_release)
+	assert(Input.is_action_pressed("move_right") and not Input.is_action_pressed("jump"))
+	var move_release := InputEventScreenTouch.new()
+	move_release.index = 1; move_release.position = right.get_center(); move_release.pressed = false
+	controls._input(move_release)
+	assert(not Input.is_action_pressed("move_right"))
+	print("TOUCH AUDIT PASS · responsive layout · simultaneous move+jump · independent release")
+	get_tree().quit(0)
 
 func clear_ui() -> void:
 	for child in ui.get_children(): child.queue_free()

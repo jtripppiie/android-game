@@ -1,172 +1,81 @@
-# You Rush
+# You Rush: Alaska
 
-**You Rush** is a local-first Android arcade runner by **TripperDeeLabs**.
+You Rush is a local-first Android platform runner built with Godot 4.7.1.
+Across five Alaska stages, the player runs, jumps, uses one air jump, dashes,
+throws snowballs, finds a key, rescues two people, defeats a distinct boss, and
+reaches the finish beacon.
 
-Players choose an Alaska stage, optionally personalize the runner with a local
-photo, then move, jump, throw snowballs, collect rewards, and survive regional
-wildlife encounters through stage runs and boss fights.
-
-## Primary Engine Build
+## Current source
 
 ```text
 engine: Godot 4.7.1
-versionCode: 521
-versionName: 5.2.1
+versionCode: 522
+versionName: 5.2.2
 package: com.jtripppiie.mooserush
-APK: app/build/outputs/apk/debug/you-rush-alaska-5.2.1-debug.apk
+APK status: build pending
+last compiled APK: app/build/outputs/apk/debug/you-rush-alaska-5.2.1-debug.apk
 ```
 
-Version 5.0 is the Godot replacement build. It contains all five authored
-stages, local progression, distinct stage bosses, accessibility controls,
-photo customization, stable debug IDs, and compact typed/voice review notes.
-It uses the original package name so the first launch can migrate the Java
-build's local progress before the Godot profile takes ownership.
-
-## Java Rollback Build
-
-```text
-versionCode: 422
-versionName: 4.2.2
-build channel: ALASKA RELEASE
-build badge: ALASKA PASSPORT v4.22
-APK: app/build/outputs/apk/debug/you-rush-alaska-4.2.2-422-debug.apk
-```
-
-Version 4.2.2 is retained as the rollback/reference build. It replaces the screen-dominating note dialog with a shallow,
-undimmed quick-note strip and opt-in keyboard. It includes the 4.2.1 stable
-control/readability pass and the 4.2 gameplay rebuild. The APK is
-developer-signed for direct device testing; an app-store upload still requires
-the owner's private release key and store submission.
-
-## Gameplay
-
-- Five Alaska stages with distinct obstacles, hazards, bosses, and seasonal
-  presentation.
-- Wildlife follows an explicit scale hierarchy: salmon and wolves stay compact,
-  eagles retain a readable wingspan, bears carry heavy mass, and moose is the
-  tallest/longest ground animal.
-- Platform-runner controls: left-thumb D-pad movement/aim, jump, double jump,
-  fire, and spray.
-- Snowballs damage bosses during recovery, clear specific threats, and crack
-  Salmon Rush river logs; ordinary shots require two hits to break a log.
-- Falling attacks stomp ordinary wildlife and rebound into follow-up jumps;
-  heavy wildlife requires FLOW or an intentional aim-down power stomp.
-- Aurora launch pads turn ground, precision, high, and boss routes into aerial
-  combo lines, with stronger launches and rewards during FLOW.
-- Consecutive wildlife stomps build an airborne chain with increasing rebounds,
-  reward arcs and a three-stomp FLOW ignition.
-- Hidden Aurora supply blocks can be jump-hit or shot open; every third cache
-  adds gear to its collectible burst.
-- Launch pads now feed authored Aurora ring arcs; chaining rings preserves lift,
-  triggers a speed surge, raises rewards, and ignites or extends FLOW.
-- Bear spray is a scarce pickup with its own SPRAY button to stun close wildlife
-  and interrupt close boss lunges.
-- Clean vault streaks trigger FLOW, a short momentum state with bonus scoring,
-  faster world movement, faster controls and snowballs, denser encounters,
-  pickup pull, HUD feedback, and a runner aura. Near misses extend FLOW.
-- Runs cycle through authored encounter beats—Launch, Precision, Wildlife Rush,
-  and Jackpot Line—with distinct pacing and curved multi-star trails.
-- Customize lets players choose a photo/default body style, including female
-  and male runner bodies.
-- Timed action chains unlock x2/x3/x4 scoring while flat completion rewards
-  prevent end-of-stage multiplier exploits.
-- Progression includes stage unlocks, XP, Trail Tokens, Daily Rush, Trail
-  Passport badges, Expedition Logs, cosmetics, combo scoring, near-miss rewards,
-  and local best scores.
+Version 5.2.2 replaces the broken fixed-coordinate mobile overlay with large,
+high-contrast, viewport-relative touch controls. Source validation, the
+multi-touch regression test, and a five-stage traversal passed. Its APK export
+is pending because the build environment could not start Gradle after two
+approval timeouts. Do not distribute a file labeled 5.2.2 until it has been
+compiled and inspected.
 
 ## Controls
 
-- `D-PAD`: move left/right and aim snowballs high, low, or diagonally
-- `JUMP`: jump, with one air jump available
-- `FIRE`: tap for snowball
-- `SPRAY`: use bear spray charges
-- `PAUSE`: pause, resume, return to map, or edit the runner sprite
+- Left/right: move
+- Run: sprint
+- Jump: jump, then jump once more in the air
+- Dash: short horizontal burst
+- Crouch while airborne: stomp
+- Fire: throw a snowball
+- Map: safely leave the stage
+- Note/IDs: available only when Review Mode is enabled
 
-## Build And Test
+Touch controls support simultaneous movement and jumping.
 
-Godot 4.7.1 is now the primary build system. See
-[the owner handbook](docs/KID_OWNER_HANDBOOK.md) for the exact friendly steps.
+## Review Mode
 
-Open the project in Android Studio, or use the Gradle wrapper:
+Enable `Accessibility > Review Mode · IDs + Notes` to display nearby authored
+identifiers and the compact review notebook. Normal play hides these tools.
+
+## Project layout
+
+- `godot/`: primary game, Android export preset, scripts, scenes, and assets
+- `docs/`: current owner, tester, privacy, release, and maintenance guidance
+- `docs/archive/`: superseded Java-era and old release/work logs
+- `app/`: legacy Android project and output location used by Godot exports
+- `verification/`: retained legacy sprite snapshots, not current acceptance
+- `tools/`: offline legacy inspection pages
+
+## Validate and build
 
 ```bash
-./gradlew testDebugUnitTest
-./gradlew lintDebug
-./gradlew assembleDebug
+python3 godot/validate_project.py
+godot --headless --path godot -- --touch-audit
+godot --headless --path godot -- --autoplay-audit=0
+godot --headless --path godot --export-debug "Android Debug"
 ```
 
-For the simplest local emulator install and launch:
+Repeat the traversal audit for stages `0` through `4`. Android export requires
+Godot 4.7.1, matching export templates, Java 17, Android SDK 36, and normal
+local socket access for Gradle.
 
-```bash
-tools/install-local-debug.sh
-```
+Before handing over a build, complete
+[the device acceptance checklist](docs/DEVICE_ACCEPTANCE_CHECKLIST.md).
 
-This reads `local.properties`, adds the Android SDK tools for that command, runs
-`app:installDebug`, and opens You Rush on the connected emulator/device.
+## Last accepted APK
 
-Debug APKs are generated under:
+The most recent compiled and inspected package is
+`app/build/outputs/apk/debug/you-rush-alaska-5.2.1-debug.apk`.
+
+SHA-256:
 
 ```text
-app/build/outputs/apk/debug/
+5dc4884d683eafe192b8170474034f4a6fb02f93a4f08a2f3226b864677c66cf
 ```
 
-GitHub Actions also publishes the debug APK as the
-`you-rush-alaska-debug-apk` artifact.
-
-## Debug Tools
-
-Local browser previews live in `tools/` and are not packaged into the app.
-
-- `index.html`: local launcher for every offline debug preview
-- `offline-debug-workbench.html`: sprite crops, alpha bounds, connected
-  components, runner foot/contact lines, runtime strips, gameplay composition,
-  and PNG snapshots
-- `menu-preview.html`: main menu layout review with 15 px grid overlay
-- `gameplay-preview.html`: HUD, overlays, controls, hitboxes, contrast, and 15
-  px grid overlay
-- `platformer-overhaul-preview.html`: camera, terrain, new runner, chase-bear
-  visibility, translucent controls, and numbered 15 px grid overlay
-- `laser-eyes-preview.html`: polar bear boss beam origin and sweep tuning with
-  15 px grid overlay
-- `sun-lasers-preview.html`: Midnight Sun twin-eye beam, glow, hitbox, sweep,
-  and runner-scale tuning with a default-on 15 px grid overlay
-- `gear-obstacle-preview.html`: logs, snow piles, icebergs, snowballs, bear
-  spray, hitboxes, numbered debug badges, and 15 px grid overlay
-- `sprite-sheet-audit.html`: actual PNG sprite sheets with frame numbers,
-  checkerboard transparency, trim boxes, runtime crop boxes, and 15 px grid
-  overlay
-- `debug-tuning-dashboard.html`: reporting guide for numbered DEBUG screenshots
-
-## Documentation
-
-Start with [docs/README.md](docs/README.md).
-
-Key active docs:
-
-- [5.1 distinct boss encounters](docs/RELEASE_5_1_BOSS_OVERHAUL.md)
-- [5.0.3 reactive environment polish](docs/RELEASE_5_0_3_ENVIRONMENT.md)
-- [5.0.2 interface and trail-object polish](docs/RELEASE_5_0_2_VISUAL_POLISH.md)
-- [5.0.1 graphics and jump refinement](docs/RELEASE_5_0_1_GRAPHICS_AND_JUMP.md)
-- [Kid owner handbook](docs/KID_OWNER_HANDBOOK.md)
-- [Device acceptance checklist](docs/DEVICE_ACCEPTANCE_CHECKLIST.md)
-- [Technical maintenance](docs/TECHNICAL_MAINTENANCE.md)
-- [Debug item identifiers](docs/DEBUG_ITEM_IDENTIFIERS.md)
-- [Generated raster assets](docs/GENERATED_ASSETS.md)
-- [Versioning](docs/VERSIONING.md)
-- [Privacy notes](docs/PRIVACY.md)
-
-Historical release notes and rapid-iteration logs are preserved in
-[docs/archive](docs/archive/).
-
-## Architecture
-
-Godot 4.7.1 owns rendering, input, physics, stages, bosses, menus, scoring, and
-persistence under `godot/`. A narrow Android plugin supplies speech notes and
-one-time migration from the former Java SharedPreferences. The Java source and
-its 99-test suite remain as a rollback/reference implementation.
-
-## Privacy
-
-The current beta is local-first: no account, no normal-play network dependency,
-and no image upload. Optional photo personalization uses Android's system picker
-and decodes the selected image locally.
+Keep it as the rollback build until 5.2.2 is compiled and passes the physical
+device checklist.

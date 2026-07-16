@@ -46,6 +46,8 @@ for state in ("idle", "run", "sprint", "crouch", "jump", "fall", "dash", "stomp"
     assert f'"{state}"' in player, state
 for action in ("move_left", "move_right", "crouch", "jump", "fire", "sprint", "dash"):
     assert f'"{action}"' in touch, action
+for marker in ("layout_controls", "SAFE_MARGIN", "InputEventScreenTouch", "InputEventMouseButton", "Color(0.02, 0.10, 0.17, 0.88)"):
+    assert marker in touch, marker
 
 image = Image.open(root / "assets/runner_overhaul.png")
 assert image.mode == "RGBA", image.mode
