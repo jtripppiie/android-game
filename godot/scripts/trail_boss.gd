@@ -17,6 +17,7 @@ var state_timer := 0.0
 var rest_position := Vector2.ZERO
 var target_x := 0.0
 var player: AlaskaRunner
+var art: Sprite2D
 
 func _ready() -> void:
 	rest_position = position
@@ -28,6 +29,7 @@ func _ready() -> void:
 	collision.shape = shape
 	add_child(collision)
 	body_entered.connect(_on_body_entered)
+	build_art()
 	feedback.emit("BOSS · READ THE TELL · FIRE DURING RECOVERY")
 	queue_redraw()
 
@@ -63,6 +65,9 @@ func _physics_process(delta: float) -> void:
 		state_timer = 0.0
 		feedback.emit("BOSS WINDUP")
 	queue_redraw()
+	if is_instance_valid(art):
+		art.frame = int(Time.get_ticks_msec() / 145.0) % maxi(1, art.hframes)
+		art.flip_h = true
 
 func snowball_hit(_projectile: Node) -> void:
 	if state != State.RECOVER:
@@ -80,6 +85,10 @@ func _on_body_entered(body: Node) -> void:
 	if body is AlaskaRunner and state == State.ATTACK: body.take_hit(global_position.x)
 
 func _draw() -> void:
+	if is_instance_valid(art):
+		if state == State.TELL: draw_arc(Vector2.ZERO, 78.0, 0.0, TAU, 40, Color(1.0, 0.38, 0.33, 0.82), 6.0)
+		elif state == State.RECOVER: draw_arc(Vector2.ZERO, 78.0, 0.0, TAU, 40, Color(1.0, 0.85, 0.47, 0.92), 7.0)
+		return
 	var body_color := Color("#ffda79") if state == State.RECOVER else Color("#6c5142")
 	var variant_colors := [Color("#e8944e"), Color("#db6b68"), Color("#79573c"), Color("#526f94"), Color("#e9f3f5")]
 	if state != State.RECOVER: body_color = variant_colors[boss_variant]
@@ -92,3 +101,13 @@ func _draw() -> void:
 	draw_circle(Vector2(17, -12), 5.0, eye_color)
 	if state == State.TELL: draw_arc(Vector2.ZERO, 70.0, 0.0, TAU, 40, Color(1.0, 0.38, 0.33, 0.72), 5.0)
 	elif state == State.RECOVER: draw_arc(Vector2.ZERO, 70.0, 0.0, TAU, 40, Color(1.0, 0.85, 0.47, 0.85), 6.0)
+
+func build_art() -> void:
+	art = Sprite2D.new()
+	var files := ["boss_laser_emitter.png", "wildlife_salmon_swim.png", "wildlife_moose_walk.png", "wildlife_eagle_fly.png", "wildlife_polar_bear_walk.png"]
+	art.texture = load("res://assets/%s" % files[boss_variant])
+	art.hframes = 1 if boss_variant == 0 else 6
+	var scales := [0.30, 0.58, 0.62, 0.58, 0.64]
+	art.scale = Vector2.ONE * scales[boss_variant]
+	art.position.y = -30.0
+	add_child(art)

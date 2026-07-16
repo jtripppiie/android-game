@@ -11,14 +11,29 @@ var key_collected := false
 var finished := false
 var survivors_found := 0
 var boss_defeated := false
+var boss_node: TrailBoss
 var best_score := 0
 var notebook: ReviewNotebook
 var debug_item_counter := 0
 var debug_ids_visible := true
 var stage_index := 0
+var autoplay_audit := false
+var audit_elapsed := 0.0
+var audit_next_jump := 0.35
+var audit_last_jump := -1.0
+var audit_release_jump := false
+var audit_release_dash := false
+var audit_jumps := 0
+var audit_hits := 0
+var audit_last_health := 3
+var audit_max_x := 0.0
+var audit_last_x := 190.0
+var audit_last_progress_time := 0.0
 
 func _ready() -> void:
 	stage_index = GameSession.selected_stage
+	for argument in OS.get_cmdline_user_args():
+		if argument.begins_with("--autoplay-audit="): autoplay_audit = true
 	RenderingServer.set_default_clear_color(Color("#102d4b"))
 	build_background()
 	build_hud()
@@ -48,10 +63,20 @@ func build_background() -> void:
 	var skies := [Color("#7b4f80"), Color("#247a86"), Color("#163d62"), Color("#071326"), Color("#29485c")]
 	var sky: Color = skies[stage_index]
 	if GameSession.high_contrast: sky = Color("#00152b")
+	if stage_index == 0 or stage_index == 3:
+		var backdrop_texture: Texture2D = load("res://assets/%s" % ("background_midnight_sun.png" if stage_index == 0 else "background_dark_winter.png"))
+		for index in range(5):
+			var backdrop := Sprite2D.new()
+			backdrop.texture = backdrop_texture
+			backdrop.position = Vector2(640.0 + index * 1280.0, 360.0)
+			backdrop.scale = Vector2(1280.0 / backdrop_texture.get_width(), 720.0 / backdrop_texture.get_height())
+			backdrop.z_index = -20
+			backdrop.modulate = Color(0.72, 0.78, 0.88) if stage_index == 3 else Color(1, 1, 1)
+			add_child(backdrop)
 	var sky_node := Polygon2D.new()
 	sky_node.polygon = PackedVector2Array([Vector2(-500,-500),Vector2(6500,-500),Vector2(6500,720),Vector2(-500,720)])
 	sky_node.color = sky
-	sky_node.z_index = -10
+	sky_node.z_index = -30
 	add_child(sky_node)
 	for i in range(12):
 		var mountain := Polygon2D.new()
@@ -60,6 +85,15 @@ func build_background() -> void:
 		mountain.color = sky.lightened(0.10 if i % 2 == 0 else 0.18)
 		mountain.z_index = -8
 		add_child(mountain)
+	var tree_texture: Texture2D = load("res://assets/%s" % ("scenery_tree_winter.png" if stage_index >= 2 else "scenery_tree_summer.png"))
+	for index in range(10):
+		var tree := Sprite2D.new()
+		tree.texture = tree_texture
+		tree.position = Vector2(420.0 + index * 590.0, 430.0 + (index % 3) * 18.0)
+		tree.scale = Vector2.ONE * (0.12 + (index % 2) * 0.018)
+		tree.modulate = Color(0.62, 0.74, 0.80, 0.78)
+		tree.z_index = -6
+		add_child(tree)
 
 func build_level() -> void:
 	if stage_index == 0: build_midnight_sun()
@@ -73,7 +107,7 @@ func build_midnight_sun() -> void:
 	platform(Rect2(1020, 500, 520, 220), Color("#f0d58d"))
 	platform(Rect2(1660, 450, 420, 270), Color("#f6e0a4"))
 	platform(Rect2(2200, 520, 610, 200), Color("#f0d58d"))
-	platform(Rect2(2940, 430, 540, 290), Color("#f6e0a4"))
+	platform(Rect2(2880, 430, 600, 290), Color("#f6e0a4"))
 	platform(Rect2(3600, 520, 720, 200), Color("#f0d58d"))
 	platform(Rect2(4440, 500, 1270, 220), Color("#f6e0a4"))
 	moving_platform(Vector2(930, 390), Vector2(0, -100), 3.0)
@@ -86,7 +120,7 @@ func build_salmon_rush() -> void:
 	platform(Rect2(0, 540, 760, 180), Color("#b8e2ce"))
 	platform(Rect2(900, 500, 500, 220), Color("#c9ead8"))
 	platform(Rect2(1580, 540, 520, 180), Color("#b8e2ce"))
-	platform(Rect2(2280, 470, 580, 250), Color("#c9ead8"))
+	platform(Rect2(2210, 470, 650, 250), Color("#c9ead8"))
 	platform(Rect2(3040, 540, 520, 180), Color("#b8e2ce"))
 	platform(Rect2(3740, 460, 540, 260), Color("#c9ead8"))
 	platform(Rect2(4460, 520, 1250, 200), Color("#b8e2ce"))
@@ -102,7 +136,7 @@ func build_moose_pass() -> void:
 	platform(Rect2(1260, 420, 460, 300), Color("#e8f4f5"))
 	platform(Rect2(1810, 505, 290, 215), Color("#cce4e8"))
 	moving_platform(Vector2(1770, 390), Vector2(230, -80), 3.2)
-	platform(Rect2(2190, 430, 540, 290), Color("#e8f4f5"))
+	platform(Rect2(2140, 430, 590, 290), Color("#e8f4f5"))
 	slope(PackedVector2Array([Vector2(2730,430),Vector2(3230,560),Vector2(3230,720),Vector2(2730,720)]), Color("#d9ecef"))
 	platform(Rect2(3230, 560, 520, 160), Color("#e8f4f5"))
 	platform(Rect2(3860, 460, 300, 260), Color("#cce4e8"))
@@ -132,7 +166,7 @@ func build_moose_pass() -> void:
 
 func build_dark_winter() -> void:
 	platform(Rect2(0, 550, 780, 170), Color("#8eb9ca"))
-	platform(Rect2(920, 470, 360, 250), Color("#a4cbd8"))
+	platform(Rect2(860, 470, 420, 250), Color("#a4cbd8"))
 	platform(Rect2(1420, 380, 420, 340), Color("#8eb9ca"))
 	platform(Rect2(1990, 520, 440, 200), Color("#a4cbd8"))
 	platform(Rect2(2600, 420, 430, 300), Color("#8eb9ca"))
@@ -149,7 +183,7 @@ func build_bear_country() -> void:
 	slope(PackedVector2Array([Vector2(860,540),Vector2(1320,360),Vector2(1320,720),Vector2(860,720)]), Color("#dcebed"))
 	platform(Rect2(1320, 360, 560, 360), Color("#eef6f7"))
 	platform(Rect2(2040, 500, 520, 220), Color("#dcebed"))
-	platform(Rect2(2730, 400, 620, 320), Color("#eef6f7"))
+	platform(Rect2(2660, 400, 690, 320), Color("#eef6f7"))
 	platform(Rect2(3520, 520, 580, 200), Color("#dcebed"))
 	platform(Rect2(4280, 470, 1430, 250), Color("#eef6f7"))
 	launch_pad(Vector2(2160, 490)); trick_ring_line(Vector2(2250, 400)); moving_platform(Vector2(3380, 350), Vector2(220, 0), 2.4)
@@ -227,10 +261,15 @@ func platform(rect: Rect2, color: Color) -> void:
 		art.scale = Vector2(rect.size.x / art.texture.get_width(), 0.16)
 		body.add_child(art)
 	else:
-		var art := Polygon2D.new()
-		art.polygon = PackedVector2Array([Vector2.ZERO,Vector2(rect.size.x,0),rect.size,Vector2(0,rect.size.y)])
-		art.color = color
-		body.add_child(art)
+		var fill := Polygon2D.new()
+		fill.polygon = PackedVector2Array([Vector2.ZERO,Vector2(rect.size.x,0),rect.size,Vector2(0,rect.size.y)])
+		fill.color = color.darkened(0.15)
+		body.add_child(fill)
+		var cap := Sprite2D.new()
+		cap.texture = load("res://assets/%s" % ("route_platform_ice.png" if stage_index == 3 else "route_platform_snow.png"))
+		cap.position = Vector2(rect.size.x * 0.5, 18)
+		cap.scale = Vector2(rect.size.x / cap.texture.get_width(), 0.19)
+		body.add_child(cap)
 	add_child(body)
 
 func slope(points: PackedVector2Array, color: Color) -> void:
@@ -254,6 +293,7 @@ func enemy(at: Vector2, distance: float, kind: String) -> void:
 
 func boss(at: Vector2) -> void:
 	var encounter := TrailBoss.new()
+	boss_node = encounter
 	encounter.position = at
 	encounter.max_health = [8, 8, 10, 12, 16][stage_index]
 	encounter.boss_name = GameSession.STAGES[stage_index].boss
@@ -312,9 +352,14 @@ func collectible(at: Vector2, kind: String) -> void:
 	shape.radius = 18
 	collision.shape = shape
 	item.add_child(collision)
-	var art := Polygon2D.new()
-	art.polygon = PackedVector2Array([Vector2(0,-18),Vector2(15,-6),Vector2(10,15),Vector2(-10,15),Vector2(-15,-6)])
-	art.color = Color("#ffda79") if kind == "coin" else Color("#ff6254") if kind == "survivor" else Color("#4ddbb8")
+	var art := Sprite2D.new()
+	var atlas := AtlasTexture.new()
+	atlas.atlas = load("res://assets/collectibles_atlas.png")
+	var atlas_index := 0 if kind == "coin" else 2 if kind == "survivor" else 1
+	var cell_width := atlas.atlas.get_width() / 3.0
+	atlas.region = Rect2(cell_width * atlas_index, 0, cell_width, atlas.atlas.get_height())
+	art.texture = atlas
+	art.scale = Vector2.ONE * (0.115 if kind == "survivor" else 0.10)
 	item.add_child(art)
 	item.body_entered.connect(func(body): collect(body, item))
 	add_child(item)
@@ -357,7 +402,7 @@ func goal(at: Vector2) -> void:
 	zone.position = at
 	var collision := CollisionShape2D.new()
 	var shape := RectangleShape2D.new()
-	shape.size = Vector2(130, 200)
+	shape.size = Vector2(150, 360)
 	collision.shape = shape
 	zone.add_child(collision)
 	zone.body_entered.connect(func(body): finish_level(body))
@@ -378,6 +423,11 @@ func finish_level(body: Node) -> void:
 	player.velocity = Vector2.ZERO
 	best_score = maxi(best_score, player.score)
 	save_profile()
+	if autoplay_audit:
+		print("AUTOPLAY PASS stage=%d time=%.2f max_x=%.1f jumps=%d hits=%d score=%d" % [stage_index, audit_elapsed, audit_max_x, audit_jumps, audit_hits, player.score])
+		release_audit_inputs()
+		get_tree().quit(0)
+		return
 	stage_completed.emit(stage_index, player.score)
 
 func spawn_snowball(origin: Vector2, direction: float) -> void:
@@ -410,6 +460,7 @@ func build_hud() -> void:
 	layer.add_child(menu_button)
 
 func _process(_delta: float) -> void:
+	if autoplay_audit: run_autoplay_audit(_delta)
 	if Input.is_action_just_pressed("debug_note") and notebook: notebook.toggle()
 	if Input.is_action_just_pressed("debug_ids"):
 		debug_ids_visible = not debug_ids_visible
@@ -419,6 +470,84 @@ func _process(_delta: float) -> void:
 	if player:
 		var route := "HIGH" if player.global_position.y < 350.0 else "LOW" if player.global_position.y > 575.0 else "PRECISION"
 		hud_label.text = "HP %d  SCORE %d  BEST %d  KEY %s  RESCUE %d/2  COMBO %d  %s  %s" % [player.health, player.score, best_score, "YES" if key_collected else "NO", survivors_found, player.combo, player.state.to_upper(), route]
+
+func run_autoplay_audit(delta: float) -> void:
+	if not is_instance_valid(player): return
+	audit_elapsed += delta
+	if player.health < audit_last_health: audit_hits += audit_last_health - player.health
+	audit_last_health = player.health
+	if player.global_position.x > audit_max_x + 8.0:
+		audit_max_x = player.global_position.x
+	if absf(player.global_position.x - audit_last_x) > 8.0:
+		audit_last_x = player.global_position.x
+		audit_last_progress_time = audit_elapsed
+	var objective := audit_target_objective()
+	var target_direction := 1.0
+	if is_instance_valid(objective): target_direction = signf(objective.global_position.x - player.global_position.x)
+	elif is_instance_valid(boss_node) and not boss_defeated:
+		target_direction = signf((boss_node.rest_position.x - 250.0) - player.global_position.x)
+	var waiting_for_boss := not boss_defeated and objective == null and absf((boss_node.rest_position.x - 250.0) - player.global_position.x) < 34.0
+	if waiting_for_boss or target_direction < 0.0: Input.action_release("move_right")
+	else: Input.action_press("move_right")
+	if target_direction < 0.0: Input.action_press("move_left")
+	else: Input.action_release("move_left")
+	Input.action_press("sprint")
+	Input.action_press("fire")
+	if audit_release_jump:
+		Input.action_release("jump")
+		audit_release_jump = false
+	if audit_release_dash:
+		Input.action_release("dash")
+		audit_release_dash = false
+	var stuck := audit_elapsed - audit_last_progress_time > 1.3
+	if is_instance_valid(objective) and absf(objective.global_position.x - player.global_position.x) < 175.0 and audit_elapsed - audit_last_jump > 0.30:
+		audit_next_jump = minf(audit_next_jump, audit_elapsed)
+	if player.is_on_floor() and audit_jump_needed(target_direction) and audit_elapsed - audit_last_jump > 0.30:
+		audit_next_jump = minf(audit_next_jump, audit_elapsed)
+	if audit_elapsed >= audit_next_jump:
+		player.queue_jump()
+		audit_jumps += 1
+		audit_last_jump = audit_elapsed
+		audit_next_jump = audit_elapsed + (0.43 if not player.is_on_floor() else 1.05)
+	if stuck:
+		player.queue_jump()
+		Input.action_press("dash")
+		audit_release_dash = true
+		audit_jumps += 1
+		audit_last_jump = audit_elapsed
+		audit_last_progress_time = audit_elapsed
+		audit_next_jump = audit_elapsed + 0.5
+	if audit_elapsed > 96.0:
+		print("AUTOPLAY FAIL stage=%d max_x=%.1f key=%s rescues=%d boss=%s jumps=%d hits=%d" % [stage_index, audit_max_x, key_collected, survivors_found, boss_defeated, audit_jumps, audit_hits])
+		release_audit_inputs()
+		get_tree().quit(2)
+
+func release_audit_inputs() -> void:
+	for action in ["move_left", "move_right", "sprint", "fire", "jump", "dash"]: Input.action_release(action)
+
+func audit_target_objective() -> Node2D:
+	var target: Node2D
+	var target_x := INF
+	for item in get_tree().get_nodes_in_group("debug_item"):
+		if item is Node2D and String(item.get_meta("kind", "")) in ["key", "survivor"] and item.global_position.x < target_x:
+			target = item
+			target_x = item.global_position.x
+	return target
+
+func audit_jump_needed(direction: float) -> bool:
+	var space := get_world_2d().direct_space_state
+	var sign_x := 1.0 if direction >= 0.0 else -1.0
+	var forward := PhysicsRayQueryParameters2D.create(
+		player.global_position + Vector2(sign_x * 28.0, -42.0),
+		player.global_position + Vector2(sign_x * 112.0, -42.0)
+	)
+	forward.exclude = [player.get_rid()]
+	var ahead_ground := PhysicsRayQueryParameters2D.create(
+		player.global_position + Vector2(sign_x * 118.0, -105.0),
+		player.global_position + Vector2(sign_x * 118.0, 82.0)
+	)
+	ahead_ground.exclude = [player.get_rid()]
+	return not space.intersect_ray(forward).is_empty() or space.intersect_ray(ahead_ground).is_empty()
 
 func register_debug_item(item: Node, prefix: String, label: String) -> void:
 	debug_item_counter += 1

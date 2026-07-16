@@ -10,10 +10,10 @@ const SPRINT_SPEED := 430.0
 const ACCELERATION := 1800.0
 const AIR_ACCELERATION := 1050.0
 const FRICTION := 2100.0
-const GRAVITY := 1550.0
-const JUMP_SPEED := 610.0
-const COYOTE_TIME := 0.11
-const JUMP_BUFFER := 0.13
+const GRAVITY := 1450.0
+const JUMP_SPEED := 750.0
+const COYOTE_TIME := 0.14
+const JUMP_BUFFER := 0.16
 const DASH_SPEED := 720.0
 const DASH_SECONDS := 0.16
 const DASH_COOLDOWN := 0.70
@@ -39,6 +39,7 @@ var ring_chain := 0
 var ring_chain_timer := 0.0
 var ring_rush_timer := 0.0
 var sprite: Sprite2D
+var air_jumps_left := 1
 
 func _ready() -> void:
 	spawn_point = global_position
@@ -77,7 +78,9 @@ func _physics_process(delta: float) -> void:
 	combo_timer = maxf(0.0, combo_timer - delta)
 	if combo_timer <= 0.0: combo = 0
 	if ring_chain_timer <= 0.0: ring_chain = 0
-	if is_on_floor(): coyote = COYOTE_TIME
+	if is_on_floor():
+		coyote = COYOTE_TIME
+		air_jumps_left = 1
 	else:
 		coyote = maxf(0.0, coyote - delta)
 		velocity.y += GRAVITY * delta
@@ -87,6 +90,11 @@ func _physics_process(delta: float) -> void:
 		velocity.y = -JUMP_SPEED
 		jump_buffer = 0.0
 		coyote = 0.0
+	elif jump_buffer > 0.0 and not is_on_floor() and air_jumps_left > 0:
+		velocity.y = -JUMP_SPEED * 0.88
+		jump_buffer = 0.0
+		air_jumps_left -= 1
+		action_feedback.emit("AIR JUMP")
 	if Input.is_action_just_released("jump") and velocity.y < -210.0: velocity.y *= 0.52
 	var axis := Input.get_axis("move_left", "move_right")
 	if Input.is_action_just_pressed("dash") and dash_cooldown <= 0.0:
@@ -143,6 +151,9 @@ func update_animation(delta: float, axis: float) -> void:
 func set_checkpoint(point: Vector2) -> void:
 	spawn_point = point
 	checkpoint_reached.emit(point)
+
+func queue_jump() -> void:
+	jump_buffer = JUMP_BUFFER
 
 func take_hit(from_x: float) -> void:
 	if invulnerability > 0.0 or dash_timer > 0.0: return

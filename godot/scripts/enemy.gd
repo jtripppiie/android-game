@@ -8,16 +8,25 @@ var origin_x := 0.0
 var direction := -1.0
 var attack_cooldown := 0.0
 var player: Node2D
+var art: Sprite2D
 
 func _ready() -> void:
 	origin_x = global_position.x
 	player = get_tree().get_first_node_in_group("player")
 	add_to_group("enemy")
 	var collision := CollisionShape2D.new()
-	var shape := CircleShape2D.new()
-	shape.radius = 34.0 if kind == "bear" else 22.0
+	var shape := RectangleShape2D.new()
+	shape.size = Vector2(92, 68) if kind == "bear" else Vector2(74, 46) if kind == "wolf" else Vector2(82, 42) if kind == "eagle" else Vector2(66, 34)
 	collision.shape = shape
+	collision.position = Vector2(0, -shape.size.y * 0.5)
 	add_child(collision)
+	art = Sprite2D.new()
+	var files := {"bear":"wildlife_bear_walk.png", "wolf":"wildlife_wolf_run.png", "eagle":"wildlife_eagle_fly.png", "salmon":"wildlife_salmon_swim.png"}
+	art.texture = load("res://assets/%s" % files.get(kind, "wildlife_wolf_run.png"))
+	art.hframes = 6
+	art.scale = Vector2.ONE * float({"bear":0.39, "wolf":0.30, "eagle":0.34, "salmon":0.25}.get(kind, 0.30))
+	art.position.y = -36.0 if kind == "bear" else -28.0
+	add_child(art)
 
 func _physics_process(delta: float) -> void:
 	attack_cooldown = maxf(0.0, attack_cooldown - delta)
@@ -46,6 +55,8 @@ func _physics_process(delta: float) -> void:
 	else: velocity.x = direction * speed
 	if kind != "eagle" and kind != "salmon": velocity.y += 1500.0 * delta
 	move_and_slide()
+	art.frame = int(Time.get_ticks_msec() / (115.0 if absf(velocity.x) > speed * 1.2 else 155.0)) % 6
+	art.flip_h = direction > 0.0
 	if is_instance_valid(player) and global_position.distance_to(player.global_position) < (46.0 if kind == "bear" else 38.0):
 		if player.velocity.y > 520.0 and player.global_position.y < global_position.y - 12.0:
 			player.enemy_defeated(true)
@@ -53,20 +64,3 @@ func _physics_process(delta: float) -> void:
 			return
 		player.take_hit(global_position.x)
 	if absf(global_position.x - origin_x) > patrol_distance: direction *= -1.0
-	queue_redraw()
-
-func _draw() -> void:
-	var scale_factor := 1.34 if kind == "bear" else 0.78 if kind == "wolf" else 0.62 if kind == "salmon" else 0.84
-	if kind == "eagle":
-		draw_colored_polygon(PackedVector2Array([Vector2(-46,0),Vector2(-10,-18),Vector2(0,-4),Vector2(10,-18),Vector2(46,0),Vector2(10,8),Vector2(0,2),Vector2(-10,8)]), Color("#6c5142"))
-		return
-	if kind == "salmon":
-		draw_colored_polygon(PackedVector2Array([Vector2(-32,0),Vector2(-20,-17),Vector2(18,-14),Vector2(34,0),Vector2(18,14),Vector2(-20,17)]), Color("#ff6254"))
-		draw_colored_polygon(PackedVector2Array([Vector2(-28,0),Vector2(-50,-22),Vector2(-50,22)]), Color("#ff8b72"))
-		return
-	draw_circle(Vector2(0, 4), 29.0 * scale_factor, Color("#3c2e2b"))
-	draw_circle(Vector2(-18, -14), 12.0, Color("#4e3a32"))
-	draw_circle(Vector2(18, -14), 12.0, Color("#4e3a32"))
-	draw_circle(Vector2(0, -2), 22.0, Color("#6c5142"))
-	draw_circle(Vector2(-8, -7), 3.0, Color.WHITE)
-	draw_circle(Vector2(8, -7), 3.0, Color.WHITE)

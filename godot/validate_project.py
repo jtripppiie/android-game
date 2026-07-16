@@ -23,6 +23,12 @@ required = [
     "assets/boss_laser_emitter.png", "assets/laser_ice_impact.png",
     "assets/arctic_launch_pad.png",
     "assets/aurora_supply_block.png",
+    "assets/collectibles_atlas.png",
+    "assets/background_midnight_sun.png", "assets/background_dark_winter.png",
+    "assets/scenery_tree_summer.png", "assets/scenery_tree_winter.png",
+    "assets/wildlife_bear_walk.png", "assets/wildlife_eagle_fly.png",
+    "assets/wildlife_moose_walk.png", "assets/wildlife_polar_bear_walk.png",
+    "assets/wildlife_salmon_swim.png", "assets/wildlife_wolf_run.png",
 ]
 missing = [name for name in required if not (root / name).is_file()]
 if missing:
@@ -60,12 +66,21 @@ for asset_name in (
 for marker in ("ReactiveIce", "launch_pad", "supply_block", "trick_ring_line"):
     assert marker in world, marker
 assert "build_directed_encounters()" not in world
+for marker in ("run_autoplay_audit", "audit_target_objective", "audit_jump_needed", "AUTOPLAY PASS"):
+    assert marker in world, marker
 for marker in ("TrailBoss", "ReviewNotebook", "debug_note_context", "save_profile", "boss_defeated"):
     assert marker in world, marker
 for marker in ("combo_timer", "chain_action", "score"):
     assert marker in player, marker
+for marker in ("JUMP_SPEED := 750.0", "air_jumps_left := 1", '"AIR JUMP"'):
+    assert marker in player, marker
+enemy_source = (root / "scripts/enemy.gd").read_text()
+for marker in ("wildlife_bear_walk.png", "wildlife_eagle_fly.png", "wildlife_salmon_swim.png"):
+    assert marker in enemy_source, marker
 boss = (root / "scripts/trail_boss.gd").read_text()
 for marker in ("TELL_SECONDS", "RECOVER_SECONDS", "ARMORED", "WEAK · FIRE"):
+    assert marker in boss, marker
+for marker in ("wildlife_moose_walk.png", "wildlife_polar_bear_walk.png", "boss_laser_emitter.png"):
     assert marker in boss, marker
 notebook = (root / "scripts/review_notebook.gd").read_text()
 for marker in ("user://debug-review-notes.txt", "FIX FIRST", "context_provider"):

@@ -8,6 +8,7 @@ func _ready() -> void:
 	var smoke_stage := -1
 	for argument in OS.get_cmdline_user_args():
 		if argument.begins_with("--stage-smoke="): smoke_stage = int(argument.get_slice("=", 1))
+		elif argument.begins_with("--autoplay-audit="): smoke_stage = int(argument.get_slice("=", 1))
 	if smoke_stage >= 0: start_stage(clampi(smoke_stage, 0, 4))
 	else: show_menu()
 
