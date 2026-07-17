@@ -47,12 +47,14 @@ for marker in ("dispose_world", "transition_locked", "remove_child(world)", "if 
     assert marker in main_source, marker
 for marker in ('Vector2(0, 82)', 'add_theme_constant_override("separation", 20)', 'add_theme_constant_override("separation", 12)'):
     assert marker in main_source, marker
+for marker in ("font_disabled_color", 'add_theme_stylebox_override("disabled"', "font_pressed_color"):
+    assert marker in main_source, marker
 assert 'enemy(Vector2(3820, 610), 115, "bear")' not in world
 for state in ("idle", "run", "sprint", "crouch", "jump", "fall", "dash", "stomp"):
     assert f'"{state}"' in player, state
 for action in ("move_left", "move_right", "crouch", "jump", "fire", "sprint", "dash"):
     assert f'"{action}"' in touch, action
-for marker in ("layout_controls", "SAFE_MARGIN", "InputEventScreenTouch", "InputEventMouseButton", "dpad_up", "dpad_down", "input_action_for", "control_color", 'return "SNOW"'):
+for marker in ("layout_controls", "SAFE_MARGIN", "InputEventScreenTouch", "InputEventMouseButton", "dpad_up", "dpad_down", "input_action_for", "control_color", "control_text_color", 'return "SNOW"'):
     assert marker in touch, marker
 
 image = Image.open(root / "assets/runner_overhaul.png")

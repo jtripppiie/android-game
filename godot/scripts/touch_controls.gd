@@ -85,7 +85,7 @@ func _draw() -> void:
 		draw_style_box(make_box(fill, border, radius), box)
 		var font_size := 34 if action in ["move_left", "move_right", "dpad_up", "dpad_down"] else 22
 		if action == "jump": font_size = 25
-		var text_color := Color("#071326") if active else Color.WHITE
+		var text_color := control_text_color(action, active)
 		var baseline := box.position + Vector2(0, box.size.y * 0.62 + font_size * 0.25)
 		draw_string(ThemeDB.fallback_font, baseline, label_for(action), HORIZONTAL_ALIGNMENT_CENTER, box.size.x, font_size, text_color)
 
@@ -126,3 +126,7 @@ func control_border(action: String) -> Color:
 	if action == "fire": return Color("#84eaff")
 	if action == "dash": return Color("#d7adff")
 	return Color("#84d5e8")
+
+func control_text_color(action: String, active: bool) -> Color:
+	if active or action == "jump": return Color("#071326")
+	return Color.WHITE

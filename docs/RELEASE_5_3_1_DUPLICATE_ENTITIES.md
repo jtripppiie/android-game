@@ -33,3 +33,9 @@ labels and 16-pixel corner radii. Main/customization screens use 20 pixels of
 vertical separation, the six-button stage map uses 12 pixels so every option
 and Back remain inside the viewport, and accessibility rows increase to 66
 pixels with explicit spacing.
+
+Readability follow-up: every gameplay action retains an internal label (`JUMP`,
+`SNOW`, `DASH`) and the D-pad uses four directional symbols. Jump text is dark
+on both its orange and bright pressed states; other actions use white on dark
+cyan/purple. Menu pressed, focused, and disabled states now have explicit text,
+fill, and border colors instead of inheriting ambiguous theme defaults.
