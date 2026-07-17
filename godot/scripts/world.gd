@@ -126,6 +126,7 @@ func build_midnight_sun() -> void:
 	platform(Rect2(4440, 500, 1270, 220), Color("#f6e0a4"))
 	moving_platform(Vector2(930, 390), Vector2(0, -100), 3.0)
 	launch_pad(Vector2(2320, 510)); trick_ring_line(Vector2(2400, 420))
+	supply_block(Vector2(3780, 430))
 	collectible(Vector2(1280, 440), "key"); collectible(Vector2(1900, 390), "survivor"); collectible(Vector2(4020, 460), "survivor")
 	enemy(Vector2(1460, 450), 130, "wolf"); enemy(Vector2(3300, 370), 150, "wolf")
 	checkpoint(Vector2(2980, 370)); finalize_stage()
@@ -201,6 +202,7 @@ func build_bear_country() -> void:
 	platform(Rect2(3520, 520, 580, 200), Color("#dcebed"))
 	platform(Rect2(4280, 470, 1430, 250), Color("#eef6f7"))
 	launch_pad(Vector2(2160, 490)); trick_ring_line(Vector2(2250, 400)); moving_platform(Vector2(3380, 350), Vector2(220, 0), 2.4)
+	supply_block(Vector2(3680, 420))
 	collectible(Vector2(1520, 300), "key"); collectible(Vector2(2320, 440), "survivor"); collectible(Vector2(3800, 460), "survivor")
 	enemy(Vector2(1780, 300), 170, "bear"); enemy(Vector2(3050, 340), 180, "bear"); enemy(Vector2(4560, 410), 150, "wolf")
 	checkpoint(Vector2(2780, 330)); finalize_stage()
@@ -228,11 +230,13 @@ func build_route_branches() -> void:
 	ice.position = Vector2(2890, 390)
 	ice.size = Vector2(220, 26)
 	ice.shattered.connect(func(_at): checkpoint_label.text = "ICE ROUTE SHATTERED")
+	register_debug_item(ice, "IC", "breakable ice")
 	add_child(ice)
 	collectible(Vector2(2890, 340), "coin")
 	var water := FreezableWater.new()
 	water.position = Vector2(2145, 535)
 	water.size = Vector2(105, 42)
+	register_debug_item(water, "WT", "freezable water")
 	add_child(water)
 	route_sign(Vector2(2070, 485), "FREEZE · JUMP · FALL")
 
@@ -314,11 +318,16 @@ func slope(points: PackedVector2Array, color: Color) -> void:
 	body.set_meta("surface_start", minimum.x)
 	body.set_meta("surface_end", maximum.x)
 	body.set_meta("surface_y", minimum.y)
+	body.position = minimum
+	var local_points := PackedVector2Array()
+	for point in points:
+		local_points.append(point - minimum)
+	register_debug_item(body, "PF", "slope")
 	var collision := CollisionPolygon2D.new()
-	collision.polygon = points
+	collision.polygon = local_points
 	body.add_child(collision)
 	var art := Polygon2D.new()
-	art.polygon = points
+	art.polygon = local_points
 	art.color = color
 	body.add_child(art)
 	add_child(body)
@@ -436,6 +445,7 @@ func collect(body: Node, item: Area2D) -> void:
 func checkpoint(at: Vector2) -> void:
 	var zone := Area2D.new()
 	zone.position = at
+	register_debug_item(zone, "CP", "checkpoint")
 	var collision := CollisionShape2D.new()
 	var shape := RectangleShape2D.new()
 	shape.size = Vector2(80, 170)
@@ -452,6 +462,7 @@ func goal(at: Vector2) -> void:
 	var zone := Area2D.new()
 	zone.add_to_group("stage_goal")
 	zone.position = at
+	register_debug_item(zone, "GO", "finish beacon")
 	var collision := CollisionShape2D.new()
 	var shape := RectangleShape2D.new()
 	shape.size = Vector2(150, 360)
@@ -585,6 +596,13 @@ func exit_run_to_map() -> void:
 	pause_panel.visible = false
 	get_tree().paused = false
 	exit_requested.emit()
+
+func pause_for_background() -> void:
+	if is_instance_valid(notebook) and notebook.panel.visible:
+		get_tree().paused = true
+		return
+	pause_panel.visible = true
+	get_tree().paused = true
 
 func _process(_delta: float) -> void:
 	if Input.is_action_just_pressed("ui_cancel"):
@@ -762,7 +780,7 @@ func update_debug_labels() -> void:
 	var nearest_distance := INF
 	for item in get_tree().get_nodes_in_group("debug_item"):
 		if not item is Node2D: continue
-		var distance: float = item.global_position.distance_to(player.global_position)
+		var distance := debug_distance_to_player(item)
 		var badge := item.get_node_or_null("DebugId") as Label
 		if badge:
 			badge.visible = debug_ids_visible and distance <= 760.0
@@ -791,11 +809,17 @@ func nearest_debug_id() -> String:
 	var closest_distance := INF
 	for item in get_tree().get_nodes_in_group("debug_item"):
 		if item is Node2D:
-			var distance: float = item.global_position.distance_to(player.global_position)
+			var distance := debug_distance_to_player(item)
 			if distance < closest_distance:
 				closest_distance = distance
 				closest = String(item.get_meta("debug_id", "UNSET"))
 	return "%s · %dm" % [closest, roundi(closest_distance / 100.0)]
+
+func debug_distance_to_player(item: Node2D) -> float:
+	if item.has_meta("surface_start"):
+		var nearest_x := clampf(player.global_position.x, float(item.get_meta("surface_start")), float(item.get_meta("surface_end")))
+		return player.global_position.distance_to(Vector2(nearest_x, float(item.get_meta("surface_y"))))
+	return item.global_position.distance_to(player.global_position)
 
 func load_profile() -> void:
 	best_score = GameSession.best_scores[stage_index]

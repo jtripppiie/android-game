@@ -25,6 +25,9 @@ func _ready() -> void:
 	load_profile()
 
 func complete_stage(stage: int, score: int) -> void:
+	if stage < 0 or stage >= STAGES.size():
+		push_error("Refused invalid stage completion index: %d" % stage)
+		return
 	best_scores[stage] = maxi(best_scores[stage], score)
 	total_score += maxi(0, score)
 	unlocked_stage = maxi(unlocked_stage, mini(STAGES.size() - 1, stage + 1))
@@ -34,7 +37,7 @@ func load_profile() -> void:
 	var config := ConfigFile.new()
 	if config.load("user://profile.cfg") != OK: return
 	unlocked_stage = clampi(int(config.get_value("campaign", "unlocked_stage", 0)), 0, STAGES.size() - 1)
-	total_score = int(config.get_value("campaign", "total_score", 0))
+	total_score = maxi(0, int(config.get_value("campaign", "total_score", 0)))
 	muted = bool(config.get_value("accessibility", "muted", false))
 	haptics = bool(config.get_value("accessibility", "haptics", true))
 	large_text = bool(config.get_value("accessibility", "large_text", false))
@@ -43,7 +46,8 @@ func load_profile() -> void:
 	review_mode = bool(config.get_value("review", "enabled", false))
 	photo_path = String(config.get_value("customization", "photo_path", ""))
 	legacy_imported = bool(config.get_value("migration", "java_profile_imported", false))
-	for index in range(STAGES.size()): best_scores[index] = int(config.get_value("scores", str(index), 0))
+	for index in range(STAGES.size()):
+		best_scores[index] = maxi(0, int(config.get_value("scores", str(index), 0)))
 
 func save_profile() -> void:
 	var config := ConfigFile.new()
@@ -58,7 +62,9 @@ func save_profile() -> void:
 	config.set_value("customization", "photo_path", photo_path)
 	config.set_value("migration", "java_profile_imported", legacy_imported)
 	for index in range(STAGES.size()): config.set_value("scores", str(index), best_scores[index])
-	config.save("user://profile.cfg")
+	var error := config.save("user://profile.cfg")
+	if error != OK:
+		push_error("Could not save profile.cfg: %s" % error_string(error))
 
 func import_legacy_profile(json_text: String) -> void:
 	if legacy_imported or json_text.is_empty() or json_text == "{}": return

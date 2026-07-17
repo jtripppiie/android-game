@@ -17,7 +17,7 @@ func cue(message: String) -> void:
 	if not GameSession.muted:
 		var frequency := 760.0 if "WEAK" in message or "RESCUE" in message else 520.0 if "HIT" in message else 340.0
 		push_tone(frequency, 0.055)
-	if GameSession.haptics and not GameSession.reduced_motion:
+	if GameSession.haptics:
 		Input.vibrate_handheld(42 if "HIT" in message else 24)
 
 func push_tone(frequency: float, seconds: float) -> void:

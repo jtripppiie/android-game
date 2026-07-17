@@ -7,6 +7,7 @@ var splash_root: Control
 var splash_prompt: Label
 var splash_skippable := false
 var splash_dismissing := false
+var current_screen := "startup"
 
 const SPLASH_MINIMUM_SECONDS := 1.25
 const SPLASH_TOTAL_SECONDS := 4.0
@@ -17,6 +18,7 @@ func _ready() -> void:
 	var smoke_stage := -1
 	var touch_audit := false
 	var lifecycle_audit := false
+	var system_audit := false
 	for argument in OS.get_cmdline_user_args():
 		if argument.begins_with("--stage-smoke="): smoke_stage = int(argument.get_slice("=", 1))
 		elif argument.begins_with("--autoplay-audit="): smoke_stage = int(argument.get_slice("=", 1))
@@ -24,6 +26,10 @@ func _ready() -> void:
 		elif argument.begins_with("--geometry-audit="): smoke_stage = int(argument.get_slice("=", 1))
 		elif argument == "--touch-audit": touch_audit = true
 		elif argument == "--lifecycle-audit": lifecycle_audit = true
+		elif argument == "--system-audit": system_audit = true
+	if system_audit:
+		run_system_audit.call_deferred()
+		return
 	if lifecycle_audit:
 		run_lifecycle_audit.call_deferred()
 		return
@@ -117,6 +123,35 @@ func run_lifecycle_audit() -> void:
 	print("LIFECYCLE AUDIT PASS · map transition · one world · one runner")
 	get_tree().quit(0)
 
+func run_system_audit() -> void:
+	var old_unlocked := GameSession.unlocked_stage
+	var old_total := GameSession.total_score
+	var old_best := GameSession.best_scores.duplicate()
+	GameSession.unlocked_stage = 0
+	GameSession.total_score = 0
+	GameSession.best_scores = [0, 0, 0, 0, 0]
+	GameSession.complete_stage(0, 100)
+	assert(GameSession.total_score == 100)
+	assert(GameSession.best_scores[0] == 100)
+	assert(GameSession.unlocked_stage == 1)
+	GameSession.complete_stage(0, 50)
+	assert(GameSession.total_score == 150)
+	assert(GameSession.best_scores[0] == 100)
+	show_menu()
+	assert(current_screen == "menu" and ui.get_child_count() == 2)
+	show_map()
+	assert(current_screen == "map" and ui.get_child_count() == 2)
+	show_customize()
+	assert(current_screen == "customize" and ui.get_child_count() == 2)
+	show_accessibility()
+	assert(current_screen == "accessibility" and ui.get_child_count() == 2)
+	GameSession.unlocked_stage = old_unlocked
+	GameSession.total_score = old_total
+	GameSession.best_scores = old_best
+	GameSession.save_profile()
+	print("SYSTEM AUDIT PASS · score ownership · immediate UI replacement · screen flow")
+	get_tree().quit(0)
+
 func run_touch_audit() -> void:
 	var controls := TouchControls.new()
 	controls.size = Vector2(1280, 720)
@@ -161,6 +196,7 @@ func clear_ui() -> void:
 
 func show_menu() -> void:
 	dispose_world()
+	current_screen = "menu"
 	transition_locked = false
 	clear_ui()
 	add_backdrop("background_midnight_sun.png")
@@ -189,6 +225,7 @@ func show_menu() -> void:
 
 func show_map() -> void:
 	dispose_world()
+	current_screen = "map"
 	transition_locked = false
 	clear_ui()
 	add_backdrop("background_dark_winter.png")
@@ -214,6 +251,7 @@ func show_map() -> void:
 func start_stage(index: int) -> void:
 	if transition_locked or is_instance_valid(world): return
 	transition_locked = true
+	current_screen = "stage"
 	GameSession.selected_stage = index
 	clear_ui()
 	world = AlaskaStage.new()
@@ -233,6 +271,7 @@ func dispose_world() -> void:
 	world = null
 
 func show_customize() -> void:
+	current_screen = "customize"
 	clear_ui()
 	add_backdrop("background_midnight_sun.png")
 	var panel := VBoxContainer.new()
@@ -255,6 +294,7 @@ func show_customize() -> void:
 	add_button(panel, "BACK", show_menu)
 
 func show_accessibility() -> void:
+	current_screen = "accessibility"
 	clear_ui()
 	add_backdrop("background_dark_winter.png")
 	var panel := VBoxContainer.new()
@@ -328,3 +368,16 @@ func add_backdrop(asset_name: String) -> void:
 	backdrop.modulate = Color(0.58, 0.66, 0.72)
 	backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	ui.add_child(backdrop)
+
+func _unhandled_input(event: InputEvent) -> void:
+	if is_instance_valid(splash_root) or is_instance_valid(world): return
+	if not event.is_action_pressed("ui_cancel"): return
+	if current_screen in ["map", "customize", "accessibility"]:
+		show_menu()
+	elif current_screen == "menu":
+		get_tree().quit()
+	get_viewport().set_input_as_handled()
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_APPLICATION_PAUSED and is_instance_valid(world):
+		world.pause_for_background()

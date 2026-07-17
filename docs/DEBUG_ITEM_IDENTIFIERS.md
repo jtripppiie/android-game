@@ -18,12 +18,14 @@ DARK-WINTER-BOSS-21
 BEAR-COUNTRY-PU-12
 ```
 
-Categories: `PF` platform, `AN` animal, `WT` water, `PD` launch pad, `BL`
-supply block, `RG` ring, `PU` pickup, and `BOSS` boss. Each category has its own
-short sequence, so the first animal is `AN-1` even if platforms were authored
-before it. Numbers are stable for that authored run. Only items near the player
-are labeled, and the nearest item is highlighted in green for readable
-screenshots.
+Categories: `PF` platform/slope, `AN` animal, `WT` water, `IC` breakable ice,
+`PD` launch pad, `BL` supply block, `RG` ring, `PU` pickup, `CP` checkpoint,
+`GO` finish beacon, and `BOSS` boss. Each category has its own short sequence,
+so the first animal is `AN-1` even if platforms were authored before it.
+Numbers are stable for that authored run. Only items near the player are
+labeled, and the nearest item is highlighted in green for readable screenshots.
+Long platforms are ranked by the nearest point on their surface rather than
+their distant left edge.
 
 In Review Mode, tap `IDS` to hide/show labels and `NOTE` to pause into the small
 top-right notebook. The notebook names the nearest item automatically. Tap

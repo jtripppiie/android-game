@@ -25,7 +25,8 @@ Pickup jobs:
 - Aurora badge: +12 base score, extends the combo, and increases `AURORA`.
 - Red key: required to activate the final beacon.
 - Red rescue radio: one rescue signal; collect both to finish.
-- Aurora ring: score plus a temporary lift/speed surge.
+- Aurora ring: increases `AURORA`, adds score, and gives a temporary lift/speed
+  surge.
 - Checkpoint: moves the recovery point after a fall.
 - Supply block: releases extra Aurora score pickups.
 
@@ -46,9 +47,10 @@ Examples of useful notes:
 - `SALMON-RUSH-AN-12 hits me before I can see it`
 - `DARK-WINTER-BOSS-18 recovery is too short`
 
-The letters mean: `PF` platform, `AN` animal, `WT` water, and `BOSS` boss. Press
-F10 with a keyboard to hide/show IDs. Press N to open the notebook. These
-shortcuts only work while Review Mode is enabled.
+The letters include: `PF` platform/slope, `AN` animal, `WT` water, `IC`
+breakable ice, `CP` checkpoint, `GO` finish, and `BOSS` boss. Press F10 with a
+keyboard to hide/show IDs. Press N to open the notebook. These shortcuts only
+work while Review Mode is enabled.
 
 ## Controls
 
@@ -58,7 +60,7 @@ shortcuts only work while Review Mode is enabled.
 - Dash: quick burst
 - Crouch in air: stomp
 - Fire: throw a snowball
-- Map: safely leave the current run
+- Pause: stop the run; choose `EXIT TO MAP` separately
 - Note: pause and write or speak a review note
 
 ## Customizing safely

@@ -55,8 +55,10 @@ for marker in ("dispose_world", "transition_locked", "remove_child(world)", "ui.
     assert marker in main_source, marker
 for marker in ("show_launch_splash", "SPLASH_MINIMUM_SECONDS := 1.25", "SPLASH_TOTAL_SECONDS := 4.0", "TAP TO BEGIN", "dismiss_launch_splash"):
     assert marker in main_source, marker
+for marker in ("current_screen", "_unhandled_input", "NOTIFICATION_APPLICATION_PAUSED", "pause_for_background", "run_system_audit", "SYSTEM AUDIT PASS"):
+    assert marker in main_source, marker
 assert world.count("GameSession.complete_stage") == 0
-assert main_source.count("GameSession.complete_stage") == 1
+assert "func _on_stage_completed(stage: int, score: int) -> void:\n\tGameSession.complete_stage(stage, score)" in main_source
 for marker in ('Vector2(0, 82)', 'add_theme_constant_override("separation", 20)', 'add_theme_constant_override("separation", 12)'):
     assert marker in main_source, marker
 for marker in ("font_disabled_color", 'add_theme_stylebox_override("disabled"', "font_pressed_color"):
@@ -99,6 +101,8 @@ for marker in ("run_autoplay_audit", "audit_target_objective", "audit_jump_neede
 assert "save_profile()\n\tif autoplay_audit" not in world
 for marker in ("TrailBoss", "ReviewNotebook", "debug_note_context", "boss_defeated", "update_debug_labels", "debug_category_counters"):
     assert marker in world, marker
+for marker in ('register_debug_item(zone, "CP"', 'register_debug_item(zone, "GO"', 'register_debug_item(ice, "IC"', "debug_distance_to_player"):
+    assert marker in world, marker
 for marker in ('menu_button.text = "PAUSE"', "build_pause_panel", "toggle_pause_panel", "EXIT TO MAP", "exit_run_to_map", 'is_action_just_pressed("ui_cancel")'):
     assert marker in world, marker
 assert 'menu_button.text = "MAP"' not in world
@@ -109,6 +113,7 @@ for marker in ("combo_timer", "chain_action", "score"):
     assert marker in player, marker
 for marker in ("JUMP_SPEED := 900.0", "SPRINT_SPEED := 540.0", "air_jumps_left := 1", '"AIR JUMP"', "capsule.height = 96.0", "Vector2(0, -90)"):
     assert marker in player, marker
+assert "func collect_aurora_ring() -> void:\n\tcoins += 1" in player
 enemy_source = (root / "scripts/enemy.gd").read_text()
 for marker in ("wildlife_bear_walk.png", "wildlife_eagle_fly.png", "wildlife_salmon_swim.png"):
     assert marker in enemy_source, marker
@@ -135,6 +140,15 @@ for marker in ("user://debug-review-notes.txt", "FIX FIRST", "context_provider",
     assert marker in notebook, marker
 for marker in ("paused_before_open", "get_tree().paused = paused_before_open", "voice_available"):
     assert marker in notebook, marker
+session_source = (root / "scripts/game_session.gd").read_text()
+for marker in ("Refused invalid stage completion index", "maxi(0", "Could not save profile.cfg"):
+    assert marker in session_source, marker
+bridge_source = (root / "scripts/android_bridge.gd").read_text()
+for marker in ('has_signal("voice_note_result")', 'has_method("readLegacyProfile")', 'has_method("isVoiceNoteAvailable")'):
+    assert marker in bridge_source, marker
+feedback_source = (root / "scripts/feedback_service.gd").read_text()
+assert "if GameSession.haptics:" in feedback_source
+assert "GameSession.haptics and not GameSession.reduced_motion" not in feedback_source
 projectile = (root / "scripts/projectile.gd").read_text()
 assert 'has_method("snowball_hit")' in projectile
 assert "area_entered.connect" in projectile

@@ -8,15 +8,18 @@ var plugin: Object
 func _ready() -> void:
 	if Engine.has_singleton("YouRushBridge"):
 		plugin = Engine.get_singleton("YouRushBridge")
-		plugin.connect("voice_note_result", _on_voice_result)
-		plugin.connect("voice_note_error", _on_voice_error)
-		GameSession.import_legacy_profile(plugin.readLegacyProfile())
+		if plugin.has_signal("voice_note_result"):
+			plugin.connect("voice_note_result", _on_voice_result)
+		if plugin.has_signal("voice_note_error"):
+			plugin.connect("voice_note_error", _on_voice_error)
+		if plugin.has_method("readLegacyProfile"):
+			GameSession.import_legacy_profile(plugin.readLegacyProfile())
 
 func voice_available() -> bool:
-	return plugin != null and bool(plugin.isVoiceNoteAvailable())
+	return plugin != null and plugin.has_method("isVoiceNoteAvailable") and bool(plugin.isVoiceNoteAvailable())
 
 func start_voice_note() -> void:
-	if plugin == null:
+	if not voice_available() or not plugin.has_method("startVoiceNote"):
 		voice_note_failed.emit("Voice notes are available in the Android build")
 		return
 	plugin.startVoiceNote()

@@ -39,6 +39,21 @@ objectives, stage geometry, persistence, and Android-facing flow.
 - The unavailable microphone action is disabled instead of appearing broken.
 - Touch controls use smaller footprints, readable directional words, and lower
   idle opacity so they obscure less of the playfield.
+- Review identifiers now cover slopes, checkpoints, the finish beacon,
+  breakable ice, and previously unregistered route water. Long platforms use
+  nearest-surface distance when selecting a note target.
+- Aurora rings now increment the visible Aurora count in addition to their
+  score and temporary movement surge.
+- Midnight Sun and Bear Country now contain reachable supply caches instead of
+  carrying an unused supply-block system.
+- Profile loading clamps corrupt negative totals/scores, invalid completion
+  indexes are rejected, and save failures are reported.
+- The Android bridge checks signals and methods before calling them, preventing
+  a stale native plugin from crashing startup.
+- Android backgrounding leaves an active run safely paused. Back/Escape now
+  returns submenus to the main menu and exits normally from the main menu.
+- Reduced Motion no longer silently disables vibration while the independent
+  Haptics setting remains enabled.
 - The source version is 5.3.2/code 532 so a later corrected build is not
   confused with the already-compiled 5.3.1 candidate.
 
@@ -47,6 +62,7 @@ objectives, stage geometry, persistence, and Android-facing flow.
 - Godot 4.7.1 parser/import: passed.
 - Touch multi-input audit: passed.
 - Single-world lifecycle audit: passed.
+- Score ownership/immediate UI replacement/screen-flow audit: passed.
 - Five geometry audits: passed.
 - Five automated objective/boss/finish traversals: passed.
 

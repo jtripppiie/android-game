@@ -173,6 +173,7 @@ func enemy_defeated(stomp: bool) -> void:
 	else: action_feedback.emit("HIT COMBO x%d" % combo)
 
 func collect_aurora_ring() -> void:
+	coins += 1
 	ring_chain = ring_chain + 1 if ring_chain_timer > 0.0 else 1
 	ring_chain_timer = 1.65
 	ring_rush_timer = minf(4.2, 1.8 + ring_chain * 0.38)
