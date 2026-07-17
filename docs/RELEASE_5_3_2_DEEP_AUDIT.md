@@ -28,6 +28,11 @@ move-and-jump, drags outside the ring, and verifies that input remains active.
 The pause audit also clears held touches so movement cannot remain stuck after
 opening a menu or notebook.
 
+Touch action edges are now state-diffed. Previously every drag event released
+and re-pressed the entire touch action set, which could turn a held thumb into
+repeated jump, air-jump, stomp, or dash triggers. Held actions now remain held;
+only genuine entry and exit from a control emits press and release edges.
+
 ## Snow terrain reconstruction
 
 Main-route platforms no longer render as flat gray or pastel rectangles with a
@@ -37,6 +42,9 @@ the complete visible platform face. The renderer crops transparent source
 padding, fits the terrain to collision geometry, and applies only a restrained
 stage tint so the painted texture remains visible. Thin aerial ledges retain
 their lighter ice treatment so they remain readable as a different route type.
+Sloped banks now use the same material with polygon-mapped texture coordinates
+and a two-layer snow crest; they no longer switch abruptly back to a flat-color
+shape when the trail inclines.
 
 ## Corrected defects
 

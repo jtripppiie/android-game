@@ -11,6 +11,7 @@ var review_mode := false
 var controls := {}
 var dpad_bounds := Rect2()
 var dpad_vector := Vector2.ZERO
+var touch_pressed_actions := {}
 
 func _ready() -> void:
 	add_to_group("touch_controls")
@@ -66,8 +67,7 @@ func action_at(point: Vector2) -> String:
 	return ""
 
 func sync_actions() -> void:
-	for action in controls: Input.action_release(input_action_for(action))
-	Input.action_release("sprint")
+	var desired_actions := {}
 	var moving := false
 	dpad_vector = Vector2.ZERO
 	for point in active_touches.values():
@@ -75,20 +75,30 @@ func sync_actions() -> void:
 			var vector := dpad_input_vector(point)
 			dpad_vector = vector
 			if vector.x < -DPAD_DEAD_ZONE:
-				Input.action_press("move_left")
+				desired_actions["move_left"] = true
 				moving = true
 			elif vector.x > DPAD_DEAD_ZONE:
-				Input.action_press("move_right")
+				desired_actions["move_right"] = true
 				moving = true
-			if vector.y < -DPAD_DEAD_ZONE: Input.action_press("jump")
-			elif vector.y > DPAD_DEAD_ZONE: Input.action_press("crouch")
+			if vector.y < -DPAD_DEAD_ZONE: desired_actions["jump"] = true
+			elif vector.y > DPAD_DEAD_ZONE: desired_actions["crouch"] = true
 			continue
 		var action := action_at(point)
 		if action != "":
-			Input.action_press(input_action_for(action))
+			desired_actions[input_action_for(action)] = true
 			if action in ["move_left", "move_right"]: moving = true
-	if moving: Input.action_press("sprint")
+	if moving: desired_actions["sprint"] = true
+	apply_touch_action_changes(desired_actions)
 	queue_redraw()
+
+func apply_touch_action_changes(desired_actions: Dictionary) -> void:
+	# ScreenDrag events can arrive every frame. Releasing and pressing every
+	# action on each event turns a hold into repeated just-pressed edges.
+	for action in touch_pressed_actions:
+		if not desired_actions.has(action): Input.action_release(action)
+	for action in desired_actions:
+		if not touch_pressed_actions.has(action): Input.action_press(action)
+	touch_pressed_actions = desired_actions
 
 func release_all_touches() -> void:
 	active_touches.clear()

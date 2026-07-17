@@ -72,9 +72,9 @@ for state in ("idle", "run", "sprint", "crouch", "jump", "fall", "dash", "stomp"
     assert f'"{state}"' in player, state
 for action in ("move_left", "move_right", "crouch", "jump", "fire", "sprint", "dash"):
     assert f'"{action}"' in touch, action
-for marker in ("layout_controls", "SAFE_MARGIN", "InputEventScreenTouch", "InputEventMouseButton", "dpad_up", "dpad_down", "input_action_for", "control_color", "control_text_color", "release_all_touches", "dpad_touch_contains", "dpad_input_vector", "draw_dpad_arrow", "DPAD_DRIFT_MARGIN", 'return "SNOW"'):
+for marker in ("layout_controls", "SAFE_MARGIN", "InputEventScreenTouch", "InputEventMouseButton", "dpad_up", "dpad_down", "input_action_for", "control_color", "control_text_color", "release_all_touches", "dpad_touch_contains", "dpad_input_vector", "draw_dpad_arrow", "apply_touch_action_changes", "touch_pressed_actions", "DPAD_DRIFT_MARGIN", 'return "SNOW"'):
     assert marker in touch, marker
-for marker in ("build_snow_terrain", "route_terrain_snow_v2.png", "AtlasTexture", "STRETCH_SCALE"):
+for marker in ("build_snow_terrain", "build_snow_slope", "route_terrain_snow_v2.png", "AtlasTexture", "STRETCH_SCALE", "mapped_uv", "crest_shadow"):
     assert marker in world, marker
 
 image = Image.open(root / "assets/runner_overhaul.png")

@@ -339,11 +339,40 @@ func slope(points: PackedVector2Array, color: Color) -> void:
 	var collision := CollisionPolygon2D.new()
 	collision.polygon = local_points
 	body.add_child(collision)
-	var art := Polygon2D.new()
-	art.polygon = local_points
-	art.color = color
-	body.add_child(art)
+	build_snow_slope(body, local_points, maximum - minimum, color)
 	add_child(body)
+
+func build_snow_slope(body: StaticBody2D, points: PackedVector2Array, bounds: Vector2, stage_tint: Color) -> void:
+	var source: Texture2D = load("res://assets/route_terrain_snow_v2.png")
+	var cropped := AtlasTexture.new()
+	cropped.atlas = source
+	cropped.region = Rect2(0, 72, 2176, 596)
+	var art := Polygon2D.new()
+	art.polygon = points
+	art.texture = cropped
+	var safe_bounds := Vector2(maxf(bounds.x, 1.0), maxf(bounds.y, 1.0))
+	var texture_size := cropped.get_size()
+	var mapped_uv := PackedVector2Array()
+	for point in points:
+		mapped_uv.append(Vector2(point.x / safe_bounds.x * texture_size.x, point.y / safe_bounds.y * texture_size.y))
+	art.uv = mapped_uv
+	art.color = Color.WHITE.lerp(stage_tint, 0.08)
+	body.add_child(art)
+	# The first polygon edge is authored as the walkable incline. A soft dark
+	# under-edge plus bright crest keeps its collision line readable without
+	# reverting to a debug-looking geometric border.
+	var crest_shadow := Line2D.new()
+	crest_shadow.points = PackedVector2Array([points[0], points[1]])
+	crest_shadow.width = 13.0
+	crest_shadow.default_color = Color(0.36, 0.64, 0.78, 0.72)
+	crest_shadow.antialiased = true
+	body.add_child(crest_shadow)
+	var crest := Line2D.new()
+	crest.points = PackedVector2Array([points[0], points[1]])
+	crest.width = 8.0
+	crest.default_color = Color(0.95, 0.99, 1.0, 0.96)
+	crest.antialiased = true
+	body.add_child(crest)
 
 func enemy(at: Vector2, distance: float, kind: String) -> void:
 	for existing in enemy_spawn_positions:
