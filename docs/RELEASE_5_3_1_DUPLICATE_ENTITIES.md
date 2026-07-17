@@ -25,8 +25,9 @@ rectangles: a 150-by-150 gold Jump button, circular cyan Snow button, and
 separate purple Dash button. The touch regression passed D-pad Up, simultaneous
 movement/jump, auto-run, and independent release.
 
-Status: validated source only. Do not claim or distribute a 5.3.1 APK until the
-owner explicitly requests compilation.
+Status: compiled and package-inspected on July 16, 2026 after the owner
+explicitly authorized compilation. Physical-device visual/gameplay acceptance
+is still pending; do not describe this candidate as accepted.
 
 Menu follow-up: primary menu buttons are now 82 pixels tall with 26-pixel
 labels and 16-pixel corner radii. Main/customization screens use 20 pixels of
@@ -90,3 +91,27 @@ button at x=1064 with clipping disabled, so long score/pickup/boss strings drew
 over one another. The HUD now has fixed non-overlapping columns (20..520,
 530..1050, 1070..1260), clipping enabled, smaller bounded typography, a
 high-contrast top bar, shorter event copy, and a visible Aurora count.
+
+## Build and verification record
+
+- Godot engine/template: 4.7.1 stable
+- Android package: `com.jtripppiie.mooserush`
+- Version: code 531, name 5.3.1
+- Minimum/target SDK: 24/36
+- Architecture: ARM64
+- Touch audit: passed
+- Stage lifecycle audit: passed
+- Autoplay traversal: all five stages passed
+- Traversal times: 23.38, 16.55, 17.58, 43.18, and 20.08 seconds
+- APK signature: v2 and v3 verified
+- Update certificate SHA-256:
+  `2ced30b68157ef4da0f723a36f2024fd281f34b935d0fb1b5f6bf2ddaf4d3615`
+- APK SHA-256:
+  `560048bde263fd247df59a25d9c9e24f046e2bf070609d31c64306d9e56dfd22`
+
+Dark Winter’s 43.18-second automated traversal is substantially slower than
+the other stages and remains a pacing-review target even though it completed.
+
+An Android Studio Pixel 5 AVD was found, but this WSL session has no `/dev/kvm`.
+The software-emulation fallback did not finish booting, so no claim of emulator
+or physical-device visual playtesting is made in this record.

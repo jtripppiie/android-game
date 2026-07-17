@@ -12,7 +12,7 @@ engine: Godot 4.7.1
 versionCode: 531
 versionName: 5.3.1
 package: com.jtripppiie.mooserush
-APK status: build pending
+APK status: compiled and package-inspected; device acceptance pending
 APK: app/build/outputs/apk/debug/you-rush-alaska-5.3.1-debug.apk
 ```
 
@@ -20,7 +20,9 @@ Version 5.3.1 contains the 5.3 control/movement overhaul and fixes duplicated
 stage worlds/runners after map transitions plus an extra stacked Moose Pass
 bear. It includes high-contrast viewport-relative touch controls, automatic
 mobile running, higher jumping, and full-size menus. Source validation, touch
-and lifecycle regression tests, and a five-stage traversal passed.
+and lifecycle regression tests, and a five-stage traversal passed. The APK was
+exported with Godot 4.7.1 and signed with the same debug certificate as 5.3.0.
+It has not yet passed the physical-device checklist.
 
 ## Controls
 
@@ -30,7 +32,7 @@ and lifecycle regression tests, and a five-stage traversal passed.
 - Dash: short horizontal burst
 - Crouch while airborne: stomp
 - Fire: throw a snowball
-- Map: safely leave the stage
+- Pause: pause the run; Exit to Map is a separate deliberate action
 - Note/IDs: available only when Review Mode is enabled
 
 Touch controls support simultaneous movement and jumping.
@@ -67,14 +69,14 @@ Before handing over a build, complete
 
 ## Current APK
 
-The current compiled and inspected package is
-`app/build/outputs/apk/debug/you-rush-alaska-5.3.0-debug.apk`.
+The current compiled and package-inspected candidate is
+`app/build/outputs/apk/debug/you-rush-alaska-5.3.1-debug.apk`.
 
 SHA-256:
 
 ```text
-53b36d3ef69a3faa625fa0282d3dbb81b7f49640e948affe1000f3849ff91941
+560048bde263fd247df59a25d9c9e24f046e2bf070609d31c64306d9e56dfd22
 ```
 
-Version 5.2.1 remains the local rollback while 5.3.0 completes the physical
-device checklist.
+Version 5.3.0 remains the local rollback while 5.3.1 completes the physical
+device checklist. “Package-inspected” does not mean visually accepted.

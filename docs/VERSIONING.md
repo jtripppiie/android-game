@@ -11,8 +11,8 @@ engine: Godot 4.7.1
 metadata: godot/export_presets.cfg
 ```
 
-Version 5.3.1 source is current. Version 5.3.0 remains the last compiled
-artifact until the 5.3.1 export and inspection finish.
+Version 5.3.1 source and compiled candidate are current. Version 5.3.0 remains
+the rollback until 5.3.1 passes real-device visual and gameplay acceptance.
 
 The Java 4.2.2 project remains rollback/reference code. Its version fields in
 `app/build.gradle` do not describe the current Godot APK.
