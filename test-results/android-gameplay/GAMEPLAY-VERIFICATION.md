@@ -2,8 +2,8 @@
 
 Date: 2026-07-17
 Starting commit: `f4739229ce49020ef56269d6094d87de2132fe39`
-Final tested implementation commit: `FINAL_IMPLEMENTATION_SHA`
-Evidence/report commit: `FINAL_EVIDENCE_SHA`
+Final tested implementation commit: `71491403290e4cc7c8608775fe7aea15d7fc9cdb`
+Evidence snapshot commit: `71491403290e4cc7c8608775fe7aea15d7fc9cdb`
 
 ## 1. Scope and source selection
 
@@ -378,9 +378,9 @@ ADB=/path/to/adb godot/tools/capture_android_evidence.sh \
 
 ## 23. Commit and push
 
-Implementation commit: `FINAL_IMPLEMENTATION_SHA`
-Evidence/report commit: `FINAL_EVIDENCE_SHA`
-Remote push: `PUSH_RESULT`
+Implementation commit: `71491403290e4cc7c8608775fe7aea15d7fc9cdb`
+Evidence snapshot commit: `71491403290e4cc7c8608775fe7aea15d7fc9cdb`
+Remote push: `origin/main` through the evidence snapshot, confirmed 2026-07-17
 
 The baseline worktree remains independently buildable at the exact starting
 commit. APK binaries are build outputs and are not committed.

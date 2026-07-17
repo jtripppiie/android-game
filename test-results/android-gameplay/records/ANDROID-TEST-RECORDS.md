@@ -29,7 +29,7 @@ Status: FAIL
 ## Reworked main menu attempt
 
 File: `after/02-main-menu.png`
-Build: `FINAL_IMPLEMENTATION_SHA`, x86_64 debug APK
+Build: `71491403290e4cc7c8608775fe7aea15d7fc9cdb`, x86_64 debug APK
 Stage: none
 Starting state: in-place upgraded package with migration fixture
 Input: debug intent scenario `main-menu`
