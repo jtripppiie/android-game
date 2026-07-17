@@ -157,3 +157,14 @@ store signing key.
 
 Use `docs/DEVICE_ACCEPTANCE_CHECKLIST.md` on the child's Android device before
 calling this a store-ready or physical-device-accepted release.
+
+## Source record
+
+```text
+implementation commit: 761999be44c7585d78c498831bb24797fab9b042
+push target: origin/main
+```
+
+The implementation commit contains the source, complete audit logs, release
+record, and APK checksums. APK binaries remain ignored build outputs and are not
+stored in Git.

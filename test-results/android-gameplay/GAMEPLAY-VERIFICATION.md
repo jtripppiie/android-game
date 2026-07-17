@@ -413,4 +413,5 @@ still applies. Physical-device visual, ergonomic, haptic, thermal, and
 long-session checks remain `NOT VERIFIED ON PHYSICAL DEVICE`.
 
 See `docs/RELEASE_5_4_1_GAMEPLAY_REFINEMENT.md` for the complete change and
-build record.
+build record. The 5.4.1 implementation commit is
+`761999be44c7585d78c498831bb24797fab9b042`.
