@@ -84,6 +84,7 @@ func show_menu() -> void:
 	var panel := VBoxContainer.new()
 	panel.position = Vector2(250, 54)
 	panel.size = Vector2(780, 612)
+	panel.add_theme_constant_override("separation", 20)
 	ui.add_child(panel)
 	var title := Label.new()
 	title.text = "YOU RUSH · ALASKA"
@@ -111,6 +112,7 @@ func show_map() -> void:
 	var panel := VBoxContainer.new()
 	panel.position = Vector2(170, 36)
 	panel.size = Vector2(940, 654)
+	panel.add_theme_constant_override("separation", 12)
 	ui.add_child(panel)
 	var title := Label.new()
 	title.text = "ALASKA EXPEDITION MAP"
@@ -153,6 +155,7 @@ func show_customize() -> void:
 	var panel := VBoxContainer.new()
 	panel.position = Vector2(240, 72)
 	panel.size = Vector2(800, 576)
+	panel.add_theme_constant_override("separation", 20)
 	ui.add_child(panel)
 	var title := Label.new()
 	title.text = "CUSTOMIZE RUNNER"
@@ -174,6 +177,7 @@ func show_accessibility() -> void:
 	var panel := VBoxContainer.new()
 	panel.position = Vector2(240, 42)
 	panel.size = Vector2(800, 636)
+	panel.add_theme_constant_override("separation", 10)
 	ui.add_child(panel)
 	var title := Label.new()
 	title.text = "ACCESSIBILITY"
@@ -183,8 +187,8 @@ func show_accessibility() -> void:
 	for spec in [["MUTE AUDIO", "muted"], ["HAPTICS", "haptics"], ["LARGE TEXT", "large_text"], ["REDUCED MOTION", "reduced_motion"], ["HIGH CONTRAST", "high_contrast"], ["REVIEW MODE · IDS + NOTES", "review_mode"]]:
 		var toggle := CheckButton.new()
 		toggle.text = spec[0]
-		toggle.custom_minimum_size.y = 62
-		toggle.add_theme_font_size_override("font_size", 24)
+		toggle.custom_minimum_size.y = 66
+		toggle.add_theme_font_size_override("font_size", 25)
 		toggle.button_pressed = GameSession.get(spec[1])
 		toggle.toggled.connect(func(value): GameSession.set(spec[1], value); GameSession.save_profile())
 		panel.add_child(toggle)
@@ -193,15 +197,15 @@ func show_accessibility() -> void:
 func add_button(parent: Control, label: String, callback: Callable) -> Button:
 	var button := Button.new()
 	button.text = label
-	button.custom_minimum_size = Vector2(0, 72)
-	button.add_theme_font_size_override("font_size", 28 if GameSession.large_text else 24)
+	button.custom_minimum_size = Vector2(0, 82)
+	button.add_theme_font_size_override("font_size", 30 if GameSession.large_text else 26)
 	button.add_theme_color_override("font_color", Color("#f7fcff"))
 	button.add_theme_color_override("font_hover_color", Color("#fff0a8"))
 	var normal := StyleBoxFlat.new()
 	normal.bg_color = Color(0.025, 0.105, 0.16, 0.90)
 	normal.border_color = Color("#4ddbb8")
 	normal.set_border_width_all(2)
-	normal.set_corner_radius_all(12)
+	normal.set_corner_radius_all(16)
 	button.add_theme_stylebox_override("normal", normal)
 	var hover := normal.duplicate()
 	hover.bg_color = Color(0.08, 0.26, 0.32, 0.96)

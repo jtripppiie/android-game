@@ -45,6 +45,8 @@ for marker in ("build_level", "checkpoint", "goal", "collectible", "enemy", "mov
 main_source = (root / "scripts/main.gd").read_text()
 for marker in ("dispose_world", "transition_locked", "remove_child(world)", "if transition_locked or is_instance_valid(world): return", "run_lifecycle_audit"):
     assert marker in main_source, marker
+for marker in ('Vector2(0, 82)', 'add_theme_constant_override("separation", 20)', 'add_theme_constant_override("separation", 12)'):
+    assert marker in main_source, marker
 assert 'enemy(Vector2(3820, 610), 115, "bear")' not in world
 for state in ("idle", "run", "sprint", "crouch", "jump", "fall", "dash", "stomp"):
     assert f'"{state}"' in player, state

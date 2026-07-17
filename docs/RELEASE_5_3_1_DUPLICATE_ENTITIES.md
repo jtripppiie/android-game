@@ -27,3 +27,9 @@ movement/jump, auto-run, and independent release.
 
 Status: validated source only. Do not claim or distribute a 5.3.1 APK until the
 owner explicitly requests compilation.
+
+Menu follow-up: primary menu buttons are now 82 pixels tall with 26-pixel
+labels and 16-pixel corner radii. Main/customization screens use 20 pixels of
+vertical separation, the six-button stage map uses 12 pixels so every option
+and Back remain inside the viewport, and accessibility rows increase to 66
+pixels with explicit spacing.
