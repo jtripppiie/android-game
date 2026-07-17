@@ -61,3 +61,32 @@ its waterline offset recalibrated. Ordinary salmon enemies remain small.
 Future enemy spawns are rejected when authored within 420 pixels of an existing
 wildlife spawn in the same stage. This prevents another shared route layer from
 silently stacking patrols into one encounter.
+
+Launch presentation follow-up: the project previously configured no Godot boot
+splash, so Android displayed a small generated icon based on the crude
+stick-figure mountain SVG. The source now has a full-size 1280-by-720 boot image
+built from the real Dark Winter painting and runner sheet, plus a coordinated
+aurora/mountain compass app icon. The splash remains source-only until the owner
+requests compilation.
+
+Scenery consistency follow-up: the stage builder previously placed painted PNG
+mountains at z=-20 and then drew twelve flat `Polygon2D` triangle mountains at
+z=-8. The incompatible layers visibly mixed painted and SVG-like scenery.
+Procedural triangle mountains are removed. All five stages now reuse one of the
+two painted Alaska panoramas with stage-specific winter tinting.
+
+Dark Winter previously spawned an ordinary eagle and later an Eagle boss from
+the same visually ambiguous wing sheet. The ordinary eagle is removed so the
+boss is the level's only eagle. Combined with single-world ownership, the source
+can no longer display two eagle actors in that stage.
+
+Run-flow follow-up: the HUD previously exposed a `MAP` button that immediately
+abandoned the run. It is now `PAUSE`. A compact 336-by-150 panel offers `RESUME`
+and the deliberate `EXIT TO MAP` action; gameplay remains visible underneath
+and the world cannot change from an accidental single tap.
+
+HUD follow-up: three labels previously occupied x=24..464, x=470..1040, and a
+button at x=1064 with clipping disabled, so long score/pickup/boss strings drew
+over one another. The HUD now has fixed non-overlapping columns (20..520,
+530..1050, 1070..1260), clipping enabled, smaller bounded typography, a
+high-contrast top bar, shorter event copy, and a visible Aurora count.

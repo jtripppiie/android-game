@@ -20,6 +20,17 @@ On the map, choose one of the five Alaska stages. A stage is complete only after
 you find its key, rescue both people, defeat its boss, and reach the beacon.
 Progress and scores save on the device.
 
+Pickup jobs:
+
+- Aurora badge: +12 base score, extends the combo, and increases `AURORA`.
+- Red key: required to activate the final beacon.
+- Red rescue radio: one rescue signal; collect both to finish.
+- Aurora ring: score plus a temporary lift/speed surge.
+- Checkpoint: moves the recovery point after a fall.
+- Supply block: releases extra Aurora score pickups.
+
+The final beacon requires the key, both rescue signals, and the defeated boss.
+
 Turn on `ACCESSIBILITY > REVIEW MODE · IDS + NOTES` when you want to review the
 game. Normal play stays clean. During a review run, tap `IDS` to control labels
 or `NOTE` to pause. The small notebook stays in the top-right so the play area

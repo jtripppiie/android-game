@@ -26,11 +26,13 @@ required = [
     "assets/collectibles_atlas.png",
     "assets/trail_objects_atlas.png",
     "assets/background_midnight_sun.png", "assets/background_dark_winter.png",
+    "assets/boot_splash.png",
     "assets/scenery_tree_summer.png", "assets/scenery_tree_winter.png",
     "assets/wildlife_bear_walk.png", "assets/wildlife_eagle_fly.png",
     "assets/wildlife_moose_walk.png", "assets/wildlife_polar_bear_walk.png",
     "assets/wildlife_salmon_swim.png", "assets/wildlife_wolf_run.png",
     "tools/build_composition_audit.py",
+    "tools/build_boot_splash.py",
 ]
 missing = [name for name in required if not (root / name).is_file()]
 if missing:
@@ -41,6 +43,8 @@ world = (root / "scripts/world.gd").read_text()
 player = (root / "scripts/player.gd").read_text()
 touch = (root / "scripts/touch_controls.gd").read_text()
 assert 'run/main_scene="res://scenes/main.tscn"' in project
+for marker in ('image="res://assets/boot_splash.png"', "fullsize=true", "use_filter=true"):
+    assert marker in project, marker
 for marker in ("build_level", "checkpoint", "goal", "collectible", "enemy", "moving_platform", "survivor"):
     assert marker in world, marker
 main_source = (root / "scripts/main.gd").read_text()
@@ -51,6 +55,9 @@ for marker in ('Vector2(0, 82)', 'add_theme_constant_override("separation", 20)'
 for marker in ("font_disabled_color", 'add_theme_stylebox_override("disabled"', "font_pressed_color"):
     assert marker in main_source, marker
 assert 'enemy(Vector2(3820, 610), 115, "bear")' not in world
+assert 'enemy(Vector2(1150, 410), 120, "eagle")' not in world
+assert "var mountain := Polygon2D.new()" not in world
+assert 'var winter := stage_index >= 3' in world
 for marker in ("enemy_spawn_positions", "REFUSED STACKED WILDLIFE", "distance_to(at) < 420.0"):
     assert marker in world, marker
 for state in ("idle", "run", "sprint", "crouch", "jump", "fall", "dash", "stomp"):
@@ -84,6 +91,12 @@ for marker in ("run_autoplay_audit", "audit_target_objective", "audit_jump_neede
     assert marker in world, marker
 for marker in ("TrailBoss", "ReviewNotebook", "debug_note_context", "save_profile", "boss_defeated", "update_debug_labels", "debug_category_counters"):
     assert marker in world, marker
+for marker in ('menu_button.text = "PAUSE"', "build_pause_panel", "toggle_pause_panel", "EXIT TO MAP", "exit_run_to_map"):
+    assert marker in world, marker
+assert 'menu_button.text = "MAP"' not in world
+for marker in ("top_bar.size = Vector2(1280, 76)", "hud_label.clip_text = true", "checkpoint_label.clip_text = true", "AURORA %d   BEST"):
+    assert marker in world, marker
+assert "Vector2(20, 8)" in world and "Vector2(530, 14)" in world and "Vector2(1070, 12)" in world
 for marker in ("combo_timer", "chain_action", "score"):
     assert marker in player, marker
 for marker in ("JUMP_SPEED := 900.0", "SPRINT_SPEED := 540.0", "air_jumps_left := 1", '"AIR JUMP"', "capsule.height = 96.0", "Vector2(0, -90)"):

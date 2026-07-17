@@ -1,8 +1,20 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
-  <rect width="256" height="256" rx="52" fill="#102d4b"/>
-  <path d="M14 184 82 74l34 50 30-42 96 102Z" fill="#84d5e8"/>
-  <path d="m14 184 68-110 18 27-28 44 44-21 30-42 96 102Z" fill="#e8f4f5" opacity=".9"/>
-  <circle cx="106" cy="120" r="15" fill="#ffda79" stroke="#1f2226" stroke-width="7"/>
-  <path d="m104 138-15 35m18-34 25 24m-28-8 28-7m-29-8 20-18" fill="none" stroke="#ff6254" stroke-linecap="round" stroke-width="12"/>
-  <path d="M34 202h188" stroke="#4ddbb8" stroke-linecap="round" stroke-width="14"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#071a35"/>
+      <stop offset="1" stop-color="#123f59"/>
+    </linearGradient>
+    <linearGradient id="aurora" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#85ffe0"/>
+      <stop offset="1" stop-color="#32b7db"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="108" fill="url(#sky)"/>
+  <circle cx="256" cy="256" r="194" fill="none" stroke="#ffda79" stroke-width="22"/>
+  <circle cx="256" cy="256" r="168" fill="#09243b" stroke="#4ddbb8" stroke-width="8"/>
+  <path d="M92 337 205 172l54 75 50-66 111 156Z" fill="#dff8fb"/>
+  <path d="m92 337 113-165 26 36-48 70 76-31 50-66 111 156Z" fill="#79bdd2"/>
+  <path d="M130 129c73-55 126 16 190-23 32-19 57-17 77-4-48 5-61 55-118 57-66 2-78-38-149-30Z" fill="url(#aurora)" opacity=".95"/>
+  <path d="M145 365h222" stroke="#ffda79" stroke-linecap="round" stroke-width="18"/>
+  <path d="m256 74 15 36-15 28-15-28Z" fill="#ff6254"/>
 </svg>

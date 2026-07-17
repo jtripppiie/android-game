@@ -8,6 +8,7 @@ var player: AlaskaRunner
 var hud_label: Label
 var hud_secondary: Label
 var checkpoint_label: Label
+var pause_panel: PanelContainer
 var key_collected := false
 var finished := false
 var survivors_found := 0
@@ -74,28 +75,21 @@ func build_background() -> void:
 	var skies := [Color("#7b4f80"), Color("#247a86"), Color("#163d62"), Color("#071326"), Color("#29485c")]
 	var sky: Color = skies[stage_index]
 	if GameSession.high_contrast: sky = Color("#00152b")
-	if stage_index == 0 or stage_index == 3:
-		var backdrop_texture: Texture2D = load("res://assets/%s" % ("background_midnight_sun.png" if stage_index == 0 else "background_dark_winter.png"))
-		for index in range(5):
-			var backdrop := Sprite2D.new()
-			backdrop.texture = backdrop_texture
-			backdrop.position = Vector2(640.0 + index * 1280.0, 360.0)
-			backdrop.scale = Vector2(1280.0 / backdrop_texture.get_width(), 720.0 / backdrop_texture.get_height())
-			backdrop.z_index = -20
-			backdrop.modulate = Color(0.72, 0.78, 0.88) if stage_index == 3 else Color(1, 1, 1)
-			add_child(backdrop)
+	var winter := stage_index >= 3
+	var backdrop_texture: Texture2D = load("res://assets/%s" % ("background_dark_winter.png" if winter else "background_midnight_sun.png"))
+	for index in range(5):
+		var backdrop := Sprite2D.new()
+		backdrop.texture = backdrop_texture
+		backdrop.position = Vector2(640.0 + index * 1280.0, 360.0)
+		backdrop.scale = Vector2(1280.0 / backdrop_texture.get_width(), 720.0 / backdrop_texture.get_height())
+		backdrop.z_index = -20
+		backdrop.modulate = Color(0.70, 0.82, 0.92) if stage_index == 3 else Color(0.86, 0.92, 1.0) if stage_index == 4 else Color.WHITE
+		add_child(backdrop)
 	var sky_node := Polygon2D.new()
 	sky_node.polygon = PackedVector2Array([Vector2(-500,-500),Vector2(6500,-500),Vector2(6500,720),Vector2(-500,720)])
 	sky_node.color = sky
 	sky_node.z_index = -30
 	add_child(sky_node)
-	for i in range(12):
-		var mountain := Polygon2D.new()
-		var x := float(i * 560 - 300)
-		mountain.polygon = PackedVector2Array([Vector2(x,560),Vector2(x+280,170+(i%3)*55),Vector2(x+600,560)])
-		mountain.color = sky.lightened(0.10 if i % 2 == 0 else 0.18)
-		mountain.z_index = -8
-		add_child(mountain)
 	var tree_texture: Texture2D = load("res://assets/%s" % ("scenery_tree_winter.png" if stage_index >= 2 else "scenery_tree_summer.png"))
 	for index in range(10):
 		var tree := Sprite2D.new()
@@ -186,7 +180,7 @@ func build_dark_winter() -> void:
 	platform(Rect2(4420, 510, 1290, 210), Color("#a4cbd8"))
 	moving_platform(Vector2(800, 360), Vector2(180, 0), 2.8); moving_platform(Vector2(3070, 330), Vector2(0, 150), 2.5)
 	collectible(Vector2(1600, 320), "key"); collectible(Vector2(2190, 460), "survivor"); collectible(Vector2(4000, 340), "survivor")
-	enemy(Vector2(1150, 410), 120, "eagle"); enemy(Vector2(3420, 480), 130, "wolf")
+	enemy(Vector2(3420, 480), 130, "wolf")
 	checkpoint(Vector2(2650, 350)); finalize_stage()
 
 func build_bear_country() -> void:
@@ -401,15 +395,15 @@ func collect(body: Node, item: Area2D) -> void:
 	if item.get_meta("kind") == "key":
 		key_collected = true
 		player.chain_action(40)
-		checkpoint_label.text = "RESCUE KEY FOUND"
+		checkpoint_label.text = "KEY FOUND · EXIT READY · +40"
 	elif item.get_meta("kind") == "survivor":
 		survivors_found += 1
 		player.chain_action(60)
-		checkpoint_label.text = "SURVIVOR %d/2" % survivors_found
+		checkpoint_label.text = "RESCUE SIGNAL %d/2 · +60" % survivors_found
 	else:
 		player.coins += 1
 		player.chain_action(12)
-		checkpoint_label.text = "TRAIL COMBO x%d" % player.combo
+		checkpoint_label.text = "AURORA +12 · COMBO x%d" % player.combo
 	item.queue_free()
 
 func checkpoint(at: Vector2) -> void:
@@ -480,32 +474,90 @@ func build_hud() -> void:
 	var layer := CanvasLayer.new()
 	layer.layer = 10
 	add_child(layer)
+	var top_bar := ColorRect.new()
+	top_bar.position = Vector2.ZERO
+	top_bar.size = Vector2(1280, 76)
+	top_bar.color = Color(0.01, 0.04, 0.08, 0.82)
+	top_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	layer.add_child(top_bar)
 	hud_label = Label.new()
-	hud_label.position = Vector2(24, 10)
-	hud_label.size = Vector2(440, 34)
-	hud_label.add_theme_font_size_override("font_size", 27 if GameSession.large_text else 22)
+	hud_label.position = Vector2(20, 8)
+	hud_label.size = Vector2(500, 32)
+	hud_label.clip_text = true
+	hud_label.add_theme_font_size_override("font_size", 24 if GameSession.large_text else 20)
 	hud_label.add_theme_color_override("font_color", Color.WHITE)
 	layer.add_child(hud_label)
 	hud_secondary = Label.new()
-	hud_secondary.position = Vector2(24, 42)
-	hud_secondary.size = Vector2(440, 28)
-	hud_secondary.add_theme_font_size_override("font_size", 20 if GameSession.large_text else 17)
+	hud_secondary.position = Vector2(20, 40)
+	hud_secondary.size = Vector2(500, 28)
+	hud_secondary.clip_text = true
+	hud_secondary.add_theme_font_size_override("font_size", 18 if GameSession.large_text else 16)
 	hud_secondary.add_theme_color_override("font_color", Color("#84d5e8"))
 	layer.add_child(hud_secondary)
 	checkpoint_label = Label.new()
-	checkpoint_label.position = Vector2(470, 14)
-	checkpoint_label.size = Vector2(570, 48)
+	checkpoint_label.position = Vector2(530, 14)
+	checkpoint_label.size = Vector2(520, 48)
+	checkpoint_label.clip_text = true
 	checkpoint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	checkpoint_label.add_theme_font_size_override("font_size", 27 if GameSession.large_text else 22)
+	checkpoint_label.add_theme_font_size_override("font_size", 22 if GameSession.large_text else 19)
 	checkpoint_label.add_theme_color_override("font_color", Color("#ffda79"))
 	layer.add_child(checkpoint_label)
 	var menu_button := Button.new()
-	menu_button.text = "MAP"
-	menu_button.position = Vector2(1064, 12)
-	menu_button.size = Vector2(92, 48)
+	menu_button.text = "PAUSE"
+	menu_button.position = Vector2(1070, 12)
+	menu_button.size = Vector2(190, 52)
 	menu_button.process_mode = Node.PROCESS_MODE_ALWAYS
-	menu_button.pressed.connect(func(): get_tree().paused = false; exit_requested.emit())
+	menu_button.pressed.connect(toggle_pause_panel)
 	layer.add_child(menu_button)
+	build_pause_panel(layer)
+
+func build_pause_panel(layer: CanvasLayer) -> void:
+	pause_panel = PanelContainer.new()
+	pause_panel.position = Vector2(820, 72)
+	pause_panel.size = Vector2(336, 150)
+	pause_panel.visible = false
+	pause_panel.process_mode = Node.PROCESS_MODE_ALWAYS
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.02, 0.07, 0.12, 0.97)
+	style.border_color = Color("#84d5e8")
+	style.set_border_width_all(3)
+	style.set_corner_radius_all(16)
+	pause_panel.add_theme_stylebox_override("panel", style)
+	layer.add_child(pause_panel)
+	var rows := VBoxContainer.new()
+	rows.add_theme_constant_override("separation", 10)
+	pause_panel.add_child(rows)
+	var title := Label.new()
+	title.text = "RUN PAUSED"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 22)
+	title.add_theme_color_override("font_color", Color("#fff0a8"))
+	rows.add_child(title)
+	var actions := HBoxContainer.new()
+	actions.add_theme_constant_override("separation", 10)
+	rows.add_child(actions)
+	for spec in [["RESUME", resume_run], ["EXIT TO MAP", exit_run_to_map]]:
+		var button := Button.new()
+		button.text = spec[0]
+		button.custom_minimum_size = Vector2(150, 58)
+		button.add_theme_font_size_override("font_size", 18)
+		button.pressed.connect(spec[1])
+		actions.add_child(button)
+
+func toggle_pause_panel() -> void:
+	if pause_panel.visible: resume_run()
+	else:
+		pause_panel.visible = true
+		get_tree().paused = true
+
+func resume_run() -> void:
+	pause_panel.visible = false
+	get_tree().paused = false
+
+func exit_run_to_map() -> void:
+	pause_panel.visible = false
+	get_tree().paused = false
+	exit_requested.emit()
 
 func _process(_delta: float) -> void:
 	if autoplay_audit: run_autoplay_audit(_delta)
@@ -520,8 +572,8 @@ func _process(_delta: float) -> void:
 	if GameSession.review_mode: update_debug_labels()
 	if player:
 		var route := "HIGH" if player.global_position.y < 350.0 else "LOW" if player.global_position.y > 575.0 else "PRECISION"
-		hud_label.text = "HP %d   SCORE %d   KEY %s   RESCUE %d/2" % [player.health, player.score, "YES" if key_collected else "NO", survivors_found]
-		hud_secondary.text = "BEST %d   COMBO x%d   %s · %s" % [best_score, player.combo, player.state.to_upper(), route]
+		hud_label.text = "HP %d   SCORE %d   KEY %s   RESCUE %d/2" % [player.health, player.score, "✓" if key_collected else "—", survivors_found]
+		hud_secondary.text = "AURORA %d   BEST %d   COMBO x%d   %s · %s" % [player.coins, best_score, player.combo, player.state.to_upper(), route]
 
 func run_autoplay_audit(delta: float) -> void:
 	if not is_instance_valid(player): return
