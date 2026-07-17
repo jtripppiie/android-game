@@ -33,6 +33,16 @@ and re-pressed the entire touch action set, which could turn a held thumb into
 repeated jump, air-jump, stomp, or dash triggers. Held actions now remain held;
 only genuine entry and exit from a control emits press and release edges.
 
+Boss collision shutdown is now deferred when the final snowball lands. The hit
+arrives during an area-overlap flush, where directly changing monitoring could
+raise a physics-server error and leave a one-frame lethal overlap at defeat.
+Both monitoring directions are disabled safely before the queued cleanup.
+
+Respawn now clears the Aurora ring chain, its scoring window, the temporary
+speed surge, and the stale grounded flag. A fall or water recovery can no longer
+carry pre-death boost state into the checkpoint or suppress the next legitimate
+landing transition.
+
 ## Snow terrain reconstruction
 
 Main-route platforms no longer render as flat gray or pastel rectangles with a

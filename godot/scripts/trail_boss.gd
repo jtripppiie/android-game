@@ -102,7 +102,11 @@ func snowball_hit(_projectile: Node) -> void:
 	feedback.emit("%s HIT · %d/%d" % [boss_name, health, max_health])
 	if health <= 0:
 		state = State.DEFEATED
-		monitoring = false
+		# snowball_hit is normally entered from Area2D.area_entered while the
+		# physics server is flushing overlaps. Directly changing monitoring here
+		# can throw and leave a one-frame lethal boss collision behind.
+		set_deferred("monitoring", false)
+		set_deferred("monitorable", false)
 		defeated.emit()
 		queue_free()
 

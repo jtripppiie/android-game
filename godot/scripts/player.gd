@@ -190,6 +190,10 @@ func respawn() -> void:
 	jump_buffer = 0.0
 	coyote = 0.0
 	air_jumps_left = 1
+	ring_chain = 0
+	ring_chain_timer = 0.0
+	ring_rush_timer = 0.0
+	was_on_floor = false
 	state = "idle"
 	invulnerability = 1.2
 	velocity = Vector2.ZERO

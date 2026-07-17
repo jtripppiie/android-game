@@ -18,7 +18,8 @@ required = [
     "scripts/trail_boss.gd", "scripts/boss_hazard.gd", "scripts/review_notebook.gd",
     "assets/runner_overhaul.png",
     "assets/route_platform_ice.png", "assets/route_platform_moving.png",
-    "assets/route_platform_snow.png", "assets/glacial_water_surface.png",
+    "assets/route_platform_snow.png", "assets/route_terrain_snow_v2.png",
+    "assets/glacial_water_surface.png",
     "assets/boss_laser_emitter.png", "assets/laser_ice_impact.png",
     "assets/arctic_launch_pad.png",
     "assets/aurora_supply_block.png",
@@ -42,6 +43,7 @@ export_preset = (root / "export_presets.cfg").read_text()
 world = (root / "scripts/world.gd").read_text()
 player = (root / "scripts/player.gd").read_text()
 touch = (root / "scripts/touch_controls.gd").read_text()
+boss = (root / "scripts/trail_boss.gd").read_text()
 assert 'run/main_scene="res://scenes/main.tscn"' in project
 for marker in ('image="res://assets/boot_splash.png"', "fullsize=true", "use_filter=true"):
     assert marker in project, marker
@@ -70,12 +72,16 @@ for marker in ("enemy_spawn_positions", "REFUSED STACKED WILDLIFE", "distance_to
     assert marker in world, marker
 for state in ("idle", "run", "sprint", "crouch", "jump", "fall", "dash", "stomp"):
     assert f'"{state}"' in player, state
+for marker in ("ring_chain = 0", "ring_chain_timer = 0.0", "ring_rush_timer = 0.0", "was_on_floor = false"):
+    assert marker in player, marker
 for action in ("move_left", "move_right", "crouch", "jump", "fire", "sprint", "dash"):
     assert f'"{action}"' in touch, action
 for marker in ("layout_controls", "SAFE_MARGIN", "InputEventScreenTouch", "InputEventMouseButton", "dpad_up", "dpad_down", "input_action_for", "control_color", "control_text_color", "release_all_touches", "dpad_touch_contains", "dpad_input_vector", "draw_dpad_arrow", "apply_touch_action_changes", "touch_pressed_actions", "DPAD_DRIFT_MARGIN", 'return "SNOW"'):
     assert marker in touch, marker
 for marker in ("build_snow_terrain", "build_snow_slope", "route_terrain_snow_v2.png", "AtlasTexture", "STRETCH_SCALE", "mapped_uv", "crest_shadow"):
     assert marker in world, marker
+for marker in ('set_deferred("monitoring", false)', 'set_deferred("monitorable", false)'):
+    assert marker in boss, marker
 
 image = Image.open(root / "assets/runner_overhaul.png")
 assert image.mode == "RGBA", image.mode

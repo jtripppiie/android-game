@@ -120,13 +120,22 @@ func run_lifecycle_audit() -> void:
 	await get_tree().process_frame
 	assert(get_tree().get_nodes_in_group("player").size() == 1)
 	assert(get_tree().get_nodes_in_group("active_stage").size() == 1)
+	var first_runner := get_tree().get_first_node_in_group("player") as AlaskaRunner
+	first_runner.ring_chain = 4
+	first_runner.ring_chain_timer = 1.0
+	first_runner.ring_rush_timer = 3.0
+	first_runner.was_on_floor = true
+	first_runner.respawn()
+	assert(first_runner.ring_chain == 0)
+	assert(first_runner.ring_chain_timer == 0.0 and first_runner.ring_rush_timer == 0.0)
+	assert(not first_runner.was_on_floor)
 	show_map()
 	await get_tree().process_frame
 	start_stage(1)
 	await get_tree().process_frame
 	assert(get_tree().get_nodes_in_group("player").size() == 1)
 	assert(get_tree().get_nodes_in_group("active_stage").size() == 1)
-	print("LIFECYCLE AUDIT PASS · map transition · one world · one runner")
+	print("LIFECYCLE AUDIT PASS · clean respawn · map transition · one world · one runner")
 	get_tree().quit(0)
 
 func run_system_audit() -> void:
