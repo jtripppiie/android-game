@@ -1,0 +1,34 @@
+YOU RUSH: ALASKA 5.4.0 — Android build metadata
+Generated: 2026-07-17
+
+Production Android debug APK
+Path: app/build/outputs/apk/debug/you-rush-alaska-5.4.0-debug.apk
+Size: 95027990 bytes
+SHA-256: eda9e54de358261d3d4222a4cf18255efd45fde2ae985715e947ef1553fb5e96
+Architectures: arm64-v8a
+
+Emulator Android debug APK
+Path: app/build/outputs/apk/debug/you-rush-alaska-5.4.0-x86_64-debug.apk
+Size: 100000152 bytes
+SHA-256: cf68ee08aa39d7eed073af79c051773a4f48e7854833ff4f10d9a79210eadb0a
+Architectures: x86_64
+
+Package: com.jtripppiie.mooserush
+Version code: 540
+Version name: 5.4.0
+Minimum SDK: 24
+Target SDK: 36
+Compile SDK: 36
+Signing: Android APK Signature Scheme v2
+Signer: CN=Godot, OU=Godot Engine, O=Stichting Godot, C=NL
+Signer certificate SHA-256: 9226c9797e988a4c0495a9ab946e32e599b083d07b2250c85d31e91714a2e89b
+zipalign: Verification successful for both APKs
+
+Commands:
+  sha256sum <apk>
+  /home/jt/android-sdk/build-tools/36.1.0/aapt dump badging <apk>
+  /home/jt/android-sdk/build-tools/36.1.0/apksigner verify --verbose --print-certs <apk>
+  /home/jt/android-sdk/build-tools/36.1.0/zipalign -c -v 4 <apk>
+
+The APKs are build outputs and are intentionally excluded from Git. This metadata
+file is committed so every distributed binary can be matched to the verified build.

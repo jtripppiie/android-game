@@ -1,0 +1,8 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+AUTOPLAY START stage=0 player_ready=true
+AUTOPLAY PROGRESS stage=0 time=10 x=504.3 health=3 key=true rescues=1 boss=false
+AUTOPLAY PROGRESS stage=0 time=20 x=4683.0 health=3 key=true rescues=2 boss=false
+AUTOPLAY RECOVERY stage=0 death=1 checkpoint_x=4800.0
+AUTOPLAY PROGRESS stage=0 time=30 x=4829.0 health=3 key=true rescues=2 boss=false
+AUTOPLAY PASS stage=0 max_x=5397.2 complete=true key=true rescues=2 boss=true jumps=25 hits=4 deaths=1 time=36.20 score=301 failure_reason=none

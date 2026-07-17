@@ -20,6 +20,11 @@ On the map, choose one of the five Alaska stages. A stage is complete only after
 you find its key, rescue both people, defeat its boss, and reach the beacon.
 Progress and scores save on the device.
 
+The completion card awards up to three stars: one for the stage score target,
+one for the stage time target, and one for taking no damage. The map keeps the
+best score, fastest time, and most stars. These are replay goals, not
+requirements for unlocking the next trail.
+
 Pickup jobs:
 
 - Aurora badge: +12 base score, extends the combo, and increases `AURORA`.
@@ -43,9 +48,9 @@ full notebook so it can be pasted into an email or issue.
 
 Examples of useful notes:
 
-- `MIDNIGHT-SUN-RUN-PF-4 is too far from PF-3`
-- `SALMON-RUSH-AN-12 hits me before I can see it`
-- `DARK-WINTER-BOSS-18 recovery is too short`
+- `S1-PF04 is too far from S1-PF03`
+- `S2-AN02 hits me before I can see it`
+- `S4-BOSS01 recovery is too short`
 
 The letters include: `PF` platform/slope, `AN` animal, `WT` water, `IC`
 breakable ice, `CP` checkpoint, `GO` finish, and `BOSS` boss. Press F10 with a
@@ -102,7 +107,8 @@ the game does not upload it. Use a photo you have permission to use. Never put a
 private photo in Git. `RESET PHOTO` returns to the default runner.
 
 Accessibility has audio mute, optional vibration, larger HUD text, reduced
-camera motion, and a high-contrast background. These settings also save locally.
+camera motion, a high-contrast background, and Small/Standard/Large touch
+controls. These settings also save locally.
 
 ## Making a small change
 
@@ -110,6 +116,8 @@ The new game lives in `godot/`. Open that folder with Godot 4.7.1.
 
 - Stage spacing and objects: `godot/scripts/world.gd`
 - Running and jumping numbers: `godot/scripts/player.gd`
+- Runner collision/art/camera: `godot/scenes/player.tscn`
+- Camera look-ahead and impact: `godot/scripts/runner_camera.gd`
 - Boss timing and patterns: `godot/scripts/trail_boss.gd`
 - Menus and map: `godot/scripts/main.gd`
 - Saved progress: `godot/scripts/game_session.gd`
@@ -134,9 +142,10 @@ Install Godot 4.7.1, its matching Android export templates, Android SDK 36, and
 Java 17. Open `godot/project.godot`. In Godot choose **Project > Install Android
 Build Template** if `godot/android/build` is absent, then reapply/copy the native
 bridge files described in `docs/TECHNICAL_MAINTENANCE.md`. Choose **Project >
-Export > Android Debug > Export Project**.
+Export > Android Debug > Export Project**. Use `Android Debug` for an ARM64
+phone or tablet. `Android Emulator Debug` is only for an x86_64 emulator.
 
-The expected package is `com.jtripppiie.mooserush`, version code 500 or higher.
+The expected package is `com.jtripppiie.mooserush`, version code 540 or higher.
 Never lower the version code for a build meant to update an installed copy.
 
 ## Before giving a build to somebody
@@ -154,5 +163,5 @@ a particular phone. Test on at least one real Android phone.
 - Build fails: copy the first actual `ERROR` plus 20 lines after it.
 - Git looks scary: run `git status`; do not use `git reset --hard`.
 
-The Java 4.2.2 build remains a rollback/reference build, but 5.0 is the primary
-game. Old documents are history, not the current source of truth.
+The Java 4.2.2 build remains a rollback/reference build, but Godot 5.4 is the
+primary game. Old documents are history, not the current source of truth.

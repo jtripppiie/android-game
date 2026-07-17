@@ -4,6 +4,8 @@ extends CharacterBody2D
 signal fired(origin: Vector2, direction: float)
 signal checkpoint_reached(position: Vector2)
 signal action_feedback(message: String)
+signal defeated
+signal damaged(health_remaining: int)
 
 const WALK_SPEED := 330.0
 const SPRINT_SPEED := 540.0
@@ -18,6 +20,8 @@ const DASH_SPEED := 780.0
 const DASH_SECONDS := 0.16
 const DASH_COOLDOWN := 0.70
 const STOMP_SPEED := 880.0
+const SHORT_JUMP_CUT := 0.52
+const FALL_LIMIT_Y := 850.0
 
 var coyote := 0.0
 var jump_buffer := 0.0
@@ -37,37 +41,23 @@ var score := 0
 var ring_chain := 0
 var ring_chain_timer := 0.0
 var ring_rush_timer := 0.0
-var sprite: Sprite2D
 var air_jumps_left := 1
+var controls_enabled := true
+var stomp_impact_pending := false
+
+@onready var presentation: PlayerPresentation = $Presentation
+@onready var camera: RunnerCamera = $Camera2D
+@onready var effects: RunnerEffects = $RunnerEffects
 
 func _ready() -> void:
 	spawn_point = global_position
 	add_to_group("player")
-	var shape := CollisionShape2D.new()
-	var capsule := CapsuleShape2D.new()
-	capsule.radius = 22.0
-	capsule.height = 96.0
-	shape.shape = capsule
-	shape.position = Vector2(0, -48)
-	add_child(shape)
-	sprite = Sprite2D.new()
-	sprite.texture = load("res://assets/runner_overhaul.png")
-	sprite.hframes = 6
-	sprite.scale = Vector2(0.34, 0.34)
-	sprite.position = Vector2(0, -90)
-	add_child(sprite)
-	apply_photo_head()
-	var camera := Camera2D.new()
-	camera.position = Vector2(220, -95)
 	camera.position_smoothing_enabled = not GameSession.reduced_motion
-	camera.position_smoothing_speed = 6.5
-	camera.limit_left = 0
-	camera.limit_top = -260
-	camera.limit_right = 6200
-	camera.limit_bottom = 760
-	add_child(camera)
 
 func _physics_process(delta: float) -> void:
+	if not controls_enabled:
+		velocity = Vector2.ZERO
+		return
 	fire_cooldown = maxf(0.0, fire_cooldown - delta)
 	dash_cooldown = maxf(0.0, dash_cooldown - delta)
 	invulnerability = maxf(0.0, invulnerability - delta)
@@ -94,22 +84,22 @@ func _physics_process(delta: float) -> void:
 		jump_buffer = 0.0
 		air_jumps_left -= 1
 		action_feedback.emit("AIR JUMP")
-	if Input.is_action_just_released("jump") and velocity.y < -210.0: velocity.y *= 0.52
+	if Input.is_action_just_released("jump") and velocity.y < -210.0:
+		velocity.y *= SHORT_JUMP_CUT
 	var axis := Input.get_axis("move_left", "move_right")
 	if Input.is_action_just_pressed("dash") and dash_cooldown <= 0.0:
 		dash_timer = DASH_SECONDS
 		dash_cooldown = DASH_COOLDOWN
-		velocity = Vector2(facing * DASH_SPEED, 0.0)
+		velocity = Vector2(facing * DASH_SPEED, clampf(velocity.y, -110.0, 110.0))
+		camera.add_trauma(0.06)
 		action_feedback.emit("TRAIL DASH")
 	if not is_on_floor() and Input.is_action_just_pressed("crouch") and dash_timer <= 0.0:
-		velocity.y = STOMP_SPEED
-		state = "stomp"
-		action_feedback.emit("ICE STOMP")
+		queue_stomp()
 	if dash_timer > 0.0:
 		velocity.x = facing * DASH_SPEED
-		velocity.y = 0.0
+		velocity.y += GRAVITY * 0.16 * delta
 		move_and_slide()
-		update_animation(delta, axis)
+		update_animation(axis)
 		return
 	var target_speed := SPRINT_SPEED if Input.is_action_pressed("sprint") else WALK_SPEED
 	if ring_rush_timer > 0.0: target_speed *= 1.18
@@ -124,13 +114,19 @@ func _physics_process(delta: float) -> void:
 		fired.emit(global_position + Vector2(facing * 32, -52), facing)
 	move_and_slide()
 	if is_on_floor() and not was_on_floor and velocity.y >= 0.0:
+		var impact_strength := 1.45 if stomp_impact_pending else 1.0 if absf(velocity.x) > 280.0 else 0.65
+		effects.emit_snow(impact_strength)
+		camera.add_trauma(0.30 if stomp_impact_pending else 0.16 if impact_strength >= 1.0 else 0.08)
+		stomp_impact_pending = false
 		action_feedback.emit("PERFECT LAND" if absf(velocity.x) > 280.0 else "LAND")
 	was_on_floor = is_on_floor()
-	if global_position.y > 850: respawn()
+	if global_position.y > FALL_LIMIT_Y:
+		action_feedback.emit("ROUTE LOST · CHECKPOINT")
+		respawn(true)
 	modulate = Color(1, 1, 1, 0.42 if invulnerability > 0.0 and int(invulnerability * 16.0) % 2 == 0 else 1.0)
-	update_animation(delta, axis)
+	update_animation(axis)
 
-func update_animation(delta: float, axis: float) -> void:
+func update_animation(_axis: float) -> void:
 	if dash_timer > 0.0: state = "dash"
 	elif not is_on_floor() and velocity.y > 700.0: state = "stomp"
 	elif not is_on_floor(): state = "jump" if velocity.y < 0.0 else "fall"
@@ -138,15 +134,7 @@ func update_animation(delta: float, axis: float) -> void:
 	elif absf(velocity.x) > 320.0: state = "sprint"
 	elif absf(velocity.x) > 35.0: state = "run"
 	else: state = "idle"
-	sprite.flip_h = facing < 0.0
-	if state == "idle": sprite.frame = 0
-	elif state == "crouch": sprite.frame = 1
-	elif state == "jump" or state == "dash": sprite.frame = 3
-	elif state == "stomp": sprite.frame = 2
-	elif state == "fall": sprite.frame = 4
-	else:
-		var fps := 13.0 if state == "sprint" else 9.0
-		sprite.frame = int(Time.get_ticks_msec() / (1000.0 / fps)) % 6
+	presentation.update_state(facing, state, absf(velocity.x), is_on_floor())
 
 func set_checkpoint(point: Vector2) -> void:
 	spawn_point = point
@@ -155,14 +143,33 @@ func set_checkpoint(point: Vector2) -> void:
 func queue_jump() -> void:
 	jump_buffer = JUMP_BUFFER
 
+
+func queue_stomp() -> bool:
+	if is_on_floor() or dash_timer > 0.0 or not controls_enabled:
+		return false
+	velocity.y = STOMP_SPEED
+	state = "stomp"
+	stomp_impact_pending = true
+	action_feedback.emit("ICE STOMP")
+	return true
+
+
 func take_hit(from_x: float) -> void:
-	if invulnerability > 0.0 or dash_timer > 0.0: return
+	if not controls_enabled or invulnerability > 0.0 or dash_timer > 0.0:
+		return
 	health -= 1
+	damaged.emit(health)
 	combo = 0
 	invulnerability = 1.0
+	effects.emit_hit()
+	camera.add_trauma(0.32)
 	velocity = Vector2(signf(global_position.x - from_x) * 320.0, -360.0)
 	action_feedback.emit("HIT · COMBO LOST")
-	if health <= 0: respawn()
+	if health <= 0:
+		controls_enabled = false
+		velocity = Vector2.ZERO
+		action_feedback.emit("RUN ENDED · RESTART OR MAP")
+		defeated.emit()
 
 func enemy_defeated(stomp: bool) -> void:
 	chain_action(42 if stomp else 24)
@@ -180,7 +187,9 @@ func collect_aurora_ring() -> void:
 	chain_action(18 + ring_chain * 4)
 	action_feedback.emit("AURORA RING x%d · SPEED SURGE" % ring_chain)
 
-func respawn() -> void:
+func respawn(apply_score_penalty := false) -> void:
+	if apply_score_penalty:
+		score = maxi(0, score - 25)
 	health = 3
 	combo = 0
 	combo_timer = 0.0
@@ -190,30 +199,29 @@ func respawn() -> void:
 	jump_buffer = 0.0
 	coyote = 0.0
 	air_jumps_left = 1
+	facing = 1.0
 	ring_chain = 0
 	ring_chain_timer = 0.0
 	ring_rush_timer = 0.0
 	was_on_floor = false
+	stomp_impact_pending = false
 	state = "idle"
 	invulnerability = 1.2
+	controls_enabled = true
 	velocity = Vector2.ZERO
 	global_position = spawn_point
+	effects.clear()
+	camera.reset_feedback()
 	action_feedback.emit("TRAIL RECOVERY · TRY AGAIN")
+
+
+func set_controls_enabled(enabled: bool) -> void:
+	controls_enabled = enabled
+	if not enabled:
+		velocity = Vector2.ZERO
 
 func chain_action(base_score: int) -> void:
 	combo += 1
 	combo_timer = maxf(2.15, 2.8 - maxf(0.0, combo - 1) * 0.045)
 	var multiplier := 4 if combo >= 10 else 3 if combo >= 7 else 2 if combo >= 4 else 1
 	score += base_score * multiplier
-
-func apply_photo_head() -> void:
-	if GameSession.photo_path.is_empty(): return
-	var image := Image.new()
-	if image.load(GameSession.photo_path) != OK: return
-	image.resize(96, 96, Image.INTERPOLATE_LANCZOS)
-	var head := Sprite2D.new()
-	head.texture = ImageTexture.create_from_image(image)
-	head.position = Vector2(0, -82)
-	head.scale = Vector2(0.52, 0.52)
-	head.z_index = 3
-	add_child(head)

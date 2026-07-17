@@ -1,0 +1,1281 @@
+--------- beginning of main
+07-17 14:43:15.885   461   461 W livelock: sample 1.648s
+--------- beginning of system
+07-17 14:43:22.654   552   566 I ActivityManager: Force stopping com.jtripppiie.mooserush appid=10131 user=0: from pid 2829
+07-17 14:43:22.666   552   566 I ActivityManager: Killing 2204:com.android.dynsystem/1000 (adj 985): empty #17
+07-17 14:43:22.771   288   288 I Zygote  : Process 2204 exited due to signal 9 (Killed)
+07-17 14:43:22.788   552   583 I libprocessgroup: Successfully killed process cgroup uid 1000 pid 2204 in 113ms
+07-17 14:43:22.795  2439  2439 D CarrierSvcBindHelper: No carrier app for: 0
+07-17 14:43:23.164   552   616 I ActivityTaskManager: START u0 {flg=0x10000000 cmp=com.jtripppiie.mooserush/com.godot.game.GodotAppLauncher (has extras)} from uid 2000
+07-17 14:43:23.179   552   574 D EventSequenceValidator: inc AccIntentStartedEvents to 1
+07-17 14:43:23.179   552   574 D EventSequenceValidator: inc AccIntentStartedEvents to 2
+07-17 14:43:23.193   425   634 W iorapd  : Overwriting transition from kActivityLaunched to kIntentStarted into kActivityLaunchCancelled
+07-17 14:43:23.440  2834  2836 I cmd     : oneway function results will be dropped but finished with status OK and parcel size 4
+07-17 14:43:23.602   552   574 D CompatibilityChangeReporter: Compat change id reported: 135634846; UID 10131; state: DISABLED
+07-17 14:43:23.610   552   582 D CompatibilityChangeReporter: Compat change id reported: 143937733; UID 10131; state: ENABLED
+07-17 14:43:23.627   425   634 W iorapd  : Rejecting transition from kActivityLaunchCancelled to kActivityLaunched
+07-17 14:43:23.659   552   574 D EventSequenceValidator: dec AccIntentStartedEvents to 1
+07-17 14:43:23.664   425   634 W iorapd  : Rejecting transition from kUninitialized to kActivityLaunchCancelled
+07-17 14:43:23.820   288   288 D Zygote  : Forked child process 2837
+07-17 14:43:23.903   552   582 W ActivityManager: Slow operation: 320ms so far, now at startProcess: returned from zygote!
+07-17 14:43:23.904   552   582 W ActivityManager: Slow operation: 321ms so far, now at startProcess: done updating battery stats
+07-17 14:43:23.922   552   582 W ActivityManager: Slow operation: 339ms so far, now at startProcess: building log message
+07-17 14:43:23.923   552   582 I ActivityManager: Start proc 2837:com.jtripppiie.mooserush/u0a131 for pre-top-activity {com.jtripppiie.mooserush/com.godot.game.GodotAppLauncher}
+07-17 14:43:23.923   552   582 W ActivityManager: Slow operation: 339ms so far, now at startProcess: starting to update pids map
+07-17 14:43:23.925   552   582 W ActivityManager: Slow operation: 341ms so far, now at startProcess: done updating pids map
+07-17 14:43:24.050  2837  2837 I ppiie.mooserus: Late-enabling -Xcheck:jni
+07-17 14:43:24.243  2837  2837 I ppiie.mooserus: Unquickening 12 vdex files!
+07-17 14:43:24.328   552   575 I Choreographer: Skipped 54 frames!  The application may be doing too much work on its main thread.
+07-17 14:43:24.331  2837  2837 W ppiie.mooserus: Unexpected CPU variant for X86 using defaults: x86_64
+07-17 14:43:24.629   305   305 D goldfish-address-space: claimShared: Ask to claim region [0x3f8000000 0x3f89a4000]
+07-17 14:43:24.638   405   437 I adbd    : jdwp connection from 2837
+07-17 14:43:24.987   552   618 W InputReader: Device virtio_input_multi_touch_7 is associated with display ADISPLAY_ID_NONE.
+07-17 14:43:24.988   552   618 W InputReader: Device virtio_input_multi_touch_4 is associated with display ADISPLAY_ID_NONE.
+07-17 14:43:24.988   552   618 W InputReader: Device virtio_input_multi_touch_5 is associated with display ADISPLAY_ID_NONE.
+07-17 14:43:24.988   552   618 W InputReader: Device virtio_input_multi_touch_2 is associated with display ADISPLAY_ID_NONE.
+07-17 14:43:24.988   552   618 W InputReader: Device virtio_input_multi_touch_8 is associated with display ADISPLAY_ID_NONE.
+07-17 14:43:24.989   552   618 W InputReader: Device virtio_input_multi_touch_10 is associated with display ADISPLAY_ID_NONE.
+07-17 14:43:24.989   552   618 W InputReader: Device virtio_input_multi_touch_9 is associated with display ADISPLAY_ID_NONE.
+07-17 14:43:24.989   552   618 W InputReader: Device virtio_input_multi_touch_3 is associated with display ADISPLAY_ID_NONE.
+07-17 14:43:25.020   552   618 W InputReader: Device virtio_input_multi_touch_6 is associated with display ADISPLAY_ID_NONE.
+07-17 14:43:25.020   552   618 W InputReader: Device virtio_input_multi_touch_11 is associated with display ADISPLAY_ID_NONE.
+07-17 14:43:25.104  1064  1139 D DefaultDisplay: Available size changed from [Point(1080, 1003), Point(2208, 2063)] to [Point(1080, 1014), Point(2208, 2142)]
+07-17 14:43:25.116  1064  1064 D ConfigMonitor: Available size changed from [Point(1080, 1014), Point(2208, 2142)] to [Point(1080, 1003), Point(2208, 2063)]
+07-17 14:43:25.214   552   618 W InputReader: Device virtio_input_multi_touch_7 is associated with display ADISPLAY_ID_NONE.
+07-17 14:43:25.215   552   618 W InputReader: Device virtio_input_multi_touch_4 is associated with display ADISPLAY_ID_NONE.
+07-17 14:43:25.215   552   618 W InputReader: Device virtio_input_multi_touch_5 is associated with display ADISPLAY_ID_NONE.
+07-17 14:43:25.215   552   618 W InputReader: Device virtio_input_multi_touch_2 is associated with display ADISPLAY_ID_NONE.
+07-17 14:43:25.215   552   618 W InputReader: Device virtio_input_multi_touch_8 is associated with display ADISPLAY_ID_NONE.
+07-17 14:43:25.215   552   618 W InputReader: Device virtio_input_multi_touch_10 is associated with display ADISPLAY_ID_NONE.
+07-17 14:43:25.216   552   618 W InputReader: Device virtio_input_multi_touch_9 is associated with display ADISPLAY_ID_NONE.
+07-17 14:43:25.216   552   618 W InputReader: Device virtio_input_multi_touch_3 is associated with display ADISPLAY_ID_NONE.
+07-17 14:43:25.216   552   618 W InputReader: Device virtio_input_multi_touch_6 is associated with display ADISPLAY_ID_NONE.
+07-17 14:43:25.216   552   618 W InputReader: Device virtio_input_multi_touch_11 is associated with display ADISPLAY_ID_NONE.
+07-17 14:43:25.224   552   618 W InputReader: Device virtio_input_multi_touch_7 is associated with display ADISPLAY_ID_NONE.
+07-17 14:43:25.225   552   618 W InputReader: Device virtio_input_multi_touch_4 is associated with display ADISPLAY_ID_NONE.
+07-17 14:43:25.225   552   618 W InputReader: Device virtio_input_multi_touch_5 is associated with display ADISPLAY_ID_NONE.
+07-17 14:43:25.225   552   618 W InputReader: Device virtio_input_multi_touch_2 is associated with display ADISPLAY_ID_NONE.
+07-17 14:43:25.262   552   618 W InputReader: Device virtio_input_multi_touch_8 is associated with display ADISPLAY_ID_NONE.
+07-17 14:43:25.263   552   618 W InputReader: Device virtio_input_multi_touch_10 is associated with display ADISPLAY_ID_NONE.
+07-17 14:43:25.263   552   618 W InputReader: Device virtio_input_multi_touch_9 is associated with display ADISPLAY_ID_NONE.
+07-17 14:43:25.263   552   618 W InputReader: Device virtio_input_multi_touch_3 is associated with display ADISPLAY_ID_NONE.
+07-17 14:43:25.263   552   618 W InputReader: Device virtio_input_multi_touch_6 is associated with display ADISPLAY_ID_NONE.
+07-17 14:43:25.263   552   618 W InputReader: Device virtio_input_multi_touch_11 is associated with display ADISPLAY_ID_NONE.
+07-17 14:43:25.289   552   618 W ActivityTaskManager: Current config: {1.0 310mcc260mnc [en_US] ldltr sw392dp w392dp h778dp 440dpi nrml long port finger qwerty/v/v -nav/h winConfig={ mBounds=Rect(0, 0 - 1080, 2340) mAppBounds=Rect(0, 0 - 1080, 2208) mWindowingMode=fullscreen mDisplayWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} s.9} unchanged for IME proc com.android.inputmethod.latin
+07-17 14:43:25.320   552   618 I ActivityTaskManager: Config changes=20000400 {1.0 310mcc260mnc [en_US] ldltr sw392dp w392dp h750dp 440dpi nrml long port finger qwerty/v/v -nav/h winConfig={ mBounds=Rect(0, 0 - 1080, 2340) mAppBounds=Rect(0, 136 - 1080, 2208) mWindowingMode=fullscreen mDisplayWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} s.42}
+07-17 14:43:25.388   305   305 D goldfish-address-space: claimShared: Ask to claim region [0x3fbfa9000 0x3fbfab000]
+07-17 14:43:25.448  1064  1590 E FrameEvents: updateAcquireFence: Did not find frame.
+07-17 14:43:25.450   305   305 D goldfish-address-space: claimShared: Ask to claim region [0x3fbfab000 0x3fbfad000]
+07-17 14:43:25.594   552   618 W ActivityTaskManager: Current config: {1.0 310mcc260mnc [en_US] ldltr sw392dp w392dp h778dp 440dpi nrml long port finger qwerty/v/v -nav/h winConfig={ mBounds=Rect(0, 0 - 1080, 2340) mAppBounds=Rect(0, 0 - 1080, 2208) mWindowingMode=fullscreen mDisplayWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} s.9} unchanged for IME proc com.android.inputmethod.latin
+07-17 14:43:25.582   305   305 D goldfish-address-space: claimShared: Ask to claim region [0x3fbfab000 0x3fbfad000]
+07-17 14:43:25.666  1064  1590 E FrameEvents: updateAcquireFence: Did not find frame.
+07-17 14:43:25.667   305   305 D goldfish-address-space: claimShared: Ask to claim region [0x3fbfad000 0x3fbfaf000]
+07-17 14:43:25.693   552   618 I WindowManager: Override config changes=20000400 {1.0 310mcc260mnc [en_US] ldltr sw392dp w392dp h750dp 440dpi nrml long port finger qwerty/v/v -nav/h winConfig={ mBounds=Rect(0, 0 - 1080, 2340) mAppBounds=Rect(0, 136 - 1080, 2208) mWindowingMode=fullscreen mDisplayWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} s.42} for displayId=0
+07-17 14:43:25.724   552   618 V ActivityTaskManager: Sending to IME proc com.android.inputmethod.latin new config {1.0 310mcc260mnc [en_US] ldltr sw392dp w392dp h750dp 440dpi nrml long port finger qwerty/v/v -nav/h winConfig={ mBounds=Rect(0, 0 - 1080, 2340) mAppBounds=Rect(0, 136 - 1080, 2208) mWindowingMode=fullscreen mDisplayWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} s.42}
+07-17 14:43:25.742   552   618 W ActivityTaskManager: Current config: {1.0 310mcc260mnc [en_US] ldltr sw392dp w392dp h750dp 440dpi nrml long port finger qwerty/v/v -nav/h winConfig={ mBounds=Rect(0, 0 - 1080, 2340) mAppBounds=Rect(0, 136 - 1080, 2208) mWindowingMode=fullscreen mDisplayWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} s.42} unchanged for IME proc com.android.inputmethod.latin
+07-17 14:43:25.879   552   618 V WindowManager: Orientation start waiting for draw, mDrawState=DRAW_PENDING in Window{b9f42f5 u0 Application Not Responding: system}, surfaceController Surface(name=Application Not Responding: system)/@0x7af009b
+07-17 14:43:25.880   552   618 V WindowManager: Orientation start waiting for draw, mDrawState=DRAW_PENDING in Window{2f31925 u0 ScreenDecorOverlayBottom}, surfaceController Surface(name=ScreenDecorOverlayBottom)/@0xc6aca71
+07-17 14:43:25.880   552   618 V WindowManager: Orientation start waiting for draw, mDrawState=DRAW_PENDING in Window{6b30bd8 u0 ScreenDecorOverlay}, surfaceController Surface(name=ScreenDecorOverlay)/@0x7a2b4e
+07-17 14:43:25.880   552   618 V WindowManager: Orientation start waiting for draw, mDrawState=DRAW_PENDING in Window{3fcfc7b u0 NavigationBar0}, surfaceController Surface(name=NavigationBar0)/@0xfb24bcf
+07-17 14:43:25.881   552   618 V WindowManager: Orientation start waiting for draw, mDrawState=DRAW_PENDING in Window{f0dafe2 u0 StatusBar}, surfaceController Surface(name=StatusBar)/@0x2a7df48
+07-17 14:43:25.881   552   618 V WindowManager: Orientation start waiting for draw, mDrawState=DRAW_PENDING in Window{4e921be u0 Application Not Responding: com.android.launcher3}, surfaceController Surface(name=Application Not Responding: com.android.launcher3)/@0xa94ac38
+07-17 14:43:25.890   552   618 V WindowManager: Orientation start waiting for draw, mDrawState=DRAW_PENDING in Window{364418f u0 Application Not Responding: com.android.systemui}, surfaceController Surface(name=Application Not Responding: com.android.systemui)/@0xabf0b1d
+07-17 14:43:25.890   552   618 V WindowManager: Orientation start waiting for draw, mDrawState=DRAW_PENDING in Window{8d716ab u0 Splash Screen com.jtripppiie.mooserush}, surfaceController Surface(name=Splash Screen com.jtripppiie.mooserush)/@0x9169411
+07-17 14:43:25.891   552   618 V WindowManager: Orientation start waiting for draw, mDrawState=DRAW_PENDING in Window{8b11a3b u0 com.android.systemui.ImageWallpaper}, surfaceController Surface(name=com.android.systemui.ImageWallpaper)/@0xc463c19
+07-17 14:43:26.041   348   598 D PermissionCache: checking android.permission.READ_FRAME_BUFFER for uid=1000 => granted (874 us)
+07-17 14:43:26.046   305   305 D goldfish-address-space: claimShared: Ask to claim region [0x3fd3d4000 0x3fdd78000]
+07-17 14:43:26.204   552   618 W ImageReader_JNI: Unable to acquire a buffer item, very likely client tried to acquire more than maxImages buffers
+07-17 14:43:26.365   552   618 W InputReader: Device virtio_input_multi_touch_7 is associated with display ADISPLAY_ID_NONE.
+07-17 14:43:26.368   552   618 W InputReader: Device virtio_input_multi_touch_4 is associated with display ADISPLAY_ID_NONE.
+07-17 14:43:26.368   552   618 W InputReader: Device virtio_input_multi_touch_5 is associated with display ADISPLAY_ID_NONE.
+07-17 14:43:26.368   552   618 W InputReader: Device virtio_input_multi_touch_2 is associated with display ADISPLAY_ID_NONE.
+07-17 14:43:26.368   552   618 W InputReader: Device virtio_input_multi_touch_8 is associated with display ADISPLAY_ID_NONE.
+07-17 14:43:26.369   552   618 W InputReader: Device virtio_input_multi_touch_10 is associated with display ADISPLAY_ID_NONE.
+07-17 14:43:26.369   552   618 W InputReader: Device virtio_input_multi_touch_9 is associated with display ADISPLAY_ID_NONE.
+07-17 14:43:26.369   552   618 W InputReader: Device virtio_input_multi_touch_3 is associated with display ADISPLAY_ID_NONE.
+07-17 14:43:26.381   552   618 W InputReader: Device virtio_input_multi_touch_6 is associated with display ADISPLAY_ID_NONE.
+07-17 14:43:26.383   552   618 W InputReader: Device virtio_input_multi_touch_11 is associated with display ADISPLAY_ID_NONE.
+07-17 14:43:26.432   552   618 W ActivityManager: Slow operation: 1495ms so far, now at attachApplicationLocked: after mServices.attachApplicationLocked
+07-17 14:43:26.433   552   983 W system_server: Long monitor contention with owner Binder:552_7 (618) at void com.android.server.am.ActivityManagerService.attachApplication(android.app.IApplicationThread, long)(ActivityManagerService.java:5460) waiters=0 in void com.android.server.am.ActivityManagerService.unregisterReceiver(android.content.IIntentReceiver) for 622ms
+07-17 14:43:26.442   552   572 W system_server: Long monitor contention with owner Binder:552_7 (618) at void com.android.server.wm.WindowManagerService.onAnimationFinished()(WindowManagerService.java:7999) waiters=0 in void com.android.server.wm.RootWindowContainer.onDisplayChanged(int) for 1.435s
+07-17 14:43:26.444   552   572 W Looper  : Slow dispatch took 1444ms android.ui h=android.hardware.display.DisplayManagerGlobal$DisplayListenerDelegate c=null m=2
+07-17 14:43:26.449   552   572 W Looper  : Slow delivery took 1451ms android.ui h=android.hardware.display.DisplayManagerGlobal$DisplayListenerDelegate c=null m=2
+07-17 14:43:26.667   737   737 I Choreographer: Skipped 50 frames!  The application may be doing too much work on its main thread.
+07-17 14:43:26.689   552   575 I Choreographer: Skipped 141 frames!  The application may be doing too much work on its main thread.
+07-17 14:43:26.749   552   575 I Choreographer: Skipped 129 frames!  The application may be doing too much work on its main thread.
+07-17 14:43:26.771   552   572 W Looper  : Slow dispatch took 301ms android.ui h=android.view.ViewRootImpl$ViewRootHandler c=null m=30
+07-17 14:43:26.925   552   575 V WindowManager: Orientation start waiting for draw, mDrawState=DRAW_PENDING in Window{8d716ab u0 Splash Screen com.jtripppiie.mooserush}, surfaceController Surface(name=Splash Screen com.jtripppiie.mooserush)/@0x9169411
+07-17 14:43:26.954   305   305 D goldfish-address-space: claimShared: Ask to claim region [0x3fdd78000 0x3fe71c000]
+07-17 14:43:27.055  1064  1139 D DefaultDisplay: Available size changed from [Point(1080, 1003), Point(2072, 2063)] to [Point(1080, 1003), Point(2208, 2063)]
+07-17 14:43:27.316   737  1262 I Choreographer: Skipped 40 frames!  The application may be doing too much work on its main thread.
+07-17 14:43:27.631   552   575 I Choreographer: Skipped 46 frames!  The application may be doing too much work on its main thread.
+07-17 14:43:27.665   305   305 D goldfish-address-space: claimShared: Ask to claim region [0x3f94e0000 0x3f981e000]
+07-17 14:43:27.746   305   305 D goldfish-address-space: claimShared: Ask to claim region [0x3fe71c000 0x3ff0c0000]
+07-17 14:43:27.890   552   574 W WindowManager: Window freeze timeout expired.
+07-17 14:43:27.891   552   574 W WindowManager: Force clearing orientation change: Window{b9f42f5 u0 Application Not Responding: system}
+07-17 14:43:27.891   552   574 W WindowManager: Force clearing orientation change: Window{3fcfc7b u0 NavigationBar0}
+07-17 14:43:27.891   552   574 W WindowManager: Force clearing orientation change: Window{f0dafe2 u0 StatusBar}
+07-17 14:43:27.891   552   574 W WindowManager: Force clearing orientation change: Window{4e921be u0 Application Not Responding: com.android.launcher3}
+07-17 14:43:27.914   552   574 W WindowManager: Force clearing orientation change: Window{364418f u0 Application Not Responding: com.android.systemui}
+07-17 14:43:27.914   552   574 W WindowManager: Force clearing orientation change: Window{8b11a3b u0 com.android.systemui.ImageWallpaper}
+07-17 14:43:28.004  1064  1140 D LoaderTask: loadWorkspace: loading default favorites
+07-17 14:43:28.116  2837  2837 D NetworkSecurityConfig: No Network Security Config specified, using platform default
+07-17 14:43:28.120   552  1474 E TaskPersister: File error accessing recents directory (directory doesn't exist?).
+07-17 14:43:28.133  2837  2837 D NetworkSecurityConfig: No Network Security Config specified, using platform default
+07-17 14:43:28.416   305   305 D goldfish-address-space: claimShared: Ask to claim region [0x3f89a4000 0x3f8ce2000]
+07-17 14:43:28.424   737   931 D EglHelper: createEglContext start
+07-17 14:43:28.427   552   575 I Choreographer: Skipped 45 frames!  The application may be doing too much work on its main thread.
+07-17 14:43:28.450   737   931 D EGL_emulation: eglCreateContext: 0x7caf7989c3d0: maj 3 min 0 rcv 3
+07-17 14:43:28.481   737   931 D EglHelper: createEglContext done
+07-17 14:43:28.504   552  1392 I OpenGLRenderer: Davey! duration=1996ms; Flags=1, IntendedVsync=389554215831, Vsync=389854215819, OldestInputEvent=9223372036854775807, NewestInputEvent=0, HandleInputStart=389867369879, AnimationStart=389867374429, PerformTraversalsStart=389867376701, DrawStart=390830359178, SyncQueued=390953482957, SyncStart=390977165365, IssueDrawCommandsStart=391064754211, SwapBuffers=391396058765, FrameCompleted=391574361111, DequeueBufferDuration=70415667, QueueBufferDuration=15653305, GpuCompleted=0,
+07-17 14:43:28.530   737   931 D EglHelper: createEglSurface start
+07-17 14:43:28.603   305   305 D goldfish-address-space: claimShared: Ask to claim region [0x3f8000000 0x3f84db000]
+07-17 14:43:28.647   737   737 I Choreographer: Skipped 49 frames!  The application may be doing too much work on its main thread.
+07-17 14:43:28.676   737   931 D EglHelper: createEglSurface done
+07-17 14:43:28.719   552   574 I WindowManager: Screen frozen for +3s644ms due to Window{b9f42f5 u0 Application Not Responding: system}
+07-17 14:43:28.730   305   305 D goldfish-address-space: claimShared: Ask to claim region [0x3ff0c0000 0x3ff94a000]
+07-17 14:43:28.737   305   305 D goldfish-address-space: claimShared: Ask to claim region [0x3f9b6c000 0x3f9eb2000]
+07-17 14:43:28.810   552  1392 I OpenGLRenderer: Davey! duration=2225ms; Flags=1, IntendedVsync=389554215831, Vsync=389854215819, OldestInputEvent=9223372036854775807, NewestInputEvent=0, HandleInputStart=389867369879, AnimationStart=389867374429, PerformTraversalsStart=389867376701, DrawStart=391639777416, SyncQueued=391667577631, SyncStart=391712072782, IssueDrawCommandsStart=391723082626, SwapBuffers=391782854872, FrameCompleted=391823979287, DequeueBufferDuration=6775189, QueueBufferDuration=6329755, GpuCompleted=42949672979,
+07-17 14:43:28.801  1064  1064 D ConfigMonitor: Available size changed from [Point(1080, 1003), Point(2208, 2063)] to [Point(1080, 1003), Point(2072, 2063)]
+07-17 14:43:28.827   552   574 W ImageReader_JNI: Unable to acquire a buffer item, very likely client tried to acquire more than maxImages buffers
+07-17 14:43:29.002   305   305 D goldfish-address-space: claimShared: Ask to claim region [0x3fbfad000 0x3fbfaf000]
+07-17 14:43:29.055   305   305 D goldfish-address-space: claimShared: Ask to claim region [0x3f84db000 0x3f8821000]
+07-17 14:43:29.066  1064  1590 E FrameEvents: updateAcquireFence: Did not find frame.
+07-17 14:43:29.075   305   305 D goldfish-address-space: claimShared: Ask to claim region [0x3fbfaf000 0x3fbfb1000]
+07-17 14:43:29.224   552  1392 I OpenGLRenderer: Davey! duration=2721ms; Flags=1, IntendedVsync=389554215831, Vsync=389854215819, OldestInputEvent=9223372036854775807, NewestInputEvent=0, HandleInputStart=389867369879, AnimationStart=389867374429, PerformTraversalsStart=389867376701, DrawStart=391955199223, SyncQueued=391970224102, SyncStart=391989306237, IssueDrawCommandsStart=391989634941, SwapBuffers=392048680276, FrameCompleted=392294664191, DequeueBufferDuration=170709112, QueueBufferDuration=71081571, GpuCompleted=30962681237471342,
+07-17 14:43:29.245   305   305 D goldfish-address-space: claimShared: Ask to claim region [0x3fbfaf000 0x3fbfb1000]
+07-17 14:43:29.320   552   566 W system_server: Long monitor contention with owner android.display (574) at float com.android.server.wm.WindowManagerService.getCurrentAnimatorScale()(WindowManagerService.java:3202) waiters=1 in com.android.server.wm.WindowProcessController com.android.server.wm.ActivityTaskManagerService$LocalService.getTopApp() for 689ms
+07-17 14:43:29.323  1064  1590 E FrameEvents: updateAcquireFence: Did not find frame.
+07-17 14:43:29.324   305   305 D goldfish-address-space: claimShared: Ask to claim region [0x3fbfb1000 0x3fbfb3000]
+07-17 14:43:29.326   552   575 W system_server: Long monitor contention with owner android.display (574) at float com.android.server.wm.WindowManagerService.getCurrentAnimatorScale()(WindowManagerService.java:3202) waiters=0 in void com.android.server.wm.WindowAnimator.lambda$new$1$WindowAnimator(long) for 768ms
+07-17 14:43:29.342   552   572 W Looper  : Slow dispatch took 2546ms android.ui h=android.view.Choreographer$FrameHandler c=android.view.Choreographer$FrameDisplayEventReceiver@f0e624a m=0
+07-17 14:43:29.358   552   617 W system_server: Long monitor contention with owner android.display (574) at float com.android.server.wm.WindowManagerService.getCurrentAnimatorScale()(WindowManagerService.java:3202) waiters=2 in int com.android.server.wm.WindowManagerService.relayoutWindow(com.android.server.wm.Session, android.view.IWindow, int, android.view.WindowManager$LayoutParams, int, int, int, int, long, android.graphics.Rect, android.graphics.Rect, android.graphics.Rect, android.graphics.Rect, android.graphics.Rect, android.view.DisplayCutout$ParcelableWrapper, android.util.MergedConfiguration, android.view.SurfaceControl, android.view.InsetsState, android.view.InsetsSourceControl[], android.graphics.Point, android.view.SurfaceControl) for 657ms
+07-17 14:43:29.639   737  1239 I OpenGLRenderer: Davey! duration=1814ms; Flags=1, IntendedVsync=390887534885, Vsync=391704201519, OldestInputEvent=9223372036854775807, NewestInputEvent=0, HandleInputStart=391718884682, AnimationStart=391718890314, PerformTraversalsStart=391718892747, DrawStart=392649732907, SyncQueued=392651967813, SyncStart=392659452859, IssueDrawCommandsStart=392659933632, SwapBuffers=392676888951, FrameCompleted=392709876731, DequeueBufferDuration=909494, QueueBufferDuration=30567433, GpuCompleted=0,
+07-17 14:43:29.711  2837  2865 D libEGL  : loaded /vendor/lib64/egl/libEGL_emulation.so
+07-17 14:43:29.745  2837  2865 D libEGL  : loaded /vendor/lib64/egl/libGLESv1_CM_emulation.so
+07-17 14:43:29.780  1064  1064 I Choreographer: Skipped 149 frames!  The application may be doing too much work on its main thread.
+07-17 14:43:29.824  2837  2865 D libEGL  : loaded /vendor/lib64/egl/libGLESv2_emulation.so
+07-17 14:43:29.856   305   305 D goldfish-address-space: claimShared: Ask to claim region [0x3ff9e6000 0x3ffec1000]
+07-17 14:43:29.919   305   305 D goldfish-address-space: claimShared: Ask to claim region [0x3f4000000 0x3f49a4000]
+07-17 14:43:29.996   552   575 W ImageReader_JNI: Unable to acquire a buffer item, very likely client tried to acquire more than maxImages buffers
+07-17 14:43:30.031  1064  1140 D LoaderTask: loadWorkspace: loading default favorites
+07-17 14:43:30.312  1064  1064 I Choreographer: Skipped 30 frames!  The application may be doing too much work on its main thread.
+07-17 14:43:30.383  1064  1590 I OpenGLRenderer: Davey! duration=3080ms; Flags=0, IntendedVsync=390354201573, Vsync=392837534807, OldestInputEvent=9223372036854775807, NewestInputEvent=0, HandleInputStart=392851490206, AnimationStart=392851496472, PerformTraversalsStart=392871614294, DrawStart=393345294346, SyncQueued=393361965238, SyncStart=393381102119, IssueDrawCommandsStart=393388707931, SwapBuffers=393421848981, FrameCompleted=393453854227, DequeueBufferDuration=912525, QueueBufferDuration=29038428, GpuCompleted=3977576991887472440,
+07-17 14:43:30.421   552   575 I Choreographer: Skipped 49 frames!  The application may be doing too much work on its main thread.
+07-17 14:43:30.443   552   572 W Looper  : Slow dispatch took 1067ms android.ui h=android.hardware.display.DisplayManagerGlobal$DisplayListenerDelegate c=null m=2
+07-17 14:43:30.677   737  1239 I OpenGLRenderer: Davey! duration=2833ms; Flags=1, IntendedVsync=390887534885, Vsync=391704201519, OldestInputEvent=9223372036854775807, NewestInputEvent=0, HandleInputStart=391718884682, AnimationStart=391718890314, PerformTraversalsStart=391718892747, DrawStart=393603076476, SyncQueued=393668985132, SyncStart=393694949225, IssueDrawCommandsStart=393695649948, SwapBuffers=393731918783, FrameCompleted=393747481304, DequeueBufferDuration=801410, QueueBufferDuration=5527491, GpuCompleted=0,
+07-17 14:43:30.838   552   574 W InputReader: Device virtio_input_multi_touch_7 is associated with display ADISPLAY_ID_NONE.
+07-17 14:43:30.838   552   574 W InputReader: Device virtio_input_multi_touch_4 is associated with display ADISPLAY_ID_NONE.
+07-17 14:43:30.838   552   574 W InputReader: Device virtio_input_multi_touch_5 is associated with display ADISPLAY_ID_NONE.
+07-17 14:43:30.839   552   574 W InputReader: Device virtio_input_multi_touch_2 is associated with display ADISPLAY_ID_NONE.
+07-17 14:43:30.839   552   574 W InputReader: Device virtio_input_multi_touch_8 is associated with display ADISPLAY_ID_NONE.
+07-17 14:43:30.839   552   574 W InputReader: Device virtio_input_multi_touch_10 is associated with display ADISPLAY_ID_NONE.
+07-17 14:43:30.839   552   574 W InputReader: Device virtio_input_multi_touch_9 is associated with display ADISPLAY_ID_NONE.
+07-17 14:43:30.839   552   574 W InputReader: Device virtio_input_multi_touch_3 is associated with display ADISPLAY_ID_NONE.
+07-17 14:43:30.839   552   574 W InputReader: Device virtio_input_multi_touch_6 is associated with display ADISPLAY_ID_NONE.
+07-17 14:43:30.840   552   574 W InputReader: Device virtio_input_multi_touch_11 is associated with display ADISPLAY_ID_NONE.
+07-17 14:43:30.858   552   574 W ActivityTaskManager: Current config: {1.0 310mcc260mnc [en_US] ldltr sw392dp w392dp h750dp 440dpi nrml long port finger qwerty/v/v -nav/h winConfig={ mBounds=Rect(0, 0 - 1080, 2340) mAppBounds=Rect(0, 136 - 1080, 2208) mWindowingMode=fullscreen mDisplayWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} s.42} unchanged for IME proc com.android.inputmethod.latin
+07-17 14:43:30.897   552   574 I ActivityTaskManager: Config changes=20000480 {1.0 310mcc260mnc [en_US] ldltr sw392dp w753dp h364dp 440dpi nrml long land finger qwerty/v/v -nav/h winConfig={ mBounds=Rect(0, 0 - 2340, 1080) mAppBounds=Rect(136, 0 - 2208, 1080) mWindowingMode=fullscreen mDisplayWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_90} s.57}
+07-17 14:43:31.046   552   574 W ActivityTaskManager: Current config: {1.0 310mcc260mnc [en_US] ldltr sw392dp w392dp h750dp 440dpi nrml long port finger qwerty/v/v -nav/h winConfig={ mBounds=Rect(0, 0 - 1080, 2340) mAppBounds=Rect(0, 136 - 1080, 2208) mWindowingMode=fullscreen mDisplayWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} s.42} unchanged for IME proc com.android.inputmethod.latin
+07-17 14:43:31.079   552   574 I WindowManager: Override config changes=20000480 {1.0 310mcc260mnc [en_US] ldltr sw392dp w753dp h364dp 440dpi nrml long land finger qwerty/v/v -nav/h winConfig={ mBounds=Rect(0, 0 - 2340, 1080) mAppBounds=Rect(136, 0 - 2208, 1080) mWindowingMode=fullscreen mDisplayWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_90} s.57} for displayId=0
+07-17 14:43:31.108   552   574 V ActivityTaskManager: Sending to IME proc com.android.inputmethod.latin new config {1.0 310mcc260mnc [en_US] ldltr sw392dp w753dp h364dp 440dpi nrml long land finger qwerty/v/v -nav/h winConfig={ mBounds=Rect(0, 0 - 2340, 1080) mAppBounds=Rect(136, 0 - 2208, 1080) mWindowingMode=fullscreen mDisplayWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_90} s.57}
+07-17 14:43:31.109   552   574 W ActivityTaskManager: Current config: {1.0 310mcc260mnc [en_US] ldltr sw392dp w753dp h364dp 440dpi nrml long land finger qwerty/v/v -nav/h winConfig={ mBounds=Rect(0, 0 - 2340, 1080) mAppBounds=Rect(136, 0 - 2208, 1080) mWindowingMode=fullscreen mDisplayWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_90} s.57} unchanged for IME proc com.android.inputmethod.latin
+07-17 14:43:31.292   552   574 V WindowManager: Orientation start waiting for draw, mDrawState=DRAW_PENDING in Window{b9f42f5 u0 Application Not Responding: system}, surfaceController Surface(name=Application Not Responding: system)/@0x7af009b
+07-17 14:43:31.303   552   574 V WindowManager: Orientation start waiting for draw, mDrawState=DRAW_PENDING in Window{2f31925 u0 ScreenDecorOverlayBottom}, surfaceController Surface(name=ScreenDecorOverlayBottom)/@0xc6aca71
+07-17 14:43:31.304   552   574 V WindowManager: Orientation start waiting for draw, mDrawState=DRAW_PENDING in Window{6b30bd8 u0 ScreenDecorOverlay}, surfaceController Surface(name=ScreenDecorOverlay)/@0x7a2b4e
+07-17 14:43:31.318   552   574 V WindowManager: Orientation start waiting for draw, mDrawState=DRAW_PENDING in Window{3fcfc7b u0 NavigationBar0}, surfaceController Surface(name=NavigationBar0)/@0xfb24bcf
+07-17 14:43:31.319   552   574 V WindowManager: Orientation start waiting for draw, mDrawState=DRAW_PENDING in Window{f0dafe2 u0 StatusBar}, surfaceController Surface(name=StatusBar)/@0x2a7df48
+07-17 14:43:31.320   552   574 V WindowManager: Orientation start waiting for draw, mDrawState=DRAW_PENDING in Window{4e921be u0 Application Not Responding: com.android.launcher3}, surfaceController Surface(name=Application Not Responding: com.android.launcher3)/@0xa94ac38
+07-17 14:43:31.320   552   574 V WindowManager: Orientation start waiting for draw, mDrawState=DRAW_PENDING in Window{364418f u0 Application Not Responding: com.android.systemui}, surfaceController Surface(name=Application Not Responding: com.android.systemui)/@0xabf0b1d
+07-17 14:43:31.321   552   574 V WindowManager: Orientation start waiting for draw, mDrawState=DRAW_PENDING in Window{8d716ab u0 Splash Screen com.jtripppiie.mooserush}, surfaceController Surface(name=Splash Screen com.jtripppiie.mooserush)/@0x9169411
+07-17 14:43:31.374   737   737 D StatusBar: disable<e i a s b h r c s > disable2<q i n >
+07-17 14:43:31.470   552   618 W system_server: Long monitor contention with owner android.display (574) at void com.android.server.wm.DisplayRotation.continueRotation(int, android.window.WindowContainerTransaction)(DisplayRotation.java:545) waiters=0 in int com.android.server.wm.ActivityTaskManagerService.getLastResumedActivityUserId() for 626ms
+07-17 14:43:31.484   552   575 W system_server: Long monitor contention with owner android.display (574) at void com.android.server.wm.DisplayRotation.continueRotation(int, android.window.WindowContainerTransaction)(DisplayRotation.java:545) waiters=1 in void com.android.server.wm.WindowAnimator.lambda$new$1$WindowAnimator(long) for 595ms
+07-17 14:43:31.532   552   572 W system_server: Long monitor contention with owner android.display (574) at void com.android.server.wm.DisplayRotation.continueRotation(int, android.window.WindowContainerTransaction)(DisplayRotation.java:545) waiters=2 in void com.android.server.wm.DisplayPolicy.lambda$updateSystemUiVisibilityLw$14$DisplayPolicy(int, java.lang.String, android.util.Pair, int, com.android.internal.view.AppearanceRegion[], boolean, boolean, boolean) for 251ms
+07-17 14:43:31.533   552   572 W Looper  : Slow dispatch took 277ms android.ui h=com.android.server.wm.DisplayPolicy$PolicyHandler c=com.android.server.wm.-$$Lambda$DisplayPolicy$HbdRZfPpJ53Wnk7_Ueb0ycyz_AQ@acd30e5 m=0
+07-17 14:43:31.610   552   617 V WindowManager: Orientation start waiting for draw, mDrawState=DRAW_PENDING in Window{2f31925 u0 ScreenDecorOverlayBottom}, surfaceController Surface(name=ScreenDecorOverlayBottom)/@0xc6aca71
+07-17 14:43:31.644   552  2261 W ActivityManager: Slow operation: 296ms so far, now at getContentProviderImpl: after updateLruProcess
+07-17 14:43:31.644   552  2261 W ActivityManager: Slow operation: 296ms so far, now at getContentProviderImpl: before updateOomAdj
+07-17 14:43:31.645   552  2261 W ActivityManager: Slow operation: 296ms so far, now at getContentProviderImpl: after updateOomAdj
+07-17 14:43:31.661   552   572 W Looper  : Slow dispatch took 102ms android.ui h=android.view.ViewRootImpl$ViewRootHandler c=null m=30
+07-17 14:43:31.668   552  2261 W ActivityManager: Slow operation: 320ms so far, now at getContentProviderImpl: done!
+07-17 14:43:31.747   305   305 D goldfish-address-space: claimShared: Ask to claim region [0x3f49a4000 0x3f49a7000]
+07-17 14:43:31.884   552   575 V WindowManager: Orientation start waiting for draw, mDrawState=DRAW_PENDING in Window{8d716ab u0 Splash Screen com.jtripppiie.mooserush}, surfaceController Surface(name=Splash Screen com.jtripppiie.mooserush)/@0x9169411
+07-17 14:43:31.926   305   305 D goldfish-address-space: claimShared: Ask to claim region [0x3f49a7000 0x3f534b000]
+07-17 14:43:31.978   552   574 I InputManager-JNI: Viewport [0] to add: local:8141241408256768, isActive: true
+07-17 14:43:32.060   552   566 V WindowManager: Orientation start waiting for draw, mDrawState=DRAW_PENDING in Window{6b30bd8 u0 ScreenDecorOverlay}, surfaceController Surface(name=ScreenDecorOverlay)/@0x7a2b4e
+07-17 14:43:32.068   552   572 W Looper  : Slow dispatch took 138ms android.ui h=android.view.ViewRootImpl$ViewRootHandler c=null m=31
+07-17 14:43:32.176   552   574 W WindowManager: Window freeze timeout expired.
+07-17 14:43:32.176   552   574 W WindowManager: Force clearing orientation change: Window{b9f42f5 u0 Application Not Responding: system}
+07-17 14:43:32.177   552   574 W WindowManager: Force clearing orientation change: Window{2f31925 u0 ScreenDecorOverlayBottom}
+07-17 14:43:32.177   552   574 W WindowManager: Force clearing orientation change: Window{6b30bd8 u0 ScreenDecorOverlay}
+07-17 14:43:32.194   552   574 W WindowManager: Force clearing orientation change: Window{3fcfc7b u0 NavigationBar0}
+07-17 14:43:32.195   552   574 W WindowManager: Force clearing orientation change: Window{f0dafe2 u0 StatusBar}
+07-17 14:43:32.195   552   574 W WindowManager: Force clearing orientation change: Window{4e921be u0 Application Not Responding: com.android.launcher3}
+07-17 14:43:32.195   552   574 W WindowManager: Force clearing orientation change: Window{364418f u0 Application Not Responding: com.android.systemui}
+07-17 14:43:32.196   552   574 W WindowManager: Force clearing orientation change: Window{8d716ab u0 Splash Screen com.jtripppiie.mooserush}
+07-17 14:43:32.210   552   644 I InputReader: Reconfiguring input devices, changes=DISPLAY_INFO |
+07-17 14:43:32.211   552   644 I InputReader: Touch device 'virtio_input_multi_touch_7' could not query the properties of its associated display.  The device will be inoperable until the display size becomes available.
+07-17 14:43:32.211   552   644 I InputReader: Touch device 'virtio_input_multi_touch_4' could not query the properties of its associated display.  The device will be inoperable until the display size becomes available.
+07-17 14:43:32.212   552   644 I InputReader: Touch device 'virtio_input_multi_touch_5' could not query the properties of its associated display.  The device will be inoperable until the display size becomes available.
+07-17 14:43:32.212   552   644 I InputReader: Touch device 'virtio_input_multi_touch_2' could not query the properties of its associated display.  The device will be inoperable until the display size becomes available.
+07-17 14:43:32.212   552   644 I InputReader: Device reconfigured: id=8, name='virtio_input_multi_touch_1', size 1080x2340, orientation 1, mode 1, display id 0
+07-17 14:43:32.226   552   644 I InputReader: Touch device 'virtio_input_multi_touch_8' could not query the properties of its associated display.  The device will be inoperable until the display size becomes available.
+07-17 14:43:32.226   552   644 I InputReader: Touch device 'virtio_input_multi_touch_10' could not query the properties of its associated display.  The device will be inoperable until the display size becomes available.
+07-17 14:43:32.226   552   644 I InputReader: Touch device 'virtio_input_multi_touch_9' could not query the properties of its associated display.  The device will be inoperable until the display size becomes available.
+07-17 14:43:32.226   552   644 I InputReader: Touch device 'virtio_input_multi_touch_3' could not query the properties of its associated display.  The device will be inoperable until the display size becomes available.
+07-17 14:43:32.227   552   644 I InputReader: Touch device 'virtio_input_multi_touch_6' could not query the properties of its associated display.  The device will be inoperable until the display size becomes available.
+07-17 14:43:32.227   552   644 I InputReader: Touch device 'virtio_input_multi_touch_11' could not query the properties of its associated display.  The device will be inoperable until the display size becomes available.
+07-17 14:43:32.241   737  1262 I Choreographer: Skipped 33 frames!  The application may be doing too much work on its main thread.
+07-17 14:43:32.319   552   572 W Looper  : Slow dispatch took 217ms android.ui h=android.hardware.display.DisplayManagerGlobal$DisplayListenerDelegate c=null m=2
+07-17 14:43:32.321   552   572 I Choreographer: Skipped 45 frames!  The application may be doing too much work on its main thread.
+07-17 14:43:32.402   305   305 D goldfish-address-space: claimShared: Ask to claim region [0x3f534b000 0x3f534e000]
+07-17 14:43:32.675   737   737 I Choreographer: Skipped 77 frames!  The application may be doing too much work on its main thread.
+07-17 14:43:32.913   552   552 W NotificationHistory: Attempted to add notif for locked/gone/disabled user 0
+07-17 14:43:32.923   552   552 W Looper  : Slow dispatch took 241ms main h=com.android.server.notification.NotificationManagerService$WorkerHandler c=com.android.server.notification.NotificationManagerService$PostNotificationRunnable@a24405b m=0
+07-17 14:43:33.005  2837  2861 I ppiie.mooserus: Waiting for a blocking GC ProfileSaver
+07-17 14:43:33.016   305   305 D goldfish-address-space: claimShared: Ask to claim region [0x3f534e000 0x3f576a000]
+07-17 14:43:33.021  2837  2861 I ppiie.mooserus: WaitForGcToComplete blocked ProfileSaver on RunEmptyCheckpoint for 15.741ms
+07-17 14:43:33.074   552   574 W system_server: Long monitor contention with owner Binder:552_8 (983) at android.content.res.Configuration com.android.server.wm.ActivityTaskManagerService.getGlobalConfigurationForPid(int)(ActivityTaskManagerService.java:976) waiters=0 in void com.android.server.wm.WindowManagerService$H.handleMessage(android.os.Message) for 376ms
+07-17 14:43:33.076   552   566 W system_server: Long monitor contention with owner Binder:552_8 (983) at android.content.res.Configuration com.android.server.wm.ActivityTaskManagerService.getGlobalConfigurationForPid(int)(ActivityTaskManagerService.java:976) waiters=1 in int com.android.server.wm.WindowManagerService.relayoutWindow(com.android.server.wm.Session, android.view.IWindow, int, android.view.WindowManager$LayoutParams, int, int, int, int, long, android.graphics.Rect, android.graphics.Rect, android.graphics.Rect, android.graphics.Rect, android.graphics.Rect, android.view.DisplayCutout$ParcelableWrapper, android.util.MergedConfiguration, android.view.SurfaceControl, android.view.InsetsState, android.view.InsetsSourceControl[], android.graphics.Point, android.view.SurfaceControl) for 345ms
+07-17 14:43:33.127  2837  2837 W ppiie.mooserus: Verification of void androidx.activity.EdgeToEdgeApi29.setUp(androidx.activity.SystemBarStyle, androidx.activity.SystemBarStyle, android.view.Window, android.view.View, boolean, boolean) took 101.669ms (708.17 bytecodes/s) (2408B approximate peak alloc)
+07-17 14:43:33.136   305   305 D goldfish-address-space: claimShared: Ask to claim region [0x3f576a000 0x3f576c000]
+07-17 14:43:33.146   552   617 W system_server: Long monitor contention with owner PackageManager (600) at void com.android.server.pm.PackageManagerService$PackageHandler.doHandleMessage(android.os.Message)(PackageManagerService.java:1808) waiters=0 in android.content.pm.ApplicationInfo com.android.server.pm.PackageManagerService.getApplicationInfoInternal(java.lang.String, int, int, int) for 294ms
+07-17 14:43:33.158   552   580 W system_server: Long monitor contention with owner PackageManager (600) at void com.android.server.pm.PackageManagerService$PackageHandler.doHandleMessage(android.os.Message)(PackageManagerService.java:1808) waiters=1 in boolean com.android.server.pm.PackageManagerService$PackageManagerInternalImpl.isPackageEphemeral(int, java.lang.String) for 256ms
+07-17 14:43:33.186   552   575 I Choreographer: Skipped 85 frames!  The application may be doing too much work on its main thread.
+07-17 14:43:33.281   552   575 I Choreographer: Skipped 81 frames!  The application may be doing too much work on its main thread.
+07-17 14:43:33.288   737  1262 I Choreographer: Skipped 43 frames!  The application may be doing too much work on its main thread.
+07-17 14:43:33.334   305   305 D goldfish-address-space: claimShared: Ask to claim region [0x3f576c000 0x3f5b88000]
+07-17 14:43:33.364   305   305 D goldfish-address-space: claimShared: Ask to claim region [0x3f5b88000 0x3f652c000]
+07-17 14:43:33.371   552   574 W ActivityTaskManager: Launch timeout has expired, giving up wake lock!
+07-17 14:43:33.387   552   566 I system_server: oneway function results will be dropped but finished with status OK and parcel size 4
+07-17 14:43:33.433  2837  2837 D GodotActivity: Project command line parameters: [--xr_mode_regular, --xr-mode, off, --fullscreen, --background_color, #000000]
+07-17 14:43:33.440   552   617 I system_server: oneway function results will be dropped but finished with status OK and parcel size 4
+07-17 14:43:33.496   552   566 I WindowManager: Screen frozen for +3s836ms due to Window{b9f42f5 u0 Application Not Responding: system}
+07-17 14:43:33.527  2837  2837 D GodotActivity: Launch intent Intent { flg=0x10000000 cmp=com.jtripppiie.mooserush/com.godot.game.GodotAppLauncher (has extras) } with parameters []
+07-17 14:43:33.554   305   305 D goldfish-address-space: claimShared: Ask to claim region [0x3f652c000 0x3f6db6000]
+07-17 14:43:33.657   552   566 W ImageReader_JNI: Unable to acquire a buffer item, very likely client tried to acquire more than maxImages buffers
+07-17 14:43:33.694   552  2531 I system_server: oneway function results will be dropped but finished with status OK and parcel size 4
+07-17 14:43:33.696   552   618 I system_server: oneway function results will be dropped but finished with status OK and parcel size 4
+07-17 14:43:33.755   552  1392 I OpenGLRenderer: Davey! duration=2134ms; Flags=1, IntendedVsync=394637534735, Vsync=395387534705, OldestInputEvent=9223372036854775807, NewestInputEvent=0, HandleInputStart=395392018558, AnimationStart=395392024930, PerformTraversalsStart=395392027465, DrawStart=396221825573, SyncQueued=396237508187, SyncStart=396290230542, IssueDrawCommandsStart=396290861489, SwapBuffers=396363253735, FrameCompleted=396825207162, DequeueBufferDuration=401106495, QueueBufferDuration=14456968, GpuCompleted=3546412315156938752,
+07-17 14:43:33.831   440   978 D NuPlayerDriver: NuPlayerDriver(0xf40c17b0) created, clientPid(737)
+07-17 14:43:34.288   440  2873 D GenericSource: FileSource remote
+07-17 14:43:34.293   737   737 D StatusBar: disable<e i a s b h r c s > disable2<q i n >
+07-17 14:43:34.378  2837  2837 V GodotActivity: Creating new Godot fragment instance.
+07-17 14:43:34.577   552   574 W system_server: Long monitor contention with owner Binder:552_1 (566) at float com.android.server.wm.WindowManagerService.getCurrentAnimatorScale()(WindowManagerService.java:3202) waiters=0 in void com.android.server.wm.WindowManagerService$H.handleMessage(android.os.Message) for 1.126s
+--------- beginning of kernel
+07-17 14:43:34.562     0     0 D logd    : logdr: UID=2000 GID=2000 PID=2867 n tail=0 logMask=99 pid=0 start=0ns timeout=0ns
+07-17 14:43:34.682   552   572 W system_server: Long monitor contention with owner Binder:552_1 (566) at float com.android.server.wm.WindowManagerService.getCurrentAnimatorScale()(WindowManagerService.java:3202) waiters=1 in int com.android.server.wm.WindowManagerService.relayoutWindow(com.android.server.wm.Session, android.view.IWindow, int, android.view.WindowManager$LayoutParams, int, int, int, int, long, android.graphics.Rect, android.graphics.Rect, android.graphics.Rect, android.graphics.Rect, android.graphics.Rect, android.view.DisplayCutout$ParcelableWrapper, android.util.MergedConfiguration, android.view.SurfaceControl, android.view.InsetsState, android.view.InsetsSourceControl[], android.graphics.Point, android.view.SurfaceControl) for 899ms
+07-17 14:43:34.751   306   306 W EmuHWC2 : validate: layer 20 CompositionType 1, fallback
+07-17 14:43:34.770   305   305 D goldfish-address-space: claimShared: Ask to claim region [0x3f6db6000 0x3f775a000]
+07-17 14:43:34.841   306   306 W EmuHWC2 : No layers, exit, buffer 0x7ec37e11d650
+07-17 14:43:34.847   305   305 D goldfish-address-space: claimShared: Ask to claim region [0x3f775a000 0x3f775c000]
+07-17 14:43:34.874   306   306 W EmuHWC2 : validate: layer 20 CompositionType 1, fallback
+07-17 14:43:34.890   305   305 D goldfish-address-space: claimShared: Ask to claim region [0x3fb542000 0x3fbee6000]
+07-17 14:43:34.918   306   306 W EmuHWC2 : No layers, exit, buffer 0x7ec37e11d0b0
+07-17 14:43:34.943   552   575 I Choreographer: Skipped 103 frames!  The application may be doing too much work on its main thread.
+07-17 14:43:35.002   306   306 W EmuHWC2 : validate: layer 26 CompositionType 1, fallback
+07-17 14:43:35.042   306   306 W EmuHWC2 : No layers, exit, buffer 0x7ec37e11d650
+07-17 14:43:35.037   552   566 I MediaFocusControl: requestAudioFocus() from uid/pid 10121/737 clientId=android.media.AudioManager@3759a6f callingPack=com.android.systemui req=3 flags=0x0 sdk=30
+07-17 14:43:35.102   552   574 W system_server: Long monitor contention with owner Binder:552_2 (567) at android.content.res.Configuration com.android.server.wm.ActivityTaskManagerService.getGlobalConfigurationForPid(int)(ActivityTaskManagerService.java:976) waiters=0 in void com.android.server.wm.WindowManagerService$H.handleMessage(android.os.Message) for 138ms
+07-17 14:43:35.361   305   305 D goldfish-address-space: claimShared: Ask to claim region [0x3f775c000 0x3f7b83000]
+07-17 14:43:35.389   552   562 I system_server: Background young concurrent copying GC freed 183123(8333KB) AllocSpace objects, 27(1140KB) LOS objects, 41% free, 12MB/21MB, paused 190us total 2.515s
+07-17 14:43:35.462   305   305 D goldfish-address-space: claimShared: Ask to claim region [0x3f7b83000 0x3f7c33000]
+07-17 14:43:35.482   552  2531 W system_server: Long monitor contention with owner android.anim (575) at void com.android.server.wm.WindowManagerService.updateRotationUnchecked(boolean, boolean)(WindowManagerService.java:3847) waiters=1 in int com.android.server.wm.WindowManagerService.relayoutWindow(com.android.server.wm.Session, android.view.IWindow, int, android.view.WindowManager$LayoutParams, int, int, int, int, long, android.graphics.Rect, android.graphics.Rect, android.graphics.Rect, android.graphics.Rect, android.graphics.Rect, android.view.DisplayCutout$ParcelableWrapper, android.util.MergedConfiguration, android.view.SurfaceControl, android.view.InsetsState, android.view.InsetsSourceControl[], android.graphics.Point, android.view.SurfaceControl) for 339ms
+07-17 14:43:35.609   737  1262 I Choreographer: Skipped 56 frames!  The application may be doing too much work on its main thread.
+07-17 14:43:35.644   440  2872 I GenericSource: start
+07-17 14:43:35.712   737  2869 W RingtonePlayer: Notification sound delayed by 2552msecs
+07-17 14:43:35.764   305   305 D goldfish-address-space: claimShared: Ask to claim region [0x3f7c33000 0x3f7ce3000]
+07-17 14:43:35.804   737  1239 I OpenGLRenderer: Davey! duration=4372ms; Flags=1, IntendedVsync=394454201409, Vsync=395737534691, OldestInputEvent=9223372036854775807, NewestInputEvent=0, HandleInputStart=395746075764, AnimationStart=395746081976, PerformTraversalsStart=395784815660, DrawStart=398681672991, SyncQueued=398713887585, SyncStart=398762093894, IssueDrawCommandsStart=398762613708, SwapBuffers=398806742269, FrameCompleted=398874867354, DequeueBufferDuration=32771342, QueueBufferDuration=26354477, GpuCompleted=0,
+07-17 14:43:35.864   305   305 D goldfish-address-space: claimShared: Ask to claim region [0x3f8821000 0x3f8c48000]
+07-17 14:43:35.889   552  1392 I OpenGLRenderer: Davey! duration=4311ms; Flags=1, IntendedVsync=394637534735, Vsync=395387534705, OldestInputEvent=9223372036854775807, NewestInputEvent=0, HandleInputStart=395392018558, AnimationStart=395392024930, PerformTraversalsStart=395392027465, DrawStart=398630559507, SyncQueued=398638096886, SyncStart=398648994384, IssueDrawCommandsStart=398649730104, SwapBuffers=398667225503, FrameCompleted=398959503154, DequeueBufferDuration=7899450, QueueBufferDuration=259792715, GpuCompleted=42,
+07-17 14:43:35.918   440  2878 D CCodec  : allocate(c2.android.vorbis.decoder)
+07-17 14:43:35.967   450   450 V C2Store : in init
+07-17 14:43:35.973   450   450 V C2Store : loading dll
+07-17 14:43:36.124   440  2878 I CCodec  : Created component [c2.android.vorbis.decoder]
+07-17 14:43:36.164   440  2878 D CCodecConfig: read media type: audio/vorbis
+07-17 14:43:36.262   552   567 W system_server: Long monitor contention with owner android.ui (572) at int com.android.server.wm.WindowManagerService.relayoutWindow(com.android.server.wm.Session, android.view.IWindow, int, android.view.WindowManager$LayoutParams, int, int, int, int, long, android.graphics.Rect, android.graphics.Rect, android.graphics.Rect, android.graphics.Rect, android.graphics.Rect, android.view.DisplayCutout$ParcelableWrapper, android.util.MergedConfiguration, android.view.SurfaceControl, android.view.InsetsState, android.view.InsetsSourceControl[], android.graphics.Point, android.view.SurfaceControl)(WindowManagerService.java:2446) waiters=0 in int com.android.server.wm.ActivityTaskManagerService.getLockTaskModeState() for 200ms
+07-17 14:43:36.267   552   575 W system_server: Long monitor contention with owner android.ui (572) at int com.android.server.wm.WindowManagerService.relayoutWindow(com.android.server.wm.Session, android.view.IWindow, int, android.view.WindowManager$LayoutParams, int, int, int, int, long, android.graphics.Rect, android.graphics.Rect, android.graphics.Rect, android.graphics.Rect, android.graphics.Rect, android.view.DisplayCutout$ParcelableWrapper, android.util.MergedConfiguration, android.view.SurfaceControl, android.view.InsetsState, android.view.InsetsSourceControl[], android.graphics.Point, android.view.SurfaceControl)(WindowManagerService.java:2446) waiters=1 in void com.android.server.wm.WindowAnimator.lambda$new$1$WindowAnimator(long) for 197ms
+07-17 14:43:36.277   552   574 W system_server: Long monitor contention with owner android.ui (572) at int com.android.server.wm.WindowManagerService.relayoutWindow(com.android.server.wm.Session, android.view.IWindow, int, android.view.WindowManager$LayoutParams, int, int, int, int, long, android.graphics.Rect, android.graphics.Rect, android.graphics.Rect, android.graphics.Rect, android.graphics.Rect, android.view.DisplayCutout$ParcelableWrapper, android.util.MergedConfiguration, android.view.SurfaceControl, android.view.InsetsState, android.view.InsetsSourceControl[], android.graphics.Point, android.view.SurfaceControl)(WindowManagerService.java:2446) waiters=2 in void com.android.server.wm.WindowManagerService$H.handleMessage(android.os.Message) for 191ms
+07-17 14:43:35.915     0     0 W healthd : battery l=100 v=5000 t=25.0 h=2 st=2 c=900000 fc=300000 cc=10 chg=a
+07-17 14:43:36.320  2837  2837 V Godot   : Initializing Godot plugin registry
+07-17 14:43:36.374   552   567 I system_server: oneway function results will be dropped but finished with status OK and parcel size 4
+07-17 14:43:36.376   552  2261 I system_server: oneway function results will be dropped but finished with status OK and parcel size 4
+07-17 14:43:36.467   552   574 W system_server: Long monitor contention with owner android.anim (575) at void com.android.server.wm.InputMonitor$UpdateInputWindows.run()(InputMonitor.java:146) waiters=1 in void com.android.server.wm.WindowManagerService$H.handleMessage(android.os.Message) for 152ms
+07-17 14:43:36.575   440  2878 D ReflectedParamUpdater: extent() != 1 for single value type: algo.buffers.max-count.values
+07-17 14:43:36.583   440  2878 D ReflectedParamUpdater: extent() != 1 for single value type: output.subscribed-indices.values
+07-17 14:43:36.590   440  2878 D ReflectedParamUpdater: extent() != 1 for single value type: input.buffers.allocator-ids.values
+07-17 14:43:36.622   440  2878 D ReflectedParamUpdater: extent() != 1 for single value type: output.buffers.allocator-ids.values
+07-17 14:43:36.632   440  2878 D ReflectedParamUpdater: extent() != 1 for single value type: algo.buffers.allocator-ids.values
+07-17 14:43:36.649   440  2878 D ReflectedParamUpdater: extent() != 1 for single value type: output.buffers.pool-ids.values
+07-17 14:43:36.684   440  2878 D ReflectedParamUpdater: extent() != 1 for single value type: algo.buffers.pool-ids.values
+07-17 14:43:36.790   305   305 D goldfish-address-space: claimShared: Ask to claim region [0x3f7ce3000 0x3f7d6f000]
+07-17 14:43:36.813   440  2878 I CCodecConfig: query failed after returning 7 values (BAD_INDEX)
+07-17 14:43:36.845   440  2878 D CCodecConfig: c2 config diff is Dict {
+07-17 14:43:36.845   440  2878 D CCodecConfig:   c2::u32 coded.bitrate.value = 64000
+07-17 14:43:36.845   440  2878 D CCodecConfig:   c2::u32 input.buffers.max-size.value = 32768
+07-17 14:43:36.845   440  2878 D CCodecConfig:   c2::u32 input.delay.value = 0
+07-17 14:43:36.845   440  2878 D CCodecConfig:   string input.media-type.value = "audio/vorbis"
+07-17 14:43:36.845   440  2878 D CCodecConfig:   string output.media-type.value = "audio/raw"
+07-17 14:43:36.845   440  2878 D CCodecConfig:   c2::u32 raw.channel-count.value = 1
+07-17 14:43:36.845   440  2878 D CCodecConfig:   c2::u32 raw.sample-rate.value = 48000
+07-17 14:43:36.845   440  2878 D CCodecConfig: }
+07-17 14:43:36.847  2837  2851 W ppiie.mooserus: Suspending all threads took: 11.828ms
+07-17 14:43:36.928   440  2878 D CCodec  : [c2.android.vorbis.decoder] buffers are bound to CCodec for this session
+07-17 14:43:36.942   440  2878 D CCodecConfig: no c2 equivalents for durationUs
+07-17 14:43:36.943   440  2878 D CCodecConfig: no c2 equivalents for csd-1
+07-17 14:43:36.943   440  2878 D CCodecConfig: no c2 equivalents for channel-mask
+07-17 14:43:36.944   440  2878 D CCodecConfig: no c2 equivalents for flags
+07-17 14:43:36.976   440  2878 W Codec2Client: query -- param skipped: index = 1107298332.
+07-17 14:43:37.010   440  2878 D CCodec  : setup formats input: AMessage(what = 0x00000000) = {
+07-17 14:43:37.010   440  2878 D CCodec  :   int32_t channel-count = 1
+07-17 14:43:37.010   440  2878 D CCodec  :   int32_t max-input-size = 32768
+07-17 14:43:37.010   440  2878 D CCodec  :   string mime = "audio/vorbis"
+07-17 14:43:37.010   440  2878 D CCodec  :   int32_t sample-rate = 48000
+07-17 14:43:37.010   440  2878 D CCodec  : } and output: AMessage(what = 0x00000000) = {
+07-17 14:43:37.010   440  2878 D CCodec  :   int32_t channel-count = 1
+07-17 14:43:37.010   440  2878 D CCodec  :   string mime = "audio/raw"
+07-17 14:43:37.010   440  2878 D CCodec  :   int32_t sample-rate = 48000
+07-17 14:43:37.010   440  2878 D CCodec  :   int32_t channel-mask = 1
+07-17 14:43:37.010   440  2878 D CCodec  : }
+07-17 14:43:37.030   440  2878 I MediaCodec: MediaCodec will operate in async mode
+07-17 14:43:37.058   440  2878 W Codec2Client: query -- param skipped: index = 1342179345.
+07-17 14:43:37.058   440  2878 W Codec2Client: query -- param skipped: index = 2415921170.
+07-17 14:43:37.127   440  2878 E FMQ     : grantorIdx must be less than 3
+07-17 14:43:37.136   440  2878 E FMQ     : grantorIdx must be less than 3
+07-17 14:43:37.149   440  2878 D CCodecBufferChannel: [c2.android.vorbis.decoder#468] Created input block pool with allocatorID 16 => poolID 17 - OK (0)
+07-17 14:43:37.177   450  1129 E FMQ     : grantorIdx must be less than 3
+07-17 14:43:37.203   450  1129 E FMQ     : grantorIdx must be less than 3
+07-17 14:43:37.220   737  1115 D BufferPoolAccessor2.0: bufferpool2 0x7cafd9805e78 : 0(0 size) total buffers - 0(0 size) used buffers - 1/9 (recycle/alloc) - 8/38 (fetch/transfer)
+07-17 14:43:37.243   737  1115 D BufferPoolAccessor2.0: Destruction - bufferpool2 0x7cafd9805e78 cached: 0/0M, 0/0% in use; allocs: 9, 11% recycled; transfers: 38, 79% unfetched
+07-17 14:43:37.244   737  1115 D BufferPoolAccessor2.0: bufferpool2 0x7cafd980f968 : 0(0 size) total buffers - 0(0 size) used buffers - 1/9 (recycle/alloc) - 8/36 (fetch/transfer)
+07-17 14:43:37.248   737  1115 D BufferPoolAccessor2.0: Destruction - bufferpool2 0x7cafd980f968 cached: 0/0M, 0/0% in use; allocs: 9, 11% recycled; transfers: 36, 78% unfetched
+07-17 14:43:37.259   737  1115 D BufferPoolAccessor2.0: bufferpool2 0x7cafd9810748 : 0(0 size) total buffers - 0(0 size) used buffers - 3/9 (recycle/alloc) - 6/18 (fetch/transfer)
+07-17 14:43:37.259   737  1115 D BufferPoolAccessor2.0: Destruction - bufferpool2 0x7cafd9810748 cached: 0/0M, 0/0% in use; allocs: 9, 33% recycled; transfers: 18, 67% unfetched
+07-17 14:43:37.263   440  2878 I CCodecBufferChannel: [c2.android.vorbis.decoder#468] Created output block pool with allocatorID 16 => poolID 22 - OK
+07-17 14:43:37.283   440  2878 D CCodecBufferChannel: [c2.android.vorbis.decoder#468] Configured output block pool ids 22 => OK
+07-17 14:43:37.344   440  2878 E ion     : ioctl c0044901 failed with code -1: Inappropriate ioctl for device
+07-17 14:43:37.391   305   305 D goldfish-address-space: claimShared: Ask to claim region [0x3f7d6f000 0x3f7d76000]
+07-17 14:43:37.446   737  1909 D HostConnection: HostConnection::get() New Host Connection established 0x7caf897f39d0, tid 1909
+07-17 14:43:37.463   450  2882 D SimpleC2Component: Using output block pool with poolID 22 => got 22 - 0
+07-17 14:43:37.543   440  2878 E FMQ     : grantorIdx must be less than 3
+07-17 14:43:37.555   450  1130 E FMQ     : grantorIdx must be less than 3
+07-17 14:43:37.615  2837  2837 W ppiie.mooserus: Verification of java.util.List kotlin.collections.ArraysKt___ArraysKt.runningReduce(int[], kotlin.jvm.functions.Function2) took 110.108ms (726.55 bytecodes/s) (2976B approximate peak alloc)
+07-17 14:43:37.693   552   588 D BufferPoolAccessor2.0: bufferpool2 0x7cafd9828288 : 0(0 size) total buffers - 0(0 size) used buffers - 3/9 (recycle/alloc) - 6/24 (fetch/transfer)
+07-17 14:43:37.706   552   588 D BufferPoolAccessor2.0: Destruction - bufferpool2 0x7cafd9828288 cached: 0/0M, 0/0% in use; allocs: 9, 33% recycled; transfers: 24, 75% unfetched
+07-17 14:43:37.707   552  1135 D BufferPoolAccessor2.0: bufferpool2 0x7cafd982a9d8 : 0(0 size) total buffers - 0(0 size) used buffers - 3/9 (recycle/alloc) - 6/18 (fetch/transfer)
+07-17 14:43:37.707   552  1135 D BufferPoolAccessor2.0: Destruction - bufferpool2 0x7cafd982a9d8 cached: 0/0M, 0/0% in use; allocs: 9, 33% recycled; transfers: 18, 67% unfetched
+07-17 14:43:37.733   305   305 D goldfish-address-space: claimShared: Ask to claim region [0x3f4000000 0x3f4427000]
+07-17 14:43:37.781   450  2882 E FMQ     : grantorIdx must be less than 3
+07-17 14:43:37.795   440   776 E FMQ     : grantorIdx must be less than 3
+07-17 14:43:37.806   737  1909 D HostConnection: HostComposition ext ANDROID_EMU_CHECKSUM_HELPER_v1 ANDROID_EMU_native_sync_v2 ANDROID_EMU_dma_v1 ANDROID_EMU_direct_mem ANDROID_EMU_host_composition_v1 ANDROID_EMU_host_composition_v2 ANDROID_EMU_vulkan ANDROID_EMU_deferred_vulkan_commands ANDROID_EMU_vulkan_null_optional_strings ANDROID_EMU_vulkan_create_resources_with_requirements ANDROID_EMU_YUV_Cache ANDROID_EMU_vulkan_ignored_handles ANDROID_EMU_has_shared_slots_host_memory_allocator ANDROID_EMU_vulkan_free_memory_sync ANDROID_EMU_vulkan_shader_float16_int8 ANDROID_EMU_vulkan_async_queue_submit ANDROID_EMU_sync_buffer_data ANDROID_EMU_vulkan_async_qsri ANDROID_EMU_read_color_buffer_dma ANDROID_EMU_hwc_color_transform GL_OES_EGL_image_external_essl3 GL_OES_vertex_array_object GL_KHR_texture_compression_astc_ldr ANDROID_EMU_host_side_tracing ANDROID_EMU_gles_max_version_3_0
+07-17 14:43:37.846   737  1909 D EGL_emulation: eglCreateContext: 0x7caf79812b20: maj 3 min 0 rcv 3
+07-17 14:43:37.849   737  1909 D EGL_emulation: eglMakeCurrent: 0x7caf79812b20: ver 3 0 (tinfo 0x7caf1985df50) (first time)
+07-17 14:43:37.927  2837  2837 I GodotPluginRegistry: Registering runtime plugin AndroidRuntime
+07-17 14:43:37.963   552   566 I system_server: oneway function results will be dropped but finished with status OK and parcel size 4
+07-17 14:43:37.964   552   566 I system_server: oneway function results will be dropped but finished with status OK and parcel size 4
+07-17 14:43:37.975  2837  2837 I GodotPluginRegistry: Initializing Godot plugin YouRushBridge
+07-17 14:43:37.985   305   305 D goldfish-address-space: claimShared: Ask to claim region [0x3f7d76000 0x3f7d7d000]
+07-17 14:43:37.988  2837  2837 I GodotPluginRegistry: Completed initialization for Godot plugin YouRushBridge
+07-17 14:43:37.994  2837  2837 V Godot   : InitEngine with params: [--xr_mode_regular, --xr-mode, off, --fullscreen, --background_color, #000000]
+07-17 14:43:38.009   552  2261 I system_server: oneway function results will be dropped but finished with status OK and parcel size 4
+07-17 14:43:38.012   552   566 I system_server: oneway function results will be dropped but finished with status OK and parcel size 4
+07-17 14:43:38.037   305   305 D goldfish-address-space: claimShared: Ask to claim region [0x3f7d7d000 0x3f7d84000]
+07-17 14:43:38.094   305   305 D goldfish-address-space: claimShared: Ask to claim region [0x3f7d84000 0x3f7d8b000]
+07-17 14:43:38.146   305   305 D goldfish-address-space: claimShared: Ask to claim region [0x3f4427000 0x3f484e000]
+07-17 14:43:38.180   305   305 D goldfish-address-space: claimShared: Ask to claim region [0x3f7d8b000 0x3f7e17000]
+07-17 14:43:38.187   379   463 D AudioFlinger: Client defaulted notificationFrames to 12213 for frameCount 24426
+07-17 14:43:38.202   737  1239 I OpenGLRenderer: Davey! duration=6816ms; Flags=1, IntendedVsync=394454201409, Vsync=395737534691, OldestInputEvent=9223372036854775807, NewestInputEvent=0, HandleInputStart=395746075764, AnimationStart=395746081976, PerformTraversalsStart=395784815660, DrawStart=399994548013, SyncQueued=401184785165, SyncStart=401187139232, IssueDrawCommandsStart=401187513737, SwapBuffers=401223060302, FrameCompleted=401273052277, DequeueBufferDuration=13872064, QueueBufferDuration=16265235, GpuCompleted=0,
+07-17 14:43:38.220   552  1392 I OpenGLRenderer: Davey! duration=6630ms; Flags=1, IntendedVsync=394637534735, Vsync=395387534705, OldestInputEvent=9223372036854775807, NewestInputEvent=0, HandleInputStart=395392018558, AnimationStart=395392024930, PerformTraversalsStart=395392027465, DrawStart=400894905350, SyncQueued=400907011100, SyncStart=400929835149, IssueDrawCommandsStart=400930590252, SwapBuffers=401126201011, FrameCompleted=401290852057, DequeueBufferDuration=17328130, QueueBufferDuration=35853927, GpuCompleted=-4294967182,
+07-17 14:43:38.242   379   463 D AF::TrackHandle: OpPlayAudio: track:55 usage:5 not muted
+07-17 14:43:38.271   552   572 W Looper  : Slow dispatch took 5950ms android.ui h=android.view.Choreographer$FrameHandler c=android.view.Choreographer$FrameDisplayEventReceiver@f0e624a m=0
+07-17 14:43:38.307   552   572 I Choreographer: Skipped 336 frames!  The application may be doing too much work on its main thread.
+07-17 14:43:38.567   305   305 D goldfish-address-space: claimShared: Ask to claim region [0x3fa816000 0x3fac32000]
+07-17 14:43:38.579  2837  2837 V Godot   : Godot native layer initialization completed: true
+07-17 14:43:38.579  2837  2837 V Godot   : Setting up native layer with params: [--xr-mode, off, --fullscreen]
+07-17 14:43:38.591   552  1392 I OpenGLRenderer: Davey! duration=5881ms; Flags=0, IntendedVsync=395770868023, Vsync=401370867799, OldestInputEvent=9223372036854775807, NewestInputEvent=0, HandleInputStart=401378803630, AnimationStart=401378808239, PerformTraversalsStart=401378810253, DrawStart=401421698834, SyncQueued=401422368997, SyncStart=401431991793, IssueDrawCommandsStart=401453460864, SwapBuffers=401481552589, FrameCompleted=401661617042, DequeueBufferDuration=23660275, QueueBufferDuration=129993418, GpuCompleted=3467824696600309808,
+07-17 14:43:38.655   305   305 D goldfish-address-space: claimShared: Ask to claim region [0x3fac32000 0x3fb059000]
+07-17 14:43:38.660   552  1675 I system_server: oneway function results will be dropped but finished with status OK and parcel size 4
+07-17 14:43:38.679   552  1392 I OpenGLRenderer: Davey! duration=5941ms; Flags=0, IntendedVsync=395770868023, Vsync=401370867799, OldestInputEvent=9223372036854775807, NewestInputEvent=0, HandleInputStart=401378803630, AnimationStart=401378808239, PerformTraversalsStart=401378810253, DrawStart=401666304274, SyncQueued=401666865509, SyncStart=401690107662, IssueDrawCommandsStart=401691946972, SwapBuffers=401704005047, FrameCompleted=401736016426, DequeueBufferDuration=8846036, QueueBufferDuration=19440255, GpuCompleted=356482289136,
+07-17 14:43:38.696   552   572 W Looper  : Slow dispatch took 389ms android.ui h=android.view.Choreographer$FrameHandler c=android.view.Choreographer$FrameDisplayEventReceiver@f0e624a m=0
+07-17 14:43:38.699   293   293 E FMQ     : grantorIdx must be less than 3
+07-17 14:43:38.704   293   293 E FMQ     : grantorIdx must be less than 3
+07-17 14:43:38.784   379   476 E FMQ     : grantorIdx must be less than 3
+07-17 14:43:38.823   552   572 W Looper  : Slow dispatch took 125ms android.ui h=android.view.ViewRootImpl$ViewRootHandler c=android.view.-$$Lambda$ViewRootImpl$DJd0VUYJgsebcnSohO6h8zc_ONI@7a94d96 m=0
+07-17 14:43:38.799   379   476 E FMQ     : grantorIdx must be less than 3
+07-17 14:43:38.856   737   737 I Choreographer: Skipped 369 frames!  The application may be doing too much work on its main thread.
+07-17 14:43:38.952   305   305 D goldfish-address-space: claimShared: Ask to claim region [0x3fb059000 0x3fb480000]
+07-17 14:43:39.020   379   476 W AudioFlinger: write blocked for 344 msecs, 1 delayed writes, thread 13
+07-17 14:43:39.051   440  2876 D AudioTrack: getTimestamp_l(15): device stall time corrected using current time 402122010346
+07-17 14:43:39.228   552  1392 I OpenGLRenderer: Davey! duration=6241ms; Flags=0, IntendedVsync=395770868023, Vsync=401370867799, OldestInputEvent=9223372036854775807, NewestInputEvent=0, HandleInputStart=401378803630, AnimationStart=401378808239, PerformTraversalsStart=401378810253, DrawStart=401691244252, SyncQueued=401691808216, SyncStart=401759178998, IssueDrawCommandsStart=401778982243, SwapBuffers=401874148917, FrameCompleted=402079954758, DequeueBufferDuration=40819500, QueueBufferDuration=147241131, GpuCompleted=28263425052536417,
+07-17 14:43:39.243   305   305 D goldfish-address-space: claimShared: Ask to claim region [0x3f7e17000 0x3f7ec7000]
+07-17 14:43:39.256   737  1239 I OpenGLRenderer: Davey! duration=6536ms; Flags=1, IntendedVsync=395770868023, Vsync=401920867777, OldestInputEvent=9223372036854775807, NewestInputEvent=0, HandleInputStart=401927034945, AnimationStart=401927040294, PerformTraversalsStart=401927219369, DrawStart=402251017026, SyncQueued=402251639187, SyncStart=402270413927, IssueDrawCommandsStart=402270745351, SwapBuffers=402303290937, FrameCompleted=402326422667, DequeueBufferDuration=14911482, QueueBufferDuration=3822993, GpuCompleted=0,
+07-17 14:43:39.479   379   476 I AudioFlinger: BUFFER TIMEOUT: remove(55) from active list on thread 0x7fc1481f6040
+07-17 14:43:39.524   305   305 D goldfish-address-space: claimShared: Ask to claim region [0x3f7ec7000 0x3f7f53000]
+07-17 14:43:39.532   737  1239 I OpenGLRenderer: Davey! duration=6824ms; Flags=1, IntendedVsync=395770868023, Vsync=401920867777, OldestInputEvent=9223372036854775807, NewestInputEvent=0, HandleInputStart=401927034945, AnimationStart=401927040294, PerformTraversalsStart=401927219369, DrawStart=402482930007, SyncQueued=402484097021, SyncStart=402491936733, IssueDrawCommandsStart=402516726779, SwapBuffers=402518538336, FrameCompleted=402603100981, DequeueBufferDuration=56027073, QueueBufferDuration=26364780, GpuCompleted=0,
+07-17 14:43:39.541   552  1675 I system_server: oneway function results will be dropped but finished with status OK and parcel size 4
+07-17 14:43:39.556   440  2876 W AudioTrack: restartIfDisabled(15): releaseBuffer() track 0xeca86930 disabled due to previous underrun, restarting
+07-17 14:43:39.580   737   737 V MediaRouter: Selecting route: RouteInfo{ name=Phone, description=null, status=null, category=RouteCategory{ name=System types=ROUTE_TYPE_LIVE_AUDIO ROUTE_TYPE_LIVE_VIDEO  groupable=false }, supportedTypes=ROUTE_TYPE_LIVE_AUDIO ROUTE_TYPE_LIVE_VIDEO , presentationDisplay=null }
+07-17 14:43:39.587   552  1675 I system_server: oneway function results will be dropped but finished with status OK and parcel size 4
+07-17 14:43:39.736   737   737 D InterruptionStateProvider: No bubble up: not allowed to bubble: -1|android|19|null|1000
+07-17 14:43:39.747   552  1392 I OpenGLRenderer: Davey! duration=873ms; Flags=0, IntendedVsync=401920876732, Vsync=401937543398, OldestInputEvent=9223372036854775807, NewestInputEvent=0, HandleInputStart=401943819446, AnimationStart=401943825432, PerformTraversalsStart=401943827473, DrawStart=402591644106, SyncQueued=402591676840, SyncStart=402614901736, IssueDrawCommandsStart=402615290935, SwapBuffers=402767731814, FrameCompleted=402817593987, DequeueBufferDuration=22108123, QueueBufferDuration=7889611, GpuCompleted=30962664049999907,
+07-17 14:43:39.748   552   572 W Looper  : Slow dispatch took 875ms android.ui h=android.view.Choreographer$FrameHandler c=android.view.Choreographer$FrameDisplayEventReceiver@f0e624a m=0
+07-17 14:43:39.771   737   737 D InterruptionStateProvider: No heads up: unimportant notification: -1|android|19|null|1000
+07-17 14:43:40.285   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(3)
+07-17 14:43:40.396   552   572 W Looper  : Drained
+07-17 14:43:40.706   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(1)
+07-17 14:43:40.984   552   567 I system_server: oneway function results will be dropped but finished with status OK and parcel size 4
+07-17 14:43:41.756   737  1239 I OpenGLRenderer: Davey! duration=804ms; Flags=0, IntendedVsync=403945867696, Vsync=403979201028, OldestInputEvent=9223372036854775807, NewestInputEvent=0, HandleInputStart=403989390767, AnimationStart=403989396585, PerformTraversalsStart=403990650476, DrawStart=403990853168, SyncQueued=403991312603, SyncStart=404067979307, IssueDrawCommandsStart=404092764159, SwapBuffers=404786926098, FrameCompleted=404826666334, DequeueBufferDuration=3895176, QueueBufferDuration=34575082, GpuCompleted=0,
+07-17 14:43:41.807   737   737 I Choreographer: Skipped 46 frames!  The application may be doing too much work on its main thread.
+07-17 14:43:42.051   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(4)
+07-17 14:43:42.071   737  1239 I OpenGLRenderer: Davey! duration=903ms; Flags=0, IntendedVsync=404095867690, Vsync=404862534326, OldestInputEvent=9223372036854775807, NewestInputEvent=0, HandleInputStart=404878471197, AnimationStart=404878477840, PerformTraversalsStart=404879564031, DrawStart=404879801040, SyncQueued=404880211128, SyncStart=405022519583, IssueDrawCommandsStart=405028320742, SwapBuffers=405030402636, FrameCompleted=405141768047, DequeueBufferDuration=75214221, QueueBufferDuration=34896014, GpuCompleted=0,
+07-17 14:43:42.110   440  2878 D BufferPoolAccessor2.0: bufferpool2 0xf06c0468 : 11(360448 size) total buffers - 8(262144 size) used buffers - 80/91 (recycle/alloc) - 13/178 (fetch/transfer)
+07-17 14:43:42.158  2837  2837 V Godot   : Godot native layer setup completed
+07-17 14:43:42.165   450  2882 D BufferPoolAccessor2.0: bufferpool2 0x7b0a27e72038 : 7(114688 size) total buffers - 1(16384 size) used buffers - 81/88 (recycle/alloc) - 7/86 (fetch/transfer)
+07-17 14:43:42.175  2837  2837 V Godot   : OnInitRenderView: GodotFragment{7882fdb} (ebd9e12b-2ea7-42e7-b2d6-88f1affe8751 id=0x7f07002c)
+07-17 14:43:42.268   737  1114 D BufferPoolAccessor2.0: evictor expired: 3, evicted: 0
+07-17 14:43:42.449   440  2878 D CCodecBufferChannel: [c2.android.vorbis.decoder#468] buffers after EOS ignored (0 us)
+07-17 14:43:42.546   440  2876 D AudioTrack: stop(15): called with 82980 frames delivered
+07-17 14:43:42.646  2837  2837 D Godot   : Render view should be transparent: false
+07-17 14:43:42.659  2837  2837 D Godot   : renderingDevice: opengl3 (ProjectSettings)
+07-17 14:43:42.659  2837  2837 D Godot   : 			renderer: gl_compatibility (ProjectSettings)
+07-17 14:43:42.733   552  1124 D BufferPoolAccessor2.0: evictor expired: 2, evicted: 0
+07-17 14:43:42.807   552   571 W Looper  : Slow dispatch took 130ms android.fg h=android.os.Handler c=com.android.server.Watchdog$HandlerChecker@cb58246 m=0
+07-17 14:43:42.841   552  1675 I MediaFocusControl: abandonAudioFocus() from uid/pid 10121/737 clientId=android.media.AudioManager@3759a6f
+07-17 14:43:42.852   737  2870 V MediaPlayer: resetDrmState:  mDrmInfo=null mDrmProvisioningThread=null mPrepareDrmInProgress=false mActiveDrmScheme=false
+07-17 14:43:42.853   737  2870 V MediaPlayer: cleanDrmObj: mDrmObj=null mDrmSessionId=null
+07-17 14:43:42.870   440   978 D NuPlayerDriver: reset(0xf40c17b0) at state 6
+07-17 14:43:43.012   440  2878 I hw-BpHwBinder: onLastStrongRef automatically unlinking death recipients
+07-17 14:43:43.026   450  1129 I hw-BpHwBinder: onLastStrongRef automatically unlinking death recipients
+07-17 14:43:43.083   450  1129 V C2Store : in ~ComponentModule
+07-17 14:43:43.083   450  1129 V C2Store : unloading dll
+07-17 14:43:42.997   552  1675 I system_server: oneway function results will be dropped but finished with status OK and parcel size 4
+07-17 14:43:43.093   552   574 I system_server: Explicit concurrent copying GC freed 51549(2348KB) AllocSpace objects, 13(876KB) LOS objects, 49% free, 10MB/20MB, paused 163us total 2.168s
+07-17 14:43:43.120   440  2872 D NuPlayerDriver: notifyResetComplete(0xf40c17b0)
+07-17 14:43:43.141     0     0 I binder  : 552:563 DecRefs 0 refcount change on invalid ref 50 ret -22
+07-17 14:43:43.150     0     0 I binder  : 552:563 DecRefs 0 refcount change on invalid ref 56 ret -22
+07-17 14:43:43.152     0     0 I binder  : 552:563 DecRefs 0 refcount change on invalid ref 271 ret -22
+07-17 14:43:43.152     0     0 I binder  : 552:563 DecRefs 0 refcount change on invalid ref 272 ret -22
+07-17 14:43:43.152     0     0 I binder  : 552:563 DecRefs 0 refcount change on invalid ref 306 ret -22
+07-17 14:43:43.152     0     0 I binder  : 552:563 DecRefs 0 refcount change on invalid ref 309 ret -22
+07-17 14:43:43.153     0     0 I binder  : 552:563 DecRefs 0 refcount change on invalid ref 325 ret -22
+07-17 14:43:43.153     0     0 I binder  : 552:563 DecRefs 0 refcount change on invalid ref 327 ret -22
+07-17 14:43:43.162   440   978 W AMessage: failed to post message as target looper for handler 0 is gone.
+07-17 14:43:43.368     0     0 D logd    : logdr: UID=2000 GID=2000 PID=2890 n tail=0 logMask=99 pid=0 start=0ns timeout=0ns
+07-17 14:43:44.255  2837  2837 W ppiie.mooserus: Verification of void androidx.fragment.app.DefaultSpecialEffectsController.createTransitionEffect(java.util.List, boolean, androidx.fragment.app.SpecialEffectsController$Operation, androidx.fragment.app.SpecialEffectsController$Operation) took 102.887ms (11935.38 bytecodes/s) (25920B approximate peak alloc)
+07-17 14:43:44.512  2837  2837 V Godot   : OnStart: GodotFragment{7882fdb} (ebd9e12b-2ea7-42e7-b2d6-88f1affe8751 id=0x7f07002c)
+07-17 14:43:44.619  2837  2837 V Godot   : OnResume: GodotFragment{7882fdb} (ebd9e12b-2ea7-42e7-b2d6-88f1affe8751 id=0x7f07002c)
+07-17 14:43:44.979  2837  2837 I Choreographer: Skipped 980 frames!  The application may be doing too much work on its main thread.
+07-17 14:43:45.623   348   400 W ServiceManager: Permission failure: android.permission.ACCESS_SURFACE_FLINGER from uid=10131 pid=2837
+07-17 14:43:45.624   348   400 D PermissionCache: checking android.permission.ACCESS_SURFACE_FLINGER for uid=10131 => denied (12491 us)
+07-17 14:43:45.634  2837  2864 D HostConnection: HostConnection::get() New Host Connection established 0x7caf897dad10, tid 2864
+07-17 14:43:45.790  2837  2864 D HostConnection: HostComposition ext ANDROID_EMU_CHECKSUM_HELPER_v1 ANDROID_EMU_native_sync_v2 ANDROID_EMU_dma_v1 ANDROID_EMU_direct_mem ANDROID_EMU_host_composition_v1 ANDROID_EMU_host_composition_v2 ANDROID_EMU_vulkan ANDROID_EMU_deferred_vulkan_commands ANDROID_EMU_vulkan_null_optional_strings ANDROID_EMU_vulkan_create_resources_with_requirements ANDROID_EMU_YUV_Cache ANDROID_EMU_vulkan_ignored_handles ANDROID_EMU_has_shared_slots_host_memory_allocator ANDROID_EMU_vulkan_free_memory_sync ANDROID_EMU_vulkan_shader_float16_int8 ANDROID_EMU_vulkan_async_queue_submit ANDROID_EMU_sync_buffer_data ANDROID_EMU_vulkan_async_qsri ANDROID_EMU_read_color_buffer_dma ANDROID_EMU_hwc_color_transform GL_OES_EGL_image_external_essl3 GL_OES_vertex_array_object GL_KHR_texture_compression_astc_ldr ANDROID_EMU_host_side_tracing ANDROID_EMU_gles_max_version_3_0
+07-17 14:43:45.849   177   177 I hwservicemanager: getTransport: Cannot find entry android.hardware.configstore@1.0::ISurfaceFlingerConfigs/default in either framework or device manifest.
+07-17 14:43:45.875  2837  2864 D EGL_emulation: eglCreateContext: 0x7caf7988f380: maj 3 min 0 rcv 3
+07-17 14:43:45.887  2837  2864 D EGL_emulation: eglMakeCurrent: 0x7caf7988f380: ver 3 0 (tinfo 0x7caf19843910) (first time)
+07-17 14:43:45.896  2837  2896 D HostConnection: HostConnection::get() New Host Connection established 0x7caf897dd110, tid 2896
+07-17 14:43:46.079  2837  2896 D HostConnection: HostComposition ext ANDROID_EMU_CHECKSUM_HELPER_v1 ANDROID_EMU_native_sync_v2 ANDROID_EMU_dma_v1 ANDROID_EMU_direct_mem ANDROID_EMU_host_composition_v1 ANDROID_EMU_host_composition_v2 ANDROID_EMU_vulkan ANDROID_EMU_deferred_vulkan_commands ANDROID_EMU_vulkan_null_optional_strings ANDROID_EMU_vulkan_create_resources_with_requirements ANDROID_EMU_YUV_Cache ANDROID_EMU_vulkan_ignored_handles ANDROID_EMU_has_shared_slots_host_memory_allocator ANDROID_EMU_vulkan_free_memory_sync ANDROID_EMU_vulkan_shader_float16_int8 ANDROID_EMU_vulkan_async_queue_submit ANDROID_EMU_sync_buffer_data ANDROID_EMU_vulkan_async_qsri ANDROID_EMU_read_color_buffer_dma ANDROID_EMU_hwc_color_transform GL_OES_EGL_image_external_essl3 GL_OES_vertex_array_object GL_KHR_texture_compression_astc_ldr ANDROID_EMU_host_side_tracing ANDROID_EMU_gles_max_version_3_0
+07-17 14:43:46.085  2837  2896 W RegularContextFactory: creating OpenGL ES 3.0 context :
+07-17 14:43:46.100   305   305 D goldfish-address-space: claimShared: Ask to claim region [0x3f94e0000 0x3f9e84000]
+07-17 14:43:46.108  2837  2896 D EGL_emulation: eglCreateContext: 0x7caf798923a0: maj 3 min 0 rcv 3
+07-17 14:43:46.113  2837  2837 W ppiie.mooserus: Long monitor contention with owner GLThread 271 (2896) at void org.godotengine.godot.gl.GLSurfaceView$GLThread.guardedRun()(GLSurfaceView.java:1533) waiters=0 in void org.godotengine.godot.gl.GLSurfaceView$GLThread.requestRenderAndNotify(java.lang.Runnable) for 397ms
+07-17 14:43:46.121   305   344 D goldfish-address-space: claimShared: Ask to claim region [0x3fc9a4000 0x3fd348000]
+07-17 14:43:46.121   552   567 I system_server: oneway function results will be dropped but finished with status OK and parcel size 4
+07-17 14:43:46.145   177   177 I hwservicemanager: getTransport: Cannot find entry android.hardware.graphics.mapper@4.0::IMapper/default in either framework or device manifest.
+07-17 14:43:46.153  2837  2864 I Gralloc4: mapper 4.x is not supported
+07-17 14:43:46.197  2837  2864 D HostConnection: createUnique: call
+07-17 14:43:46.203  2837  2864 D HostConnection: HostConnection::get() New Host Connection established 0x7caf897dcb10, tid 2864
+07-17 14:43:46.203  2837  2864 D goldfish-address-space: allocate: Ask for block of size 0x100
+07-17 14:43:46.204  2837  2864 D goldfish-address-space: allocate: ioctl allocate returned offset 0x3f3ffe000 size 0x2000
+07-17 14:43:46.322  2837  2864 D HostConnection: HostComposition ext ANDROID_EMU_CHECKSUM_HELPER_v1 ANDROID_EMU_native_sync_v2 ANDROID_EMU_dma_v1 ANDROID_EMU_direct_mem ANDROID_EMU_host_composition_v1 ANDROID_EMU_host_composition_v2 ANDROID_EMU_vulkan ANDROID_EMU_deferred_vulkan_commands ANDROID_EMU_vulkan_null_optional_strings ANDROID_EMU_vulkan_create_resources_with_requirements ANDROID_EMU_YUV_Cache ANDROID_EMU_vulkan_ignored_handles ANDROID_EMU_has_shared_slots_host_memory_allocator ANDROID_EMU_vulkan_free_memory_sync ANDROID_EMU_vulkan_shader_float16_int8 ANDROID_EMU_vulkan_async_queue_submit ANDROID_EMU_sync_buffer_data ANDROID_EMU_vulkan_async_qsri ANDROID_EMU_read_color_buffer_dma ANDROID_EMU_hwc_color_transform GL_OES_EGL_image_external_essl3 GL_OES_vertex_array_object GL_KHR_texture_compression_astc_ldr ANDROID_EMU_host_side_tracing ANDROID_EMU_gles_max_version_3_0
+07-17 14:43:46.333  2837  2896 D EGL_emulation: eglMakeCurrent: 0x7caf798923a0: ver 3 0 (tinfo 0x7caf19844570) (first time)
+07-17 14:43:46.361  2837  2896 I godot   : Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+07-17 14:43:46.666   305   344 D goldfish-address-space: claimShared: Ask to claim region [0x3fd348000 0x3fdcec000]
+07-17 14:43:46.700  2837  2864 I OpenGLRenderer: Davey! duration=18042ms; Flags=1, IntendedVsync=391704201519, Vsync=408037534199, OldestInputEvent=9223372036854775807, NewestInputEvent=0, HandleInputStart=408051189543, AnimationStart=408051215499, PerformTraversalsStart=408067526536, DrawStart=409437082399, SyncQueued=409476178130, SyncStart=409499640287, IssueDrawCommandsStart=409518397057, SwapBuffers=409563091573, FrameCompleted=409770038725, DequeueBufferDuration=23437348, QueueBufferDuration=68712512, GpuCompleted=12,
+07-17 14:43:46.748  2837  2837 I Choreographer: Skipped 102 frames!  The application may be doing too much work on its main thread.
+07-17 14:43:47.002   305   344 D goldfish-address-space: claimShared: Ask to claim region [0x3fd348000 0x3fdcec000]
+07-17 14:43:47.096   552   567 D WifiNl80211Manager: Scan result ready event
+07-17 14:43:47.097   552   567 D WifiNative: Scan result ready event
+07-17 14:43:47.118   305   344 D goldfish-address-space: claimShared: Ask to claim region [0x3fdcec000 0x3fe690000]
+07-17 14:43:47.158  2837  2864 I OpenGLRenderer: Davey! duration=2052ms; Flags=1, IntendedVsync=408104200863, Vsync=409804200795, OldestInputEvent=9223372036854775807, NewestInputEvent=0, HandleInputStart=409819859042, AnimationStart=409819873847, PerformTraversalsStart=409819883022, DrawStart=410105208118, SyncQueued=410106541306, SyncStart=410149898697, IssueDrawCommandsStart=410150455208, SwapBuffers=410161109929, FrameCompleted=410199879901, DequeueBufferDuration=11161479, QueueBufferDuration=13176576, GpuCompleted=32772522036388713,
+07-17 14:43:47.212   440  2881 D BufferPoolAccessor2.0: bufferpool2 0xf06c0468 : 0(0 size) total buffers - 0(0 size) used buffers - 91/102 (recycle/alloc) - 13/198 (fetch/transfer)
+07-17 14:43:47.217   440  2881 D BufferPoolAccessor2.0: evictor expired: 1, evicted: 1
+07-17 14:43:48.284   450   946 D BufferPoolAccessor2.0: bufferpool2 0x7b0a27e72038 : 0(0 size) total buffers - 0(0 size) used buffers - 90/97 (recycle/alloc) - 7/96 (fetch/transfer)
+07-17 14:43:48.285   450   946 D BufferPoolAccessor2.0: evictor expired: 1, evicted: 1
+07-17 14:43:50.092     0     0 D logd    : logdr: UID=2000 GID=2000 PID=2903 n tail=0 logMask=99 pid=0 start=0ns timeout=0ns
+07-17 14:43:50.421  2837  2896 I godot   : 1:
+07-17 14:43:50.428  2837  2896 E godot   : ERROR: SceneShaderGLES3: Program linking failed:
+07-17 14:43:50.428  2837  2896 E godot   : Fragment shader active uniforms exceed GL_MAX_FRAGMENT_UNIFORM_VECTORS (261)
+07-17 14:43:50.428  2837  2896 E godot   :
+07-17 14:43:50.428  2837  2896 E godot   :    at: _display_error_with_code (drivers/gles3/shader_gles3.cpp:262)
+07-17 14:43:50.429  2837  2896 E godot   : ERROR: Method/function failed.
+07-17 14:43:50.429  2837  2896 E godot   :    at: _compile_specialization (drivers/gles3/shader_gles3.cpp:464)
+07-17 14:43:50.452  2837  2906 D ProfileInstaller: Installing profile for com.jtripppiie.mooserush
+07-17 14:43:50.469  2837  2896 E godot   : ERROR: Condition "p_size < 0" is true. Returning: ERR_INVALID_PARAMETER
+07-17 14:43:50.479  2837  2896 E godot   :    at: resize (./core/templates/cowdata.h:404)
+07-17 14:43:50.481  2837  2896 E godot   : WARNING: shader failed to compile, unable to bind shader.
+07-17 14:43:50.485  2837  2896 E godot   :    at: _version_bind_shader (./drivers/gles3/shader_gles3.h:215)
+07-17 14:43:50.638  2837  2896 I godot   : OpenGL API OpenGL ES 3.0 (OpenGL ES 3.0 SwiftShader 4.0.0.1) - Compatibility - Using Device: Google (Google Inc.) - Android Emulator OpenGL ES Translator (Google SwiftShader)
+07-17 14:43:50.683  2837  2896 D ppiie.mooserus: PlayerBase::PlayerBase()
+07-17 14:43:50.692   552   567 I system_server: oneway function results will be dropped but finished with status OK and parcel size 4
+07-17 14:43:50.697  2837  2896 D ppiie.mooserus: TrackPlayerBase::TrackPlayerBase()
+07-17 14:43:50.698  2837  2896 I libOpenSLES: Emulating old channel mask behavior (ignoring positional mask 0x3, using default mask 0x3 based on channel count of 2)
+07-17 14:43:50.708   552   567 I system_server: oneway function results will be dropped but finished with status OK and parcel size 4
+07-17 14:43:50.738   552  2261 I system_server: oneway function results will be dropped but finished with status OK and parcel size 4
+07-17 14:43:50.739   552   567 I system_server: oneway function results will be dropped but finished with status OK and parcel size 4
+07-17 14:43:50.775   379  2042 W AudioFlinger: createTrack_l(): mismatch between requested flags (00000104) and output flags (00000002)
+07-17 14:43:50.778   379  2042 D AudioFlinger: Client defaulted notificationFrames to 882 for frameCount 1956
+07-17 14:43:50.800   379  2042 D AF::TrackHandle: OpPlayAudio: track:56 usage:1 not muted
+07-17 14:43:50.842  2837  2896 D AudioTrack: createTrack_l(0): AUDIO_OUTPUT_FLAG_FAST denied by server; frameCount 0 -> 1956
+07-17 14:43:50.929   379  2042 W APM::AudioPolicyEngine: getDevicesForStrategy() unknown strategy: -1
+07-17 14:43:50.931   379  2042 W APM::AudioPolicyEngine: getDevicesForStrategy() unknown strategy: -1
+07-17 14:43:50.952  2837  2896 I godot   :
+07-17 14:43:50.968   552  2261 I system_server: oneway function results will be dropped but finished with status OK and parcel size 4
+07-17 14:43:51.195   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(20)
+07-17 14:43:51.310   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:43:51.381   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(1)
+07-17 14:43:51.422   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(5)
+07-17 14:43:51.446   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:43:51.460   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:43:51.508   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(20)
+07-17 14:43:51.521   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:43:51.541   293  2887 I chatty  : uid=1041(audioserver) audio.service.r identical 1 line
+07-17 14:43:51.561   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:43:51.612   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(3)
+07-17 14:43:51.626   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:43:51.637   293  2887 I chatty  : uid=1041(audioserver) audio.service.r identical 1 line
+07-17 14:43:51.657   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:43:51.659   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(1)
+07-17 14:43:51.709   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:43:51.755   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:43:51.952   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(17)
+07-17 14:43:52.063   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:43:52.285   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(6)
+07-17 14:43:52.393   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:43:52.549   293  2887 I chatty  : uid=1041(audioserver) audio.service.r identical 2 lines
+07-17 14:43:52.646   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:43:52.982   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(7)
+07-17 14:43:53.288   552   573 I DropBoxManagerService: add tag=system_server_strictmode isTagEnabled=true flags=0x2
+07-17 14:43:53.312   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(15)
+07-17 14:43:53.368   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(11)
+07-17 14:43:53.512   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(7)
+07-17 14:43:53.543   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:43:53.611   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(4)
+07-17 14:43:53.705   552  1675 I system_server: oneway function results will be dropped but finished with status OK and parcel size 4
+07-17 14:43:53.906   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:43:53.910   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:43:54.604   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(5)
+07-17 14:43:54.684   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(9)
+07-17 14:43:54.705  1935  2812 I Dialer  : OmtpVvmCarrierCfgHlpr - OmtpEvent:CONFIG_STATUS_SMS_TIME_OUT
+07-17 14:43:54.719  1935  1935 I Dialer  : RetryPolicy - discarding deferred status: configuration_state=4
+07-17 14:43:54.753  1935  1935 I Dialer  : VvmTaskExecutor - no more tasks, stopping service if no task are added in 5000 millis
+07-17 14:43:54.831  1935  1935 I Dialer  : VvmTaskReceiver - task received
+07-17 14:43:54.832  1935  1935 I Dialer  : VvmTaskReceiver - TaskExecutor already running
+07-17 14:43:54.847  1935  1935 I Dialer  : Task.createTask - create task:com.android.voicemail.impl.ActivationTask
+07-17 14:43:54.849  1935  1935 I Dialer  : RetryPolicy - retry #1 for com.android.voicemail.impl.ActivationTask@7882fdb queued, executing in 5000
+07-17 14:43:54.855  1935  1935 I Dialer  : VvmTaskExecutor - com.android.voicemail.impl.ActivationTask@7882fdb added
+07-17 14:43:54.856  1935  1935 I Dialer  : VvmTaskExecutor - minimal wait time:4994
+07-17 14:43:54.862  1935  1935 I Dialer  : VvmTaskExecutor - sleep for 4994 millis
+07-17 14:43:55.358   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(5)
+07-17 14:43:55.491   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(20)
+07-17 14:43:55.706   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:43:55.950   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(3)
+07-17 14:43:56.416     0     0 D logd    : logdr: UID=2000 GID=2000 PID=2909 n tail=0 logMask=99 pid=0 start=0ns timeout=0ns
+07-17 14:43:56.426   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(1)
+07-17 14:43:56.559   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(3)
+07-17 14:43:56.682   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(1)
+07-17 14:43:57.200   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(8)
+07-17 14:43:57.372   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:43:57.492   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(4)
+07-17 14:43:57.645   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:43:57.709   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(5)
+07-17 14:43:58.190   305   344 D goldfish-address-space: claimShared: Ask to claim region [0x3f94e0000 0x3f9e84000]
+07-17 14:43:58.305   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(5)
+07-17 14:43:58.714   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:43:58.743   305   344 D goldfish-address-space: claimShared: Ask to claim region [0x3fe690000 0x3ff034000]
+07-17 14:43:58.769   552  2261 W system_server: Long monitor contention with owner android.anim (575) at void com.android.server.wm.WindowSurfacePlacer$Traverser.run()(WindowSurfacePlacer.java:59) waiters=1 in void com.android.server.wm.WindowManagerService.setTransparentRegionWindow(com.android.server.wm.Session, android.view.IWindow, android.graphics.Region) for 112ms
+07-17 14:43:58.856   305   344 D goldfish-address-space: claimShared: Ask to claim region [0x3ff034000 0x3ff9d8000]
+07-17 14:43:59.118   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(4)
+07-17 14:43:59.294   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(14)
+07-17 14:43:59.343   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(10)
+07-17 14:43:59.454   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(20)
+07-17 14:43:59.587   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(56)
+07-17 14:43:59.622   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(10)
+07-17 14:43:59.652   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(1)
+07-17 14:43:59.749   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(4)
+07-17 14:43:59.811   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(10)
+07-17 14:43:59.868   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(11)
+07-17 14:43:59.898   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:43:59.911  1935  2812 I Dialer  : VvmTaskExecutor - executing task com.android.voicemail.impl.ActivationTask@7882fdb
+07-17 14:43:59.936  1935  2812 I Dialer  : PreOMigrationHandler - ComponentInfo{com.android.phone/com.android.services.telephony.TelephonyConnectionService}, ***, UserHandle{0} already migrated
+07-17 14:44:00.115   737   737 D KeyguardClockSwitch: Updating clock: 244
+07-17 14:44:00.238   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(3)
+07-17 14:44:00.572   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:44:00.577  2010  2032 I VoicemailNotifier: receivers for android.intent.action.PROVIDER_CHANGED :[]
+07-17 14:44:00.618  1935  2812 I Dialer  : VvmActivationTask - VVM content provider configured - vvm_type_cvvm
+07-17 14:44:00.619  1935  2812 I Dialer  : OmtpVvmCarrierCfgHlpr - OmtpEvent:CONFIG_ACTIVATING
+07-17 14:44:00.784  2010  2032 I VoicemailNotifier: receivers for android.intent.action.PROVIDER_CHANGED :[]
+07-17 14:44:01.031  2439  2724 D SmsNumberUtils: enter filterDestAddr. destAddr="[BajqU4K5_YhSYbs-7QUn0dOwcmI]"
+07-17 14:44:01.049  2439  2724 D SmsNumberUtils: destAddr is not formatted.
+07-17 14:44:01.051  2439  2724 D SmsNumberUtils: leave filterDestAddr, new destAddr="[BajqU4K5_YhSYbs-7QUn0dOwcmI]"
+07-17 14:44:01.290   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(11)
+07-17 14:44:01.305  2837  2851 I ppiie.mooserus: Background young concurrent copying GC freed 7472(609KB) AllocSpace objects, 0(0B) LOS objects, 47% free, 2378KB/4563KB, paused 389us total 190.916ms
+07-17 14:44:01.351   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(4)
+07-17 14:44:01.414   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(15)
+07-17 14:44:01.450   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(7)
+07-17 14:44:01.494   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(6)
+07-17 14:44:01.626   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(1)
+07-17 14:44:01.846   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(4)
+07-17 14:44:01.908   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(3)
+07-17 14:44:02.538     0     0 D logd    : logdr: UID=2000 GID=2000 PID=2913 n tail=0 logMask=99 pid=0 start=0ns timeout=0ns
+07-17 14:44:02.603   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:44:05.716   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:44:07.175   528   528 E netmgr  : qemu_pipe_open_ns:62: Could not connect to the 'pipe:qemud:network' service: Invalid argument
+07-17 14:44:07.176   528   528 E netmgr  : Failed to open QEMU pipe 'qemud:network': Invalid argument
+07-17 14:44:08.007   530   530 E wifi_forwarder: qemu_pipe_open_ns:62: Could not connect to the 'pipe:qemud:wififorward' service: Invalid argument
+07-17 14:44:08.008   530   530 E wifi_forwarder: RemoteConnection failed to initialize: RemoteConnection failed to open pipe
+07-17 14:44:08.084   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(5)
+07-17 14:44:08.122   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:44:08.245     0     0 D logd    : logdr: UID=2000 GID=2000 PID=2916 n tail=0 logMask=99 pid=0 start=0ns timeout=0ns
+07-17 14:44:08.641   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(9)
+07-17 14:44:08.915  2837  2896 V Godot   : OnGodotSetupCompleted
+07-17 14:44:09.214   379   476 D AF::Track: interceptBuffer: took 1478us to intercept 0 tracks
+07-17 14:44:09.294  2837  2896 V Godot   : OnGodotMainLoopStarted
+07-17 14:44:09.466   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(5)
+07-17 14:44:09.576  2837  2896 I godot   : 1:
+07-17 14:44:09.577  2837  2896 E godot   : ERROR: CanvasShaderGLES3: Program linking failed:
+07-17 14:44:09.577  2837  2896 E godot   : Fragment shader active uniforms exceed GL_MAX_FRAGMENT_UNIFORM_VECTORS (261)
+07-17 14:44:09.577  2837  2896 E godot   :
+07-17 14:44:09.577  2837  2896 E godot   :    at: _display_error_with_code (drivers/gles3/shader_gles3.cpp:262)
+07-17 14:44:09.579  2837  2896 E godot   : ERROR: Method/function failed.
+07-17 14:44:09.579  2837  2896 E godot   :    at: _compile_specialization (drivers/gles3/shader_gles3.cpp:464)
+07-17 14:44:09.581  2837  2896 E godot   : ERROR: Condition "p_size < 0" is true. Returning: ERR_INVALID_PARAMETER
+07-17 14:44:09.581  2837  2896 E godot   :    at: resize (./core/templates/cowdata.h:404)
+07-17 14:44:09.874   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(8)
+07-17 14:44:09.917   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(4)
+07-17 14:44:10.060   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(1)
+07-17 14:44:10.163   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(4)
+07-17 14:44:10.312   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(6)
+07-17 14:44:10.358   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(3)
+07-17 14:44:10.412   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(4)
+07-17 14:44:10.654   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:44:11.854   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(1)
+07-17 14:44:12.013   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(1)
+07-17 14:44:12.763   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(3)
+07-17 14:44:12.998   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:44:13.217   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(1)
+07-17 14:44:13.430   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(4)
+07-17 14:44:13.481   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(4)
+07-17 14:44:13.650   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(5)
+07-17 14:44:13.696   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:44:13.842   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(5)
+07-17 14:44:14.430  2837  2896 I godot   : 1:
+07-17 14:44:14.430  2837  2896 E godot   : ERROR: CanvasShaderGLES3: Program linking failed:
+07-17 14:44:14.430  2837  2896 E godot   : Fragment shader active uniforms exceed GL_MAX_FRAGMENT_UNIFORM_VECTORS (261)
+07-17 14:44:14.430  2837  2896 E godot   :
+07-17 14:44:14.430  2837  2896 E godot   :    at: _display_error_with_code (drivers/gles3/shader_gles3.cpp:262)
+07-17 14:44:14.430  2837  2896 E godot   : ERROR: Method/function failed.
+07-17 14:44:14.431  2837  2896 E godot   :    at: _compile_specialization (drivers/gles3/shader_gles3.cpp:464)
+07-17 14:44:14.432  2837  2896 E godot   : ERROR: Condition "p_size < 0" is true. Returning: ERR_INVALID_PARAMETER
+07-17 14:44:14.434  2837  2896 E godot   :    at: resize (./core/templates/cowdata.h:404)
+07-17 14:44:14.435  2837  2896 E godot   : ERROR: Condition "p_size < 0" is true. Returning: ERR_INVALID_PARAMETER
+07-17 14:44:14.435  2837  2896 E godot   :    at: resize (./core/templates/cowdata.h:404)
+07-17 14:44:14.628   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(3)
+07-17 14:44:14.662   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(6)
+07-17 14:44:15.062   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(3)
+07-17 14:44:15.746   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(10)
+07-17 14:44:16.128   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(13)
+07-17 14:44:16.199   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(3)
+07-17 14:44:16.344   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(25)
+07-17 14:44:16.788   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(1)
+07-17 14:44:16.923   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:44:16.957   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:44:17.037   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(1)
+07-17 14:44:17.230   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(5)
+07-17 14:44:17.407   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:44:17.510   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(10)
+07-17 14:44:17.564   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(1)
+07-17 14:44:17.590   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:44:17.679   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(6)
+07-17 14:44:17.813   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(52)
+07-17 14:44:17.870   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(6)
+07-17 14:44:18.362   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(20)
+07-17 14:44:18.590   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(1)
+07-17 14:44:18.727   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(3)
+07-17 14:44:19.276   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(5)
+07-17 14:44:19.383   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(7)
+07-17 14:44:19.927   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(1)
+07-17 14:44:20.014   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(5)
+07-17 14:44:20.130   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:44:20.750   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(10)
+07-17 14:44:20.855   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(10)
+07-17 14:44:21.115   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(6)
+07-17 14:44:21.358   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(1)
+07-17 14:44:21.418   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(10)
+07-17 14:44:21.498   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(25)
+07-17 14:44:21.860     0     0 D logd    : logdr: UID=2000 GID=2000 PID=2919 n tail=0 logMask=99 pid=0 start=0ns timeout=0ns
+07-17 14:44:22.320   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(7)
+07-17 14:44:22.711   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(1)
+07-17 14:44:22.958   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(5)
+07-17 14:44:23.011   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:44:23.117   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(3)
+07-17 14:44:23.269   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(3)
+07-17 14:44:23.372   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:44:23.684   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(34)
+07-17 14:44:23.741   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:44:23.777   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(6)
+07-17 14:44:23.831   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:44:23.835   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(4)
+07-17 14:44:23.869   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:44:23.902   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(6)
+07-17 14:44:23.913   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:44:23.956   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(3)
+07-17 14:44:23.978   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:44:24.017   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:44:24.025   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(5)
+07-17 14:44:24.052   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:44:24.281   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(4)
+07-17 14:44:24.379   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(4)
+07-17 14:44:24.630   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:44:24.887   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(16)
+07-17 14:44:24.930   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(10)
+07-17 14:44:25.018   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(9)
+07-17 14:44:25.083   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:44:25.153   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:44:25.229   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:44:25.249   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(15)
+07-17 14:44:25.271   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:44:25.316   293  2887 I chatty  : uid=1041(audioserver) audio.service.r identical 2 lines
+07-17 14:44:25.334   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:44:25.446   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(6)
+07-17 14:44:25.473   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:44:25.612   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(4)
+07-17 14:44:25.816   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(21)
+07-17 14:44:25.976   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(3)
+07-17 14:44:26.026   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:44:26.217   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(24)
+07-17 14:44:26.357   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(15)
+07-17 14:44:26.442   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(19)
+07-17 14:44:26.508   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(11)
+07-17 14:44:26.526   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:44:26.543   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:44:26.779   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(4)
+07-17 14:44:26.863   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(5)
+07-17 14:44:26.911   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(4)
+07-17 14:44:26.984   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(11)
+07-17 14:44:27.081   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:44:27.086   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(5)
+07-17 14:44:27.130   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:44:27.132   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(5)
+07-17 14:44:27.150   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:44:27.165   293  2887 I chatty  : uid=1041(audioserver) audio.service.r identical 1 line
+07-17 14:44:27.199   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:44:27.236   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:44:27.304   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:44:27.364   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:44:27.365   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(4)
+07-17 14:44:27.509   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:44:27.548   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(7)
+07-17 14:44:27.571   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:44:27.626   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(6)
+07-17 14:44:27.677   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:44:27.713   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:44:27.917   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(13)
+07-17 14:44:27.970   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:44:28.011   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(4)
+07-17 14:44:28.073   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(3)
+07-17 14:44:28.157   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(17)
+07-17 14:44:28.238   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(1)
+07-17 14:44:28.289   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(6)
+07-17 14:44:28.345   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(19)
+07-17 14:44:28.410   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:44:28.442   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(7)
+07-17 14:44:28.465   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:44:28.593   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:44:28.761   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:44:28.871   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(4)
+07-17 14:44:29.011   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:44:29.035   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(11)
+07-17 14:44:29.082   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:44:29.149   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:44:29.155   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(10)
+07-17 14:44:29.161   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:44:29.217   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:44:29.219   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(9)
+07-17 14:44:29.280   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(8)
+07-17 14:44:29.366   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(5)
+07-17 14:44:29.499   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(1)
+07-17 14:44:29.614   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(18)
+07-17 14:44:29.658   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(1)
+07-17 14:44:29.674   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:44:29.817   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:44:29.883   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:44:29.896   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:44:29.972   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(7)
+07-17 14:44:30.072   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(10)
+07-17 14:44:30.211   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(1)
+07-17 14:44:30.332   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(1)
+07-17 14:44:30.418   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(5)
+07-17 14:44:30.811   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:44:31.571   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(6)
+07-17 14:44:32.018   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(1)
+07-17 14:44:32.110   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(6)
+07-17 14:44:32.223   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(7)
+07-17 14:44:32.380   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(22)
+07-17 14:44:32.463   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(7)
+07-17 14:44:32.495   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(4)
+07-17 14:44:32.532   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(4)
+07-17 14:44:32.588   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(1)
+07-17 14:44:32.684   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(9)
+07-17 14:44:32.774   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:44:32.871   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(4)
+07-17 14:44:32.905   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(6)
+07-17 14:44:32.933   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(3)
+07-17 14:44:33.003   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(5)
+07-17 14:44:33.103   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(5)
+07-17 14:44:33.202   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(15)
+07-17 14:44:33.275   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(4)
+07-17 14:44:33.380   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(13)
+07-17 14:44:33.490   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(15)
+07-17 14:44:33.540   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(4)
+07-17 14:44:33.620   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(6)
+07-17 14:44:33.680   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(7)
+07-17 14:44:33.758   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(1)
+07-17 14:44:33.856   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(6)
+07-17 14:44:33.901   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(1)
+07-17 14:44:33.981   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(4)
+07-17 14:44:34.086   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(19)
+07-17 14:44:34.158   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(10)
+07-17 14:44:34.214   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:44:34.353   293  2887 I chatty  : uid=1041(audioserver) audio.service.r identical 3 lines
+07-17 14:44:34.369   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:44:34.401   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:44:34.413   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:44:34.493   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:44:34.498   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:44:34.518   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:44:34.581   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:44:34.592   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(11)
+07-17 14:44:34.611   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:44:34.647   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:44:34.660   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:44:34.764   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(6)
+07-17 14:44:34.879   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:44:35.042   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(21)
+07-17 14:44:35.095   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(18)
+07-17 14:44:35.122   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(7)
+07-17 14:44:35.156   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:44:35.172   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:44:35.272   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(5)
+07-17 14:44:35.319   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:44:35.320   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(4)
+07-17 14:44:35.346   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:44:35.459   293  2887 I chatty  : uid=1041(audioserver) audio.service.r identical 4 lines
+07-17 14:44:35.594   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:44:35.597   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(5)
+07-17 14:44:35.673   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(7)
+07-17 14:44:35.729   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:44:35.733   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:44:35.744   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:44:35.794   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:44:35.805     0     0 W healthd : battery l=100 v=5000 t=25.0 h=2 st=2 c=900000 fc=300000 cc=10 chg=a
+07-17 14:44:35.974   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(8)
+07-17 14:44:36.036   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(1)
+07-17 14:44:36.128   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(17)
+07-17 14:44:36.218   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(13)
+07-17 14:44:36.293   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(4)
+07-17 14:44:36.381   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:44:36.439   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(12)
+07-17 14:44:36.498   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(3)
+07-17 14:44:36.549   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:44:36.580   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(1)
+07-17 14:44:36.758   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(8)
+07-17 14:44:36.837   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(1)
+07-17 14:44:36.947   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(14)
+07-17 14:44:36.998   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:44:37.242   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:44:37.862   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(4)
+07-17 14:44:38.911   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(6)
+07-17 14:44:40.230   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(9)
+07-17 14:44:40.316   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(6)
+07-17 14:44:40.552   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(4)
+07-17 14:44:40.662   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:44:40.814   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(17)
+07-17 14:44:40.893   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(4)
+07-17 14:44:40.938   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(3)
+07-17 14:44:41.050   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:44:41.216   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(6)
+07-17 14:44:41.279   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(13)
+07-17 14:44:41.360   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(8)
+07-17 14:44:41.450   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(10)
+07-17 14:44:41.550   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(14)
+07-17 14:44:41.631   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(8)
+07-17 14:44:41.771   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(4)
+07-17 14:44:41.904   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(6)
+07-17 14:44:41.947   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(8)
+07-17 14:44:42.064   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(1)
+07-17 14:44:42.132   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(21)
+07-17 14:44:42.162   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:44:42.284   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(4)
+07-17 14:44:42.348   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(3)
+07-17 14:44:42.473   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(7)
+07-17 14:44:42.555   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(4)
+07-17 14:44:42.653   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(19)
+07-17 14:44:42.716   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(9)
+07-17 14:44:42.763   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:44:42.806   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(3)
+07-17 14:44:42.849   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(7)
+07-17 14:44:42.936   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(4)
+07-17 14:44:43.012   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(6)
+07-17 14:44:43.042   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(1)
+07-17 14:44:43.166   379   476 I chatty  : uid=1041(audioserver) AudioOut_D identical 1 line
+07-17 14:44:43.393   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(1)
+07-17 14:44:43.559   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(3)
+07-17 14:44:43.700   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(7)
+07-17 14:44:43.779   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:44:44.059   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(1)
+07-17 14:44:44.294   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(11)
+07-17 14:44:44.463   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(6)
+07-17 14:44:44.539   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(7)
+07-17 14:44:44.858   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:44:44.910   379   476 I chatty  : uid=1041(audioserver) AudioOut_D identical 1 line
+07-17 14:44:45.336   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:44:46.292   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(10)
+07-17 14:44:46.472   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(3)
+07-17 14:44:46.702   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(7)
+07-17 14:44:46.838   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(4)
+07-17 14:44:46.899   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(4)
+07-17 14:44:47.024   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(3)
+07-17 14:44:47.121   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(3)
+07-17 14:44:47.191   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(1)
+07-17 14:44:47.354   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(14)
+07-17 14:44:47.450   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(10)
+07-17 14:44:47.554   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(4)
+07-17 14:44:47.633   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(3)
+07-17 14:44:47.742   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(5)
+07-17 14:44:47.939   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(22)
+07-17 14:44:48.048   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(7)
+07-17 14:44:48.165   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(14)
+07-17 14:44:48.306   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(20)
+07-17 14:44:48.335   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(3)
+07-17 14:44:48.429   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(7)
+07-17 14:44:48.534   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(4)
+07-17 14:44:48.650   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(1)
+07-17 14:44:48.686   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(12)
+07-17 14:44:48.838   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(8)
+07-17 14:44:48.920   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:44:49.065   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:44:49.218   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(1)
+07-17 14:44:49.297   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(6)
+07-17 14:44:49.370   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(1)
+07-17 14:44:49.418   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(6)
+07-17 14:44:49.495   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(9)
+07-17 14:44:49.698   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(5)
+07-17 14:44:49.810   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(3)
+07-17 14:44:49.868   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(9)
+07-17 14:44:49.966   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(12)
+07-17 14:44:50.006   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(5)
+07-17 14:44:50.089   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(22)
+07-17 14:44:50.240   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(4)
+07-17 14:44:50.345   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(1)
+07-17 14:44:50.412   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:44:50.722   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:44:50.768   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(3)
+07-17 14:44:50.808   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:44:50.862   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:44:50.865   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(10)
+07-17 14:44:50.894   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(4)
+07-17 14:44:50.965   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:44:50.974   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:44:51.028   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(4)
+07-17 14:44:51.116   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:44:51.203   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(4)
+07-17 14:44:51.238   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(1)
+07-17 14:44:51.453   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(8)
+07-17 14:44:51.637   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(4)
+07-17 14:44:51.744   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(6)
+07-17 14:44:51.780   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:44:51.846   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:44:51.884   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:44:51.885   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(28)
+07-17 14:44:51.898   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:44:52.001   293  2887 I chatty  : uid=1041(audioserver) audio.service.r identical 3 lines
+07-17 14:44:52.015   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:44:52.088   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:44:52.210   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(1)
+07-17 14:44:52.326   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(8)
+07-17 14:44:52.468   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(11)
+07-17 14:44:52.625   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(4)
+07-17 14:44:52.757   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:44:52.761   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(3)
+07-17 14:44:52.809   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:44:52.814   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(1)
+07-17 14:44:52.918   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(4)
+07-17 14:44:52.943   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(10)
+07-17 14:44:52.999   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(1)
+07-17 14:44:53.009   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:44:53.202   293  2887 I chatty  : uid=1041(audioserver) audio.service.r identical 4 lines
+07-17 14:44:53.208   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:44:53.266   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(10)
+07-17 14:44:53.321   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(4)
+07-17 14:44:53.906   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(10)
+07-17 14:44:53.935   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:44:53.994   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(4)
+07-17 14:44:54.103   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(13)
+07-17 14:44:54.209   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(27)
+07-17 14:44:54.321   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:44:54.528   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(1)
+07-17 14:44:54.665   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(7)
+07-17 14:44:54.676   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:44:54.723   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:44:54.810   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(10)
+07-17 14:44:54.829   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:44:54.837   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(7)
+07-17 14:44:54.845   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:44:54.956   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(6)
+07-17 14:44:54.992   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:44:55.092   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(10)
+07-17 14:44:55.150   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(4)
+07-17 14:44:55.158   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:44:55.212   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(4)
+07-17 14:44:55.283   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(7)
+07-17 14:44:55.306   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:44:55.326   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:44:55.361   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(13)
+07-17 14:44:55.385   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:44:55.432   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(5)
+07-17 14:44:55.530   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(3)
+07-17 14:44:55.701   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:44:55.715   293  2887 W android.hardware.audio.service.ranchu: TinyalsaSink::write:125 pcm_write was late reading frames, dropping 22131 us of audio
+07-17 14:44:55.948   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:44:56.138   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:44:56.215   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(34)
+07-17 14:44:56.249   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(5)
+07-17 14:44:56.345   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(4)
+07-17 14:44:56.574   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(5)
+07-17 14:44:56.824   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:44:57.168   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(11)
+07-17 14:44:57.934   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(3)
+07-17 14:44:58.506   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(3)
+07-17 14:44:58.853   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(4)
+07-17 14:44:59.343   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(5)
+07-17 14:44:59.398   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(10)
+07-17 14:44:59.438   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(5)
+07-17 14:44:59.627   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(10)
+07-17 14:44:59.755   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(7)
+07-17 14:44:59.807   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(5)
+07-17 14:44:59.940   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(3)
+07-17 14:44:59.994   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(5)
+07-17 14:45:00.071   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:45:00.134   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:45:00.243   737   737 D KeyguardClockSwitch: Updating clock: 245
+07-17 14:45:00.280   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(5)
+07-17 14:45:00.458   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(1)
+07-17 14:45:00.544   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(10)
+07-17 14:45:00.726   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:45:00.830   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(5)
+07-17 14:45:01.057   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(3)
+07-17 14:45:01.228   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(3)
+07-17 14:45:01.266   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(6)
+07-17 14:45:01.324  1935  2812 I Dialer  : OmtpVvmCarrierCfgHlpr - OmtpEvent:CONFIG_STATUS_SMS_TIME_OUT
+07-17 14:45:01.368  1935  1935 I Dialer  : RetryPolicy - discarding deferred status: configuration_state=4
+07-17 14:45:01.428  1935  1935 I Dialer  : VvmTaskExecutor - no more tasks, stopping service if no task are added in 5000 millis
+07-17 14:45:01.519   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(1)
+07-17 14:45:01.551  1935  1935 I Dialer  : VvmTaskReceiver - task received
+07-17 14:45:01.555  1935  1935 I Dialer  : VvmTaskReceiver - TaskExecutor already running
+07-17 14:45:01.561  1935  1935 I Dialer  : Task.createTask - create task:com.android.voicemail.impl.ActivationTask
+07-17 14:45:01.563  1935  1935 I Dialer  : RetryPolicy - retry #2 for com.android.voicemail.impl.ActivationTask@f0d158d queued, executing in 5000
+07-17 14:45:01.564  1935  1935 I Dialer  : VvmTaskExecutor - com.android.voicemail.impl.ActivationTask@f0d158d added
+07-17 14:45:01.568  1935  1935 I Dialer  : VvmTaskExecutor - minimal wait time:4999
+07-17 14:45:01.569  1935  1935 I Dialer  : VvmTaskExecutor - sleep for 4999 millis
+07-17 14:45:01.674   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(3)
+07-17 14:45:01.971   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(11)
+07-17 14:45:02.017   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(8)
+07-17 14:45:02.337   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(32)
+07-17 14:45:02.446   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(3)
+07-17 14:45:02.514   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(5)
+07-17 14:45:02.666   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(43)
+07-17 14:45:02.747   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(3)
+07-17 14:45:02.886   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(35)
+07-17 14:45:03.050   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(4)
+07-17 14:45:03.711   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:45:03.762   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(5)
+07-17 14:45:03.814   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(8)
+07-17 14:45:03.912   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(5)
+07-17 14:45:03.970   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(7)
+07-17 14:45:04.173   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(7)
+07-17 14:45:04.244   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(5)
+07-17 14:45:04.638   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(10)
+07-17 14:45:04.952   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:45:05.127   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(1)
+07-17 14:45:05.362   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(1)
+07-17 14:45:05.450   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(4)
+07-17 14:45:05.583   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(5)
+07-17 14:45:05.844   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(1)
+07-17 14:45:06.091   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:45:06.165   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:45:06.259   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(3)
+07-17 14:45:06.367   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(1)
+07-17 14:45:06.410   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(7)
+07-17 14:45:06.474   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(5)
+07-17 14:45:06.553   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(3)
+07-17 14:45:06.617  1935  2812 I Dialer  : VvmTaskExecutor - executing task com.android.voicemail.impl.ActivationTask@f0d158d
+07-17 14:45:06.651  1935  2812 I Dialer  : PreOMigrationHandler - ComponentInfo{com.android.phone/com.android.services.telephony.TelephonyConnectionService}, ***, UserHandle{0} already migrated
+07-17 14:45:06.742   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:45:06.810   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(9)
+07-17 14:45:07.191   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(4)
+07-17 14:45:07.248   528   528 E netmgr  : qemu_pipe_open_ns:62: Could not connect to the 'pipe:qemud:network' service: Invalid argument
+07-17 14:45:07.249   528   528 E netmgr  : Failed to open QEMU pipe 'qemud:network': Invalid argument
+07-17 14:45:07.323   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(6)
+07-17 14:45:07.598  2010  2032 I VoicemailNotifier: receivers for android.intent.action.PROVIDER_CHANGED :[]
+07-17 14:45:07.653  1935  2812 I Dialer  : VvmActivationTask - VVM content provider configured - vvm_type_cvvm
+07-17 14:45:07.676   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(3)
+07-17 14:45:07.720  1935  2812 I Dialer  : OmtpVvmCarrierCfgHlpr - OmtpEvent:CONFIG_ACTIVATING
+07-17 14:45:07.829   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:45:07.962   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(7)
+07-17 14:45:08.048   530   530 E wifi_forwarder: qemu_pipe_open_ns:62: Could not connect to the 'pipe:qemud:wififorward' service: Invalid argument
+07-17 14:45:08.049   530   530 E wifi_forwarder: RemoteConnection failed to initialize: RemoteConnection failed to open pipe
+07-17 14:45:08.084  2010  2032 I VoicemailNotifier: receivers for android.intent.action.PROVIDER_CHANGED :[]
+07-17 14:45:08.423   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(6)
+07-17 14:45:08.599   379   476 D AF::Track: interceptBuffer: took 4219us to intercept 0 tracks
+07-17 14:45:08.644  2439  2794 D SmsNumberUtils: enter filterDestAddr. destAddr="[BajqU4K5_YhSYbs-7QUn0dOwcmI]"
+07-17 14:45:08.745  2439  2794 D SmsNumberUtils: destAddr is not formatted.
+07-17 14:45:08.750  2439  2794 D SmsNumberUtils: leave filterDestAddr, new destAddr="[BajqU4K5_YhSYbs-7QUn0dOwcmI]"
+07-17 14:45:09.229   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(1)
+07-17 14:45:09.515   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(7)
+07-17 14:45:09.663   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(13)
+07-17 14:45:09.752   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(5)
+07-17 14:45:09.942   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(8)
+07-17 14:45:10.064   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(12)
+07-17 14:45:10.132   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:45:10.203   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(1)
+07-17 14:45:10.268   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(3)
+07-17 14:45:10.340   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(6)
+07-17 14:45:10.477   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(4)
+07-17 14:45:10.677   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(4)
+07-17 14:45:11.044   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(11)
+07-17 14:45:11.792   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(11)
+07-17 14:45:11.932   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(5)
+07-17 14:45:11.958   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:45:12.219   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(13)
+07-17 14:45:12.379   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(6)
+07-17 14:45:12.426   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(4)
+07-17 14:45:12.618   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(4)
+07-17 14:45:13.272   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(13)
+07-17 14:45:13.352   176   176 I servicemanager: Since 'apexservice' could not be found, trying to start it as a lazy AIDL service
+07-17 14:45:13.474     0     0 I init    : starting service 'apexd'...
+07-17 14:45:13.648     0     0 I init    : Control message: Processed ctl.interface_start for 'aidl/apexservice' from pid: 176 (/system/bin/servicemanager)
+07-17 14:45:14.420   176   176 I servicemanager: Since 'apexservice' could not be found, trying to start it as a lazy AIDL service
+07-17 14:45:14.450   552  2261 W ServiceManager: Waited one second for apexservice
+07-17 14:45:14.603   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(3)
+07-17 14:45:15.472   176   176 I servicemanager: Since 'apexservice' could not be found, trying to start it as a lazy AIDL service
+07-17 14:45:14.470     0     0 I init    : Control message: Processed ctl.interface_start for 'aidl/apexservice' from pid: 176 (/system/bin/servicemanager)
+07-17 14:45:15.517     0     0 I apexd   : Scanning /system/apex for preinstalled data
+07-17 14:45:15.535     0     0 I init    : Control message: Processed ctl.interface_start for 'aidl/apexservice' from pid: 176 (/system/bin/servicemanager)
+07-17 14:45:15.484   552  2261 W ServiceManager: Waited one second for apexservice
+07-17 14:45:15.951     0     0 I apexd   : Scanning /system_ext/apex for preinstalled data
+07-17 14:45:15.952     0     0 I apexd   : ... does not exist. Skipping
+07-17 14:45:15.952     0     0 I apexd   : Scanning /product/apex for preinstalled data
+07-17 14:45:15.952     0     0 I apexd   : ... does not exist. Skipping
+07-17 14:45:15.953     0     0 I apexd   : Scanning /vendor/apex for preinstalled data
+07-17 14:45:15.953     0     0 I apexd   : ... does not exist. Skipping
+07-17 14:45:15.953     0     0 I apexd   : Populating APEX database from mounts...
+07-17 14:45:16.070     0     0 I apexd   : Found "/apex/com.android.neuralnetworks@300000000" backed by file /system/apex/com.android.neuralnetworks.apex
+07-17 14:45:16.077     0     0 I apexd   : Found "/apex/com.android.runtime@1" backed by file /system/apex/com.android.runtime.apex
+07-17 14:45:16.107     0     0 I apexd   : Found "/apex/com.android.resolv@300000000" backed by file /system/apex/com.android.resolv.apex
+07-17 14:45:16.109     0     0 I apexd   : Found "/apex/com.android.extservices@300000000" backed by file /system/apex/com.android.extservices.apex
+07-17 14:45:16.167     0     0 I apexd   : Found "/apex/com.android.tethering@300000000" backed by file /system/apex/com.android.tethering.apex
+07-17 14:45:16.168     0     0 I apexd   : Found "/apex/com.android.cellbroadcast@300000000" backed by file /system/apex/com.android.cellbroadcast.apex
+07-17 14:45:16.172     0     0 I apexd   : Found "/apex/com.android.vndk.v30@1" backed by file /system/apex/com.android.vndk.current.apex
+07-17 14:45:16.290   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(23)
+07-17 14:45:16.197     0     0 I apexd   : Found "/apex/com.android.art@1" backed by file /system/apex/com.android.art.debug.apex
+07-17 14:45:16.273     0     0 I apexd   : Found "/apex/com.android.conscrypt@300000000" backed by file /system/apex/com.android.conscrypt.apex
+07-17 14:45:16.293     0     0 I apexd   : Found "/apex/com.android.apex.cts.shim@1" backed by file /system/apex/com.android.apex.cts.shim.apex
+07-17 14:45:16.297     0     0 I apexd   : Found "/apex/com.android.i18n@1" backed by file /system/apex/com.android.i18n.apex
+07-17 14:45:16.320     0     0 I apexd   : Found "/apex/com.android.permission@300000000" backed by file /system/apex/com.android.permission.apex
+07-17 14:45:16.349     0     0 I apexd   : Found "/apex/com.android.media@300000000" backed by file /system/apex/com.android.media.apex
+07-17 14:45:16.373     0     0 I apexd   : Found "/apex/com.android.adbd@300000000" backed by file /system/apex/com.android.adbd.apex
+07-17 14:45:16.379     0     0 I apexd   : Found "/apex/com.android.mediaprovider@300000000" backed by file /system/apex/com.android.mediaprovider.apex
+07-17 14:45:16.433     0     0 I apexd   : Found "/apex/com.android.ipsec@300000000" backed by file /system/apex/com.android.ipsec.apex
+07-17 14:45:16.456     0     0 I apexd   : Found "/apex/com.android.tzdata@300000000" backed by file /system/apex/com.android.tzdata.apex
+07-17 14:45:16.457     0     0 I apexd   : Found "/apex/com.android.media.swcodec@300000000" backed by file /system/apex/com.android.media.swcodec.apex
+07-17 14:45:16.475     0     0 I apexd   : Found "/apex/com.android.os.statsd@300000000" backed by file /system/apex/com.android.os.statsd.apex
+07-17 14:45:16.478     0     0 I apexd   : Found "/apex/com.android.wifi@300000000" backed by file /system/apex/com.android.wifi.apex
+07-17 14:45:16.479     0     0 I apexd   : Found "/apex/com.android.sdkext@300000000" backed by file /system/apex/com.android.sdkext.apex
+07-17 14:45:16.500     0     0 I apexd   : 21 packages restored.
+07-17 14:45:16.520     0     0 I init    : Control message: Processed ctl.interface_start for 'aidl/apexservice' from pid: 176 (/system/bin/servicemanager)
+07-17 14:45:16.493   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(1)
+07-17 14:45:16.498   176   176 I servicemanager: Since 'apexservice' could not be found, trying to start it as a lazy AIDL service
+07-17 14:45:16.500   552  2261 W ServiceManager: Waited one second for apexservice
+07-17 14:45:16.527     0     0 I AidlLazyServiceRegistrar: Registering service apexservice
+07-17 14:45:16.561     0     0 I AidlLazyServiceRegistrar: Trying to shut down the service. No clients in use for any service in process.
+07-17 14:45:16.574     0     0 I AidlLazyServiceRegistrar: Failed to unregister service apexservice
+07-17 14:45:16.540   176   176 I BpBinder: onLastStrongRef automatically unlinking death recipients: <uncached descriptor>
+07-17 14:45:16.557   176   176 I servicemanager: Tried to unregister apexservice, but there is about to be a client.
+07-17 14:45:16.948   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:45:17.056   176   176 I servicemanager: Notifying apexservice they have clients: 1
+07-17 14:45:17.099   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(4)
+07-17 14:45:17.156     0     0 I AidlLazyServiceRegistrar: Process has 1 (of 1 available) client(s) in use after notification android.apex.IApexService has clients: 1
+07-17 14:45:18.388   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:45:18.631   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(4)
+07-17 14:45:18.842   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(63)
+07-17 14:45:18.907   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(9)
+07-17 14:45:18.976   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(20)
+07-17 14:45:19.040   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(10)
+07-17 14:45:19.148   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(14)
+07-17 14:45:21.133   305   344 D goldfish-address-space: claimShared: Ask to claim region [0x3f5b88000 0x3f652c000]
+07-17 14:45:21.516   177   177 I hwservicemanager: getTransport: Cannot find entry android.hardware.graphics.mapper@4.0::IMapper/default in either framework or device manifest.
+07-17 14:45:21.590  2939  2939 I Gralloc4: mapper 4.x is not supported
+07-17 14:45:21.685   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(7)
+07-17 14:45:21.835   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(1)
+07-17 14:45:21.910  2939  2939 D HostConnection: createUnique: call
+07-17 14:45:21.913  2939  2939 D HostConnection: HostConnection::get() New Host Connection established 0x7968fb19c4d0, tid 2939
+07-17 14:45:21.966  2939  2939 D goldfish-address-space: allocate: Ask for block of size 0x100
+07-17 14:45:21.967  2939  2939 D goldfish-address-space: allocate: ioctl allocate returned offset 0x3f3ffe000 size 0x2000
+07-17 14:45:22.011   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(10)
+07-17 14:45:22.093   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(10)
+07-17 14:45:22.176  2939  2939 D HostConnection: HostComposition ext ANDROID_EMU_CHECKSUM_HELPER_v1 ANDROID_EMU_native_sync_v2 ANDROID_EMU_dma_v1 ANDROID_EMU_direct_mem ANDROID_EMU_host_composition_v1 ANDROID_EMU_host_composition_v2 ANDROID_EMU_vulkan ANDROID_EMU_deferred_vulkan_commands ANDROID_EMU_vulkan_null_optional_strings ANDROID_EMU_vulkan_create_resources_with_requirements ANDROID_EMU_YUV_Cache ANDROID_EMU_vulkan_ignored_handles ANDROID_EMU_has_shared_slots_host_memory_allocator ANDROID_EMU_vulkan_free_memory_sync ANDROID_EMU_vulkan_shader_float16_int8 ANDROID_EMU_vulkan_async_queue_submit ANDROID_EMU_sync_buffer_data ANDROID_EMU_vulkan_async_qsri ANDROID_EMU_read_color_buffer_dma ANDROID_EMU_hwc_color_transform GL_OES_EGL_image_external_essl3 GL_OES_vertex_array_object GL_KHR_texture_compression_astc_ldr ANDROID_EMU_host_side_tracing ANDROID_EMU_gles_max_version_3_0
+07-17 14:45:23.549   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(17)
+07-17 14:45:23.999   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:45:24.596   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(19)
+07-17 14:45:24.826   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(13)
+07-17 14:45:25.069   461   461 E livelock: sample 10.825s
+07-17 14:45:25.178   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(1)
+07-17 14:45:25.559   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(3)
+07-17 14:45:25.999   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(29)
+07-17 14:45:26.471   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(4)
+07-17 14:45:26.790   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:45:26.901   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(7)
+07-17 14:45:27.226   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(3)
+07-17 14:45:27.382   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(6)
+07-17 14:45:27.426   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(4)
+07-17 14:45:27.679   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(11)
+07-17 14:45:27.766   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(17)
+07-17 14:45:27.906   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(6)
+07-17 14:45:28.082   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(5)
+07-17 14:45:28.130   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(1)
+07-17 14:45:28.174   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(5)
+07-17 14:45:28.492   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(6)
+07-17 14:45:28.630   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(1)
+07-17 14:45:28.876   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(13)
+07-17 14:45:29.455   379   476 D AF::Track: interceptBuffer: took 13319us to intercept 0 tracks
+07-17 14:45:29.862   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:45:29.914   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:45:30.211   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(29)
+07-17 14:45:30.320   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(16)
+07-17 14:45:31.623   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(4)
+07-17 14:45:32.069   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(3)
+07-17 14:45:32.264   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(10)
+07-17 14:45:32.383   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(13)
+07-17 14:45:32.636   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(18)
+07-17 14:45:32.875   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:45:33.149   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:45:33.415   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(10)
+07-17 14:45:33.678     0     0 D logd    : logdr: UID=2000 GID=2000 PID=2941 n tail=0 logMask=99 pid=0 start=0ns timeout=0ns
+07-17 14:45:33.914   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(4)
+07-17 14:45:33.990   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(1)
+07-17 14:45:34.282   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:45:34.374   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(6)
+07-17 14:45:34.522   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)
+07-17 14:45:34.599   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(23)
+07-17 14:45:34.706   379   476 D AudioFlinger: mixer(0x7fc1481f6040) throttle end: throttle time(2)

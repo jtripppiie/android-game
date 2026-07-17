@@ -1,84 +1,81 @@
 # You Rush: Alaska
 
-You Rush is a local-first Android platform runner built with Godot 4.7.1.
-Across five Alaska stages, the player runs, jumps, uses one air jump, dashes,
-throws snowballs, finds a key, rescues two people, defeats a distinct boss, and
-reaches the finish beacon.
+You Rush is a local-first Android platform runner built with Godot 4.7.1. Five
+authored Alaska stages ask the player to find a key, rescue two people, defeat
+one distinct wildlife boss, and reach the trail beacon.
 
-## Current source
+## Current production source
 
 ```text
+source: godot/
 engine: Godot 4.7.1
-versionCode: 532
-versionName: 5.3.2
+versionCode: 540
+versionName: 5.4.0
 package: com.jtripppiie.mooserush
-APK status: compiled and package-inspected; physical-device acceptance pending
-expected APK: app/build/outputs/apk/debug/you-rush-alaska-5.3.2-debug.apk
+device APK: app/build/outputs/apk/debug/you-rush-alaska-5.4.0-debug.apk
+emulator APK: app/build/outputs/apk/debug/you-rush-alaska-5.4.0-x86_64-debug.apk
 ```
 
-Version 5.3.2 contains the 5.3 control/movement overhaul, fixes duplicated
-stage worlds/runners after map transitions plus an extra stacked Moose Pass
-bear. It includes high-contrast viewport-relative touch controls, automatic
-mobile running, higher jumping, and full-size menus. Source validation, touch
-and lifecycle regressions, corrects scoring and collision defects, and adds
-five stage-geometry audits. Source validation and five-stage traversal passed.
-It was compiled and package-inspected on July 17, 2026. Physical-device
-acceptance is still required.
+`app/src/main/` is the legacy Java game retained for rollback and save
+migration. It is not the current game and must not be used for production
+gameplay changes.
+
+Version 5.4.0 separates the player scene, presentation, camera, effects,
+verification, review IDs, and completion/game-over flows; fixes runner
+grounding to a measured subpixel contract; adds parallax, snow contact effects,
+soft terrain joins, a larger premium HUD and menu; strengthens profile backups;
+adds score/time/no-damage stars, saved touch sizing, and deterministic Android
+verification scenarios. The Android export is
+split by architecture so the ARM64 device APK no longer carries an unused
+x86_64 engine.
 
 ## Controls
 
-- Left/right: move
-- Run: sprint
-- Jump: jump, then jump once more in the air
-- Dash: short horizontal burst
-- Crouch while airborne: stomp
-- Fire: throw a snowball
-- Pause: pause the run; Exit to Map is a separate deliberate action
-- Note/IDs: available only when Review Mode is enabled
+- Left/right: move; touch movement automatically sprints.
+- Jump: release early for a short jump; tap once more in air for one air jump.
+- Dash: short horizontal burst.
+- Crouch while airborne: stomp.
+- Snow: throw a snowball.
+- Pause: freeze the run; restart and Exit to Map are explicit choices.
+- Review Mode: optional compact IDs and field notes, hidden in normal play.
 
-Touch controls support simultaneous movement and jumping.
+## Validate
 
-## Review Mode
-
-Enable `Accessibility > Review Mode · IDs + Notes` to display nearby authored
-identifiers and the compact review notebook. Normal play hides these tools.
-
-## Project layout
-
-- `godot/`: primary game, Android export preset, scripts, scenes, and assets
-- `docs/`: current owner, tester, privacy, release, and maintenance guidance
-- `docs/archive/`: superseded Java-era and old release/work logs
-- `app/`: legacy Android project and output location used by Godot exports
-- `verification/`: retained legacy sprite snapshots, not current acceptance
-- `tools/`: offline legacy inspection pages
-
-## Validate and build
+Use the exact supported audit suite:
 
 ```bash
 python3 godot/validate_project.py
-godot --headless --path godot -- --touch-audit
-godot --headless --path godot -- --autoplay-audit=0
+GODOT_BIN=/path/to/godot godot/tools/run_gameplay_audits.sh
+```
+
+The script runs touch, system, lifecycle, pause, mechanics, geometry,
+debug-overlay, and autoplay audits for stages 0–4. A successful process exit
+alone is not enough: the validator also rejects script failures found in
+Godot’s output.
+
+## Build Android
+
+Godot 4.7.1 with matching export templates, Java 17, Android SDK/target 36,
+Build Tools 36.1.0, and NDK 29 are required.
+
+```bash
 godot --headless --path godot --export-debug "Android Debug"
+godot --headless --path godot --export-debug "Android Emulator Debug"
 ```
 
-Repeat the traversal audit for stages `0` through `4`. Android export requires
-Godot 4.7.1, matching export templates, Java 17, Android SDK 36, and normal
-local socket access for Gradle.
+`Android Debug` is ARM64 for phones/tablets. `Android Emulator Debug` is
+x86_64 and is test-only. Both are debug-signed; a public release needs the
+owner’s private release key.
 
-Before handing over a build, complete
-[the device acceptance checklist](docs/DEVICE_ACCEPTANCE_CHECKLIST.md).
+## Documentation and evidence
 
-## Current APK
+- [Gameplay verification](test-results/android-gameplay/GAMEPLAY-VERIFICATION.md)
+- [Kid owner handbook](docs/KID_OWNER_HANDBOOK.md)
+- [Device acceptance checklist](docs/DEVICE_ACCEPTANCE_CHECKLIST.md)
+- [Technical maintenance](docs/TECHNICAL_MAINTENANCE.md)
+- [Privacy](docs/PRIVACY.md)
+- [5.4 release notes](docs/RELEASE_5_4_PRODUCTION_REFACTOR.md)
 
-The current compiled and package-inspected candidate is
-`app/build/outputs/apk/debug/you-rush-alaska-5.3.2-debug.apk` (94,980,899
-bytes).
-
-SHA-256:
-
-```text
-59930a6c69dd27ac536a561b61f22b16e511e0bcd0c46b09aff18b61b92728fa
-```
-
-Version 5.3.1 remains the local rollback. The 5.3.2 candidate has not completed
-the physical-device checklist.
+Emulator/headless evidence does not replace testing touch ergonomics, haptics,
+speech recognition, interruptions, thermals, or performance on a physical
+Android device.

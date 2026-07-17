@@ -1,4 +1,4 @@
-# You Rush 5.0 Device Acceptance
+# You Rush 5.4 Device Acceptance
 
 Tester: __________  Device/model: __________  Android: __________  Date: ______
 
@@ -7,8 +7,8 @@ Do not call a release accepted until every required line passes on a real phone.
 ## Install and migration
 
 - [ ] Back up the previous working APK.
-- [ ] With Java 4.2.2 installed, create a score and unlock at least stage 2.
-- [ ] Install 5.0 as an update without clearing app data.
+- [ ] With the last supported APK installed, create a score and unlock stage 2.
+- [ ] Install 5.4 as an update without clearing app data.
 - [ ] The app opens and the old unlock/best score appears.
 - [ ] Close and reopen; migrated progress remains.
 
@@ -17,6 +17,7 @@ Do not call a release accepted until every required line passes on a real phone.
 For all five stages:
 
 - [ ] Start, move left/right, sprint, short jump, full jump, dash, stomp, fire.
+- [ ] Runner shoes meet the snow line in idle, run, crouch, landing, and restart.
 - [ ] No camera tilt occurs when changing direction.
 - [ ] Every required jump is readable and reachable without a blind leap.
 - [ ] Hazards do not spawn directly on the player or cover the landing.
@@ -49,6 +50,8 @@ For all five stages:
 - [ ] Force close and reopen; progress is intact.
 - [ ] APK package/version/signature were checked and the file was virus-scanned.
 - [ ] A second person can follow the owner handbook without verbal coaching.
+- [ ] Record device-only results in `test-results/android-gameplay/` and do not
+      turn an untested item into PASS.
 
 Failed item, exact stage/item ID, and what happened:
 

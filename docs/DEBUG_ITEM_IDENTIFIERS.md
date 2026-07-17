@@ -5,24 +5,24 @@ identifier clutter and no review buttons. Review Mode persists after restarting
 the game and places compact labels beside gameplay objects. The format is:
 
 ```text
-LEVEL-NAME-CATEGORY-NUMBER
+S#-CATEGORY##
 ```
 
 Examples:
 
 ```text
-MIDNIGHT-SUN-RUN-PF-4
-SALMON-RUSH-WT-9
-MOOSE-PASS-AN-18
-DARK-WINTER-BOSS-21
-BEAR-COUNTRY-PU-12
+S1-PF04
+S2-WT03
+S3-AN02
+S4-BOSS01
+S5-PU07
 ```
 
-Categories: `PF` platform/slope, `AN` animal, `WT` water, `IC` breakable ice,
+`S1` through `S5` identify the stage. Categories: `PF` platform/slope, `AN`
+animal, `WT` water, `IC` breakable ice,
 `PD` launch pad, `BL` supply block, `RG` ring, `PU` pickup, `CP` checkpoint,
-`GO` finish beacon, and `BOSS` boss. Each category has its own short sequence,
-so the first animal is `AN-1` even if platforms were authored before it.
-Numbers are stable for that authored run. At most the five nearest items are
+`GO` finish beacon, and `BOSS` boss. Each category has its own short sequence.
+Numbers are stable for that authored run. At most the four nearest items are
 labeled, and the nearest item is highlighted in green for readable screenshots.
 Every badge uses 16 px text with a dark outline. Long platform and slope badges
 follow the nearest visible point on their surface instead of remaining at a
@@ -39,6 +39,6 @@ to hide/show labels.
 Useful report:
 
 ```text
-Dark Winter: DARK-WINTER-PF-7 hides the landing behind DARK-WINTER-AN-11.
+Dark Winter: S4-PF07 hides the landing behind S4-AN02.
 I was sprinting and used one full jump, no air jump.
 ```

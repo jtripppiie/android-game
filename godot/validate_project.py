@@ -1,211 +1,466 @@
 #!/usr/bin/env python3
+"""Fast structural and asset validation for the production Godot game."""
+
 from pathlib import Path
+import os
 import shutil
 import subprocess
 from PIL import Image
 
-root = Path(__file__).resolve().parent
-required = [
-    "project.godot", "export_presets.cfg", "icon.svg", "scenes/main.tscn",
-    "scripts/main.gd", "scripts/game_session.gd", "scripts/feedback_service.gd",
-    "scripts/world.gd", "scripts/player.gd", "scripts/enemy.gd",
-    "scripts/projectile.gd", "scripts/touch_controls.gd",
+ROOT = Path(__file__).resolve().parent
+
+REQUIRED = [
+    "project.godot",
+    "export_presets.cfg",
+    "icon.svg",
+    "scenes/main.tscn",
+    "scenes/player.tscn",
+    "scripts/main.gd",
+    "scripts/game_session.gd",
+    "scripts/feedback_service.gd",
+    "scripts/android_bridge.gd",
+    "scripts/world.gd",
+    "scripts/player.gd",
+    "scripts/player_presentation.gd",
+    "scripts/runner_camera.gd",
+    "scripts/runner_effects.gd",
+    "scripts/enemy.gd",
+    "scripts/projectile.gd",
+    "scripts/touch_controls.gd",
     "scripts/game_hud.gd",
     "scripts/moving_platform.gd",
-    "scripts/reactive_ice.gd", "scripts/freezable_water.gd",
+    "scripts/reactive_ice.gd",
+    "scripts/freezable_water.gd",
     "scripts/launch_pad.gd",
     "scripts/supply_block.gd",
     "scripts/trick_ring.gd",
-    "scripts/trail_boss.gd", "scripts/boss_hazard.gd", "scripts/review_notebook.gd",
+    "scripts/trail_boss.gd",
+    "scripts/boss_hazard.gd",
+    "scripts/review_notebook.gd",
+    "scripts/review_registry.gd",
+    "scripts/gameplay_auditor.gd",
+    "scripts/mechanics_auditor.gd",
+    "scripts/game_over_overlay.gd",
+    "scripts/stage_complete_overlay.gd",
+    "scripts/android_verification_harness.gd",
+    "android/build/src/main/AndroidManifest.xml",
+    "android/build/src/main/java/com/jtripppiie/mooserush/YouRushBridge.java",
     "assets/runner_overhaul.png",
-    "assets/route_platform_ice.png", "assets/route_platform_moving.png",
-    "assets/route_platform_snow.png", "assets/route_terrain_snow_v2.png",
+    "assets/route_platform_ice.png",
+    "assets/route_platform_moving.png",
+    "assets/route_platform_snow.png",
+    "assets/route_terrain_snow_v2.png",
     "assets/glacial_water_surface.png",
-    "assets/boss_laser_emitter.png", "assets/laser_ice_impact.png",
+    "assets/boss_laser_emitter.png",
+    "assets/laser_ice_impact.png",
     "assets/arctic_launch_pad.png",
     "assets/aurora_supply_block.png",
     "assets/collectibles_atlas.png",
     "assets/trail_objects_atlas.png",
-    "assets/background_midnight_sun.png", "assets/background_dark_winter.png",
+    "assets/background_midnight_sun.png",
+    "assets/background_dark_winter.png",
     "assets/boot_splash.png",
-    "assets/scenery_tree_summer.png", "assets/scenery_tree_winter.png",
-    "assets/wildlife_bear_walk.png", "assets/wildlife_eagle_fly.png",
-    "assets/wildlife_moose_walk.png", "assets/wildlife_polar_bear_walk.png",
-    "assets/wildlife_salmon_swim.png", "assets/wildlife_wolf_run.png",
-    "tools/build_composition_audit.py",
-    "tools/build_boot_splash.py",
+    "assets/scenery_tree_summer.png",
+    "assets/scenery_tree_winter.png",
+    "assets/wildlife_bear_walk.png",
+    "assets/wildlife_eagle_fly.png",
+    "assets/wildlife_moose_walk.png",
+    "assets/wildlife_polar_bear_walk.png",
+    "assets/wildlife_salmon_swim.png",
+    "assets/wildlife_wolf_run.png",
 ]
-missing = [name for name in required if not (root / name).is_file()]
+missing = [name for name in REQUIRED if not (ROOT / name).is_file()]
 if missing:
-    raise SystemExit("Missing: " + ", ".join(missing))
+    raise SystemExit("Missing production files: " + ", ".join(missing))
 
-project = (root / "project.godot").read_text()
-export_preset = (root / "export_presets.cfg").read_text()
-world = (root / "scripts/world.gd").read_text()
-player = (root / "scripts/player.gd").read_text()
-touch = (root / "scripts/touch_controls.gd").read_text()
-boss = (root / "scripts/trail_boss.gd").read_text()
-hud = (root / "scripts/game_hud.gd").read_text()
-notebook = (root / "scripts/review_notebook.gd").read_text()
-assert 'run/main_scene="res://scenes/main.tscn"' in project
-for marker in ('image="res://assets/boot_splash.png"', "fullsize=true", "use_filter=true"):
-    assert marker in project, marker
-for marker in ('version/code=532', 'version/name="5.3.2"', 'you-rush-alaska-5.3.2-debug.apk'):
-    assert marker in export_preset, marker
-for marker in ("build_level", "checkpoint", "goal", "collectible", "enemy", "moving_platform", "survivor"):
-    assert marker in world, marker
-main_source = (root / "scripts/main.gd").read_text()
-feedback_source = (root / "scripts/feedback_service.gd").read_text()
-for marker in ("dispose_world", "transition_locked", "remove_child(world)", "ui.remove_child(child)", "if transition_locked or is_instance_valid(world): return", "run_lifecycle_audit"):
-    assert marker in main_source, marker
-for marker in ("show_launch_splash", "SPLASH_MINIMUM_SECONDS := 1.25", "SPLASH_TOTAL_SECONDS := 4.0", "TAP TO BEGIN", "dismiss_launch_splash"):
-    assert marker in main_source, marker
-for marker in ("current_screen", "_unhandled_input", "NOTIFICATION_APPLICATION_PAUSED", "pause_for_background", "run_system_audit", "SYSTEM AUDIT PASS", "run_pause_audit", "PAUSE AUDIT PASS"):
-    assert marker in main_source, marker
-for marker in ("start_stage.bind(index)", "set_accessibility.bind", "func set_accessibility", "Refused unknown accessibility property"):
-    assert marker in main_source, marker
-for marker in ("profile_for", "PERFECT LAND", '"BOSS" in upper', "return Vector3.ZERO"):
-    assert marker in feedback_source, marker
+
+def text(relative: str) -> str:
+    return (ROOT / relative).read_text()
+
+
+def require(source: str, markers: tuple[str, ...], label: str) -> None:
+    for marker in markers:
+        assert marker in source, f"{label} missing {marker!r}"
+
+
+project = text("project.godot")
+preset = text("export_presets.cfg")
+main = text("scripts/main.gd")
+session = text("scripts/game_session.gd")
+world = text("scripts/world.gd")
+player = text("scripts/player.gd")
+player_presentation = text("scripts/player_presentation.gd")
+player_scene = text("scenes/player.tscn")
+touch = text("scripts/touch_controls.gd")
+hud = text("scripts/game_hud.gd")
+boss = text("scripts/trail_boss.gd")
+enemy = text("scripts/enemy.gd")
+notebook = text("scripts/review_notebook.gd")
+registry = text("scripts/review_registry.gd")
+auditor = text("scripts/gameplay_auditor.gd")
+mechanics = text("scripts/mechanics_auditor.gd")
+harness = text("scripts/android_verification_harness.gd")
+bridge = text("scripts/android_bridge.gd")
+bridge_java = text("android/build/src/main/java/com/jtripppiie/mooserush/YouRushBridge.java")
+
+require(
+    project,
+    (
+        'run/main_scene="res://scenes/main.tscn"',
+        'image="res://assets/boot_splash.png"',
+        'window/stretch/aspect="expand"',
+        'renderer/rendering_method.mobile="gl_compatibility"',
+        "limits/opengl/max_lights_per_object=2",
+        "limits/opengl/max_renderable_lights=8",
+    ),
+    "project",
+)
+require(
+    preset,
+    (
+        'version/code=540',
+        'version/name="5.4.0"',
+        "you-rush-alaska-5.4.0-debug.apk",
+        "architectures/arm64-v8a=true",
+        "architectures/x86_64=true",
+        'name="Android Emulator Debug"',
+        "you-rush-alaska-5.4.0-x86_64-debug.apk",
+        'package/unique_name="com.jtripppiie.mooserush"',
+    ),
+    "export preset",
+)
+require(
+    main,
+    (
+        "show_launch_splash",
+        "SPLASH_TOTAL_SECONDS := 4.0",
+        "restart_stage",
+        "dispose_world",
+        "transition_locked",
+        "world.restart_requested.connect",
+        "world.advance_requested.connect",
+        "AndroidVerificationHarness",
+        "--mechanics-audit",
+        "--debug-overlay-audit=",
+        "NOTIFICATION_APPLICATION_PAUSED",
+        "pause_for_background",
+        "ALASKA 5.4.0",
+        "menu_panel_style",
+        'frame.name = "MainMenuFrame"',
+        "set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)",
+    ),
+    "main controller",
+)
+assert "remove_child(world)" in main
+assert "ui.remove_child(child)" in main
 assert world.count("GameSession.complete_stage") == 0
-assert "func _on_stage_completed(stage: int, score: int) -> void:\n\tGameSession.complete_stage(stage, score)" in main_source
-for marker in ('Vector2(0, 82)', 'add_theme_constant_override("separation", 20)', 'add_theme_constant_override("separation", 12)'):
-    assert marker in main_source, marker
-for marker in ("font_disabled_color", 'add_theme_stylebox_override("disabled"', "font_pressed_color"):
-    assert marker in main_source, marker
+assert "GameSession.complete_stage(stage, score, elapsed_seconds, damage_taken)" in main
+
+require(
+    world,
+    (
+        "var review_registry: ReviewRegistry",
+        "var auditor: GameplayAuditor",
+        "var game_over_overlay: GameOverOverlay",
+        "var stage_complete_overlay: StageCompleteOverlay",
+        "show_game_over",
+        "restart_requested.emit",
+        "advance_requested.emit",
+        "show_stage_complete",
+        "build_snow_terrain",
+        "build_snow_slope",
+        "REFUSED STACKED WILDLIFE",
+        "distance_to(at) < 420.0",
+        "hud.update_snapshot",
+        "review_registry.register",
+        "auditor.complete",
+        "PROCESS_MODE_PAUSABLE",
+        "release_gameplay_inputs",
+    ),
+    "stage",
+)
+for obsolete in (
+    "func run_autoplay_audit",
+    "func run_geometry_audit",
+    "var debug_category_counters",
+    "var visual_capture_x",
+):
+    assert obsolete not in world, f"obsolete stage responsibility remains: {obsolete}"
 assert 'enemy(Vector2(3820, 610), 115, "bear")' not in world
 assert 'enemy(Vector2(1150, 410), 120, "eagle")' not in world
-assert "var mountain := Polygon2D.new()" not in world
-assert 'var winter := stage_index >= 3' in world
-for marker in ("enemy_spawn_positions", "REFUSED STACKED WILDLIFE", "distance_to(at) < 420.0"):
-    assert marker in world, marker
-for state in ("idle", "run", "sprint", "crouch", "jump", "fall", "dash", "stomp"):
-    assert f'"{state}"' in player, state
-for marker in ("ring_chain = 0", "ring_chain_timer = 0.0", "ring_rush_timer = 0.0", "was_on_floor = false"):
-    assert marker in player, marker
-for action in ("move_left", "move_right", "crouch", "jump", "fire", "sprint", "dash"):
-    assert f'"{action}"' in touch, action
-for marker in ("layout_controls", "SAFE_MARGIN", "InputEventScreenTouch", "InputEventMouseButton", "dpad_up", "dpad_down", "input_action_for", "control_color", "control_text_color", "release_all_touches", "dpad_touch_contains", "dpad_input_vector", "draw_dpad_arrow", "apply_touch_action_changes", "touch_pressed_actions", "touch_roles", "begin_touch", "end_touch", "dpad_touch_id", "ACTION_DRIFT_MARGIN", "DPAD_DRIFT_MARGIN", "REVIEW_BUTTON_TOP := 92.0", 'return "SNOW"'):
-    assert marker in touch, marker
-for marker in ("build_snow_terrain", "build_snow_slope", "route_terrain_snow_v2.png", "AtlasTexture", "STRETCH_SCALE", "mapped_uv", "crest_shadow"):
-    assert marker in world, marker
-for marker in ('set_deferred("monitoring", false)', 'set_deferred("monitorable", false)'):
-    assert marker in boss, marker
-for marker in ("activated := false", "activation_distance := 780.0", "if not activated:", "BOSS AHEAD"):
-    assert marker in boss, marker
-assert 'title.position = Vector2(120, 92)' not in world
-for marker in ("update_snapshot", "objective_text", "post_message", "message_queue", "audit_layout", "ui_font", "StageProgressFill"):
-    assert marker in hud, marker
-for marker in ("QUICK_NOTES", "apply_quick_note", "undo_last_note", "recent_note_summary", "audit_layout", "note_font"):
-    assert marker in notebook, marker
-assert "var hud: AlaskaGameHud" in world
-assert "hud.update_snapshot(" in world
-assert "func announce(message: String" in world
 
-image = Image.open(root / "assets/runner_overhaul.png")
-assert image.mode == "RGBA", image.mode
-assert image.width % 6 == 0, image.size
-alpha = image.getchannel("A")
+require(
+    player,
+    (
+        "signal defeated",
+        "JUMP_SPEED := 900.0",
+        "SPRINT_SPEED := 540.0",
+        "SHORT_JUMP_CUT := 0.52",
+        "air_jumps_left := 1",
+        "queue_stomp",
+        "controls_enabled",
+        "RUN ENDED",
+        "respawn(apply_score_penalty",
+        "facing = 1.0",
+    ),
+    "player",
+)
+for state in ("idle", "run", "sprint", "crouch", "jump", "fall", "dash", "stomp"):
+    assert f'"{state}"' in player
+require(
+    player_scene,
+    (
+        'type="CapsuleShape2D"',
+        'parent="Presentation"',
+        'name="GroundShadow"',
+        'name="Camera2D"',
+    ),
+    "player scene",
+)
+require(
+    player_presentation,
+    (
+        "FRAME_GROUND_Y",
+        "player_photo_texture",
+        "ground_shadow.visible = grounded",
+    ),
+    "player presentation",
+)
+assert "CollisionShape2D.new()" not in player
+assert "Sprite2D.new()" not in player
+assert "Camera2D.new()" not in player
+
+require(
+    touch,
+    (
+        "DPAD_SIZE := 196.0",
+        "InputEventScreenTouch",
+        "touch_roles",
+        "dpad_touch_id",
+        "ACTION_DRIFT_MARGIN",
+        "apply_touch_action_changes",
+        'return "SNOW"',
+        "GameSession.high_contrast",
+        "GameSession.large_text",
+        "GameSession.touch_scale",
+    ),
+    "touch controls",
+)
+require(
+    hud,
+    (
+        "layout_for_viewport",
+        "last_snapshot",
+        "last_progress_pixels",
+        "objective_text",
+        "message_queue",
+        "audit_layout",
+        "RunnerStatus",
+        "ObjectiveStatus",
+        'pause_button.text = "PAUSE"',
+    ),
+    "HUD",
+)
+require(
+    session,
+    (
+        "PROFILE_SCHEMA := 3",
+        "PROFILE_BACKUP_PATH",
+        "backup_existing_profile",
+        "completed_runs",
+        "best_times",
+        "best_stars",
+        "star_rating",
+        "touch_scale",
+        "legacy_imported",
+        "import_legacy_profile",
+        "Could not save profile.cfg",
+    ),
+    "profile",
+)
+require(
+    registry,
+    (
+        "MAX_VISIBLE_BADGES := 4",
+        'identifier := "S%d-%s%02d"',
+        "distance_to_player",
+        "position_surface_badge",
+        "func audit",
+    ),
+    "review registry",
+)
+require(
+    auditor,
+    (
+        "AUTOPLAY PASS",
+        "AUTOPLAY FAIL",
+        "VISUAL AUDIT CAPTURE",
+        "GEOMETRY AUDIT PASS",
+        "DEBUG OVERLAY AUDIT PASS",
+        "complete=true",
+        "failure_reason=none",
+        "visual_capture_pending",
+    ),
+    "gameplay auditor",
+)
+require(
+    mechanics,
+    (
+        "MECHANICS AUDIT PASS",
+        "short_jump",
+        "full_jump",
+        "third_jump=blocked",
+        "clean_restart=true",
+    ),
+    "mechanics auditor",
+)
+require(
+    harness,
+    (
+        "if not OS.is_debug_build()",
+        "SUPPORTED_SCENARIOS",
+        "VERIFICATION READY",
+        "boss-attack",
+        "stage-complete",
+        "background-resume",
+        "world.collect",
+        "world.finish_level",
+    ),
+    "Android verification harness",
+)
+require(
+    bridge,
+    (
+        "not OS.is_debug_build()",
+        "getVerificationScenario",
+        "getVerificationStage",
+        "readLegacyProfile",
+    ),
+    "Godot Android bridge",
+)
+require(
+    bridge_java,
+    (
+        "ApplicationInfo.FLAG_DEBUGGABLE",
+        "verification_scenario",
+        "verification_stage",
+        "getVerificationScenario",
+        "getVerificationStage",
+        "readLegacyProfile",
+    ),
+    "Java Android bridge",
+)
+require(
+    notebook,
+    (
+        "user://debug-review-notes.txt",
+        "FIX FIRST",
+        "QUICK_NOTES",
+        "undo_last_note",
+        "paused_before_open",
+        "panel.size = Vector2(480, 292)",
+    ),
+    "review notebook",
+)
+require(
+    boss,
+    (
+        "TELL_SECONDS",
+        "RECOVER_SECONDS",
+        "activated := false",
+        "BOSS AHEAD",
+        "ARMORED",
+        "WEAK · FIRE",
+        "player.global_position.x > global_position.x",
+        "hitbox_sizes",
+    ),
+    "boss",
+)
+require(
+    enemy,
+    (
+        "ledge_ray",
+        "force_raycast_update",
+        "is_stomp_contact",
+        "runner.velocity.y >= -180.0",
+        "inside_patrol",
+    ),
+    "enemy",
+)
+
+runner = Image.open(ROOT / "assets/runner_overhaul.png")
+assert runner.mode == "RGBA"
+assert runner.width % 6 == 0
+alpha = runner.getchannel("A")
 transparent = sum(1 for value in alpha.get_flattened_data() if value == 0)
-assert transparent > image.width * image.height * 0.60
+assert transparent > runner.width * runner.height * 0.60
+frame_width = runner.width // 6
+frame_ground_y = (-85.0, -89.8, -86.7, -81.6, -90.1, -89.1)
+foot_errors = []
+for frame_index, offset_y in enumerate(frame_ground_y):
+    frame_alpha = alpha.crop(
+        (frame_index * frame_width, 0, (frame_index + 1) * frame_width, runner.height)
+    )
+    bounds = frame_alpha.getbbox()
+    assert bounds is not None, f"empty runner frame {frame_index}"
+    last_opaque_pixel_center = bounds[3] - 0.5
+    local_foot_y = offset_y + (last_opaque_pixel_center - runner.height / 2.0) * 0.34
+    foot_errors.append(local_foot_y)
+    assert abs(local_foot_y) < 0.5, (
+        f"runner frame {frame_index} foot misses collision line by {local_foot_y:.2f}px"
+    )
 
 for asset_name in (
-    "route_platform_ice.png", "route_platform_moving.png", "route_platform_snow.png",
-    "glacial_water_surface.png", "boss_laser_emitter.png", "laser_ice_impact.png",
+    "route_platform_ice.png",
+    "route_platform_moving.png",
+    "route_platform_snow.png",
+    "route_terrain_snow_v2.png",
+    "glacial_water_surface.png",
+    "boss_laser_emitter.png",
+    "laser_ice_impact.png",
     "arctic_launch_pad.png",
     "aurora_supply_block.png",
+    "collectibles_atlas.png",
+    "trail_objects_atlas.png",
 ):
-    asset = Image.open(root / "assets" / asset_name)
+    asset = Image.open(ROOT / "assets" / asset_name)
     assert asset.mode == "RGBA", (asset_name, asset.mode)
     assert asset.getbbox() is not None, asset_name
 
-for marker in ("ReactiveIce", "launch_pad", "supply_block", "trick_ring_line"):
-    assert marker in world, marker
-assert "build_directed_encounters()" not in world
-for marker in ("run_autoplay_audit", "audit_target_objective", "audit_jump_needed", "AUTOPLAY PASS", "capture_visual_audit", "run_geometry_audit", "GEOMETRY AUDIT PASS", "main_route_surface"):
-    assert marker in world, marker
-assert "save_profile()\n\tif autoplay_audit" not in world
-for marker in ("TrailBoss", "ReviewNotebook", "debug_note_context", "boss_defeated", "update_debug_labels", "debug_category_counters", "position_surface_badge", "visible_count := mini(5", "audit_debug_overlay"):
-    assert marker in world, marker
-for marker in ('register_debug_item(zone, "CP"', 'register_debug_item(zone, "GO"', 'register_debug_item(ice, "IC"', "debug_distance_to_player"):
-    assert marker in world, marker
-for marker in ("build_pause_panel", "toggle_pause_panel", "EXIT TO MAP", "exit_run_to_map", "PROCESS_MODE_PAUSABLE", "release_gameplay_inputs"):
-    assert marker in world, marker
-assert 'pause_button.text = "PAUSE"' in hud
-assert 'is_action_just_pressed("ui_cancel")' not in world
-assert 'pause_button.text = "MAP"' not in hud
-for marker in ("BAR_HEIGHT := 82.0", "RunnerStatus", "ObjectiveStatus", "AUR %d", "SCORE %d"):
-    assert marker in hud, marker
-for marker in ("Vector2(14, 10)", "Vector2(446, 10)", "Vector2(1066, 10)"):
-    assert marker in hud, marker
-for marker in ("combo_timer", "chain_action", "score"):
-    assert marker in player, marker
-for marker in ("JUMP_SPEED := 900.0", "SPRINT_SPEED := 540.0", "air_jumps_left := 1", '"AIR JUMP"', "capsule.height = 96.0", "Vector2(0, -90)"):
-    assert marker in player, marker
-assert "func collect_aurora_ring() -> void:\n\tcoins += 1" in player
-enemy_source = (root / "scripts/enemy.gd").read_text()
-for marker in ("wildlife_bear_walk.png", "wildlife_eagle_fly.png", "wildlife_salmon_swim.png"):
-    assert marker in enemy_source, marker
-for marker in ("is_stomp_contact", "runner.velocity.y >= -180.0", "not runner.is_on_floor()"):
-    assert marker in enemy_source, marker
-for marker in ("ledge_ray", "force_raycast_update", "not ledge_ray.is_colliding()"):
-    assert marker in enemy_source, marker
-assert "inside_patrol" in enemy_source and "global_position.x = origin_x + edge_side * patrol_distance" in enemy_source
-boss = (root / "scripts/trail_boss.gd").read_text()
-for marker in ("TELL_SECONDS", "RECOVER_SECONDS", "ARMORED", "WEAK · FIRE"):
-    assert marker in boss, marker
-for marker in ("wildlife_moose_walk.png", "wildlife_polar_bear_walk.png", "boss_laser_emitter.png"):
-    assert marker in boss, marker
-assert "player.global_position.x > global_position.x" in boss
-assert "art.flip_h = true" not in boss
-assert "hitbox_sizes" in boss and "RectangleShape2D.new()" in boss
-assert "clampf(target_x" in boss and "attack_side" in boss
-for marker in ("SUN FLARE", "SALMON SPLASH", "ANTLER SHOCKWAVE", "FEATHER SPREAD", "SNOW BARRAGE"):
-    assert marker in boss, marker
-assert "0.30, 1.05, 0.62, 0.58, 0.90" in boss
-boss_hazard = (root / "scripts/boss_hazard.gd").read_text()
-for marker in ("class_name BossHazard", "fall_acceleration", "_on_body_entered", "trail_objects_atlas.png"):
-    assert marker in boss_hazard, marker
-notebook = (root / "scripts/review_notebook.gd").read_text()
-for marker in ("user://debug-review-notes.txt", "FIX FIRST", "context_provider", "nearest_id_provider", "note_count", '"JUMP", "SPACE", "ART", "BUG"'):
-    assert marker in notebook, marker
-for marker in ("paused_before_open", "get_tree().paused = paused_before_open", "voice_available"):
-    assert marker in notebook, marker
-session_source = (root / "scripts/game_session.gd").read_text()
-for marker in ("Refused invalid stage completion index", "maxi(0", "Could not save profile.cfg"):
-    assert marker in session_source, marker
-bridge_source = (root / "scripts/android_bridge.gd").read_text()
-for marker in ('has_signal("voice_note_result")', 'has_method("readLegacyProfile")', 'has_method("isVoiceNoteAvailable")'):
-    assert marker in bridge_source, marker
-feedback_source = (root / "scripts/feedback_service.gd").read_text()
-assert "if GameSession.haptics and vibration_ms > 0:" in feedback_source
-assert "GameSession.haptics and not GameSession.reduced_motion" not in feedback_source
-projectile = (root / "scripts/projectile.gd").read_text()
-assert 'has_method("snowball_hit")' in projectile
-assert "area_entered.connect" in projectile
-assert "trail_objects_atlas.png" in projectile
-freezable_water = (root / "scripts/freezable_water.gd").read_text()
-for marker in ("bridge.shattered.connect", "_on_bridge_shattered", 'set_deferred("disabled", false)'):
-    assert marker in freezable_water, marker
-for marker in ("glacial_water_surface.png", "current_tween", "art.visible = false"):
-    assert marker in freezable_water, marker
-reactive_ice = (root / "scripts/reactive_ice.gd").read_text()
-for marker in ("route_platform_ice.png", "laser_ice_impact.png", "spawn_hit_flash"):
-    assert marker in reactive_ice, marker
-moving_platform_source = (root / "scripts/moving_platform.gd").read_text()
-assert "position = origin + travel * 0.5" in moving_platform_source
-assert "(sin(clock * TAU / cycle_seconds) + 1.0) * 0.5" in moving_platform_source
-
-godot = shutil.which("godot4") or shutil.which("godot")
+godot = os.environ.get("GODOT_BIN") or shutil.which("godot4") or shutil.which("godot")
 if godot:
-    subprocess.run(
-        [godot, "--headless", "--path", str(root), "--editor", "--quit"],
-        check=True, timeout=45,
+    parse_result = subprocess.run(
+        [godot, "--headless", "--path", str(ROOT), "--editor", "--quit"],
+        check=True,
+        timeout=60,
+        env={**os.environ, "HOME": os.environ.get("HOME", "/tmp")},
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
     )
+    fatal_log_markers = (
+        "SCRIPT ERROR:",
+        "Failed to load script",
+        "Parse Error:",
+        "Compile Error:",
+    )
+    parse_failures = [
+        line
+        for line in parse_result.stdout.splitlines()
+        if any(marker in line for marker in fatal_log_markers)
+    ]
+    if parse_failures:
+        raise SystemExit(
+            "Headless Godot reported script failures despite exit code 0:\n"
+            + "\n".join(parse_failures)
+        )
     runtime_status = "headless Godot parse passed"
 else:
-    runtime_status = "structural validation passed; Godot executable unavailable"
+    runtime_status = "structural validation passed; set GODOT_BIN for parse validation"
 
 print(
-    f"Godot overhaul validation passed: {image.width}x{image.height}, six frames, "
-    f"{transparent} transparent pixels; {runtime_status}"
+    "Godot production validation passed: "
+    f"{len(REQUIRED)} required files, runner {runner.width}x{runner.height}, "
+    f"{transparent} transparent pixels, max foot error "
+    f"{max(abs(error) for error in foot_errors):.2f}px; {runtime_status}"
 )

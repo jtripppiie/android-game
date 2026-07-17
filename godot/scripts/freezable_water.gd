@@ -44,4 +44,4 @@ func _on_bridge_shattered(_at: Vector2) -> void:
 func _on_body_entered(body: Node) -> void:
 	if body is AlaskaRunner:
 		body.action_feedback.emit("CURRENT · ROUTE LOST")
-		body.respawn()
+		body.respawn(true)

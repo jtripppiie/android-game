@@ -24,6 +24,26 @@ func start_voice_note() -> void:
 		return
 	plugin.startVoiceNote()
 
+
+func verification_scenario() -> String:
+	if (
+		not OS.is_debug_build()
+		or plugin == null
+		or not plugin.has_method("getVerificationScenario")
+	):
+		return ""
+	return String(plugin.getVerificationScenario()).strip_edges()
+
+
+func verification_stage() -> int:
+	if (
+		not OS.is_debug_build()
+		or plugin == null
+		or not plugin.has_method("getVerificationStage")
+	):
+		return 0
+	return clampi(int(plugin.getVerificationStage()), 0, GameSession.STAGES.size() - 1)
+
 func _on_voice_result(text: String) -> void:
 	voice_note_received.emit(text)
 

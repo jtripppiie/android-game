@@ -18,6 +18,10 @@ The image is used locally for the game character.
 
 The app keeps a local reference so the selected image can be restored later on the same device when Android allows access.
 
+Images larger than 20 MB are rejected. Accepted images are center-cropped and
+resized to a cached 96×96 in-memory texture rather than decoded every frame or
+every respawn.
+
 ## Local preferences
 
 The app stores simple local preferences, including:

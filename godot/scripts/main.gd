@@ -8,6 +8,7 @@ var splash_prompt: Label
 var splash_skippable := false
 var splash_dismissing := false
 var current_screen := "startup"
+var verification_harness: AndroidVerificationHarness
 
 const SPLASH_MINIMUM_SECONDS := 1.25
 const SPLASH_TOTAL_SECONDS := 4.0
@@ -20,16 +21,34 @@ func _ready() -> void:
 	var lifecycle_audit := false
 	var system_audit := false
 	var pause_audit := false
+	var mechanics_audit := false
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	for argument in OS.get_cmdline_user_args():
 		if argument.begins_with("--stage-smoke="): smoke_stage = int(argument.get_slice("=", 1))
 		elif argument.begins_with("--autoplay-audit="): smoke_stage = int(argument.get_slice("=", 1))
 		elif argument.begins_with("--visual-audit="): smoke_stage = int(argument.get_slice("=", 1))
 		elif argument.begins_with("--geometry-audit="): smoke_stage = int(argument.get_slice("=", 1))
+		elif argument.begins_with("--debug-overlay-audit="): smoke_stage = int(argument.get_slice("=", 1))
 		elif argument == "--touch-audit": touch_audit = true
 		elif argument == "--lifecycle-audit": lifecycle_audit = true
 		elif argument == "--system-audit": system_audit = true
 		elif argument == "--pause-audit": pause_audit = true
+		elif argument == "--mechanics-audit": mechanics_audit = true
+	var verification_scenario := AndroidBridge.verification_scenario()
+	if not verification_scenario.is_empty():
+		verification_harness = AndroidVerificationHarness.new()
+		add_child(verification_harness)
+		verification_harness.run.call_deferred(
+			self,
+			verification_scenario,
+			AndroidBridge.verification_stage()
+		)
+		return
+	if mechanics_audit:
+		var mechanics := MechanicsAuditor.new()
+		add_child(mechanics)
+		mechanics.run.call_deferred(self)
+		return
 	if pause_audit:
 		run_pause_audit.call_deferred()
 		return
@@ -62,16 +81,16 @@ func show_launch_splash() -> void:
 	splash_root.add_child(art)
 	var shade := ColorRect.new()
 	shade.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
-	shade.position = Vector2(0, -112)
-	shade.size = Vector2(1280, 112)
+	shade.offset_top = -112
+	shade.offset_bottom = 0
 	shade.color = Color(0.01, 0.04, 0.08, 0.58)
 	shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	splash_root.add_child(shade)
 	splash_prompt = Label.new()
 	splash_prompt.text = "TAP TO BEGIN"
 	splash_prompt.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
-	splash_prompt.position = Vector2(0, -88)
-	splash_prompt.size = Vector2(1280, 64)
+	splash_prompt.offset_top = -88
+	splash_prompt.offset_bottom = -24
 	splash_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	splash_prompt.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	splash_prompt.add_theme_font_size_override("font_size", 28)
@@ -152,8 +171,12 @@ func run_lifecycle_audit() -> void:
 
 func run_system_audit() -> void:
 	var old_unlocked := GameSession.unlocked_stage
+	var old_selected := GameSession.selected_stage
 	var old_total := GameSession.total_score
 	var old_best := GameSession.best_scores.duplicate()
+	var old_completed := GameSession.completed_runs.duplicate()
+	var old_times := GameSession.best_times.duplicate()
+	var old_stars := GameSession.best_stars.duplicate()
 	var old_muted := GameSession.muted
 	GameSession.unlocked_stage = 0
 	GameSession.total_score = 0
@@ -162,6 +185,8 @@ func run_system_audit() -> void:
 	assert(GameSession.total_score == 100)
 	assert(GameSession.best_scores[0] == 100)
 	assert(GameSession.unlocked_stage == 1)
+	assert(GameSession.star_rating(0, 300, 40.0, 0) == 3)
+	assert(GameSession.star_rating(0, 0, 90.0, 2) == 0)
 	GameSession.complete_stage(0, 50)
 	assert(GameSession.total_score == 150)
 	assert(GameSession.best_scores[0] == 100)
@@ -191,11 +216,33 @@ func run_system_audit() -> void:
 	assert(FeedbackService.profile_for("HIT · COMBO LOST").z >= 50.0)
 	assert(FeedbackService.profile_for("BOSS WINDUP").x > 0.0)
 	assert(FeedbackService.profile_for("BOSS WINDUP").z == 0.0)
+	start_stage(0)
+	world.player.score = 320
+	world.run_elapsed = 40.0
+	world.damage_taken = 0
+	world.key_collected = true
+	world.survivors_found = 2
+	world.boss_defeated = true
+	world.finish_level(world.player)
+	assert(get_tree().paused)
+	assert(is_instance_valid(world.stage_complete_overlay))
+	assert(world.stage_complete_overlay.rating_label.text.contains("3/3"))
+	assert(GameSession.best_stars[0] == 3)
+	world.stage_complete_overlay.replay_requested.emit()
+	await get_tree().process_frame
+	assert(not get_tree().paused)
+	assert(get_tree().get_nodes_in_group("active_stage").size() == 1)
+	assert(get_tree().get_nodes_in_group("player").size() == 1)
+	show_map()
 	GameSession.unlocked_stage = old_unlocked
+	GameSession.selected_stage = old_selected
 	GameSession.total_score = old_total
 	GameSession.best_scores = old_best
+	GameSession.completed_runs = old_completed
+	GameSession.best_times = old_times
+	GameSession.best_stars = old_stars
 	GameSession.save_profile()
-	print("SYSTEM AUDIT PASS · score ownership · bound map/accessibility actions · immediate UI replacement")
+	print("SYSTEM AUDIT PASS · score ownership · 3-star result · saved progression · clean replay · bound UI actions")
 	get_tree().quit(0)
 
 func run_pause_audit() -> void:
@@ -228,6 +275,8 @@ func run_pause_audit() -> void:
 	get_tree().quit(0)
 
 func run_touch_audit() -> void:
+	var original_touch_scale := GameSession.touch_scale
+	GameSession.touch_scale = 1.0
 	var controls := TouchControls.new()
 	controls.size = Vector2(1280, 720)
 	add_child(controls)
@@ -238,7 +287,7 @@ func run_touch_audit() -> void:
 	var dpad_up: Rect2 = controls.controls["dpad_up"]
 	var review_note: Rect2 = controls.controls["debug_note"]
 	var review_ids: Rect2 = controls.controls["debug_ids"]
-	assert(jump.size == Vector2(124, 124))
+	assert(jump.size == Vector2(132, 132))
 	var objective_hud := Rect2(446, 10, 608, 62)
 	var pause_hud := Rect2(1066, 10, 200, 62)
 	assert(review_note.position.y >= 92.0 and review_ids.position.y >= 92.0)
@@ -311,6 +360,17 @@ func run_touch_audit() -> void:
 	var competing_release := InputEventScreenTouch.new()
 	competing_release.index = 7; competing_release.position = competing_dpad.position; competing_release.pressed = false
 	controls._input(competing_release)
+	for scale in [0.85, 1.15]:
+		GameSession.touch_scale = scale
+		controls.layout_controls()
+		assert(is_equal_approx(controls.dpad_bounds.size.x, TouchControls.DPAD_SIZE * scale))
+		assert(Rect2(Vector2.ZERO, controls.size).encloses(controls.dpad_bounds))
+		var scaled_jump: Rect2 = controls.controls["jump"]
+		var scaled_fire: Rect2 = controls.controls["fire"]
+		var scaled_dash: Rect2 = controls.controls["dash"]
+		assert(scaled_jump.intersection(scaled_fire).get_area() == 0.0)
+		assert(scaled_jump.intersection(scaled_dash).get_area() == 0.0)
+	GameSession.touch_scale = original_touch_scale
 	print("TOUCH AUDIT PASS · ownership · no cross-control drag · single dpad thumb · diagonal · drift")
 	get_tree().quit(0)
 
@@ -327,28 +387,66 @@ func show_menu() -> void:
 	transition_locked = false
 	clear_ui()
 	add_backdrop("background_midnight_sun.png")
+	var view := get_viewport().get_visible_rect().size
+	var frame := PanelContainer.new()
+	frame.name = "MainMenuFrame"
+	var frame_width := minf(900.0, view.x - 96.0)
+	var frame_height := minf(620.0, view.y - 64.0)
+	frame.position = Vector2((view.x - frame_width) * 0.5, (view.y - frame_height) * 0.5)
+	frame.size = Vector2(frame_width, frame_height)
+	frame.add_theme_stylebox_override("panel", menu_panel_style())
+	ui.add_child(frame)
 	var panel := VBoxContainer.new()
-	panel.position = Vector2(250, 54)
-	panel.size = Vector2(780, 612)
-	panel.add_theme_constant_override("separation", 20)
-	ui.add_child(panel)
+	panel.name = "MainMenuActions"
+	panel.alignment = BoxContainer.ALIGNMENT_CENTER
+	panel.add_theme_constant_override("separation", 22)
+	frame.add_child(panel)
 	var title := Label.new()
 	title.text = "YOU RUSH · ALASKA"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_font_size_override("font_size", 54 if GameSession.large_text else 48)
-	title.custom_minimum_size.y = 92
+	title.custom_minimum_size.y = 76
 	title.add_theme_color_override("font_color", Color("#fff4d2"))
 	title.add_theme_constant_override("outline_size", 8)
 	title.add_theme_color_override("font_outline_color", Color(0.02, 0.08, 0.14, 0.9))
 	panel.add_child(title)
-	add_button(panel, "PLAY ALASKA MAP", show_map)
-	add_button(panel, "CUSTOMIZE RUNNER", show_customize)
-	add_button(panel, "ACCESSIBILITY", show_accessibility)
+	var subtitle := Label.new()
+	subtitle.text = "FIVE TRAILS · KEYS · RESCUES · WILDLIFE BOSSES"
+	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	subtitle.add_theme_font_size_override("font_size", 21 if GameSession.large_text else 19)
+	subtitle.add_theme_color_override("font_color", Color("#9ee8f5"))
+	subtitle.custom_minimum_size.y = 34
+	panel.add_child(subtitle)
+	for spec in [
+		["PLAY ALASKA MAP", show_map],
+		["CUSTOMIZE RUNNER", show_customize],
+		["ACCESSIBILITY", show_accessibility]
+	]:
+		var button := add_button(panel, String(spec[0]), spec[1])
+		button.custom_minimum_size.y = 88
 	var status := Label.new()
-	status.text = "ALASKA 5.3.2 · STAGES %d/5 · LIFETIME %d" % [GameSession.unlocked_stage + 1, GameSession.total_score]
+	status.text = "ALASKA 5.4.0 · STAGES %d/5 · LIFETIME %d" % [GameSession.unlocked_stage + 1, GameSession.total_score]
 	status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	status.add_theme_font_size_override("font_size", 22)
+	status.add_theme_color_override("font_color", Color("#fff0a8"))
+	status.custom_minimum_size.y = 32
 	panel.add_child(status)
+
+
+func menu_panel_style() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.008, 0.035, 0.075, 0.95)
+	style.border_color = Color("#5ce1e6")
+	style.set_border_width_all(4)
+	style.set_corner_radius_all(24)
+	style.content_margin_left = 34
+	style.content_margin_right = 34
+	style.content_margin_top = 26
+	style.content_margin_bottom = 26
+	style.shadow_color = Color(0.0, 0.0, 0.0, 0.72)
+	style.shadow_size = 16
+	style.shadow_offset = Vector2(0, 10)
+	return style
 
 func show_map() -> void:
 	dispose_world()
@@ -357,8 +455,10 @@ func show_map() -> void:
 	clear_ui()
 	add_backdrop("background_dark_winter.png")
 	var panel := VBoxContainer.new()
-	panel.position = Vector2(170, 36)
-	panel.size = Vector2(940, 654)
+	var view := get_viewport().get_visible_rect().size
+	var panel_width := minf(1040.0, view.x - 80.0)
+	panel.position = Vector2((view.x - panel_width) * 0.5, 28)
+	panel.size = Vector2(panel_width, view.y - 48)
 	panel.add_theme_constant_override("separation", 12)
 	ui.add_child(panel)
 	var title := Label.new()
@@ -370,7 +470,19 @@ func show_map() -> void:
 	for index in range(GameSession.STAGES.size()):
 		var stage = GameSession.STAGES[index]
 		var unlocked := index <= GameSession.unlocked_stage
-		var label := "%d · %s · BEST %d%s" % [index + 1, stage.name, GameSession.best_scores[index], "" if unlocked else " · LOCKED"]
+		var time_text := (
+			" · %.1fs" % GameSession.best_times[index]
+			if GameSession.best_times[index] > 0.0
+			else ""
+		)
+		var label := "%d · %s · BEST %d · ★ %d/3%s%s" % [
+			index + 1,
+			stage.name,
+			GameSession.best_scores[index],
+			GameSession.best_stars[index],
+			time_text,
+			"" if unlocked else " · LOCKED"
+		]
 		var button := add_button(panel, label, start_stage.bind(index))
 		button.disabled = not unlocked
 	add_button(panel, "BACK", show_menu)
@@ -384,12 +496,29 @@ func start_stage(index: int) -> void:
 	world = AlaskaStage.new()
 	world.stage_completed.connect(_on_stage_completed)
 	world.exit_requested.connect(show_map)
+	world.restart_requested.connect(restart_stage)
+	world.advance_requested.connect(advance_stage)
 	add_child(world)
 	transition_locked = false
 
-func _on_stage_completed(stage: int, score: int) -> void:
-	GameSession.complete_stage(stage, score)
-	show_map()
+func _on_stage_completed(stage: int, score: int, elapsed_seconds: float, damage_taken: int) -> void:
+	GameSession.complete_stage(stage, score, elapsed_seconds, damage_taken)
+
+
+func restart_stage(index: int) -> void:
+	get_tree().paused = false
+	dispose_world()
+	transition_locked = false
+	start_stage(clampi(index, 0, GameSession.STAGES.size() - 1))
+
+
+func advance_stage(index: int) -> void:
+	get_tree().paused = false
+	dispose_world()
+	transition_locked = false
+	GameSession.selected_stage = clampi(index, 0, GameSession.unlocked_stage)
+	GameSession.save_profile()
+	start_stage(GameSession.selected_stage)
 
 func dispose_world() -> void:
 	if not is_instance_valid(world): return
@@ -402,8 +531,10 @@ func show_customize() -> void:
 	clear_ui()
 	add_backdrop("background_midnight_sun.png")
 	var panel := VBoxContainer.new()
-	panel.position = Vector2(240, 72)
-	panel.size = Vector2(800, 576)
+	var view := get_viewport().get_visible_rect().size
+	var panel_width := minf(860.0, view.x - 96.0)
+	panel.position = Vector2((view.x - panel_width) * 0.5, 58)
+	panel.size = Vector2(panel_width, view.y - 92)
 	panel.add_theme_constant_override("separation", 20)
 	ui.add_child(panel)
 	var title := Label.new()
@@ -417,7 +548,7 @@ func show_customize() -> void:
 	status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	panel.add_child(status)
 	add_button(panel, "CHOOSE LOCAL PHOTO", func(): open_photo_picker(status))
-	add_button(panel, "RESET PHOTO", func(): GameSession.photo_path = ""; status.text = "DEFAULT RUNNER"; GameSession.save_profile())
+	add_button(panel, "RESET PHOTO", func(): GameSession.set_photo_path(""); status.text = "DEFAULT RUNNER")
 	add_button(panel, "BACK", show_menu)
 
 func show_accessibility() -> void:
@@ -425,23 +556,26 @@ func show_accessibility() -> void:
 	clear_ui()
 	add_backdrop("background_dark_winter.png")
 	var panel := VBoxContainer.new()
-	panel.position = Vector2(240, 42)
-	panel.size = Vector2(800, 636)
-	panel.add_theme_constant_override("separation", 10)
+	var view := get_viewport().get_visible_rect().size
+	var panel_width := minf(860.0, view.x - 96.0)
+	panel.position = Vector2((view.x - panel_width) * 0.5, 20)
+	panel.size = Vector2(panel_width, view.y - 34)
+	panel.add_theme_constant_override("separation", 7)
 	ui.add_child(panel)
 	var title := Label.new()
 	title.text = "ACCESSIBILITY"
 	title.add_theme_font_size_override("font_size", 42)
-	title.custom_minimum_size.y = 68
+	title.custom_minimum_size.y = 56
 	panel.add_child(title)
 	for spec in [["MUTE AUDIO", "muted"], ["HAPTICS", "haptics"], ["LARGE TEXT", "large_text"], ["REDUCED MOTION", "reduced_motion"], ["HIGH CONTRAST", "high_contrast"], ["REVIEW MODE · IDS + NOTES", "review_mode"]]:
 		var toggle := CheckButton.new()
 		toggle.text = spec[0]
-		toggle.custom_minimum_size.y = 66
+		toggle.custom_minimum_size.y = 58
 		toggle.add_theme_font_size_override("font_size", 25)
 		toggle.button_pressed = GameSession.get(spec[1])
 		toggle.toggled.connect(set_accessibility.bind(String(spec[1])))
 		panel.add_child(toggle)
+	add_touch_size_control(panel)
 	add_button(panel, "BACK", show_menu)
 
 func set_accessibility(value: bool, property_name: String) -> void:
@@ -451,6 +585,34 @@ func set_accessibility(value: bool, property_name: String) -> void:
 		return
 	GameSession.set(property_name, value)
 	GameSession.save_profile()
+
+
+func add_touch_size_control(parent: VBoxContainer) -> void:
+	var row := HBoxContainer.new()
+	row.custom_minimum_size.y = 58
+	row.add_theme_constant_override("separation", 10)
+	parent.add_child(row)
+	var label := Label.new()
+	label.text = "TOUCH SIZE"
+	label.custom_minimum_size.x = 250
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.add_theme_font_size_override("font_size", 25)
+	row.add_child(label)
+	for spec in [["SMALL", 0.85], ["STANDARD", 1.0], ["LARGE", 1.15]]:
+		var button := Button.new()
+		button.text = String(spec[0])
+		button.toggle_mode = true
+		button.button_pressed = is_equal_approx(GameSession.touch_scale, float(spec[1]))
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		button.add_theme_font_size_override("font_size", 20)
+		button.pressed.connect(set_touch_scale.bind(float(spec[1])))
+		row.add_child(button)
+
+
+func set_touch_scale(value: float) -> void:
+	GameSession.touch_scale = clampf(value, 0.85, 1.15)
+	GameSession.save_profile()
+	show_accessibility()
 
 func add_button(parent: Control, label: String, callback: Callable) -> Button:
 	var button := Button.new()
@@ -488,7 +650,13 @@ func open_photo_picker(status: Label) -> void:
 	picker.file_mode = FileDialog.FILE_MODE_OPEN_FILE
 	picker.access = FileDialog.ACCESS_FILESYSTEM
 	picker.filters = PackedStringArray(["*.png, *.jpg, *.jpeg, *.webp ; Images"])
-	picker.file_selected.connect(func(path): GameSession.photo_path = path; GameSession.save_profile(); status.text = "PHOTO READY · " + path.get_file(); picker.queue_free())
+	picker.file_selected.connect(func(path):
+		if GameSession.set_photo_path(path):
+			status.text = "PHOTO READY · " + path.get_file()
+		else:
+			status.text = "PHOTO COULD NOT BE LOADED · MAX 20 MB"
+		picker.queue_free()
+	)
 	picker.canceled.connect(func(): picker.queue_free())
 	add_child(picker)
 	picker.popup_centered_ratio(0.8)
@@ -496,8 +664,7 @@ func open_photo_picker(status: Label) -> void:
 func add_backdrop(asset_name: String) -> void:
 	var backdrop := TextureRect.new()
 	backdrop.texture = load("res://assets/%s" % asset_name)
-	backdrop.position = Vector2.ZERO
-	backdrop.size = Vector2(1280, 720)
+	backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	backdrop.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	backdrop.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	backdrop.modulate = Color(0.58, 0.66, 0.72)

@@ -1,8 +1,8 @@
 class_name TouchControls
 extends Control
 
-const SAFE_MARGIN := Vector2(34, 30)
-const DPAD_SIZE := 180.0
+const SAFE_MARGIN := Vector2(30, 26)
+const DPAD_SIZE := 196.0
 const DPAD_DRIFT_MARGIN := 24.0
 const DPAD_DEAD_ZONE := 0.16
 const ACTION_DRIFT_MARGIN := 14.0
@@ -17,6 +17,7 @@ var dpad_bounds := Rect2()
 var dpad_vector := Vector2.ZERO
 var touch_pressed_actions := {}
 var dpad_touch_id := NO_DPAD_TOUCH
+var control_scale := 1.0
 
 func _ready() -> void:
 	add_to_group("touch_controls")
@@ -29,19 +30,33 @@ func _ready() -> void:
 func layout_controls() -> void:
 	var view := size
 	if view.x < 600.0 or view.y < 360.0: view = get_viewport_rect().size
+	control_scale = clampf(GameSession.touch_scale, 0.85, 1.15)
 	var bottom := view.y - SAFE_MARGIN.y
-	dpad_bounds = Rect2(Vector2(SAFE_MARGIN.x, bottom - DPAD_SIZE), Vector2(DPAD_SIZE, DPAD_SIZE))
+	var dpad_size := DPAD_SIZE * control_scale
+	dpad_bounds = Rect2(Vector2(SAFE_MARGIN.x, bottom - dpad_size), Vector2(dpad_size, dpad_size))
 	var center := dpad_bounds.get_center()
-	var arrow_offset := 52.0
-	var arrow_size := Vector2(52, 52)
+	var arrow_offset := 56.0 * control_scale
+	var arrow_size := Vector2(56, 56) * control_scale
+	var jump_size := 132.0 * control_scale
+	var fire_size := 100.0 * control_scale
+	var dash_size := Vector2(110, 82) * control_scale
 	controls = {
 		"move_left": Rect2(center + Vector2(-arrow_offset, 0) - arrow_size * 0.5, arrow_size),
 		"move_right": Rect2(center + Vector2(arrow_offset, 0) - arrow_size * 0.5, arrow_size),
 		"dpad_up": Rect2(center + Vector2(0, -arrow_offset) - arrow_size * 0.5, arrow_size),
 		"dpad_down": Rect2(center + Vector2(0, arrow_offset) - arrow_size * 0.5, arrow_size),
-		"jump": Rect2(Vector2(view.x - SAFE_MARGIN.x - 124, bottom - 134), Vector2(124, 124)),
-		"fire": Rect2(Vector2(view.x - SAFE_MARGIN.x - 226, bottom - 234), Vector2(94, 94)),
-		"dash": Rect2(Vector2(view.x - SAFE_MARGIN.x - 238, bottom - 106), Vector2(98, 76))
+		"jump": Rect2(
+			Vector2(view.x - SAFE_MARGIN.x - jump_size, bottom - jump_size - 10.0 * control_scale),
+			Vector2.ONE * jump_size
+		),
+		"fire": Rect2(
+			Vector2(view.x - SAFE_MARGIN.x - 236.0 * control_scale, bottom - 244.0 * control_scale),
+			Vector2.ONE * fire_size
+		),
+		"dash": Rect2(
+			Vector2(view.x - SAFE_MARGIN.x - 250.0 * control_scale, bottom - 112.0 * control_scale),
+			dash_size
+		)
 	}
 	if review_mode:
 		controls["debug_note"] = Rect2(Vector2(view.x - SAFE_MARGIN.x - 104, REVIEW_BUTTON_TOP), Vector2(104, 52))
@@ -140,42 +155,46 @@ func _draw() -> void:
 		var active := Input.is_action_pressed(input_action_for(action))
 		var fill := control_color(action, active)
 		var border := Color.WHITE if active else control_border(action)
-		var radius := 62 if action == "jump" else 47 if action == "fire" else 22
+		var radius := roundi(minf(box.size.x, box.size.y) * (0.5 if action in ["jump", "fire"] else 0.28))
 		draw_style_box(make_box(fill, border, radius), box)
-		var font_size := 17 if action in ["move_left", "move_right", "dpad_up", "dpad_down"] else 19
-		if action == "jump": font_size = 22
+		var font_size := 21 if action not in ["debug_note", "debug_ids"] else 18
+		if action == "jump":
+			font_size = 24
+		font_size = roundi(font_size * control_scale)
+		if GameSession.large_text:
+			font_size += 2
 		var text_color := control_text_color(action, active)
 		var baseline := box.position + Vector2(0, box.size.y * 0.62 + font_size * 0.25)
 		draw_string(ThemeDB.fallback_font, baseline, label_for(action), HORIZONTAL_ALIGNMENT_CENTER, box.size.x, font_size, text_color)
 
 func dpad_touch_contains(point: Vector2) -> bool:
-	return point.distance_to(dpad_bounds.get_center()) <= DPAD_SIZE * 0.5 + DPAD_DRIFT_MARGIN
+	return point.distance_to(dpad_bounds.get_center()) <= dpad_bounds.size.x * 0.5 + DPAD_DRIFT_MARGIN * control_scale
 
 func dpad_input_vector(point: Vector2) -> Vector2:
-	var half := maxf(1.0, DPAD_SIZE * 0.5)
+	var half := maxf(1.0, dpad_bounds.size.x * 0.5)
 	var vector := (point - dpad_bounds.get_center()) / half
 	return vector.limit_length(1.0)
 
 func draw_dpad() -> void:
 	var center := dpad_bounds.get_center()
-	var radius := DPAD_SIZE * 0.5
+	var radius := dpad_bounds.size.x * 0.5
 	draw_circle(center + Vector2(0, 5), radius + 3, Color(0, 0, 0, 0.28))
 	draw_circle(center, radius, Color(0.035, 0.09, 0.13, 0.78))
 	draw_circle(center + Vector2(0, -radius * 0.18), radius * 0.66, Color(1, 1, 1, 0.07))
 	draw_arc(center, radius, 0, TAU, 64, Color(0.52, 0.84, 0.91, 0.82), 3.0)
-	draw_dpad_arrow(center + Vector2(-52, 0), Vector2.LEFT, Input.is_action_pressed("move_left"))
-	draw_dpad_arrow(center + Vector2(52, 0), Vector2.RIGHT, Input.is_action_pressed("move_right"))
-	draw_dpad_arrow(center + Vector2(0, -52), Vector2.UP, Input.is_action_pressed("jump"))
-	draw_dpad_arrow(center + Vector2(0, 52), Vector2.DOWN, Input.is_action_pressed("crouch"))
+	draw_dpad_arrow(center + Vector2(-56, 0) * control_scale, Vector2.LEFT, Input.is_action_pressed("move_left"))
+	draw_dpad_arrow(center + Vector2(56, 0) * control_scale, Vector2.RIGHT, Input.is_action_pressed("move_right"))
+	draw_dpad_arrow(center + Vector2(0, -56) * control_scale, Vector2.UP, Input.is_action_pressed("jump"))
+	draw_dpad_arrow(center + Vector2(0, 56) * control_scale, Vector2.DOWN, Input.is_action_pressed("crouch"))
 	var knob := center + dpad_vector * radius * 0.46
-	draw_circle(knob, 14, Color(1.0, 0.84, 0.42, 0.92))
-	draw_circle(knob, 6, Color("#18202a"))
+	draw_circle(knob, 14 * control_scale, Color(1.0, 0.84, 0.42, 0.92))
+	draw_circle(knob, 6 * control_scale, Color("#18202a"))
 
 func draw_dpad_arrow(at: Vector2, direction: Vector2, active: bool) -> void:
-	draw_circle(at, 23, Color(1.0, 0.84, 0.42, 0.92) if active else Color(1, 1, 1, 0.62))
-	var tip := at + direction * 12.0
-	var back := at - direction * 8.0
-	var side := Vector2(-direction.y, direction.x) * 8.0
+	draw_circle(at, 23 * control_scale, Color(1.0, 0.84, 0.42, 0.92) if active else Color(1, 1, 1, 0.62))
+	var tip := at + direction * 12.0 * control_scale
+	var back := at - direction * 8.0 * control_scale
+	var side := Vector2(-direction.y, direction.x) * 8.0 * control_scale
 	draw_colored_polygon(PackedVector2Array([tip, back + side, back - side]), Color("#18202a"))
 
 func make_box(color: Color, border: Color, radius: int) -> StyleBoxFlat:
@@ -204,6 +223,10 @@ func input_action_for(control: String) -> String:
 	return control
 
 func control_color(action: String, active: bool) -> Color:
+	if GameSession.high_contrast:
+		if action == "jump": return Color("#fff176") if active else Color(0.74, 0.36, 0.0, 0.96)
+		if action == "fire": return Color("#baf6ff") if active else Color(0.0, 0.28, 0.44, 0.96)
+		if action == "dash": return Color("#e1c4ff") if active else Color(0.28, 0.08, 0.48, 0.96)
 	if action == "jump": return Color("#ffe27a") if active else Color(0.78, 0.43, 0.06, 0.88)
 	if action == "fire": return Color("#baf6ff") if active else Color(0.02, 0.38, 0.52, 0.88)
 	if action == "dash": return Color("#e1c4ff") if active else Color(0.34, 0.17, 0.52, 0.88)

@@ -3,6 +3,7 @@ package com.jtripppiie.mooserush;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ApplicationInfo;
 import android.speech.RecognizerIntent;
 
 import org.godotengine.godot.Godot;
@@ -42,6 +43,28 @@ public final class YouRushBridge extends GodotPlugin {
         return intent.resolveActivity(activity.getPackageManager()) != null;
     }
 
+    /**
+     * Returns an ADB-supplied verification scenario only for debuggable builds.
+     * Release APKs cannot activate the deterministic test harness.
+     */
+    @UsedByGodot
+    public String getVerificationScenario() {
+        Activity activity = getActivity();
+        if (activity == null || !isDebuggable(activity)) return "";
+        Intent launchIntent = activity.getIntent();
+        if (launchIntent == null) return "";
+        String scenario = launchIntent.getStringExtra("verification_scenario");
+        return scenario == null ? "" : scenario;
+    }
+
+    @UsedByGodot
+    public int getVerificationStage() {
+        Activity activity = getActivity();
+        if (activity == null || !isDebuggable(activity)) return 0;
+        Intent launchIntent = activity.getIntent();
+        return launchIntent == null ? 0 : launchIntent.getIntExtra("verification_stage", 0);
+    }
+
     @UsedByGodot
     public void startVoiceNote() {
         runOnUiThread(() -> {
@@ -78,5 +101,9 @@ public final class YouRushBridge extends GodotPlugin {
             for (Map.Entry<String, ?> entry : preferences.getAll().entrySet()) result.put(entry.getKey(), entry.getValue());
         } catch (Exception ignored) { return "{}"; }
         return result.toString();
+    }
+
+    private static boolean isDebuggable(Activity activity) {
+        return (activity.getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0;
     }
 }

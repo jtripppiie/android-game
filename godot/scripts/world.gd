@@ -1,8 +1,12 @@
 class_name AlaskaStage
 extends Node2D
 
-signal stage_completed(stage: int, score: int)
+const PLAYER_SCENE := preload("res://scenes/player.tscn")
+
+signal stage_completed(stage: int, score: int, elapsed_seconds: float, damage_taken: int)
 signal exit_requested
+signal restart_requested(stage: int)
+signal advance_requested(stage: int)
 
 var player: AlaskaRunner
 var hud: AlaskaGameHud
@@ -14,24 +18,14 @@ var boss_defeated := false
 var boss_node: TrailBoss
 var best_score := 0
 var notebook: ReviewNotebook
-var debug_category_counters := {}
 var enemy_spawn_positions: Array[Vector2] = []
-var debug_ids_visible := false
 var stage_index := 0
-var autoplay_audit := false
-var visual_audit := false
-var geometry_audit := false
-var visual_capture_x := 500.0
-var audit_elapsed := 0.0
-var audit_next_jump := 0.35
-var audit_last_jump := -1.0
-var audit_release_dash := false
-var audit_jumps := 0
-var audit_hits := 0
-var audit_last_health := 3
-var audit_max_x := 0.0
-var audit_last_x := 190.0
-var audit_last_progress_time := 0.0
+var review_registry: ReviewRegistry
+var auditor: GameplayAuditor
+var game_over_overlay: GameOverOverlay
+var stage_complete_overlay: StageCompleteOverlay
+var run_elapsed := 0.0
+var damage_taken := 0
 
 func _ready() -> void:
 	# Main handles pause/back input in ALWAYS mode. Gameplay must remain
@@ -39,14 +33,8 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_PAUSABLE
 	add_to_group("active_stage")
 	stage_index = GameSession.selected_stage
-	debug_ids_visible = GameSession.review_mode
-	for argument in OS.get_cmdline_user_args():
-		if argument.begins_with("--autoplay-audit="): autoplay_audit = true
-		elif argument.begins_with("--visual-audit="):
-			autoplay_audit = true
-			visual_audit = true
-		elif argument.begins_with("--geometry-audit="):
-			geometry_audit = true
+	review_registry = ReviewRegistry.new()
+	review_registry.configure(self, stage_index, GameSession.review_mode)
 	RenderingServer.set_default_clear_color(Color("#102d4b"))
 	build_background()
 	build_hud()
@@ -64,15 +52,18 @@ func _ready() -> void:
 	notebook.context_provider = debug_note_context
 	notebook.nearest_id_provider = nearest_debug_id
 	note_layer.add_child(notebook)
-	if geometry_audit:
-		run_geometry_audit.call_deferred()
+	auditor = GameplayAuditor.new()
+	add_child(auditor)
+	auditor.configure(self)
 
 func spawn_player() -> void:
-	player = AlaskaRunner.new()
+	player = PLAYER_SCENE.instantiate() as AlaskaRunner
 	player.position = Vector2(190, 470)
 	player.fired.connect(spawn_snowball)
 	player.checkpoint_reached.connect(func(_point): announce("CHECKPOINT SAVED", 2))
 	player.action_feedback.connect(func(message): announce(message, feedback_priority(message)))
+	player.defeated.connect(show_game_over)
+	player.damaged.connect(func(_health_remaining): damage_taken += 1)
 	add_child(player)
 
 func build_background() -> void:
@@ -81,31 +72,39 @@ func build_background() -> void:
 	if GameSession.high_contrast: sky = Color("#00152b")
 	var winter := stage_index >= 3
 	var backdrop_texture: Texture2D = load("res://assets/%s" % ("background_dark_winter.png" if winter else "background_midnight_sun.png"))
+	var far_parallax := Parallax2D.new()
+	far_parallax.name = "FarMountainParallax"
+	far_parallax.scroll_scale = Vector2(0.16, 0.08)
+	far_parallax.z_index = -20
+	add_child(far_parallax)
 	for index in range(5):
 		var backdrop := Sprite2D.new()
 		backdrop.texture = backdrop_texture
 		backdrop.position = Vector2(640.0 + index * 1280.0, 360.0)
 		backdrop.scale = Vector2(1280.0 / backdrop_texture.get_width(), 720.0 / backdrop_texture.get_height())
-		backdrop.z_index = -20
 		if GameSession.high_contrast:
 			backdrop.modulate = Color(0.58, 0.72, 0.84) if winter else Color(0.72, 0.80, 0.84)
 		else:
 			backdrop.modulate = Color(0.70, 0.82, 0.92) if stage_index == 3 else Color(0.86, 0.92, 1.0) if stage_index == 4 else Color.WHITE
-		add_child(backdrop)
+		far_parallax.add_child(backdrop)
 	var sky_node := Polygon2D.new()
 	sky_node.polygon = PackedVector2Array([Vector2(-500,-500),Vector2(6500,-500),Vector2(6500,720),Vector2(-500,720)])
 	sky_node.color = sky
 	sky_node.z_index = -30
 	add_child(sky_node)
 	var tree_texture: Texture2D = load("res://assets/%s" % ("scenery_tree_winter.png" if stage_index >= 2 else "scenery_tree_summer.png"))
+	var tree_parallax := Parallax2D.new()
+	tree_parallax.name = "TreeLineParallax"
+	tree_parallax.scroll_scale = Vector2(0.56, 0.32)
+	tree_parallax.z_index = -6
+	add_child(tree_parallax)
 	for index in range(10):
 		var tree := Sprite2D.new()
 		tree.texture = tree_texture
 		tree.position = Vector2(420.0 + index * 590.0, 430.0 + (index % 3) * 18.0)
 		tree.scale = Vector2.ONE * (0.12 + (index % 2) * 0.018)
 		tree.modulate = Color(0.62, 0.74, 0.80, 0.78)
-		tree.z_index = -6
-		add_child(tree)
+		tree_parallax.add_child(tree)
 
 func build_level() -> void:
 	if stage_index == 0: build_midnight_sun()
@@ -303,10 +302,31 @@ func build_snow_terrain(body: StaticBody2D, size: Vector2, stage_tint: Color) ->
 	terrain.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	terrain.stretch_mode = TextureRect.STRETCH_SCALE
 	terrain.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	terrain.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	terrain.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 	# Keep stages visually related without repainting the terrain as a flat slab.
 	terrain.modulate = Color.WHITE.lerp(stage_tint, 0.08)
 	body.add_child(terrain)
+	add_platform_crest(body, size.x)
+
+
+func add_platform_crest(body: StaticBody2D, width: float) -> void:
+	# Extend a few pixels beyond each independent terrain rectangle. The soft
+	# shadow and cap bridge the abrupt UV boundary where authored surfaces meet
+	# without weakening the collision edge or hiding a real gap.
+	var shadow := Line2D.new()
+	shadow.name = "SnowCrestShadow"
+	shadow.points = PackedVector2Array([Vector2(-6, 7), Vector2(width + 6, 7)])
+	shadow.width = 15.0
+	shadow.default_color = Color(0.28, 0.57, 0.70, 0.40)
+	shadow.antialiased = true
+	body.add_child(shadow)
+	var highlight := Line2D.new()
+	highlight.name = "SnowCrestHighlight"
+	highlight.points = PackedVector2Array([Vector2(-6, 2), Vector2(width + 6, 2)])
+	highlight.width = 7.0
+	highlight.default_color = Color(0.96, 0.995, 1.0, 0.72)
+	highlight.antialiased = true
+	body.add_child(highlight)
 
 func slope(points: PackedVector2Array, color: Color) -> void:
 	var body := StaticBody2D.new()
@@ -528,13 +548,13 @@ func finish_level(body: Node) -> void:
 	finished = true
 	announce("LEVEL CLEAR · EXPEDITION COMPLETE", 5, 3.5)
 	player.velocity = Vector2.ZERO
+	var previous_best := best_score
 	best_score = maxi(best_score, player.score)
-	if autoplay_audit:
-		print("AUTOPLAY PASS stage=%d time=%.2f max_x=%.1f jumps=%d hits=%d score=%d" % [stage_index, audit_elapsed, audit_max_x, audit_jumps, audit_hits, player.score])
-		release_audit_inputs()
-		get_tree().quit(0)
+	if is_instance_valid(auditor) and auditor.autoplay:
+		auditor.complete(player.score)
 		return
-	stage_completed.emit(stage_index, player.score)
+	stage_completed.emit(stage_index, player.score, run_elapsed, damage_taken)
+	show_stage_complete(previous_best)
 
 func spawn_snowball(origin: Vector2, direction: float) -> void:
 	var shot := SnowballProjectile.new()
@@ -549,8 +569,11 @@ func build_hud() -> void:
 
 func build_pause_panel(layer: CanvasLayer) -> void:
 	pause_panel = PanelContainer.new()
-	pause_panel.position = Vector2(820, 72)
-	pause_panel.size = Vector2(336, 150)
+	pause_panel.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	pause_panel.offset_left = -372.0
+	pause_panel.offset_top = 88.0
+	pause_panel.offset_right = -24.0
+	pause_panel.offset_bottom = 250.0
 	pause_panel.visible = false
 	pause_panel.process_mode = Node.PROCESS_MODE_ALWAYS
 	var style := StyleBoxFlat.new()
@@ -604,19 +627,66 @@ func pause_for_background() -> void:
 	pause_panel.visible = true
 	get_tree().paused = true
 
-func _process(_delta: float) -> void:
-	if autoplay_audit: run_autoplay_audit(_delta)
-	if visual_audit and is_instance_valid(player) and player.global_position.x >= visual_capture_x:
-		capture_visual_audit()
+
+func show_game_over() -> void:
+	if is_instance_valid(game_over_overlay):
+		return
+	release_gameplay_inputs()
+	player.set_controls_enabled(false)
+	game_over_overlay = GameOverOverlay.new()
+	game_over_overlay.restart_requested.connect(func() -> void:
+		get_tree().paused = false
+		restart_requested.emit(stage_index)
+	)
+	game_over_overlay.map_requested.connect(func() -> void:
+		get_tree().paused = false
+		exit_requested.emit()
+	)
+	hud.add_child(game_over_overlay)
+	get_tree().paused = true
+
+
+func show_stage_complete(previous_best: int) -> void:
+	if is_instance_valid(stage_complete_overlay):
+		return
+	release_gameplay_inputs()
+	player.set_controls_enabled(false)
+	stage_complete_overlay = StageCompleteOverlay.new()
+	hud.add_child(stage_complete_overlay)
+	stage_complete_overlay.configure(
+		stage_index,
+		player.score,
+		previous_best,
+		run_elapsed,
+		damage_taken
+	)
+	stage_complete_overlay.next_requested.connect(func() -> void:
+		get_tree().paused = false
+		if stage_index >= GameSession.STAGES.size() - 1:
+			exit_requested.emit()
+		else:
+			advance_requested.emit(stage_index + 1)
+	)
+	stage_complete_overlay.replay_requested.connect(func() -> void:
+		get_tree().paused = false
+		restart_requested.emit(stage_index)
+	)
+	stage_complete_overlay.map_requested.connect(func() -> void:
+		get_tree().paused = false
+		exit_requested.emit()
+	)
+	get_tree().paused = true
+
+func _process(delta: float) -> void:
+	if not finished and is_instance_valid(player) and player.controls_enabled:
+		run_elapsed += delta
 	if Input.is_action_just_pressed("debug_note") and notebook and GameSession.review_mode and not pause_panel.visible:
 		notebook.toggle()
 		if notebook.panel.visible: release_gameplay_inputs()
 	if Input.is_action_just_pressed("debug_ids") and GameSession.review_mode:
-		debug_ids_visible = not debug_ids_visible
-		for item in get_tree().get_nodes_in_group("debug_item"):
-			var label := item.get_node_or_null("DebugId")
-			if label: label.visible = false
-	if GameSession.review_mode: update_debug_labels()
+		review_registry.toggle()
+	if GameSession.review_mode:
+		review_registry.update(player)
 	if player and is_instance_valid(hud):
 		var route := "HIGH" if player.global_position.y < 350.0 else "LOW" if player.global_position.y > 575.0 else "PRECISION"
 		hud.update_snapshot(
@@ -650,247 +720,25 @@ func release_gameplay_inputs() -> void:
 	for action in ["move_left", "move_right", "sprint", "jump", "crouch", "fire", "dash", "debug_note", "debug_ids"]:
 		Input.action_release(action)
 
-func run_autoplay_audit(delta: float) -> void:
-	if not is_instance_valid(player): return
-	audit_elapsed += delta
-	if player.health < audit_last_health: audit_hits += audit_last_health - player.health
-	audit_last_health = player.health
-	if player.global_position.x > audit_max_x + 8.0:
-		audit_max_x = player.global_position.x
-	if absf(player.global_position.x - audit_last_x) > 8.0:
-		audit_last_x = player.global_position.x
-		audit_last_progress_time = audit_elapsed
-	var objective := audit_target_objective()
-	var boss_engaged := not boss_defeated and objective == null and is_instance_valid(boss_node) and player.global_position.x > boss_node.rest_position.x - 700.0
-	var objective_dx := objective.global_position.x - player.global_position.x if is_instance_valid(objective) else INF
-	var target_direction := 1.0
-	if is_instance_valid(objective): target_direction = signf(objective_dx)
-	elif boss_engaged:
-		target_direction = signf((boss_node.rest_position.x - 250.0) - player.global_position.x)
-	var waiting_for_boss := boss_engaged and absf((boss_node.rest_position.x - 250.0) - player.global_position.x) < 90.0
-	if is_instance_valid(objective) and absf(objective_dx) < 28.0:
-		Input.action_release("move_right")
-		Input.action_release("move_left")
-	elif waiting_for_boss:
-		Input.action_release("move_right")
-		Input.action_release("move_left")
-		player.facing = 1.0
-	elif target_direction < 0.0:
-		Input.action_release("move_right")
-		Input.action_press("move_left")
-	else:
-		Input.action_press("move_right")
-		Input.action_release("move_left")
-	if is_instance_valid(objective) and absf(objective_dx) < 180.0: Input.action_release("sprint")
-	else: Input.action_press("sprint")
-	Input.action_press("fire")
-	if audit_release_dash:
-		Input.action_release("dash")
-		audit_release_dash = false
-	var stuck := audit_elapsed - audit_last_progress_time > 1.3
-	if is_instance_valid(objective) and player.is_on_floor() and absf(objective_dx) < 175.0 and audit_elapsed - audit_last_jump > 0.30:
-		audit_next_jump = minf(audit_next_jump, audit_elapsed)
-	if not boss_engaged and player.is_on_floor() and audit_jump_needed(target_direction) and audit_elapsed - audit_last_jump > 0.30:
-		audit_next_jump = minf(audit_next_jump, audit_elapsed)
-	for hazard in get_tree().get_nodes_in_group("boss_hazard"):
-		if player.is_on_floor() and hazard is Node2D and absf(hazard.global_position.x - player.global_position.x) < 250.0 and audit_elapsed - audit_last_jump > 0.30:
-			audit_next_jump = minf(audit_next_jump, audit_elapsed)
-			break
-	if audit_elapsed >= audit_next_jump:
-		player.queue_jump()
-		audit_jumps += 1
-		audit_last_jump = audit_elapsed
-		audit_next_jump = INF
-	if stuck and not boss_engaged:
-		player.queue_jump()
-		Input.action_press("dash")
-		audit_release_dash = true
-		audit_jumps += 1
-		audit_last_jump = audit_elapsed
-		audit_last_progress_time = audit_elapsed
-		audit_next_jump = audit_elapsed + 0.5
-	if audit_elapsed > 120.0:
-		print("AUTOPLAY FAIL stage=%d max_x=%.1f key=%s rescues=%d boss=%s boss_hp=%d jumps=%d hits=%d" % [stage_index, audit_max_x, key_collected, survivors_found, boss_defeated, boss_node.health if is_instance_valid(boss_node) else 0, audit_jumps, audit_hits])
-		release_audit_inputs()
-		get_tree().quit(2)
-
-func capture_visual_audit() -> void:
-	var capture_at := visual_capture_x
-	visual_capture_x += 800.0
-	await RenderingServer.frame_post_draw
-	var image := get_viewport().get_texture().get_image()
-	image.save_png("user://visual-audit-s%d-x%d.png" % [stage_index, roundi(capture_at)])
-
-func release_audit_inputs() -> void:
-	for action in ["move_left", "move_right", "sprint", "fire", "jump", "dash"]: Input.action_release(action)
-
-func run_geometry_audit() -> void:
-	await get_tree().physics_frame
-	var keys := 0
-	var survivors := 0
-	for item in get_tree().get_nodes_in_group("debug_item"):
-		if String(item.get_meta("kind", "")) == "key": keys += 1
-		elif String(item.get_meta("kind", "")) == "survivor": survivors += 1
-	assert(keys == 1)
-	assert(survivors == 2)
-	assert(get_tree().get_nodes_in_group("stage_boss").size() == 1)
-	assert(get_tree().get_nodes_in_group("stage_goal").size() == 1)
-	for mover in get_tree().get_nodes_in_group("moving_platform"):
-		var midpoint: Vector2 = mover.origin + mover.travel * 0.5
-		assert(mover.position.distance_to(midpoint) <= maxf(4.0, mover.travel.length() * 0.10))
-	for foe in get_tree().get_nodes_in_group("enemy"):
-		assert(absf(foe.global_position.x - foe.origin_x) <= foe.patrol_distance + 4.0)
-	for item in get_tree().get_nodes_in_group("debug_item"):
-		if String(item.get_meta("debug_label", "")) == "SUPPLY BLOCK":
-			assert(item.global_position.y >= 440.0 and item.global_position.y <= 490.0)
-	var surfaces: Array[Node] = get_tree().get_nodes_in_group("main_route_surface")
-	surfaces.sort_custom(func(a: Node, b: Node): return float(a.get_meta("surface_start")) < float(b.get_meta("surface_start")))
-	assert(surfaces.size() >= 7)
-	var maximum_gap := 0.0
-	var maximum_rise := 0.0
-	for index in range(1, surfaces.size()):
-		var previous := surfaces[index - 1]
-		var current := surfaces[index]
-		var gap := maxf(0.0, float(current.get_meta("surface_start")) - float(previous.get_meta("surface_end")))
-		var rise := maxf(0.0, float(previous.get_meta("surface_y")) - float(current.get_meta("surface_y")))
-		maximum_gap = maxf(maximum_gap, gap)
-		maximum_rise = maxf(maximum_rise, rise)
-	assert(maximum_gap <= 190.0)
-	assert(maximum_rise <= 190.0)
-	print("GEOMETRY AUDIT PASS stage=%d surfaces=%d max_gap=%.1f max_rise=%.1f" % [stage_index, surfaces.size(), maximum_gap, maximum_rise])
-	get_tree().quit(0)
-
-func audit_target_objective() -> Node2D:
-	var target: Node2D
-	var target_x := INF
-	for item in get_tree().get_nodes_in_group("debug_item"):
-		if item is Node2D and String(item.get_meta("kind", "")) in ["key", "survivor"] and item.global_position.x < target_x:
-			target = item
-			target_x = item.global_position.x
-	return target
-
-func audit_jump_needed(direction: float) -> bool:
-	var space := get_world_2d().direct_space_state
-	var sign_x := 1.0 if direction >= 0.0 else -1.0
-	var forward := PhysicsRayQueryParameters2D.create(
-		player.global_position + Vector2(sign_x * 28.0, -42.0),
-		player.global_position + Vector2(sign_x * 112.0, -42.0)
-	)
-	forward.exclude = [player.get_rid()]
-	var ahead_ground := PhysicsRayQueryParameters2D.create(
-		player.global_position + Vector2(sign_x * 118.0, -105.0),
-		player.global_position + Vector2(sign_x * 118.0, 82.0)
-	)
-	ahead_ground.exclude = [player.get_rid()]
-	return not space.intersect_ray(forward).is_empty() or space.intersect_ray(ahead_ground).is_empty()
-
 func register_debug_item(item: Node, prefix: String, label: String) -> void:
-	debug_category_counters[prefix] = int(debug_category_counters.get(prefix, 0)) + 1
-	item.add_to_group("debug_item")
-	var short_stage := String(GameSession.STAGES[stage_index].name).replace(" ", "-")
-	item.set_meta("debug_id", "%s-%s-%d" % [short_stage, prefix, debug_category_counters[prefix]])
-	item.set_meta("debug_label", label.to_upper())
-	if item is Node2D:
-		var badge := Label.new()
-		badge.name = "DebugId"
-		badge.text = String(item.get_meta("debug_id"))
-		badge.position = Vector2(-110, -62)
-		badge.size = Vector2(220, 30)
-		badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		badge.add_theme_font_size_override("font_size", 16)
-		badge.add_theme_color_override("font_color", Color("#ffda79"))
-		badge.add_theme_constant_override("outline_size", 5)
-		badge.add_theme_color_override("font_outline_color", Color(0.02, 0.06, 0.10, 0.95))
-		badge.visible = debug_ids_visible
-		item.add_child(badge)
+	review_registry.register(item, prefix, label)
+
 
 func update_debug_labels() -> void:
-	if not is_instance_valid(player): return
-	var candidates: Array[Dictionary] = []
-	for item in get_tree().get_nodes_in_group("debug_item"):
-		if not item is Node2D: continue
-		var distance := debug_distance_to_player(item)
-		var badge := item.get_node_or_null("DebugId") as Label
-		if badge:
-			badge.visible = false
-			badge.modulate = Color.WHITE
-			badge.scale = Vector2.ONE
-			position_surface_badge(item, badge)
-		if distance <= 760.0:
-			candidates.append({"item": item, "distance": distance})
-	if not debug_ids_visible: return
-	candidates.sort_custom(func(a: Dictionary, b: Dictionary): return float(a.distance) < float(b.distance))
-	var visible_count := mini(5, candidates.size())
-	for index in range(visible_count):
-		var candidate: Dictionary = candidates[index]
-		var candidate_item := candidate.item as Node2D
-		var candidate_badge := candidate_item.get_node_or_null("DebugId") as Label
-		if candidate_badge:
-			candidate_badge.visible = true
-			if index == 0:
-				candidate_badge.modulate = Color("#4ddbb8")
-				candidate_badge.scale = Vector2.ONE * 1.12
+	review_registry.update(player)
 
-func position_surface_badge(item: Node2D, badge: Label) -> void:
-	if not item.has_meta("surface_start"): return
-	var nearest_world_x := clampf(
-		player.global_position.x,
-		float(item.get_meta("surface_start")),
-		float(item.get_meta("surface_end"))
-	)
-	var surface_world_y := float(item.get_meta("surface_y"))
-	badge.position = Vector2(
-		nearest_world_x - item.global_position.x - badge.size.x * 0.5,
-		surface_world_y - item.global_position.y - 62.0
-	)
 
 func audit_debug_overlay() -> void:
-	debug_ids_visible = true
-	update_debug_labels()
-	var visible_badges := 0
-	var followed_surface := false
-	for item in get_tree().get_nodes_in_group("debug_item"):
-		if not item is Node2D: continue
-		var badge := item.get_node_or_null("DebugId") as Label
-		if badge == null: continue
-		assert(badge.get_theme_font_size("font_size") >= 16)
-		if badge.visible: visible_badges += 1
-		if item.has_meta("surface_start"):
-			var start := float(item.get_meta("surface_start"))
-			var finish := float(item.get_meta("surface_end"))
-			if player.global_position.x >= start and player.global_position.x <= finish:
-				var badge_world_center: float = item.global_position.x + badge.position.x + badge.size.x * 0.5
-				assert(absf(badge_world_center - player.global_position.x) <= 1.0)
-				followed_surface = true
-	assert(visible_badges > 0 and visible_badges <= 5)
-	assert(followed_surface)
-	debug_ids_visible = false
-	update_debug_labels()
+	review_registry.audit(player)
+
 
 func debug_note_context() -> String:
-	var visible: Array[String] = []
-	for item in get_tree().get_nodes_in_group("debug_item"):
-		if item is Node2D and absf(item.global_position.x - player.global_position.x) <= 700.0:
-			visible.append(String(item.get_meta("debug_id", "UNSET")))
-	return "stage=%s | x=%d | score=%d | combo=%d | key=%s | rescues=%d/2 | visible=%s" % [GameSession.STAGES[stage_index].name, player.global_position.x, player.score, player.combo, key_collected, survivors_found, ", ".join(visible)]
+	return review_registry.context(player, key_collected, survivors_found)
+
 
 func nearest_debug_id() -> String:
-	if not is_instance_valid(player): return "NO TARGET"
-	var closest := "NO ITEM NEARBY"
-	var closest_distance := INF
-	for item in get_tree().get_nodes_in_group("debug_item"):
-		if item is Node2D:
-			var distance := debug_distance_to_player(item)
-			if distance < closest_distance:
-				closest_distance = distance
-				closest = String(item.get_meta("debug_id", "UNSET"))
-	return "%s · %dm" % [closest, roundi(closest_distance / 100.0)]
+	return review_registry.nearest(player)
 
-func debug_distance_to_player(item: Node2D) -> float:
-	if item.has_meta("surface_start"):
-		var nearest_x := clampf(player.global_position.x, float(item.get_meta("surface_start")), float(item.get_meta("surface_end")))
-		return player.global_position.distance_to(Vector2(nearest_x, float(item.get_meta("surface_y"))))
-	return item.global_position.distance_to(player.global_position)
 
 func load_profile() -> void:
 	best_score = GameSession.best_scores[stage_index]
