@@ -21,6 +21,7 @@ func _ready() -> void:
 		if argument.begins_with("--stage-smoke="): smoke_stage = int(argument.get_slice("=", 1))
 		elif argument.begins_with("--autoplay-audit="): smoke_stage = int(argument.get_slice("=", 1))
 		elif argument.begins_with("--visual-audit="): smoke_stage = int(argument.get_slice("=", 1))
+		elif argument.begins_with("--geometry-audit="): smoke_stage = int(argument.get_slice("=", 1))
 		elif argument == "--touch-audit": touch_audit = true
 		elif argument == "--lifecycle-audit": lifecycle_audit = true
 	if lifecycle_audit:
@@ -124,7 +125,7 @@ func run_touch_audit() -> void:
 	var right: Rect2 = controls.controls["move_right"]
 	var jump: Rect2 = controls.controls["jump"]
 	var dpad_up: Rect2 = controls.controls["dpad_up"]
-	assert(jump.size == Vector2(150, 150))
+	assert(jump.size == Vector2(124, 124))
 	var move_press := InputEventScreenTouch.new()
 	move_press.index = 1; move_press.position = right.get_center(); move_press.pressed = true
 	controls._input(move_press)
@@ -152,7 +153,11 @@ func run_touch_audit() -> void:
 	get_tree().quit(0)
 
 func clear_ui() -> void:
-	for child in ui.get_children(): child.queue_free()
+	# Detach immediately so a newly built screen cannot overlap or receive
+	# input alongside the screen waiting for deletion at frame end.
+	for child in ui.get_children():
+		ui.remove_child(child)
+		child.queue_free()
 
 func show_menu() -> void:
 	dispose_world()
@@ -177,7 +182,7 @@ func show_menu() -> void:
 	add_button(panel, "CUSTOMIZE RUNNER", show_customize)
 	add_button(panel, "ACCESSIBILITY", show_accessibility)
 	var status := Label.new()
-	status.text = "ALASKA 5.3 · STAGES %d/5 · TOTAL %d" % [GameSession.unlocked_stage + 1, GameSession.total_score]
+	status.text = "ALASKA 5.3.2 · STAGES %d/5 · LIFETIME %d" % [GameSession.unlocked_stage + 1, GameSession.total_score]
 	status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	status.add_theme_font_size_override("font_size", 22)
 	panel.add_child(status)

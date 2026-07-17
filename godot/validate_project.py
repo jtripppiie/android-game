@@ -39,19 +39,24 @@ if missing:
     raise SystemExit("Missing: " + ", ".join(missing))
 
 project = (root / "project.godot").read_text()
+export_preset = (root / "export_presets.cfg").read_text()
 world = (root / "scripts/world.gd").read_text()
 player = (root / "scripts/player.gd").read_text()
 touch = (root / "scripts/touch_controls.gd").read_text()
 assert 'run/main_scene="res://scenes/main.tscn"' in project
 for marker in ('image="res://assets/boot_splash.png"', "fullsize=true", "use_filter=true"):
     assert marker in project, marker
+for marker in ('version/code=532', 'version/name="5.3.2"', 'you-rush-alaska-5.3.2-debug.apk'):
+    assert marker in export_preset, marker
 for marker in ("build_level", "checkpoint", "goal", "collectible", "enemy", "moving_platform", "survivor"):
     assert marker in world, marker
 main_source = (root / "scripts/main.gd").read_text()
-for marker in ("dispose_world", "transition_locked", "remove_child(world)", "if transition_locked or is_instance_valid(world): return", "run_lifecycle_audit"):
+for marker in ("dispose_world", "transition_locked", "remove_child(world)", "ui.remove_child(child)", "if transition_locked or is_instance_valid(world): return", "run_lifecycle_audit"):
     assert marker in main_source, marker
 for marker in ("show_launch_splash", "SPLASH_MINIMUM_SECONDS := 1.25", "SPLASH_TOTAL_SECONDS := 4.0", "TAP TO BEGIN", "dismiss_launch_splash"):
     assert marker in main_source, marker
+assert world.count("GameSession.complete_stage") == 0
+assert main_source.count("GameSession.complete_stage") == 1
 for marker in ('Vector2(0, 82)', 'add_theme_constant_override("separation", 20)', 'add_theme_constant_override("separation", 12)'):
     assert marker in main_source, marker
 for marker in ("font_disabled_color", 'add_theme_stylebox_override("disabled"', "font_pressed_color"):
@@ -66,7 +71,7 @@ for state in ("idle", "run", "sprint", "crouch", "jump", "fall", "dash", "stomp"
     assert f'"{state}"' in player, state
 for action in ("move_left", "move_right", "crouch", "jump", "fire", "sprint", "dash"):
     assert f'"{action}"' in touch, action
-for marker in ("layout_controls", "SAFE_MARGIN", "InputEventScreenTouch", "InputEventMouseButton", "dpad_up", "dpad_down", "input_action_for", "control_color", "control_text_color", 'return "SNOW"'):
+for marker in ("layout_controls", "SAFE_MARGIN", "InputEventScreenTouch", "InputEventMouseButton", "dpad_up", "dpad_down", "input_action_for", "control_color", "control_text_color", 'return "SNOW"', 'return "LEFT"', 'return "RIGHT"'):
     assert marker in touch, marker
 
 image = Image.open(root / "assets/runner_overhaul.png")
@@ -89,11 +94,12 @@ for asset_name in (
 for marker in ("ReactiveIce", "launch_pad", "supply_block", "trick_ring_line"):
     assert marker in world, marker
 assert "build_directed_encounters()" not in world
-for marker in ("run_autoplay_audit", "audit_target_objective", "audit_jump_needed", "AUTOPLAY PASS", "capture_visual_audit"):
+for marker in ("run_autoplay_audit", "audit_target_objective", "audit_jump_needed", "AUTOPLAY PASS", "capture_visual_audit", "run_geometry_audit", "GEOMETRY AUDIT PASS", "main_route_surface"):
     assert marker in world, marker
-for marker in ("TrailBoss", "ReviewNotebook", "debug_note_context", "save_profile", "boss_defeated", "update_debug_labels", "debug_category_counters"):
+assert "save_profile()\n\tif autoplay_audit" not in world
+for marker in ("TrailBoss", "ReviewNotebook", "debug_note_context", "boss_defeated", "update_debug_labels", "debug_category_counters"):
     assert marker in world, marker
-for marker in ('menu_button.text = "PAUSE"', "build_pause_panel", "toggle_pause_panel", "EXIT TO MAP", "exit_run_to_map"):
+for marker in ('menu_button.text = "PAUSE"', "build_pause_panel", "toggle_pause_panel", "EXIT TO MAP", "exit_run_to_map", 'is_action_just_pressed("ui_cancel")'):
     assert marker in world, marker
 assert 'menu_button.text = "MAP"' not in world
 for marker in ("top_bar.size = Vector2(1280, 76)", "hud_label.clip_text = true", "checkpoint_label.clip_text = true", "AURORA %d   BEST"):
@@ -108,6 +114,8 @@ for marker in ("wildlife_bear_walk.png", "wildlife_eagle_fly.png", "wildlife_sal
     assert marker in enemy_source, marker
 for marker in ("is_stomp_contact", "runner.velocity.y >= -180.0", "not runner.is_on_floor()"):
     assert marker in enemy_source, marker
+for marker in ("ledge_ray", "force_raycast_update", "not ledge_ray.is_colliding()"):
+    assert marker in enemy_source, marker
 boss = (root / "scripts/trail_boss.gd").read_text()
 for marker in ("TELL_SECONDS", "RECOVER_SECONDS", "ARMORED", "WEAK · FIRE"):
     assert marker in boss, marker
@@ -115,6 +123,7 @@ for marker in ("wildlife_moose_walk.png", "wildlife_polar_bear_walk.png", "boss_
     assert marker in boss, marker
 assert "player.global_position.x > global_position.x" in boss
 assert "art.flip_h = true" not in boss
+assert "hitbox_sizes" in boss and "RectangleShape2D.new()" in boss
 for marker in ("SUN FLARE", "SALMON SPLASH", "ANTLER SHOCKWAVE", "FEATHER SPREAD", "SNOW BARRAGE"):
     assert marker in boss, marker
 assert "0.30, 1.05, 0.62, 0.58, 0.90" in boss
@@ -123,6 +132,8 @@ for marker in ("class_name BossHazard", "fall_acceleration", "_on_body_entered",
     assert marker in boss_hazard, marker
 notebook = (root / "scripts/review_notebook.gd").read_text()
 for marker in ("user://debug-review-notes.txt", "FIX FIRST", "context_provider", "nearest_id_provider", "note_count", '"JUMP", "SPACE", "ART", "BUG"'):
+    assert marker in notebook, marker
+for marker in ("paused_before_open", "get_tree().paused = paused_before_open", "voice_available"):
     assert marker in notebook, marker
 projectile = (root / "scripts/projectile.gd").read_text()
 assert 'has_method("snowball_hit")' in projectile

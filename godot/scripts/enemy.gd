@@ -9,6 +9,7 @@ var direction := -1.0
 var attack_cooldown := 0.0
 var player: Node2D
 var art: Sprite2D
+var ledge_ray: RayCast2D
 
 func _ready() -> void:
 	origin_x = global_position.x
@@ -27,6 +28,12 @@ func _ready() -> void:
 	art.scale = Vector2.ONE * float({"bear":0.48, "wolf":0.30, "eagle":0.34, "salmon":0.25}.get(kind, 0.30))
 	art.position.y = float({"bear":-68.0, "wolf":-32.0, "eagle":-80.0, "salmon":-34.0}.get(kind, -32.0))
 	add_child(art)
+	if kind in ["bear", "wolf"]:
+		ledge_ray = RayCast2D.new()
+		ledge_ray.position = Vector2(direction * 36.0, -12.0)
+		ledge_ray.target_position = Vector2(direction * 28.0, 76.0)
+		ledge_ray.enabled = true
+		add_child(ledge_ray)
 
 func _physics_process(delta: float) -> void:
 	attack_cooldown = maxf(0.0, attack_cooldown - delta)
@@ -53,6 +60,13 @@ func _physics_process(delta: float) -> void:
 		direction = signf(distance)
 		velocity.x = direction * speed * 1.28
 	else: velocity.x = direction * speed
+	if is_instance_valid(ledge_ray) and is_on_floor():
+		ledge_ray.position = Vector2(direction * 36.0, -12.0)
+		ledge_ray.target_position = Vector2(direction * 28.0, 76.0)
+		ledge_ray.force_raycast_update()
+		if not ledge_ray.is_colliding():
+			direction *= -1.0
+			velocity.x = direction * absf(velocity.x)
 	if kind != "eagle" and kind != "salmon": velocity.y += 1500.0 * delta
 	move_and_slide()
 	art.frame = int(Time.get_ticks_msec() / (115.0 if absf(velocity.x) > speed * 1.2 else 155.0)) % 6

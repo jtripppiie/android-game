@@ -20,13 +20,13 @@ func layout_controls() -> void:
 	if view.x < 600.0 or view.y < 360.0: view = get_viewport_rect().size
 	var bottom := view.y - SAFE_MARGIN.y
 	controls = {
-		"move_left": Rect2(Vector2(SAFE_MARGIN.x, bottom - 142), Vector2(112, 104)),
-		"move_right": Rect2(Vector2(SAFE_MARGIN.x + 216, bottom - 142), Vector2(112, 104)),
-		"dpad_up": Rect2(Vector2(SAFE_MARGIN.x + 108, bottom - 246), Vector2(112, 104)),
-		"dpad_down": Rect2(Vector2(SAFE_MARGIN.x + 108, bottom - 104), Vector2(112, 76)),
-		"jump": Rect2(Vector2(view.x - SAFE_MARGIN.x - 150, bottom - 160), Vector2(150, 150)),
-		"fire": Rect2(Vector2(view.x - SAFE_MARGIN.x - 272, bottom - 278), Vector2(116, 116)),
-		"dash": Rect2(Vector2(view.x - SAFE_MARGIN.x - 286, bottom - 122), Vector2(118, 96))
+		"move_left": Rect2(Vector2(SAFE_MARGIN.x, bottom - 116), Vector2(92, 86)),
+		"move_right": Rect2(Vector2(SAFE_MARGIN.x + 184, bottom - 116), Vector2(92, 86)),
+		"dpad_up": Rect2(Vector2(SAFE_MARGIN.x + 92, bottom - 202), Vector2(92, 86)),
+		"dpad_down": Rect2(Vector2(SAFE_MARGIN.x + 92, bottom - 100), Vector2(92, 70)),
+		"jump": Rect2(Vector2(view.x - SAFE_MARGIN.x - 124, bottom - 134), Vector2(124, 124)),
+		"fire": Rect2(Vector2(view.x - SAFE_MARGIN.x - 226, bottom - 234), Vector2(94, 94)),
+		"dash": Rect2(Vector2(view.x - SAFE_MARGIN.x - 238, bottom - 106), Vector2(98, 76))
 	}
 	if review_mode:
 		controls["debug_note"] = Rect2(Vector2(view.x - SAFE_MARGIN.x - 104, SAFE_MARGIN.y), Vector2(104, 52))
@@ -81,10 +81,10 @@ func _draw() -> void:
 		var active: bool = action in active_touches.values()
 		var fill := control_color(action, active)
 		var border := Color.WHITE if active else control_border(action)
-		var radius := 75 if action == "jump" else 58 if action == "fire" else 24
+		var radius := 62 if action == "jump" else 47 if action == "fire" else 22
 		draw_style_box(make_box(fill, border, radius), box)
-		var font_size := 34 if action in ["move_left", "move_right", "dpad_up", "dpad_down"] else 22
-		if action == "jump": font_size = 25
+		var font_size := 17 if action in ["move_left", "move_right", "dpad_up", "dpad_down"] else 19
+		if action == "jump": font_size = 22
 		var text_color := control_text_color(action, active)
 		var baseline := box.position + Vector2(0, box.size.y * 0.62 + font_size * 0.25)
 		draw_string(ThemeDB.fallback_font, baseline, label_for(action), HORIZONTAL_ALIGNMENT_CENTER, box.size.x, font_size, text_color)
@@ -98,10 +98,10 @@ func make_box(color: Color, border: Color, radius: int) -> StyleBoxFlat:
 	return box
 
 func label_for(action: String) -> String:
-	if action == "move_left": return "◀"
-	if action == "move_right": return "▶"
-	if action == "dpad_up": return "▲"
-	if action == "dpad_down": return "▼"
+	if action == "move_left": return "LEFT"
+	if action == "move_right": return "RIGHT"
+	if action == "dpad_up": return "UP"
+	if action == "dpad_down": return "DOWN"
 	if action == "jump": return "JUMP"
 	if action == "fire": return "SNOW"
 	if action == "dash": return "DASH"
@@ -115,11 +115,11 @@ func input_action_for(control: String) -> String:
 	return control
 
 func control_color(action: String, active: bool) -> Color:
-	if action == "jump": return Color("#ffe27a") if active else Color(0.78, 0.43, 0.06, 0.96)
-	if action == "fire": return Color("#baf6ff") if active else Color(0.02, 0.38, 0.52, 0.96)
-	if action == "dash": return Color("#e1c4ff") if active else Color(0.34, 0.17, 0.52, 0.96)
+	if action == "jump": return Color("#ffe27a") if active else Color(0.78, 0.43, 0.06, 0.88)
+	if action == "fire": return Color("#baf6ff") if active else Color(0.02, 0.38, 0.52, 0.88)
+	if action == "dash": return Color("#e1c4ff") if active else Color(0.34, 0.17, 0.52, 0.88)
 	if action in ["debug_note", "debug_ids"]: return Color(0.03, 0.12, 0.18, 0.94)
-	return Color(0.02, 0.10, 0.17, 0.94)
+	return Color(0.02, 0.10, 0.17, 0.86)
 
 func control_border(action: String) -> Color:
 	if action == "jump": return Color("#fff0a8")

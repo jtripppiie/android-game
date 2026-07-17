@@ -24,9 +24,19 @@ func _ready() -> void:
 	health = max_health
 	player = get_tree().get_first_node_in_group("player") as AlaskaRunner
 	var collision := CollisionShape2D.new()
-	var shape := CircleShape2D.new()
-	shape.radius = 58.0
+	var shape := RectangleShape2D.new()
+	var hitbox_sizes := [
+		Vector2(106, 106),
+		Vector2(286, 92),
+		Vector2(176, 126),
+		Vector2(148, 112),
+		Vector2(244, 124)
+	]
+	shape.size = hitbox_sizes[boss_variant]
 	collision.shape = shape
+	# Keep the lower edge aligned with the runner's snowball lane as well as
+	# the visible animal body; the previous centered circle was misleading.
+	collision.position.y = [-35.0, -42.0, -40.0, -42.0, -50.0][boss_variant]
 	add_child(collision)
 	body_entered.connect(_on_body_entered)
 	build_art()
@@ -74,6 +84,8 @@ func _physics_process(delta: float) -> void:
 		state = State.TELL
 		state_timer = 0.0
 		feedback.emit("BOSS WINDUP")
+	if state == State.ATTACK and is_instance_valid(player) and player in get_overlapping_bodies():
+		player.take_hit(global_position.x)
 	queue_redraw()
 	if is_instance_valid(art):
 		art.frame = int(Time.get_ticks_msec() / 145.0) % maxi(1, art.hframes)

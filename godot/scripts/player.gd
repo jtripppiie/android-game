@@ -183,6 +183,14 @@ func collect_aurora_ring() -> void:
 func respawn() -> void:
 	health = 3
 	combo = 0
+	combo_timer = 0.0
+	dash_timer = 0.0
+	dash_cooldown = 0.25
+	fire_cooldown = 0.0
+	jump_buffer = 0.0
+	coyote = 0.0
+	air_jumps_left = 1
+	state = "idle"
 	invulnerability = 1.2
 	velocity = Vector2.ZERO
 	global_position = spawn_point

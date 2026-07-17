@@ -23,6 +23,7 @@ var debug_ids_visible := false
 var stage_index := 0
 var autoplay_audit := false
 var visual_audit := false
+var geometry_audit := false
 var visual_capture_x := 500.0
 var audit_elapsed := 0.0
 var audit_next_jump := 0.35
@@ -37,6 +38,7 @@ var audit_last_x := 190.0
 var audit_last_progress_time := 0.0
 
 func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	add_to_group("active_stage")
 	stage_index = GameSession.selected_stage
 	debug_ids_visible = GameSession.review_mode
@@ -45,6 +47,8 @@ func _ready() -> void:
 		elif argument.begins_with("--visual-audit="):
 			autoplay_audit = true
 			visual_audit = true
+		elif argument.begins_with("--geometry-audit="):
+			geometry_audit = true
 	RenderingServer.set_default_clear_color(Color("#102d4b"))
 	build_background()
 	build_hud()
@@ -62,6 +66,8 @@ func _ready() -> void:
 	notebook.context_provider = debug_note_context
 	notebook.nearest_id_provider = nearest_debug_id
 	note_layer.add_child(notebook)
+	if geometry_audit:
+		run_geometry_audit.call_deferred()
 
 func spawn_player() -> void:
 	player = AlaskaRunner.new()
@@ -83,7 +89,10 @@ func build_background() -> void:
 		backdrop.position = Vector2(640.0 + index * 1280.0, 360.0)
 		backdrop.scale = Vector2(1280.0 / backdrop_texture.get_width(), 720.0 / backdrop_texture.get_height())
 		backdrop.z_index = -20
-		backdrop.modulate = Color(0.70, 0.82, 0.92) if stage_index == 3 else Color(0.86, 0.92, 1.0) if stage_index == 4 else Color.WHITE
+		if GameSession.high_contrast:
+			backdrop.modulate = Color(0.58, 0.72, 0.84) if winter else Color(0.72, 0.80, 0.84)
+		else:
+			backdrop.modulate = Color(0.70, 0.82, 0.92) if stage_index == 3 else Color(0.86, 0.92, 1.0) if stage_index == 4 else Color.WHITE
 		add_child(backdrop)
 	var sky_node := Polygon2D.new()
 	sky_node.polygon = PackedVector2Array([Vector2(-500,-500),Vector2(6500,-500),Vector2(6500,720),Vector2(-500,720)])
@@ -264,6 +273,11 @@ func route_sign(at: Vector2, message: String) -> void:
 func platform(rect: Rect2, color: Color) -> void:
 	var body := StaticBody2D.new()
 	body.position = rect.position
+	if rect.size.y >= 100.0:
+		body.add_to_group("main_route_surface")
+		body.set_meta("surface_start", rect.position.x)
+		body.set_meta("surface_end", rect.end.x)
+		body.set_meta("surface_y", rect.position.y)
 	register_debug_item(body, "PF", "platform")
 	var collision := CollisionShape2D.new()
 	var shape := RectangleShape2D.new()
@@ -291,6 +305,15 @@ func platform(rect: Rect2, color: Color) -> void:
 
 func slope(points: PackedVector2Array, color: Color) -> void:
 	var body := StaticBody2D.new()
+	body.add_to_group("main_route_surface")
+	var minimum := points[0]
+	var maximum := points[0]
+	for point in points:
+		minimum = Vector2(minf(minimum.x, point.x), minf(minimum.y, point.y))
+		maximum = Vector2(maxf(maximum.x, point.x), maxf(maximum.y, point.y))
+	body.set_meta("surface_start", minimum.x)
+	body.set_meta("surface_end", maximum.x)
+	body.set_meta("surface_y", minimum.y)
 	var collision := CollisionPolygon2D.new()
 	collision.polygon = points
 	body.add_child(collision)
@@ -316,9 +339,10 @@ func enemy(at: Vector2, distance: float, kind: String) -> void:
 func boss(at: Vector2) -> void:
 	checkpoint(at + Vector2(-360, 0))
 	var encounter := TrailBoss.new()
+	encounter.add_to_group("stage_boss")
 	boss_node = encounter
 	encounter.position = at
-	encounter.max_health = [7, 8, 9, 10, 12][stage_index]
+	encounter.max_health = [6, 6, 7, 7, 9][stage_index]
 	encounter.boss_name = GameSession.STAGES[stage_index].boss
 	encounter.boss_variant = stage_index
 	register_debug_item(encounter, "BOSS", encounter.boss_name)
@@ -330,6 +354,8 @@ func _on_boss_defeated() -> void:
 	boss_defeated = true
 	checkpoint_label.text = "BOSS DEFEATED · REACH THE BEACON"
 	player.chain_action(100)
+	for hazard in get_tree().get_nodes_in_group("boss_hazard"):
+		hazard.queue_free()
 
 func moving_platform(at: Vector2, travel: Vector2, seconds: float) -> void:
 	var mover := MovingTrailPlatform.new()
@@ -391,7 +417,8 @@ func collectible(at: Vector2, kind: String) -> void:
 	add_child(item)
 
 func collect(body: Node, item: Area2D) -> void:
-	if body != player: return
+	if body != player or bool(item.get_meta("collected", false)): return
+	item.set_meta("collected", true)
 	if item.get_meta("kind") == "key":
 		key_collected = true
 		player.chain_action(40)
@@ -423,6 +450,7 @@ func checkpoint(at: Vector2) -> void:
 
 func goal(at: Vector2) -> void:
 	var zone := Area2D.new()
+	zone.add_to_group("stage_goal")
 	zone.position = at
 	var collision := CollisionShape2D.new()
 	var shape := RectangleShape2D.new()
@@ -454,10 +482,9 @@ func finish_level(body: Node) -> void:
 		checkpoint_label.text = "NEED KEY · %d RESCUES · BOSS %s" % [2 - survivors_found, "DONE" if boss_defeated else "ALIVE"]
 		return
 	finished = true
-	checkpoint_label.text = "LEVEL CLEAR · CHUGACH RESCUE COMPLETE"
+	checkpoint_label.text = "LEVEL CLEAR · EXPEDITION COMPLETE"
 	player.velocity = Vector2.ZERO
 	best_score = maxi(best_score, player.score)
-	save_profile()
 	if autoplay_audit:
 		print("AUTOPLAY PASS stage=%d time=%.2f max_x=%.1f jumps=%d hits=%d score=%d" % [stage_index, audit_elapsed, audit_max_x, audit_jumps, audit_hits, player.score])
 		release_audit_inputs()
@@ -560,10 +587,16 @@ func exit_run_to_map() -> void:
 	exit_requested.emit()
 
 func _process(_delta: float) -> void:
+	if Input.is_action_just_pressed("ui_cancel"):
+		if is_instance_valid(notebook) and notebook.panel.visible:
+			notebook.close()
+		else:
+			toggle_pause_panel()
 	if autoplay_audit: run_autoplay_audit(_delta)
 	if visual_audit and is_instance_valid(player) and player.global_position.x >= visual_capture_x:
 		capture_visual_audit()
-	if Input.is_action_just_pressed("debug_note") and notebook and GameSession.review_mode: notebook.toggle()
+	if Input.is_action_just_pressed("debug_note") and notebook and GameSession.review_mode and not pause_panel.visible:
+		notebook.toggle()
 	if Input.is_action_just_pressed("debug_ids") and GameSession.review_mode:
 		debug_ids_visible = not debug_ids_visible
 		for item in get_tree().get_nodes_in_group("debug_item"):
@@ -621,7 +654,7 @@ func run_autoplay_audit(delta: float) -> void:
 	if not boss_engaged and player.is_on_floor() and audit_jump_needed(target_direction) and audit_elapsed - audit_last_jump > 0.30:
 		audit_next_jump = minf(audit_next_jump, audit_elapsed)
 	for hazard in get_tree().get_nodes_in_group("boss_hazard"):
-		if not boss_engaged and player.is_on_floor() and hazard is Node2D and absf(hazard.global_position.x - player.global_position.x) < 250.0 and audit_elapsed - audit_last_jump > 0.30:
+		if player.is_on_floor() and hazard is Node2D and absf(hazard.global_position.x - player.global_position.x) < 250.0 and audit_elapsed - audit_last_jump > 0.30:
 			audit_next_jump = minf(audit_next_jump, audit_elapsed)
 			break
 	if audit_elapsed >= audit_next_jump:
@@ -651,6 +684,34 @@ func capture_visual_audit() -> void:
 
 func release_audit_inputs() -> void:
 	for action in ["move_left", "move_right", "sprint", "fire", "jump", "dash"]: Input.action_release(action)
+
+func run_geometry_audit() -> void:
+	await get_tree().physics_frame
+	var keys := 0
+	var survivors := 0
+	for item in get_tree().get_nodes_in_group("debug_item"):
+		if String(item.get_meta("kind", "")) == "key": keys += 1
+		elif String(item.get_meta("kind", "")) == "survivor": survivors += 1
+	assert(keys == 1)
+	assert(survivors == 2)
+	assert(get_tree().get_nodes_in_group("stage_boss").size() == 1)
+	assert(get_tree().get_nodes_in_group("stage_goal").size() == 1)
+	var surfaces: Array[Node] = get_tree().get_nodes_in_group("main_route_surface")
+	surfaces.sort_custom(func(a: Node, b: Node): return float(a.get_meta("surface_start")) < float(b.get_meta("surface_start")))
+	assert(surfaces.size() >= 7)
+	var maximum_gap := 0.0
+	var maximum_rise := 0.0
+	for index in range(1, surfaces.size()):
+		var previous := surfaces[index - 1]
+		var current := surfaces[index]
+		var gap := maxf(0.0, float(current.get_meta("surface_start")) - float(previous.get_meta("surface_end")))
+		var rise := maxf(0.0, float(previous.get_meta("surface_y")) - float(current.get_meta("surface_y")))
+		maximum_gap = maxf(maximum_gap, gap)
+		maximum_rise = maxf(maximum_rise, rise)
+	assert(maximum_gap <= 190.0)
+	assert(maximum_rise <= 190.0)
+	print("GEOMETRY AUDIT PASS stage=%d surfaces=%d max_gap=%.1f max_rise=%.1f" % [stage_index, surfaces.size(), maximum_gap, maximum_rise])
+	get_tree().quit(0)
 
 func audit_target_objective() -> Node2D:
 	var target: Node2D
@@ -738,6 +799,3 @@ func nearest_debug_id() -> String:
 
 func load_profile() -> void:
 	best_score = GameSession.best_scores[stage_index]
-
-func save_profile() -> void:
-	GameSession.complete_stage(stage_index, best_score)

@@ -23,6 +23,9 @@ developer should normally need.
 - [5.2.2 Touch controls](RELEASE_5_2_2_TOUCH_CONTROLS.md): responsive, readable mobile controls and multi-touch regression test.
 - [5.3 controls, movement, and menus](RELEASE_5_3_CONTROLS_MOVEMENT_MENU.md): phone-scale controls, stronger running/jumping, and full-size menus.
 - [5.3.1 duplicate entities](RELEASE_5_3_1_DUPLICATE_ENTITIES.md): single-world lifecycle and removal of the extra route bear.
+- [5.3.2 deep source audit](RELEASE_5_3_2_DEEP_AUDIT.md): scoring,
+  collision, controls, pause/notes, boss, wildlife, and measured stage-geometry
+  corrections.
 - [Generated assets](GENERATED_ASSETS.md): asset provenance and transparency.
 - [Wildlife scale contract](WILDLIFE_SCALE_CONTRACT.md): gameplay silhouette
   hierarchy.
@@ -33,6 +36,9 @@ developer should normally need.
 - [5.2 Review Mode](RELEASE_5_2_REVIEW_MODE.md)
 - [5.2.1 scale alignment](RELEASE_5_2_1_SCALE_ALIGNMENT.md)
 - [5.2.2 touch controls](RELEASE_5_2_2_TOUCH_CONTROLS.md)
+- [5.3 controls, movement, and menus](RELEASE_5_3_CONTROLS_MOVEMENT_MENU.md)
+- [5.3.1 duplicate entities](RELEASE_5_3_1_DUPLICATE_ENTITIES.md)
+- [5.3.2 deep source audit](RELEASE_5_3_2_DEEP_AUDIT.md)
 
 ## Historical archive
 

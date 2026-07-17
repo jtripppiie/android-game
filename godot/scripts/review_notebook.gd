@@ -9,6 +9,7 @@ var priority: CheckButton
 var selected_tag := "FEEL"
 var target_label: Label
 var status_label: Label
+var paused_before_open := false
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -63,6 +64,9 @@ func build_panel() -> void:
 	for spec in [["MIC", start_voice_note], ["COPY ALL", copy_notes], ["CANCEL", close], ["SAVE", save_note]]:
 		var button := Button.new()
 		button.text = spec[0]
+		if spec[0] == "MIC" and not AndroidBridge.voice_available():
+			button.disabled = true
+			button.tooltip_text = "Voice notes require the Android bridge"
 		button.pressed.connect(spec[1])
 		actions.add_child(button)
 	status_label = Label.new()
@@ -77,6 +81,7 @@ func toggle() -> void:
 	else: open()
 
 func open() -> void:
+	paused_before_open = get_tree().paused
 	panel.visible = true
 	target_label.text = "NEAREST: " + (String(nearest_id_provider.call()) if nearest_id_provider.is_valid() else "UNKNOWN")
 	status_label.text = "%d notes saved locally" % note_count()
@@ -87,7 +92,7 @@ func close() -> void:
 	panel.visible = false
 	input.clear()
 	priority.button_pressed = false
-	get_tree().paused = false
+	get_tree().paused = paused_before_open
 
 func save_note() -> void:
 	var clean := input.text.strip_edges()

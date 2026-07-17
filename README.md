@@ -9,20 +9,20 @@ reaches the finish beacon.
 
 ```text
 engine: Godot 4.7.1
-versionCode: 531
-versionName: 5.3.1
+versionCode: 532
+versionName: 5.3.2
 package: com.jtripppiie.mooserush
-APK status: compiled and package-inspected; device acceptance pending
-APK: app/build/outputs/apk/debug/you-rush-alaska-5.3.1-debug.apk
+APK status: source validated; build pending
+expected APK: app/build/outputs/apk/debug/you-rush-alaska-5.3.2-debug.apk
 ```
 
-Version 5.3.1 contains the 5.3 control/movement overhaul and fixes duplicated
+Version 5.3.2 contains the 5.3 control/movement overhaul, fixes duplicated
 stage worlds/runners after map transitions plus an extra stacked Moose Pass
 bear. It includes high-contrast viewport-relative touch controls, automatic
 mobile running, higher jumping, and full-size menus. Source validation, touch
-and lifecycle regression tests, and a five-stage traversal passed. The APK was
-exported with Godot 4.7.1 and signed with the same debug certificate as 5.3.0.
-It has not yet passed the physical-device checklist.
+and lifecycle regressions, corrects scoring and collision defects, and adds
+five stage-geometry audits. Source validation and five-stage traversal passed.
+It has not been compiled or physically accepted.
 
 ## Controls
 
@@ -69,7 +69,7 @@ Before handing over a build, complete
 
 ## Current APK
 
-The current compiled and package-inspected candidate is
+The last compiled and package-inspected candidate is
 `app/build/outputs/apk/debug/you-rush-alaska-5.3.1-debug.apk`.
 
 SHA-256:
@@ -78,5 +78,5 @@ SHA-256:
 560048bde263fd247df59a25d9c9e24f046e2bf070609d31c64306d9e56dfd22
 ```
 
-Version 5.3.0 remains the local rollback while 5.3.1 completes the physical
-device checklist. “Package-inspected” does not mean visually accepted.
+Version 5.3.0 remains the local rollback. The 5.3.1 candidate has not completed
+the physical-device checklist, and 5.3.2 remains source-only.
