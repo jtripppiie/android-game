@@ -67,6 +67,17 @@ The right side has three clearly named actions: **JUMP** (large gold circle),
 JUMP button when you want to keep horizontal movement steady with your left
 thumb.
 
+### Reading the run display
+
+The top-left card shows health, score, Aurora pickups, combo, and your current
+movement/route. The middle card always shows the three things needed to finish:
+the key, two rescues, and the boss. A thin green line below the cards shows how
+far you have traveled. Important messages appear briefly in their own small box
+below the display, so they do not overwrite the objective list.
+
+If **Large Text** is enabled from Accessibility, HUD and review-note text grows
+without moving the three top sections into each other.
+
 - Left/right: move
 - Run: sprint
 - Jump: jump; release early for a shorter jump

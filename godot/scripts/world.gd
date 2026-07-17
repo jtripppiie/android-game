@@ -5,9 +5,7 @@ signal stage_completed(stage: int, score: int)
 signal exit_requested
 
 var player: AlaskaRunner
-var hud_label: Label
-var hud_secondary: Label
-var checkpoint_label: Label
+var hud: AlaskaGameHud
 var pause_panel: PanelContainer
 var key_collected := false
 var finished := false
@@ -73,8 +71,8 @@ func spawn_player() -> void:
 	player = AlaskaRunner.new()
 	player.position = Vector2(190, 470)
 	player.fired.connect(spawn_snowball)
-	player.checkpoint_reached.connect(func(_point): checkpoint_label.text = "CHECKPOINT SAVED")
-	player.action_feedback.connect(func(message): checkpoint_label.text = message; FeedbackService.cue(message))
+	player.checkpoint_reached.connect(func(_point): announce("CHECKPOINT SAVED", 2))
+	player.action_feedback.connect(func(message): announce(message, feedback_priority(message)))
 	add_child(player)
 
 func build_background() -> void:
@@ -229,7 +227,7 @@ func build_route_branches() -> void:
 	var ice := ReactiveIce.new()
 	ice.position = Vector2(2890, 390)
 	ice.size = Vector2(220, 26)
-	ice.shattered.connect(func(_at): checkpoint_label.text = "ICE ROUTE SHATTERED")
+	ice.shattered.connect(func(_at): announce("ICE ROUTE SHATTERED", 2))
 	register_debug_item(ice, "IC", "breakable ice")
 	add_child(ice)
 	collectible(Vector2(2890, 340), "coin")
@@ -398,12 +396,12 @@ func boss(at: Vector2) -> void:
 	encounter.boss_variant = stage_index
 	register_debug_item(encounter, "BOSS", encounter.boss_name)
 	encounter.defeated.connect(_on_boss_defeated)
-	encounter.feedback.connect(func(message): checkpoint_label.text = message; FeedbackService.cue(message))
+	encounter.feedback.connect(func(message): announce(message, feedback_priority(message)))
 	add_child(encounter)
 
 func _on_boss_defeated() -> void:
 	boss_defeated = true
-	checkpoint_label.text = "BOSS DEFEATED · REACH THE BEACON"
+	announce("BOSS DEFEATED · REACH THE BEACON", 4, 3.2)
 	player.chain_action(100)
 	for hazard in get_tree().get_nodes_in_group("boss_hazard"):
 		hazard.queue_free()
@@ -438,7 +436,7 @@ func trick_ring_line(at: Vector2) -> void:
 		add_child(ring)
 
 func _on_supply_block_opened(at: Vector2) -> void:
-	checkpoint_label.text = "SECRET CACHE · REWARD ARC"
+	announce("SECRET CACHE · REWARD ARC", 2)
 	call_deferred("spawn_supply_reward_arc", at)
 
 func spawn_supply_reward_arc(at: Vector2) -> void:
@@ -476,15 +474,15 @@ func collect(body: Node, item: Area2D) -> void:
 	if item.get_meta("kind") == "key":
 		key_collected = true
 		player.chain_action(40)
-		checkpoint_label.text = "KEY FOUND · EXIT READY · +40"
+		announce("KEY FOUND · EXIT READY · +40", 3)
 	elif item.get_meta("kind") == "survivor":
 		survivors_found += 1
 		player.chain_action(60)
-		checkpoint_label.text = "RESCUE SIGNAL %d/2 · +60" % survivors_found
+		announce("RESCUE SIGNAL %d/2 · +60" % survivors_found, 3)
 	else:
 		player.coins += 1
 		player.chain_action(12)
-		checkpoint_label.text = "AURORA +12 · COMBO x%d" % player.combo
+		announce("AURORA +12 · COMBO x%d" % player.combo, 1, 1.4)
 	item.queue_free()
 
 func checkpoint(at: Vector2) -> void:
@@ -535,10 +533,10 @@ func atlas_object_sprite(index: int, display_scale: float) -> Sprite2D:
 func finish_level(body: Node) -> void:
 	if body != player or finished: return
 	if not key_collected or survivors_found < 2 or not boss_defeated:
-		checkpoint_label.text = "NEED KEY · %d RESCUES · BOSS %s" % [2 - survivors_found, "DONE" if boss_defeated else "ALIVE"]
+		announce("NEED KEY · %d RESCUES · BOSS %s" % [2 - survivors_found, "DONE" if boss_defeated else "ALIVE"], 3)
 		return
 	finished = true
-	checkpoint_label.text = "LEVEL CLEAR · EXPEDITION COMPLETE"
+	announce("LEVEL CLEAR · EXPEDITION COMPLETE", 5, 3.5)
 	player.velocity = Vector2.ZERO
 	best_score = maxi(best_score, player.score)
 	if autoplay_audit:
@@ -554,45 +552,10 @@ func spawn_snowball(origin: Vector2, direction: float) -> void:
 	shot.setup(origin, direction)
 
 func build_hud() -> void:
-	var layer := CanvasLayer.new()
-	layer.layer = 10
-	add_child(layer)
-	var top_bar := ColorRect.new()
-	top_bar.position = Vector2.ZERO
-	top_bar.size = Vector2(1280, 76)
-	top_bar.color = Color(0.01, 0.04, 0.08, 0.82)
-	top_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	layer.add_child(top_bar)
-	hud_label = Label.new()
-	hud_label.position = Vector2(20, 8)
-	hud_label.size = Vector2(500, 32)
-	hud_label.clip_text = true
-	hud_label.add_theme_font_size_override("font_size", 24 if GameSession.large_text else 20)
-	hud_label.add_theme_color_override("font_color", Color.WHITE)
-	layer.add_child(hud_label)
-	hud_secondary = Label.new()
-	hud_secondary.position = Vector2(20, 40)
-	hud_secondary.size = Vector2(500, 28)
-	hud_secondary.clip_text = true
-	hud_secondary.add_theme_font_size_override("font_size", 18 if GameSession.large_text else 16)
-	hud_secondary.add_theme_color_override("font_color", Color("#84d5e8"))
-	layer.add_child(hud_secondary)
-	checkpoint_label = Label.new()
-	checkpoint_label.position = Vector2(530, 14)
-	checkpoint_label.size = Vector2(520, 48)
-	checkpoint_label.clip_text = true
-	checkpoint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	checkpoint_label.add_theme_font_size_override("font_size", 22 if GameSession.large_text else 19)
-	checkpoint_label.add_theme_color_override("font_color", Color("#ffda79"))
-	layer.add_child(checkpoint_label)
-	var menu_button := Button.new()
-	menu_button.text = "PAUSE"
-	menu_button.position = Vector2(1070, 12)
-	menu_button.size = Vector2(190, 52)
-	menu_button.process_mode = Node.PROCESS_MODE_ALWAYS
-	menu_button.pressed.connect(toggle_pause_panel)
-	layer.add_child(menu_button)
-	build_pause_panel(layer)
+	hud = AlaskaGameHud.new()
+	hud.pause_requested.connect(toggle_pause_panel)
+	add_child(hud)
+	build_pause_panel(hud)
 
 func build_pause_panel(layer: CanvasLayer) -> void:
 	pause_panel = PanelContainer.new()
@@ -664,10 +627,32 @@ func _process(_delta: float) -> void:
 			var label := item.get_node_or_null("DebugId")
 			if label: label.visible = false
 	if GameSession.review_mode: update_debug_labels()
-	if player:
+	if player and is_instance_valid(hud):
 		var route := "HIGH" if player.global_position.y < 350.0 else "LOW" if player.global_position.y > 575.0 else "PRECISION"
-		hud_label.text = "HP %d   SCORE %d   KEY %s   RESCUE %d/2" % [player.health, player.score, "✓" if key_collected else "—", survivors_found]
-		hud_secondary.text = "AURORA %d   BEST %d   COMBO x%d   %s · %s" % [player.coins, best_score, player.combo, player.state.to_upper(), route]
+		hud.update_snapshot(
+			player.health,
+			player.score,
+			best_score,
+			player.coins,
+			player.combo,
+			player.state,
+			route,
+			key_collected,
+			survivors_found,
+			boss_defeated,
+			player.global_position.x
+		)
+
+func announce(message: String, priority := 1, seconds := 2.4) -> void:
+	if is_instance_valid(hud): hud.post_message(message, priority, seconds)
+	FeedbackService.cue(message)
+
+func feedback_priority(message: String) -> int:
+	if "DEFEATED" in message or "LEVEL CLEAR" in message: return 5
+	if "HIT" in message or "ROUTE LOST" in message: return 4
+	if "KEY" in message or "RESCUE" in message or "CHECKPOINT" in message: return 3
+	if "BOSS" in message or "WEAK" in message or "ARMORED" in message: return 2
+	return 1
 
 func release_gameplay_inputs() -> void:
 	for controls in get_tree().get_nodes_in_group("touch_controls"):

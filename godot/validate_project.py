@@ -10,6 +10,7 @@ required = [
     "scripts/main.gd", "scripts/game_session.gd", "scripts/feedback_service.gd",
     "scripts/world.gd", "scripts/player.gd", "scripts/enemy.gd",
     "scripts/projectile.gd", "scripts/touch_controls.gd",
+    "scripts/game_hud.gd",
     "scripts/moving_platform.gd",
     "scripts/reactive_ice.gd", "scripts/freezable_water.gd",
     "scripts/launch_pad.gd",
@@ -44,6 +45,8 @@ world = (root / "scripts/world.gd").read_text()
 player = (root / "scripts/player.gd").read_text()
 touch = (root / "scripts/touch_controls.gd").read_text()
 boss = (root / "scripts/trail_boss.gd").read_text()
+hud = (root / "scripts/game_hud.gd").read_text()
+notebook = (root / "scripts/review_notebook.gd").read_text()
 assert 'run/main_scene="res://scenes/main.tscn"' in project
 for marker in ('image="res://assets/boot_splash.png"', "fullsize=true", "use_filter=true"):
     assert marker in project, marker
@@ -82,6 +85,13 @@ for marker in ("build_snow_terrain", "build_snow_slope", "route_terrain_snow_v2.
     assert marker in world, marker
 for marker in ('set_deferred("monitoring", false)', 'set_deferred("monitorable", false)'):
     assert marker in boss, marker
+for marker in ("update_snapshot", "objective_text", "post_message", "message_queue", "audit_layout", "ui_font", "StageProgressFill"):
+    assert marker in hud, marker
+for marker in ("QUICK_NOTES", "apply_quick_note", "undo_last_note", "recent_note_summary", "audit_layout", "note_font"):
+    assert marker in notebook, marker
+assert "var hud: AlaskaGameHud" in world
+assert "hud.update_snapshot(" in world
+assert "func announce(message: String" in world
 
 image = Image.open(root / "assets/runner_overhaul.png")
 assert image.mode == "RGBA", image.mode
@@ -110,13 +120,15 @@ for marker in ("TrailBoss", "ReviewNotebook", "debug_note_context", "boss_defeat
     assert marker in world, marker
 for marker in ('register_debug_item(zone, "CP"', 'register_debug_item(zone, "GO"', 'register_debug_item(ice, "IC"', "debug_distance_to_player"):
     assert marker in world, marker
-for marker in ('menu_button.text = "PAUSE"', "build_pause_panel", "toggle_pause_panel", "EXIT TO MAP", "exit_run_to_map", "PROCESS_MODE_PAUSABLE", "release_gameplay_inputs"):
+for marker in ("build_pause_panel", "toggle_pause_panel", "EXIT TO MAP", "exit_run_to_map", "PROCESS_MODE_PAUSABLE", "release_gameplay_inputs"):
     assert marker in world, marker
+assert 'pause_button.text = "PAUSE"' in hud
 assert 'is_action_just_pressed("ui_cancel")' not in world
-assert 'menu_button.text = "MAP"' not in world
-for marker in ("top_bar.size = Vector2(1280, 76)", "hud_label.clip_text = true", "checkpoint_label.clip_text = true", "AURORA %d   BEST"):
-    assert marker in world, marker
-assert "Vector2(20, 8)" in world and "Vector2(530, 14)" in world and "Vector2(1070, 12)" in world
+assert 'pause_button.text = "MAP"' not in hud
+for marker in ("BAR_HEIGHT := 82.0", "RunnerStatus", "ObjectiveStatus", "AUR %d", "SCORE %d"):
+    assert marker in hud, marker
+for marker in ("Vector2(14, 10)", "Vector2(446, 10)", "Vector2(1066, 10)"):
+    assert marker in hud, marker
 for marker in ("combo_timer", "chain_action", "score"):
     assert marker in player, marker
 for marker in ("JUMP_SPEED := 900.0", "SPRINT_SPEED := 540.0", "air_jumps_left := 1", '"AIR JUMP"', "capsule.height = 96.0", "Vector2(0, -90)"):

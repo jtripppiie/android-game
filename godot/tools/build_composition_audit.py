@@ -49,6 +49,57 @@ def label(draw: ImageDraw.ImageDraw, xy: tuple[int, int], text: str, fill: str =
     draw.text(xy, text, font=ImageFont.load_default(size=20), fill=fill, stroke_width=3, stroke_fill="#071326")
 
 
+def draw_hud(draw: ImageDraw.ImageDraw, stage_index: int) -> None:
+    """Reconstruct the non-overlapping in-engine HUD at its exact reference positions."""
+    small = ImageFont.load_default(size=16)
+    normal = ImageFont.load_default(size=18)
+    strong = ImageFont.load_default(size=20)
+    draw.rectangle((0, 0, 1280, 82), fill=(3, 10, 17, 238), outline=(56, 143, 173, 184), width=2)
+
+    draw.rounded_rectangle(
+        (14, 10, 434, 72),
+        radius=12,
+        fill=(5, 20, 31, 220),
+        outline=(79, 194, 191, 155),
+        width=1,
+    )
+    draw.text((28, 31), "HP 3/3", font=strong, fill="#fff4d2")
+    draw.text((172, 21), "SCORE 376    BEST 420", font=normal, fill="white")
+    draw.text((172, 47), "AUR 3    COMBO x4    RUN · MID", font=small, fill="#84d5e8")
+
+    draw.rounded_rectangle(
+        (446, 10, 1054, 72),
+        radius=12,
+        fill=(8, 19, 28, 225),
+        outline=(242, 194, 82, 160),
+        width=1,
+    )
+    objective = "KEY FOUND   ·   RESCUE 1/2   ·   BOSS NEXT"
+    draw.text((750, 41), objective, anchor="mm", font=normal, fill="#fff0a8")
+
+    draw.rounded_rectangle(
+        (1066, 10, 1266, 72),
+        radius=13,
+        fill=(14, 33, 46, 245),
+        outline="#84d5e8",
+        width=2,
+    )
+    draw.text((1166, 41), "PAUSE", anchor="mm", font=strong, fill="white")
+
+    progress = int(1280 * (0.22 + stage_index * 0.14))
+    draw.rectangle((0, 78, 1280, 82), fill=(5, 25, 36, 255))
+    draw.rectangle((0, 78, progress, 82), fill="#4ddbb8")
+
+    draw.rounded_rectangle(
+        (380, 92, 900, 140),
+        radius=12,
+        fill=(4, 14, 23, 235),
+        outline="#ffda79",
+        width=2,
+    )
+    draw.text((640, 116), "CHECKPOINT SAVED", anchor="mm", font=normal, fill="#fff4d2")
+
+
 def build() -> None:
     runner = scaled(alpha_crop(frame(ASSETS / "runner_overhaul.png", 6, 3)), 0.34)
     terrain_source = alpha_crop(Image.open(ASSETS / "route_terrain_snow_v2.png").convert("RGBA"))
@@ -68,7 +119,7 @@ def build() -> None:
         paste_feet(canvas, runner, 260, ground)
         paste_feet(canvas, boss, 880, ground)
 
-        label(draw, (24, 18), f"{name} · COMPOSITION AUDIT (NOT ENGINE CAPTURE)", "#fff0a8")
+        label(draw, (24, 150), f"{name} · COMPOSITION AUDIT (NOT ENGINE CAPTURE)", "#fff0a8")
         label(draw, (178, ground - runner.height - 34), f"RUNNER {runner.width}x{runner.height}")
         label(draw, (760, ground - boss.height - 34), f"BOSS {boss.width}x{boss.height} · FACES PLAYER")
         draw.line((260, ground - runner.height, 260, ground), fill=(77, 219, 184, 180), width=2)
@@ -99,6 +150,7 @@ def build() -> None:
         draw.text((1067, 503), "SNOW", anchor="mm", font=ImageFont.load_default(size=17), fill="white")
         draw.rounded_rectangle((1008, 584, 1106, 660), radius=22, fill=(87, 43, 133, 225), outline="#d7adff", width=4)
         draw.text((1057, 622), "DASH", anchor="mm", font=ImageFont.load_default(size=17), fill="white")
+        draw_hud(draw, stage_index)
 
         output = OUT / f"stage-{stage_index + 1}-{name.lower().replace(' ', '-')}.png"
         canvas.convert("RGB").save(output, quality=95)

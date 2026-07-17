@@ -26,6 +26,9 @@ developer should normally need.
 - [5.3.2 deep source audit](RELEASE_5_3_2_DEEP_AUDIT.md): scoring,
   collision, controls, pause/notes, boss, wildlife, and measured stage-geometry
   corrections.
+- [5.3.2 interface overhaul](RELEASE_5_3_2_INTERFACE_OVERHAUL.md): legible HUD
+  contract, priority gameplay messages, compact field notes, and full audit
+  evidence.
 - [Generated assets](GENERATED_ASSETS.md): asset provenance and transparency.
 - [Wildlife scale contract](WILDLIFE_SCALE_CONTRACT.md): gameplay silhouette
   hierarchy.
@@ -39,6 +42,7 @@ developer should normally need.
 - [5.3 controls, movement, and menus](RELEASE_5_3_CONTROLS_MOVEMENT_MENU.md)
 - [5.3.1 duplicate entities](RELEASE_5_3_1_DUPLICATE_ENTITIES.md)
 - [5.3.2 deep source audit](RELEASE_5_3_2_DEEP_AUDIT.md)
+- [5.3.2 interface overhaul](RELEASE_5_3_2_INTERFACE_OVERHAUL.md)
 
 ## Historical archive
 
