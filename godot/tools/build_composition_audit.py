@@ -74,21 +74,31 @@ def build() -> None:
         draw.line((260, ground - runner.height, 260, ground), fill=(77, 219, 184, 180), width=2)
         draw.line((880, ground - boss.height, 880, ground), fill=(255, 98, 84, 180), width=2)
 
-        # Reconstruct the intended source-only phone controls for crowding review.
-        draw.rounded_rectangle((34, 548, 146, 652), radius=24, fill=(5, 26, 40, 235), outline="#84d5e8", width=3)
-        draw.rounded_rectangle((250, 548, 362, 652), radius=24, fill=(5, 26, 40, 235), outline="#84d5e8", width=3)
-        draw.rounded_rectangle((142, 444, 254, 548), radius=24, fill=(5, 26, 40, 235), outline="#84d5e8", width=3)
-        draw.rounded_rectangle((142, 586, 254, 662), radius=24, fill=(5, 26, 40, 235), outline="#84d5e8", width=3)
-        label(draw, (74, 581), "LEFT")
-        label(draw, (286, 581), "RIGHT")
-        label(draw, (176, 475), "UP")
-        label(draw, (166, 607), "DOWN")
-        draw.ellipse((1096, 530, 1246, 680), fill=(199, 110, 15, 245), outline="#fff0a8", width=4)
-        label(draw, (1138, 592), "JUMP", "#071326")
-        draw.ellipse((968, 402, 1084, 518), fill=(5, 97, 133, 245), outline="#84eaff", width=4)
-        label(draw, (994, 447), "SNOW")
-        draw.rounded_rectangle((960, 554, 1078, 650), radius=24, fill=(87, 43, 133, 245), outline="#d7adff", width=4)
-        label(draw, (992, 588), "DASH")
+        # Reconstruct the current circular thumb pad, ported from the most
+        # responsive Java build: compact, draggable, diagonal, and forgiving.
+        center = (124, 600)
+        draw.ellipse((31, 515, 217, 701), fill=(0, 0, 0, 70))
+        draw.ellipse((34, 510, 214, 690), fill=(9, 23, 33, 205), outline="#84d5e8", width=3)
+        draw.ellipse((64, 517, 184, 637), fill=(255, 255, 255, 18))
+        arrows = [
+            ((72, 600), [(60, 600), (80, 592), (80, 608)]),
+            ((176, 600), [(188, 600), (168, 592), (168, 608)]),
+            ((124, 548), [(124, 536), (116, 556), (132, 556)]),
+            ((124, 652), [(124, 664), (116, 644), (132, 644)]),
+        ]
+        for arrow_center, points in arrows:
+            x, y = arrow_center
+            draw.ellipse((x - 23, y - 23, x + 23, y + 23), fill=(255, 255, 255, 158))
+            draw.polygon(points, fill="#18202a")
+        draw.ellipse((110, 586, 138, 614), fill=(255, 218, 121, 235))
+        draw.ellipse((118, 594, 130, 606), fill="#18202a")
+
+        draw.ellipse((1122, 556, 1246, 680), fill=(199, 110, 15, 225), outline="#fff0a8", width=4)
+        draw.text((1184, 618), "JUMP", anchor="mm", font=ImageFont.load_default(size=19), fill="#071326")
+        draw.ellipse((1020, 456, 1114, 550), fill=(5, 97, 133, 225), outline="#84eaff", width=4)
+        draw.text((1067, 503), "SNOW", anchor="mm", font=ImageFont.load_default(size=17), fill="white")
+        draw.rounded_rectangle((1008, 584, 1106, 660), radius=22, fill=(87, 43, 133, 225), outline="#d7adff", width=4)
+        draw.text((1057, 622), "DASH", anchor="mm", font=ImageFont.load_default(size=17), fill="white")
 
         output = OUT / f"stage-{stage_index + 1}-{name.lower().replace(' ', '-')}.png"
         canvas.convert("RGB").save(output, quality=95)

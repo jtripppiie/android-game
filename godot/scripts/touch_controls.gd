@@ -2,10 +2,15 @@ class_name TouchControls
 extends Control
 
 const SAFE_MARGIN := Vector2(34, 30)
+const DPAD_SIZE := 180.0
+const DPAD_DRIFT_MARGIN := 24.0
+const DPAD_DEAD_ZONE := 0.16
 
 var active_touches := {}
 var review_mode := false
 var controls := {}
+var dpad_bounds := Rect2()
+var dpad_vector := Vector2.ZERO
 
 func _ready() -> void:
 	add_to_group("touch_controls")
@@ -19,11 +24,15 @@ func layout_controls() -> void:
 	var view := size
 	if view.x < 600.0 or view.y < 360.0: view = get_viewport_rect().size
 	var bottom := view.y - SAFE_MARGIN.y
+	dpad_bounds = Rect2(Vector2(SAFE_MARGIN.x, bottom - DPAD_SIZE), Vector2(DPAD_SIZE, DPAD_SIZE))
+	var center := dpad_bounds.get_center()
+	var arrow_offset := 52.0
+	var arrow_size := Vector2(52, 52)
 	controls = {
-		"move_left": Rect2(Vector2(SAFE_MARGIN.x, bottom - 116), Vector2(92, 86)),
-		"move_right": Rect2(Vector2(SAFE_MARGIN.x + 184, bottom - 116), Vector2(92, 86)),
-		"dpad_up": Rect2(Vector2(SAFE_MARGIN.x + 92, bottom - 202), Vector2(92, 86)),
-		"dpad_down": Rect2(Vector2(SAFE_MARGIN.x + 92, bottom - 100), Vector2(92, 70)),
+		"move_left": Rect2(center + Vector2(-arrow_offset, 0) - arrow_size * 0.5, arrow_size),
+		"move_right": Rect2(center + Vector2(arrow_offset, 0) - arrow_size * 0.5, arrow_size),
+		"dpad_up": Rect2(center + Vector2(0, -arrow_offset) - arrow_size * 0.5, arrow_size),
+		"dpad_down": Rect2(center + Vector2(0, arrow_offset) - arrow_size * 0.5, arrow_size),
 		"jump": Rect2(Vector2(view.x - SAFE_MARGIN.x - 124, bottom - 134), Vector2(124, 124)),
 		"fire": Rect2(Vector2(view.x - SAFE_MARGIN.x - 226, bottom - 234), Vector2(94, 94)),
 		"dash": Rect2(Vector2(view.x - SAFE_MARGIN.x - 238, bottom - 106), Vector2(98, 76))
@@ -35,22 +44,24 @@ func layout_controls() -> void:
 
 func _input(event: InputEvent) -> void:
 	if event is InputEventScreenTouch:
-		if event.pressed: active_touches[event.index] = action_at(event.position)
+		if event.pressed: active_touches[event.index] = event.position
 		else: active_touches.erase(event.index)
 		sync_actions()
 	elif event is InputEventScreenDrag:
-		active_touches[event.index] = action_at(event.position)
+		active_touches[event.index] = event.position
 		sync_actions()
 	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
-		if event.pressed: active_touches[-1] = action_at(event.position)
+		if event.pressed: active_touches[-1] = event.position
 		else: active_touches.erase(-1)
 		sync_actions()
 	elif event is InputEventMouseMotion and -1 in active_touches and Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
-		active_touches[-1] = action_at(event.position)
+		active_touches[-1] = event.position
 		sync_actions()
 
 func action_at(point: Vector2) -> String:
+	if dpad_touch_contains(point): return "dpad"
 	for action in controls:
+		if action in ["move_left", "move_right", "dpad_up", "dpad_down"]: continue
 		if (controls[action] as Rect2).has_point(point): return action
 	return ""
 
@@ -58,7 +69,21 @@ func sync_actions() -> void:
 	for action in controls: Input.action_release(input_action_for(action))
 	Input.action_release("sprint")
 	var moving := false
-	for action in active_touches.values():
+	dpad_vector = Vector2.ZERO
+	for point in active_touches.values():
+		if dpad_touch_contains(point):
+			var vector := dpad_input_vector(point)
+			dpad_vector = vector
+			if vector.x < -DPAD_DEAD_ZONE:
+				Input.action_press("move_left")
+				moving = true
+			elif vector.x > DPAD_DEAD_ZONE:
+				Input.action_press("move_right")
+				moving = true
+			if vector.y < -DPAD_DEAD_ZONE: Input.action_press("jump")
+			elif vector.y > DPAD_DEAD_ZONE: Input.action_press("crouch")
+			continue
+		var action := action_at(point)
 		if action != "":
 			Input.action_press(input_action_for(action))
 			if action in ["move_left", "move_right"]: moving = true
@@ -74,14 +99,11 @@ func _exit_tree() -> void:
 
 func _draw() -> void:
 	if controls.is_empty(): return
-	var dpad_bounds: Rect2 = controls["move_left"]
-	for direction in ["move_right", "dpad_up", "dpad_down"]:
-		dpad_bounds = dpad_bounds.merge(controls[direction])
-	draw_style_box(make_box(Color(0.01, 0.04, 0.08, 0.82), Color("#84d5e8"), 32), dpad_bounds.grow(12))
-	draw_circle(dpad_bounds.get_center(), 34.0, Color(0.12, 0.30, 0.38, 0.96))
+	draw_dpad()
 	for action in controls:
+		if action in ["move_left", "move_right", "dpad_up", "dpad_down"]: continue
 		var box: Rect2 = controls[action]
-		var active: bool = action in active_touches.values()
+		var active := Input.is_action_pressed(input_action_for(action))
 		var fill := control_color(action, active)
 		var border := Color.WHITE if active else control_border(action)
 		var radius := 62 if action == "jump" else 47 if action == "fire" else 22
@@ -91,6 +113,36 @@ func _draw() -> void:
 		var text_color := control_text_color(action, active)
 		var baseline := box.position + Vector2(0, box.size.y * 0.62 + font_size * 0.25)
 		draw_string(ThemeDB.fallback_font, baseline, label_for(action), HORIZONTAL_ALIGNMENT_CENTER, box.size.x, font_size, text_color)
+
+func dpad_touch_contains(point: Vector2) -> bool:
+	return point.distance_to(dpad_bounds.get_center()) <= DPAD_SIZE * 0.5 + DPAD_DRIFT_MARGIN
+
+func dpad_input_vector(point: Vector2) -> Vector2:
+	var half := maxf(1.0, DPAD_SIZE * 0.5)
+	var vector := (point - dpad_bounds.get_center()) / half
+	return vector.limit_length(1.0)
+
+func draw_dpad() -> void:
+	var center := dpad_bounds.get_center()
+	var radius := DPAD_SIZE * 0.5
+	draw_circle(center + Vector2(0, 5), radius + 3, Color(0, 0, 0, 0.28))
+	draw_circle(center, radius, Color(0.035, 0.09, 0.13, 0.78))
+	draw_circle(center + Vector2(0, -radius * 0.18), radius * 0.66, Color(1, 1, 1, 0.07))
+	draw_arc(center, radius, 0, TAU, 64, Color(0.52, 0.84, 0.91, 0.82), 3.0)
+	draw_dpad_arrow(center + Vector2(-52, 0), Vector2.LEFT, Input.is_action_pressed("move_left"))
+	draw_dpad_arrow(center + Vector2(52, 0), Vector2.RIGHT, Input.is_action_pressed("move_right"))
+	draw_dpad_arrow(center + Vector2(0, -52), Vector2.UP, Input.is_action_pressed("jump"))
+	draw_dpad_arrow(center + Vector2(0, 52), Vector2.DOWN, Input.is_action_pressed("crouch"))
+	var knob := center + dpad_vector * radius * 0.46
+	draw_circle(knob, 14, Color(1.0, 0.84, 0.42, 0.92))
+	draw_circle(knob, 6, Color("#18202a"))
+
+func draw_dpad_arrow(at: Vector2, direction: Vector2, active: bool) -> void:
+	draw_circle(at, 23, Color(1.0, 0.84, 0.42, 0.92) if active else Color(1, 1, 1, 0.62))
+	var tip := at + direction * 12.0
+	var back := at - direction * 8.0
+	var side := Vector2(-direction.y, direction.x) * 8.0
+	draw_colored_polygon(PackedVector2Array([tip, back + side, back - side]), Color("#18202a"))
 
 func make_box(color: Color, border: Color, radius: int) -> StyleBoxFlat:
 	var box := StyleBoxFlat.new()

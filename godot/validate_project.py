@@ -72,7 +72,7 @@ for state in ("idle", "run", "sprint", "crouch", "jump", "fall", "dash", "stomp"
     assert f'"{state}"' in player, state
 for action in ("move_left", "move_right", "crouch", "jump", "fire", "sprint", "dash"):
     assert f'"{action}"' in touch, action
-for marker in ("layout_controls", "SAFE_MARGIN", "InputEventScreenTouch", "InputEventMouseButton", "dpad_up", "dpad_down", "input_action_for", "control_color", "control_text_color", "release_all_touches", 'return "SNOW"', 'return "LEFT"', 'return "RIGHT"'):
+for marker in ("layout_controls", "SAFE_MARGIN", "InputEventScreenTouch", "InputEventMouseButton", "dpad_up", "dpad_down", "input_action_for", "control_color", "control_text_color", "release_all_touches", "dpad_touch_contains", "dpad_input_vector", "draw_dpad_arrow", "DPAD_DRIFT_MARGIN", 'return "SNOW"'):
     assert marker in touch, marker
 
 image = Image.open(root / "assets/runner_overhaul.png")

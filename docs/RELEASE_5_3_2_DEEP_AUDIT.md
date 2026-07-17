@@ -7,6 +7,27 @@ that the game was correct. The audit reviewed startup, screen transitions,
 touch input, pause and notes, respawning, wildlife, boss combat, scoring,
 objectives, stage geometry, persistence, and Android-facing flow.
 
+## Historical control restoration
+
+The touch layout was compared against earlier implementations instead of being
+tuned in isolation. The strongest older control was the circular drag-pad in
+the Java build (`d91e2c0`): one thumb surface, a forgiving outside margin,
+diagonal input, and a visible thumb position.
+
+That behavior is now restored in the Godot build:
+
+- one compact 180 px circular D-pad replaces four oversized direction boxes;
+- the thumb may drift 24 px outside the visible ring without losing control;
+- a 0.16 dead zone prevents accidental movement near the center;
+- diagonal up-left/up-right input permits running jumps with one thumb;
+- all four arrows are equal visual targets and the gold center follows input;
+- JUMP, SNOW, and DASH remain separate, readable actions on the right.
+
+The automated touch audit presses a diagonal, verifies simultaneous
+move-and-jump, drags outside the ring, and verifies that input remains active.
+The pause audit also clears held touches so movement cannot remain stuck after
+opening a menu or notebook.
+
 ## Corrected defects
 
 - A completed stage called `GameSession.complete_stage` inside the world and

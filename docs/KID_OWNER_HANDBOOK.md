@@ -54,6 +54,19 @@ work while Review Mode is enabled.
 
 ## Controls
 
+### Circular movement pad
+
+Put your left thumb anywhere on the round pad. Slide left or right to run. Slide
+up to jump, or diagonally up and toward the trail to run and jump together. You
+do not need to hit an individual arrow exactly, and you can drift a little
+outside the circle without suddenly stopping. The gold dot shows what direction
+the game is reading.
+
+The right side has three clearly named actions: **JUMP** (large gold circle),
+**SNOW** (blue circle), and **DASH** (purple button). You can use the dedicated
+JUMP button when you want to keep horizontal movement steady with your left
+thumb.
+
 - Left/right: move
 - Run: sprint
 - Jump: jump; release early for a shorter jump

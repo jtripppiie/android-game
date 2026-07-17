@@ -216,7 +216,21 @@ func run_touch_audit() -> void:
 	up_release.index = 3; up_release.position = dpad_up.get_center(); up_release.pressed = false
 	controls._input(up_release)
 	assert(not Input.is_action_pressed("jump"))
-	print("TOUCH AUDIT PASS · four-way dpad · auto-run · simultaneous move+jump")
+	var diagonal := InputEventScreenTouch.new()
+	diagonal.index = 4
+	diagonal.position = controls.dpad_bounds.get_center() + Vector2(52, -52)
+	diagonal.pressed = true
+	controls._input(diagonal)
+	assert(Input.is_action_pressed("move_right") and Input.is_action_pressed("jump"))
+	var drift := InputEventScreenDrag.new()
+	drift.index = 4
+	drift.position = Vector2(controls.dpad_bounds.end.x + 18, controls.dpad_bounds.get_center().y)
+	controls._input(drift)
+	assert(Input.is_action_pressed("move_right") and not Input.is_action_pressed("jump"))
+	var diagonal_release := InputEventScreenTouch.new()
+	diagonal_release.index = 4; diagonal_release.position = drift.position; diagonal_release.pressed = false
+	controls._input(diagonal_release)
+	print("TOUCH AUDIT PASS · circular dpad · diagonal input · drift margin · simultaneous move+jump")
 	get_tree().quit(0)
 
 func clear_ui() -> void:
