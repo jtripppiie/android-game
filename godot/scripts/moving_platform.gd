@@ -8,6 +8,8 @@ var clock := 0.0
 
 func _ready() -> void:
 	origin = position
+	position = origin + travel * 0.5
+	add_to_group("moving_platform")
 	var collision := CollisionShape2D.new()
 	var shape := RectangleShape2D.new()
 	shape.size = Vector2(150, 24)
@@ -21,5 +23,7 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	clock += delta
+	# Preserve the authored origin-to-destination route, but start at its
+	# midpoint before the first render so frame one cannot visibly teleport.
 	var pct := (sin(clock * TAU / cycle_seconds) + 1.0) * 0.5
 	position = origin + travel * pct

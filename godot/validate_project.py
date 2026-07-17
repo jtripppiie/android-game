@@ -11,7 +11,6 @@ required = [
     "scripts/world.gd", "scripts/player.gd", "scripts/enemy.gd",
     "scripts/projectile.gd", "scripts/touch_controls.gd",
     "scripts/moving_platform.gd",
-    "scripts/encounter_card.gd", "scripts/encounter_director.gd",
     "scripts/reactive_ice.gd", "scripts/freezable_water.gd",
     "scripts/launch_pad.gd",
     "scripts/supply_block.gd",
@@ -121,6 +120,7 @@ for marker in ("is_stomp_contact", "runner.velocity.y >= -180.0", "not runner.is
     assert marker in enemy_source, marker
 for marker in ("ledge_ray", "force_raycast_update", "not ledge_ray.is_colliding()"):
     assert marker in enemy_source, marker
+assert "inside_patrol" in enemy_source and "global_position.x = origin_x + edge_side * patrol_distance" in enemy_source
 boss = (root / "scripts/trail_boss.gd").read_text()
 for marker in ("TELL_SECONDS", "RECOVER_SECONDS", "ARMORED", "WEAK · FIRE"):
     assert marker in boss, marker
@@ -129,6 +129,7 @@ for marker in ("wildlife_moose_walk.png", "wildlife_polar_bear_walk.png", "boss_
 assert "player.global_position.x > global_position.x" in boss
 assert "art.flip_h = true" not in boss
 assert "hitbox_sizes" in boss and "RectangleShape2D.new()" in boss
+assert "clampf(target_x" in boss and "attack_side" in boss
 for marker in ("SUN FLARE", "SALMON SPLASH", "ANTLER SHOCKWAVE", "FEATHER SPREAD", "SNOW BARRAGE"):
     assert marker in boss, marker
 assert "0.30, 1.05, 0.62, 0.58, 0.90" in boss
@@ -161,6 +162,9 @@ for marker in ("glacial_water_surface.png", "current_tween", "art.visible = fals
 reactive_ice = (root / "scripts/reactive_ice.gd").read_text()
 for marker in ("route_platform_ice.png", "laser_ice_impact.png", "spawn_hit_flash"):
     assert marker in reactive_ice, marker
+moving_platform_source = (root / "scripts/moving_platform.gd").read_text()
+assert "position = origin + travel * 0.5" in moving_platform_source
+assert "(sin(clock * TAU / cycle_seconds) + 1.0) * 0.5" in moving_platform_source
 
 godot = shutil.which("godot4") or shutil.which("godot")
 if godot:

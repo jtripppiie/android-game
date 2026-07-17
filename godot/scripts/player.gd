@@ -26,7 +26,6 @@ var facing := 1.0
 var state := "idle"
 var spawn_point := Vector2.ZERO
 var coins := 0
-var keys := 0
 var health := 3
 var dash_timer := 0.0
 var dash_cooldown := 0.0

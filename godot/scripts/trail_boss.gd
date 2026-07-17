@@ -71,7 +71,8 @@ func _physics_process(delta: float) -> void:
 	elif state == State.ATTACK:
 		var pct := minf(1.0, state_timer / ATTACK_SECONDS)
 		var reach: float = [300.0, 250.0, 390.0, 440.0, 520.0][boss_variant]
-		position.x = lerpf(rest_position.x, maxf(rest_position.x - reach, target_x), sin(pct * PI))
+		var attack_x := clampf(target_x, rest_position.x - reach, rest_position.x + reach)
+		position.x = lerpf(rest_position.x, attack_x, sin(pct * PI))
 		if boss_variant == 0: position.y = rest_position.y - sin(pct * PI) * 90.0 # sun arc
 		elif boss_variant == 1: position.y = rest_position.y - sin(pct * PI) * 150.0 # salmon jump
 		elif boss_variant == 3: position.y = rest_position.y + sin(pct * PI) * 120.0 # eagle dive
@@ -160,5 +161,8 @@ func launch_variant_attack() -> void:
 
 func spawn_hazard(kind: String, velocity: Vector2, offset := Vector2.ZERO) -> void:
 	var hazard := BossHazard.new()
+	var attack_side := signf(player.global_position.x - global_position.x) if is_instance_valid(player) else -1.0
+	if is_zero_approx(attack_side): attack_side = -1.0
+	velocity.x = absf(velocity.x) * attack_side
 	hazard.setup(kind, global_position + offset, velocity)
 	get_parent().add_child(hazard)

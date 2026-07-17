@@ -16,7 +16,6 @@ var boss_defeated := false
 var boss_node: TrailBoss
 var best_score := 0
 var notebook: ReviewNotebook
-var debug_item_counter := 0
 var debug_category_counters := {}
 var enemy_spawn_positions: Array[Vector2] = []
 var debug_ids_visible := false
@@ -28,7 +27,6 @@ var visual_capture_x := 500.0
 var audit_elapsed := 0.0
 var audit_next_jump := 0.35
 var audit_last_jump := -1.0
-var audit_release_jump := false
 var audit_release_dash := false
 var audit_jumps := 0
 var audit_hits := 0
@@ -126,7 +124,7 @@ func build_midnight_sun() -> void:
 	platform(Rect2(4440, 500, 1270, 220), Color("#f6e0a4"))
 	moving_platform(Vector2(930, 390), Vector2(0, -100), 3.0)
 	launch_pad(Vector2(2320, 510)); trick_ring_line(Vector2(2400, 420))
-	supply_block(Vector2(3780, 430))
+	supply_block(Vector2(3780, 468))
 	collectible(Vector2(1280, 440), "key"); collectible(Vector2(1900, 390), "survivor"); collectible(Vector2(4020, 460), "survivor")
 	enemy(Vector2(1460, 450), 130, "wolf"); enemy(Vector2(3300, 370), 150, "wolf")
 	checkpoint(Vector2(2980, 370)); finalize_stage()
@@ -202,7 +200,7 @@ func build_bear_country() -> void:
 	platform(Rect2(3520, 520, 580, 200), Color("#dcebed"))
 	platform(Rect2(4280, 470, 1430, 250), Color("#eef6f7"))
 	launch_pad(Vector2(2160, 490)); trick_ring_line(Vector2(2250, 400)); moving_platform(Vector2(3380, 350), Vector2(220, 0), 2.4)
-	supply_block(Vector2(3680, 420))
+	supply_block(Vector2(3680, 468))
 	collectible(Vector2(1520, 300), "key"); collectible(Vector2(2320, 440), "survivor"); collectible(Vector2(3800, 460), "survivor")
 	enemy(Vector2(1780, 300), 170, "bear"); enemy(Vector2(3050, 340), 180, "bear"); enemy(Vector2(4560, 410), 150, "wolf")
 	checkpoint(Vector2(2780, 330)); finalize_stage()
@@ -660,9 +658,6 @@ func run_autoplay_audit(delta: float) -> void:
 	if is_instance_valid(objective) and absf(objective_dx) < 180.0: Input.action_release("sprint")
 	else: Input.action_press("sprint")
 	Input.action_press("fire")
-	if audit_release_jump:
-		Input.action_release("jump")
-		audit_release_jump = false
 	if audit_release_dash:
 		Input.action_release("dash")
 		audit_release_dash = false
@@ -714,6 +709,14 @@ func run_geometry_audit() -> void:
 	assert(survivors == 2)
 	assert(get_tree().get_nodes_in_group("stage_boss").size() == 1)
 	assert(get_tree().get_nodes_in_group("stage_goal").size() == 1)
+	for mover in get_tree().get_nodes_in_group("moving_platform"):
+		var midpoint: Vector2 = mover.origin + mover.travel * 0.5
+		assert(mover.position.distance_to(midpoint) <= maxf(4.0, mover.travel.length() * 0.10))
+	for foe in get_tree().get_nodes_in_group("enemy"):
+		assert(absf(foe.global_position.x - foe.origin_x) <= foe.patrol_distance + 4.0)
+	for item in get_tree().get_nodes_in_group("debug_item"):
+		if String(item.get_meta("debug_label", "")) == "SUPPLY BLOCK":
+			assert(item.global_position.y >= 440.0 and item.global_position.y <= 490.0)
 	var surfaces: Array[Node] = get_tree().get_nodes_in_group("main_route_surface")
 	surfaces.sort_custom(func(a: Node, b: Node): return float(a.get_meta("surface_start")) < float(b.get_meta("surface_start")))
 	assert(surfaces.size() >= 7)
@@ -756,7 +759,6 @@ func audit_jump_needed(direction: float) -> bool:
 	return not space.intersect_ray(forward).is_empty() or space.intersect_ray(ahead_ground).is_empty()
 
 func register_debug_item(item: Node, prefix: String, label: String) -> void:
-	debug_item_counter += 1
 	debug_category_counters[prefix] = int(debug_category_counters.get(prefix, 0)) + 1
 	item.add_to_group("debug_item")
 	var short_stage := String(GameSession.STAGES[stage_index].name).replace(" ", "-")

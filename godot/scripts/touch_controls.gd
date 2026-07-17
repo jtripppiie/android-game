@@ -1,7 +1,6 @@
 class_name TouchControls
 extends Control
 
-const MIN_SIZE := Vector2(104, 84)
 const SAFE_MARGIN := Vector2(34, 30)
 
 var active_touches := {}

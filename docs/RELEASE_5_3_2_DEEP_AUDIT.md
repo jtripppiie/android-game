@@ -54,6 +54,19 @@ objectives, stage geometry, persistence, and Android-facing flow.
   returns submenus to the main menu and exits normally from the main menu.
 - Reduced Motion no longer silently disables vibration while the independent
   Haptics setting remains enabled.
+- Wildlife chase logic is now bounded by its authored patrol distance; salmon,
+  wolves, and bears can no longer keep reacquiring the runner and drift through
+  the rest of a level. Ground patrols are clamped at their route edge.
+- Boss lunges are reach-limited on both sides, and spawned hazards travel
+  toward the runner even after the runner crosses behind the boss.
+- Moving platforms preserve their authored origin-to-destination paths but
+  initialize at the midpoint before the first rendered frame, removing the
+  visible frame-one teleport without relocating the route.
+- Supply caches were moved onto the runner's actual snowball lane and their
+  reachability is now covered by the geometry audit.
+- The unused random encounter card/director implementation was removed from
+  the active game scripts. Authored stages remain the sole geometry and enemy
+  source, preventing accidental reintroduction of stacked encounters.
 - The source version is 5.3.2/code 532 so a later corrected build is not
   confused with the already-compiled 5.3.1 candidate.
 

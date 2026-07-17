@@ -39,24 +39,31 @@ func _physics_process(delta: float) -> void:
 	attack_cooldown = maxf(0.0, attack_cooldown - delta)
 	if not is_instance_valid(player): player = get_tree().get_first_node_in_group("player")
 	var distance := player.global_position.x - global_position.x if is_instance_valid(player) else 9999.0
+	var inside_patrol := absf(global_position.x - origin_x) < maxf(12.0, patrol_distance - 8.0)
 	if kind == "eagle":
-		direction = signf(distance)
-		velocity.x = direction * speed * 1.45
+		if inside_patrol:
+			direction = signf(distance)
+			velocity.x = direction * speed * 1.45
+		else:
+			velocity.x = direction * speed
 		velocity.y = sin(Time.get_ticks_msec() * 0.004) * 90.0
 	elif kind == "salmon":
-		direction = signf(distance)
-		velocity.x = direction * speed * 1.20
+		if inside_patrol:
+			direction = signf(distance)
+			velocity.x = direction * speed * 1.20
+		else:
+			velocity.x = direction * speed
 		velocity.y += 900.0 * delta
 		if is_on_floor() and attack_cooldown <= 0.0:
 			velocity.y = -520.0
 			attack_cooldown = 1.4
-	elif kind == "wolf" and absf(distance) < 230.0:
+	elif kind == "wolf" and absf(distance) < 230.0 and inside_patrol:
 		direction = signf(distance)
 		velocity.x = direction * speed * 1.75
 		if is_on_floor() and absf(distance) < 150.0 and attack_cooldown <= 0.0:
 			velocity.y = -420.0
 			attack_cooldown = 1.25
-	elif kind == "bear" and absf(distance) < 320.0:
+	elif kind == "bear" and absf(distance) < 320.0 and inside_patrol:
 		direction = signf(distance)
 		velocity.x = direction * speed * 1.28
 	else: velocity.x = direction * speed
@@ -77,7 +84,10 @@ func _physics_process(delta: float) -> void:
 			queue_free()
 			return
 		player.take_hit(global_position.x)
-	if absf(global_position.x - origin_x) > patrol_distance: direction *= -1.0
+	if absf(global_position.x - origin_x) > patrol_distance:
+		var edge_side := signf(global_position.x - origin_x)
+		global_position.x = origin_x + edge_side * patrol_distance
+		direction = -edge_side
 
 func is_stomp_contact(runner: AlaskaRunner) -> bool:
 	# A normal jump landing must read as a stomp, not an inexplicable death.
