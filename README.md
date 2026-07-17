@@ -12,7 +12,7 @@ engine: Godot 4.7.1
 versionCode: 532
 versionName: 5.3.2
 package: com.jtripppiie.mooserush
-APK status: source validated; build pending
+APK status: compiled and package-inspected; physical-device acceptance pending
 expected APK: app/build/outputs/apk/debug/you-rush-alaska-5.3.2-debug.apk
 ```
 
@@ -22,7 +22,8 @@ bear. It includes high-contrast viewport-relative touch controls, automatic
 mobile running, higher jumping, and full-size menus. Source validation, touch
 and lifecycle regressions, corrects scoring and collision defects, and adds
 five stage-geometry audits. Source validation and five-stage traversal passed.
-It has not been compiled or physically accepted.
+It was compiled and package-inspected on July 17, 2026. Physical-device
+acceptance is still required.
 
 ## Controls
 
@@ -69,14 +70,15 @@ Before handing over a build, complete
 
 ## Current APK
 
-The last compiled and package-inspected candidate is
-`app/build/outputs/apk/debug/you-rush-alaska-5.3.1-debug.apk`.
+The current compiled and package-inspected candidate is
+`app/build/outputs/apk/debug/you-rush-alaska-5.3.2-debug.apk` (94,980,899
+bytes).
 
 SHA-256:
 
 ```text
-560048bde263fd247df59a25d9c9e24f046e2bf070609d31c64306d9e56dfd22
+59930a6c69dd27ac536a561b61f22b16e511e0bcd0c46b09aff18b61b92728fa
 ```
 
-Version 5.3.0 remains the local rollback. The 5.3.1 candidate has not completed
-the physical-device checklist, and 5.3.2 remains source-only.
+Version 5.3.1 remains the local rollback. The 5.3.2 candidate has not completed
+the physical-device checklist.

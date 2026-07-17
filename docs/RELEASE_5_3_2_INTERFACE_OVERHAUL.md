@@ -1,6 +1,6 @@
 # 5.3.2 Interface and Review Overhaul
 
-Status: source validated; Android compilation intentionally deferred.
+Status: compiled and package-inspected; physical-device acceptance pending.
 
 This pass replaces the remaining monolithic run interface with dedicated,
 testable systems. The goal is not merely to move controls around. It establishes
@@ -189,4 +189,18 @@ normal-play evidence remains uncluttered.
 - `verification/current/stage-*.png`
 - `verification/current/composition-review.mp4`
 
-No APK is produced by this pass.
+The final combined source was exported afterward as
+`app/build/outputs/apk/debug/you-rush-alaska-5.3.2-debug.apk`.
+
+Build evidence:
+
+- size: 94,980,899 bytes;
+- SHA-256: `59930a6c69dd27ac536a561b61f22b16e511e0bcd0c46b09aff18b61b92728fa`;
+- package: `com.jtripppiie.mooserush`;
+- versionCode: 532;
+- versionName: 5.3.2;
+- minimum SDK: 24;
+- target/compile SDK: 36;
+- APK Signature Scheme v2: verified;
+- 16KB ZIP alignment: verified;
+- archive integrity: verified.

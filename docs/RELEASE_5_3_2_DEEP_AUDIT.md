@@ -1,6 +1,6 @@
 # 5.3.2 Deep Source Audit
 
-Status: source validated; compilation and device acceptance pending.
+Status: compiled and package-inspected; device acceptance pending.
 
 This revision exists because reaching the finish line was not enough evidence
 that the game was correct. The audit reviewed startup, screen transitions,
@@ -150,4 +150,7 @@ Final automated traversal times were 30.13, 17.05, 16.75, 43.29, and 33.48
 seconds. Dark Winter remains the slowest pacing target. Automated traversal is
 regression evidence, not a substitute for physical-device visual playtesting.
 
-No 5.3.2 APK was compiled during this pass.
+The final 5.3.2 source was compiled on July 17, 2026 after the later interface,
+input-ownership, boss-flow, terrain, and Review Mode passes. Package inspection
+confirmed versionCode 532, versionName 5.3.2, target SDK 36, v2 debug signing,
+16KB alignment, and clean archive integrity.

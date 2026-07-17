@@ -44,8 +44,8 @@ aapt dump badging app/build/outputs/apk/debug/you-rush-alaska-5.3.2-debug.apk
 apksigner verify --verbose app/build/outputs/apk/debug/you-rush-alaska-5.3.2-debug.apk
 ```
 
-Version 5.3.0 remains the rollback while source-only 5.3.2 awaits export and
-device inspection.
+Version 5.3.1 remains the rollback. Version 5.3.2 was exported and
+package-inspected on July 17, 2026; it still requires real-device inspection.
 
 ## Release rules
 
