@@ -19,6 +19,8 @@ func _ready() -> void:
 	var touch_audit := false
 	var lifecycle_audit := false
 	var system_audit := false
+	var pause_audit := false
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	for argument in OS.get_cmdline_user_args():
 		if argument.begins_with("--stage-smoke="): smoke_stage = int(argument.get_slice("=", 1))
 		elif argument.begins_with("--autoplay-audit="): smoke_stage = int(argument.get_slice("=", 1))
@@ -27,6 +29,10 @@ func _ready() -> void:
 		elif argument == "--touch-audit": touch_audit = true
 		elif argument == "--lifecycle-audit": lifecycle_audit = true
 		elif argument == "--system-audit": system_audit = true
+		elif argument == "--pause-audit": pause_audit = true
+	if pause_audit:
+		run_pause_audit.call_deferred()
+		return
 	if system_audit:
 		run_system_audit.call_deferred()
 		return
@@ -150,6 +156,32 @@ func run_system_audit() -> void:
 	GameSession.best_scores = old_best
 	GameSession.save_profile()
 	print("SYSTEM AUDIT PASS · score ownership · immediate UI replacement · screen flow")
+	get_tree().quit(0)
+
+func run_pause_audit() -> void:
+	start_stage(0)
+	await get_tree().physics_frame
+	Input.action_press("move_right")
+	Input.action_press("sprint")
+	for frame in range(6):
+		await get_tree().physics_frame
+	var moving_x := world.player.global_position.x
+	assert(moving_x > 190.0)
+	world.toggle_pause_panel()
+	assert(get_tree().paused and world.pause_panel.visible)
+	assert(not Input.is_action_pressed("move_right"))
+	for frame in range(12):
+		await get_tree().process_frame
+	assert(is_equal_approx(world.player.global_position.x, moving_x))
+	world.resume_run()
+	Input.action_press("move_right")
+	Input.action_press("sprint")
+	for frame in range(6):
+		await get_tree().physics_frame
+	assert(world.player.global_position.x > moving_x)
+	Input.action_release("move_right")
+	Input.action_release("sprint")
+	print("PAUSE AUDIT PASS · player frozen · controls frozen · resume restored")
 	get_tree().quit(0)
 
 func run_touch_audit() -> void:
@@ -370,8 +402,15 @@ func add_backdrop(asset_name: String) -> void:
 	ui.add_child(backdrop)
 
 func _unhandled_input(event: InputEvent) -> void:
-	if is_instance_valid(splash_root) or is_instance_valid(world): return
+	if is_instance_valid(splash_root): return
 	if not event.is_action_pressed("ui_cancel"): return
+	if is_instance_valid(world):
+		if is_instance_valid(world.notebook) and world.notebook.panel.visible:
+			world.notebook.close()
+		else:
+			world.toggle_pause_panel()
+		get_viewport().set_input_as_handled()
+		return
 	if current_screen in ["map", "customize", "accessibility"]:
 		show_menu()
 	elif current_screen == "menu":

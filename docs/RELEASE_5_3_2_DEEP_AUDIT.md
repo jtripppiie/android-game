@@ -67,6 +67,13 @@ objectives, stage geometry, persistence, and Android-facing flow.
 - The unused random encounter card/director implementation was removed from
   the active game scripts. Authored stages remain the sole geometry and enemy
   source, preventing accidental reintroduction of stacked encounters.
+- Pause previously set the stage itself to always process, which caused the
+  runner, enemies, bosses, hazards, and touch controls to inherit processing
+  while the tree was paused. Always-on Back/pause handling now lives in the
+  main controller while the complete gameplay world is explicitly pausable.
+- Entering Pause, Review Note, or Android background now clears active touch
+  IDs and every gameplay action. A held movement finger cannot become a stuck
+  input when its release occurs while gameplay is frozen.
 - The source version is 5.3.2/code 532 so a later corrected build is not
   confused with the already-compiled 5.3.1 candidate.
 
@@ -76,6 +83,7 @@ objectives, stage geometry, persistence, and Android-facing flow.
 - Touch multi-input audit: passed.
 - Single-world lifecycle audit: passed.
 - Score ownership/immediate UI replacement/screen-flow audit: passed.
+- Pause freeze/input-clear/resume audit: passed.
 - Five geometry audits: passed.
 - Five automated objective/boss/finish traversals: passed.
 

@@ -8,6 +8,7 @@ var review_mode := false
 var controls := {}
 
 func _ready() -> void:
+	add_to_group("touch_controls")
 	review_mode = GameSession.review_mode
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -64,9 +65,12 @@ func sync_actions() -> void:
 	if moving: Input.action_press("sprint")
 	queue_redraw()
 
+func release_all_touches() -> void:
+	active_touches.clear()
+	sync_actions()
+
 func _exit_tree() -> void:
-	for action in controls: Input.action_release(input_action_for(action))
-	Input.action_release("sprint")
+	release_all_touches()
 
 func _draw() -> void:
 	if controls.is_empty(): return

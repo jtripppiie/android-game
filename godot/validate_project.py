@@ -54,7 +54,7 @@ for marker in ("dispose_world", "transition_locked", "remove_child(world)", "ui.
     assert marker in main_source, marker
 for marker in ("show_launch_splash", "SPLASH_MINIMUM_SECONDS := 1.25", "SPLASH_TOTAL_SECONDS := 4.0", "TAP TO BEGIN", "dismiss_launch_splash"):
     assert marker in main_source, marker
-for marker in ("current_screen", "_unhandled_input", "NOTIFICATION_APPLICATION_PAUSED", "pause_for_background", "run_system_audit", "SYSTEM AUDIT PASS"):
+for marker in ("current_screen", "_unhandled_input", "NOTIFICATION_APPLICATION_PAUSED", "pause_for_background", "run_system_audit", "SYSTEM AUDIT PASS", "run_pause_audit", "PAUSE AUDIT PASS"):
     assert marker in main_source, marker
 assert world.count("GameSession.complete_stage") == 0
 assert "func _on_stage_completed(stage: int, score: int) -> void:\n\tGameSession.complete_stage(stage, score)" in main_source
@@ -72,7 +72,7 @@ for state in ("idle", "run", "sprint", "crouch", "jump", "fall", "dash", "stomp"
     assert f'"{state}"' in player, state
 for action in ("move_left", "move_right", "crouch", "jump", "fire", "sprint", "dash"):
     assert f'"{action}"' in touch, action
-for marker in ("layout_controls", "SAFE_MARGIN", "InputEventScreenTouch", "InputEventMouseButton", "dpad_up", "dpad_down", "input_action_for", "control_color", "control_text_color", 'return "SNOW"', 'return "LEFT"', 'return "RIGHT"'):
+for marker in ("layout_controls", "SAFE_MARGIN", "InputEventScreenTouch", "InputEventMouseButton", "dpad_up", "dpad_down", "input_action_for", "control_color", "control_text_color", "release_all_touches", 'return "SNOW"', 'return "LEFT"', 'return "RIGHT"'):
     assert marker in touch, marker
 
 image = Image.open(root / "assets/runner_overhaul.png")
@@ -102,8 +102,9 @@ for marker in ("TrailBoss", "ReviewNotebook", "debug_note_context", "boss_defeat
     assert marker in world, marker
 for marker in ('register_debug_item(zone, "CP"', 'register_debug_item(zone, "GO"', 'register_debug_item(ice, "IC"', "debug_distance_to_player"):
     assert marker in world, marker
-for marker in ('menu_button.text = "PAUSE"', "build_pause_panel", "toggle_pause_panel", "EXIT TO MAP", "exit_run_to_map", 'is_action_just_pressed("ui_cancel")'):
+for marker in ('menu_button.text = "PAUSE"', "build_pause_panel", "toggle_pause_panel", "EXIT TO MAP", "exit_run_to_map", "PROCESS_MODE_PAUSABLE", "release_gameplay_inputs"):
     assert marker in world, marker
+assert 'is_action_just_pressed("ui_cancel")' not in world
 assert 'menu_button.text = "MAP"' not in world
 for marker in ("top_bar.size = Vector2(1280, 76)", "hud_label.clip_text = true", "checkpoint_label.clip_text = true", "AURORA %d   BEST"):
     assert marker in world, marker

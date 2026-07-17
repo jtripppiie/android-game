@@ -36,7 +36,9 @@ var audit_last_x := 190.0
 var audit_last_progress_time := 0.0
 
 func _ready() -> void:
-	process_mode = Node.PROCESS_MODE_ALWAYS
+	# Main handles pause/back input in ALWAYS mode. Gameplay must remain
+	# explicitly pausable or every child inherits processing while paused.
+	process_mode = Node.PROCESS_MODE_PAUSABLE
 	add_to_group("active_stage")
 	stage_index = GameSession.selected_stage
 	debug_ids_visible = GameSession.review_mode
@@ -583,6 +585,7 @@ func build_pause_panel(layer: CanvasLayer) -> void:
 func toggle_pause_panel() -> void:
 	if pause_panel.visible: resume_run()
 	else:
+		release_gameplay_inputs()
 		pause_panel.visible = true
 		get_tree().paused = true
 
@@ -596,6 +599,7 @@ func exit_run_to_map() -> void:
 	exit_requested.emit()
 
 func pause_for_background() -> void:
+	release_gameplay_inputs()
 	if is_instance_valid(notebook) and notebook.panel.visible:
 		get_tree().paused = true
 		return
@@ -603,16 +607,12 @@ func pause_for_background() -> void:
 	get_tree().paused = true
 
 func _process(_delta: float) -> void:
-	if Input.is_action_just_pressed("ui_cancel"):
-		if is_instance_valid(notebook) and notebook.panel.visible:
-			notebook.close()
-		else:
-			toggle_pause_panel()
 	if autoplay_audit: run_autoplay_audit(_delta)
 	if visual_audit and is_instance_valid(player) and player.global_position.x >= visual_capture_x:
 		capture_visual_audit()
 	if Input.is_action_just_pressed("debug_note") and notebook and GameSession.review_mode and not pause_panel.visible:
 		notebook.toggle()
+		if notebook.panel.visible: release_gameplay_inputs()
 	if Input.is_action_just_pressed("debug_ids") and GameSession.review_mode:
 		debug_ids_visible = not debug_ids_visible
 		for item in get_tree().get_nodes_in_group("debug_item"):
@@ -623,6 +623,12 @@ func _process(_delta: float) -> void:
 		var route := "HIGH" if player.global_position.y < 350.0 else "LOW" if player.global_position.y > 575.0 else "PRECISION"
 		hud_label.text = "HP %d   SCORE %d   KEY %s   RESCUE %d/2" % [player.health, player.score, "✓" if key_collected else "—", survivors_found]
 		hud_secondary.text = "AURORA %d   BEST %d   COMBO x%d   %s · %s" % [player.coins, best_score, player.combo, player.state.to_upper(), route]
+
+func release_gameplay_inputs() -> void:
+	for controls in get_tree().get_nodes_in_group("touch_controls"):
+		controls.release_all_touches()
+	for action in ["move_left", "move_right", "sprint", "jump", "crouch", "fire", "dash", "debug_note", "debug_ids"]:
+		Input.action_release(action)
 
 func run_autoplay_audit(delta: float) -> void:
 	if not is_instance_valid(player): return

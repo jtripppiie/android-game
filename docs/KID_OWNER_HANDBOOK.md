@@ -63,6 +63,10 @@ work while Review Mode is enabled.
 - Pause: stop the run; choose `EXIT TO MAP` separately
 - Note: pause and write or speak a review note
 
+Pause and Note freeze the runner, wildlife, bosses, hazards, and moving
+platforms. Any held movement is cleared; touch the direction again after
+resuming.
+
 ## Customizing safely
 
 Choose `CUSTOMIZE RUNNER`, then choose a photo. The image stays on the device;
