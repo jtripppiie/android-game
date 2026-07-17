@@ -38,6 +38,8 @@ now produces one ARM64 device APK only.
 - Snow: throw a snowball.
 - Pause: freeze the run; restart and Exit to Map are explicit choices.
 - Review Mode: optional compact IDs and field notes, hidden in normal play.
+- Computer Review: real desktop play with keyboard controls, a compact nearest-
+  ID toolbar, F1 Review Mode, F10 IDs, and N notes.
 
 ## Validate
 
@@ -52,6 +54,16 @@ The script runs touch, system, lifecycle, pause, mechanics, geometry,
 debug-overlay, and autoplay audits for stages 0–4. A successful process exit
 alone is not enough: the validator also rejects script failures found in
 Godot’s output.
+
+## Run and review on a computer
+
+```bash
+godot --path godot -- --computer-review
+```
+
+This runs the production game without phone controls. Use A/D, Space, Shift,
+E, S, and F to play; F1 toggles Review Mode, F10 toggles nearby color-coded
+IDs, and N opens the compact tagged notebook.
 
 ## Build Android
 
@@ -69,6 +81,7 @@ debug-signed; a public release needs the owner’s private release key.
 
 - [Gameplay verification](test-results/android-gameplay/GAMEPLAY-VERIFICATION.md)
 - [Kid owner handbook](docs/KID_OWNER_HANDBOOK.md)
+- [Computer Review Mode](docs/COMPUTER_REVIEW_MODE.md)
 - [Device acceptance checklist](docs/DEVICE_ACCEPTANCE_CHECKLIST.md)
 - [Technical maintenance](docs/TECHNICAL_MAINTENANCE.md)
 - [Privacy](docs/PRIVACY.md)

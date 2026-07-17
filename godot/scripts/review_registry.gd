@@ -26,14 +26,21 @@ func register(item: Node, prefix: String, description: String) -> void:
 		return
 	var badge := Label.new()
 	badge.name = "DebugId"
-	badge.text = "%s · %s" % [identifier, description.to_upper()]
-	badge.position = Vector2(-120, -62)
-	badge.size = Vector2(240, 30)
+	# Keep the world label compact. The desktop toolbar and notebook carry the
+	# full description, so the playfield only needs the stable reference ID.
+	badge.text = identifier
+	badge.tooltip_text = description.to_upper()
+	badge.position = Vector2(-58, -62)
+	badge.size = Vector2(116, 30)
 	badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	badge.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	badge.add_theme_font_size_override("font_size", 16)
-	badge.add_theme_color_override("font_color", Color("#ffda79"))
-	badge.add_theme_constant_override("outline_size", 5)
+	var category_color := badge_color(prefix)
+	badge.set_meta("category_color", category_color)
+	badge.add_theme_color_override("font_color", category_color)
+	badge.add_theme_constant_override("outline_size", 3)
 	badge.add_theme_color_override("font_outline_color", Color(0.02, 0.06, 0.10, 0.95))
+	badge.add_theme_stylebox_override("normal", badge_style(category_color, false))
 	badge.visible = ids_visible
 	item.add_child(badge)
 
@@ -43,6 +50,12 @@ func toggle() -> bool:
 	if not ids_visible:
 		hide_all()
 	return ids_visible
+
+
+func set_enabled(enabled: bool) -> void:
+	ids_visible = enabled
+	if not enabled:
+		hide_all()
 
 
 func hide_all() -> void:
@@ -66,6 +79,8 @@ func update(player: Node2D) -> void:
 			badge.visible = false
 			badge.modulate = Color.WHITE
 			badge.scale = Vector2.ONE
+			var category_color: Color = badge.get_meta("category_color", Color("#ffda79"))
+			badge.add_theme_stylebox_override("normal", badge_style(category_color, false))
 			position_surface_badge(item, badge, player)
 		var distance := distance_to_player(item, player)
 		if distance <= BADGE_RADIUS:
@@ -81,8 +96,18 @@ func update(player: Node2D) -> void:
 		if candidate_badge:
 			candidate_badge.visible = true
 			if index == 0:
-				candidate_badge.modulate = Color("#4ddbb8")
 				candidate_badge.scale = Vector2.ONE * 1.08
+				candidate_badge.add_theme_color_override("font_color", Color("#071326"))
+				candidate_badge.add_theme_stylebox_override(
+					"normal",
+					badge_style(Color("#4ddbb8"), true)
+				)
+			else:
+				var category_color: Color = candidate_badge.get_meta(
+					"category_color",
+					Color("#ffda79")
+				)
+				candidate_badge.add_theme_color_override("font_color", category_color)
 
 
 func context(player: AlaskaRunner, key_collected: bool, rescues: int) -> String:
@@ -176,3 +201,29 @@ func distance_to_player(item: Node2D, player: Node2D) -> float:
 		)
 		return player.global_position.distance_to(Vector2(nearest_x, float(item.get_meta("surface_y"))))
 	return item.global_position.distance_to(player.global_position)
+
+
+func badge_color(prefix: String) -> Color:
+	if prefix in ["PF", "PD", "CP"]:
+		return Color("#84eaff")
+	if prefix in ["AN", "BOSS"]:
+		return Color("#ff9b86")
+	if prefix in ["PU", "RG", "BL"]:
+		return Color("#ffda79")
+	if prefix in ["WT", "IC"]:
+		return Color("#b8d8ff")
+	if prefix == "GO":
+		return Color("#75efbe")
+	return Color("#e1c4ff")
+
+
+func badge_style(color: Color, closest: bool) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = color if closest else Color(0.015, 0.055, 0.09, 0.90)
+	style.border_color = Color.WHITE if closest else color
+	style.set_border_width_all(3 if closest else 2)
+	style.set_corner_radius_all(10)
+	style.shadow_color = Color(0, 0, 0, 0.52)
+	style.shadow_size = 5 if closest else 3
+	style.shadow_offset = Vector2(0, 3)
+	return style

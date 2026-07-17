@@ -23,6 +23,8 @@ developer should normally need.
   spacing.
 - [Versioning](VERSIONING.md): current version and release rules.
 - [Debug identifiers](DEBUG_ITEM_IDENTIFIERS.md): how to report a specific item.
+- [Computer Review Mode](COMPUTER_REVIEW_MODE.md): run the production game with
+  keyboard controls, nearby IDs, and tagged notes.
 - [5.2 Review Mode](RELEASE_5_2_REVIEW_MODE.md): optional IDs and compact tagged notes.
 - [5.2.1 Scale alignment](RELEASE_5_2_1_SCALE_ALIGNMENT.md): measured sprite, ground-line, hitbox, and jump corrections.
 - [5.2.2 Touch controls](RELEASE_5_2_2_TOUCH_CONTROLS.md): responsive, readable mobile controls and multi-touch regression test.

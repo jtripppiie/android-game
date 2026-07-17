@@ -173,3 +173,21 @@ push target: origin/main
 The implementation commit contains the source, complete audit logs, release
 record, and APK checksums. APK binaries remain ignored build outputs and are not
 stored in Git.
+
+## Computer review follow-up
+
+The production game can now run directly on a computer without drawing Android
+touch controls. The desktop menu exposes `COMPUTER REVIEW · IDS + NOTES`, and
+`--computer-review` starts at the stage map with Review Mode enabled. A compact
+bottom toolbar reports the nearest ID and provides clickable IDS/NOTE/EXIT
+actions. F1, F10, and N provide the same actions from the keyboard.
+
+World identifiers are now compact category-colored pills rather than long
+ID-plus-description labels. The closest is highlighted, while the toolbar and
+notebook retain the full description. This remains the same production game,
+not a parallel desktop gameplay implementation or emulator APK.
+
+The dedicated computer-review audit passes the desktop menu, absence of touch
+controls, nearest-ID context, ID visibility toggle, compact notebook
+pause/close flow, and Review Mode exit. It is part of the standard audit script
+and therefore runs in CI.

@@ -16,12 +16,15 @@ const SPLASH_FADE_SECONDS := 0.35
 
 func _ready() -> void:
 	add_child(ui)
+	ensure_computer_review_action()
 	var smoke_stage := -1
 	var touch_audit := false
 	var lifecycle_audit := false
 	var system_audit := false
 	var pause_audit := false
 	var mechanics_audit := false
+	var computer_review_audit := false
+	var computer_review_mode := false
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	for argument in OS.get_cmdline_user_args():
 		if argument.begins_with("--stage-smoke="): smoke_stage = int(argument.get_slice("=", 1))
@@ -34,6 +37,8 @@ func _ready() -> void:
 		elif argument == "--system-audit": system_audit = true
 		elif argument == "--pause-audit": pause_audit = true
 		elif argument == "--mechanics-audit": mechanics_audit = true
+		elif argument == "--computer-review-audit": computer_review_audit = true
+		elif argument == "--computer-review": computer_review_mode = true
 	var verification_scenario := AndroidBridge.verification_scenario()
 	if not verification_scenario.is_empty():
 		verification_harness = AndroidVerificationHarness.new()
@@ -49,6 +54,9 @@ func _ready() -> void:
 		add_child(mechanics)
 		mechanics.run.call_deferred(self)
 		return
+	if computer_review_audit:
+		run_computer_review_audit.call_deferred()
+		return
 	if pause_audit:
 		run_pause_audit.call_deferred()
 		return
@@ -62,7 +70,52 @@ func _ready() -> void:
 		run_touch_audit.call_deferred()
 		return
 	if smoke_stage >= 0: start_stage(clampi(smoke_stage, 0, 4))
+	elif computer_review_mode:
+		start_computer_review()
 	else: show_launch_splash()
+
+
+func ensure_computer_review_action() -> void:
+	if InputMap.has_action("debug_review"):
+		return
+	InputMap.add_action("debug_review")
+	var key := InputEventKey.new()
+	key.physical_keycode = KEY_F1
+	InputMap.action_add_event("debug_review", key)
+
+
+func run_computer_review_audit() -> void:
+	var old_review_mode := GameSession.review_mode
+	start_computer_review()
+	assert(current_screen == "map")
+	assert(GameSession.review_mode)
+	start_stage(0)
+	await get_tree().process_frame
+	assert(current_screen == "stage")
+	assert(is_instance_valid(world))
+	assert(is_instance_valid(world.desktop_review_bar))
+	assert(world.desktop_review_bar.active)
+	assert(get_tree().get_nodes_in_group("touch_controls").is_empty())
+	world.review_registry.update(world.player)
+	world.desktop_review_bar.update_context()
+	assert(world.desktop_review_bar.context_label.text.contains("REVIEW MODE"))
+	assert(world.desktop_review_bar.context_label.text.contains("S1-"))
+	world.toggle_review_ids()
+	assert(not world.review_registry.ids_visible)
+	world.toggle_review_ids()
+	assert(world.review_registry.ids_visible)
+	world.toggle_review_notebook()
+	assert(get_tree().paused)
+	assert(world.notebook.panel.visible)
+	world.notebook.close()
+	assert(not get_tree().paused)
+	world.set_review_mode(false)
+	assert(not world.desktop_review_bar.active)
+	assert(not world.review_registry.ids_visible)
+	GameSession.review_mode = old_review_mode
+	GameSession.save_profile()
+	print("COMPUTER REVIEW AUDIT PASS · menu · no touch overlay · nearest ID · F1/F10/N flow")
+	get_tree().quit(0)
 
 func show_launch_splash() -> void:
 	clear_ui()
@@ -140,6 +193,9 @@ func run_lifecycle_audit() -> void:
 	assert(get_tree().get_nodes_in_group("player").size() == 1)
 	assert(get_tree().get_nodes_in_group("active_stage").size() == 1)
 	assert(is_instance_valid(world.hud))
+	if not OS.has_feature("android"):
+		assert(is_instance_valid(world.desktop_review_bar))
+		assert(get_tree().get_nodes_in_group("touch_controls").is_empty())
 	world.hud.audit_layout()
 	assert(is_instance_valid(world.notebook))
 	world.notebook.audit_layout()
@@ -192,6 +248,14 @@ func run_system_audit() -> void:
 	assert(GameSession.best_scores[0] == 100)
 	show_menu()
 	assert(current_screen == "menu" and ui.get_child_count() == 2)
+	if not OS.has_feature("android"):
+		var menu_frame := ui.get_child(1) as PanelContainer
+		var menu_actions := menu_frame.get_node("MainMenuActions") as VBoxContainer
+		var computer_review_found := false
+		for child in menu_actions.get_children():
+			if child is Button and child.text == "COMPUTER REVIEW · IDS + NOTES":
+				computer_review_found = true
+		assert(computer_review_found)
 	show_map()
 	assert(current_screen == "map" and ui.get_child_count() == 2)
 	var map_panel := ui.get_child(1) as VBoxContainer
@@ -402,7 +466,7 @@ func show_menu() -> void:
 	var frame := PanelContainer.new()
 	frame.name = "MainMenuFrame"
 	var frame_width := minf(900.0, view.x - 96.0)
-	var frame_height := minf(620.0, view.y - 64.0)
+	var frame_height := minf(680.0, view.y - 40.0)
 	frame.position = Vector2((view.x - frame_width) * 0.5, (view.y - frame_height) * 0.5)
 	frame.size = Vector2(frame_width, frame_height)
 	frame.add_theme_stylebox_override("panel", menu_panel_style())
@@ -410,7 +474,7 @@ func show_menu() -> void:
 	var panel := VBoxContainer.new()
 	panel.name = "MainMenuActions"
 	panel.alignment = BoxContainer.ALIGNMENT_CENTER
-	panel.add_theme_constant_override("separation", 22)
+	panel.add_theme_constant_override("separation", 18)
 	frame.add_child(panel)
 	var title := Label.new()
 	title.text = "YOU RUSH · ALASKA"
@@ -428,13 +492,16 @@ func show_menu() -> void:
 	subtitle.add_theme_color_override("font_color", Color("#9ee8f5"))
 	subtitle.custom_minimum_size.y = 34
 	panel.add_child(subtitle)
-	for spec in [
-		["PLAY ALASKA MAP", show_map],
+	var menu_actions: Array = [["PLAY ALASKA MAP", show_map]]
+	if not OS.has_feature("android"):
+		menu_actions.append(["COMPUTER REVIEW · IDS + NOTES", start_computer_review])
+	menu_actions.append_array([
 		["CUSTOMIZE RUNNER", show_customize],
 		["ACCESSIBILITY", show_accessibility]
-	]:
+	])
+	for spec in menu_actions:
 		var button := add_button(panel, String(spec[0]), spec[1])
-		button.custom_minimum_size.y = 88
+		button.custom_minimum_size.y = 80 if menu_actions.size() >= 4 else 88
 	var status := Label.new()
 	status.text = "ALASKA %s · STAGES %d/5 · LIFETIME %d" % [
 		GameSession.APP_VERSION,
@@ -446,6 +513,12 @@ func show_menu() -> void:
 	status.add_theme_color_override("font_color", Color("#fff0a8"))
 	status.custom_minimum_size.y = 32
 	panel.add_child(status)
+
+
+func start_computer_review() -> void:
+	GameSession.review_mode = true
+	GameSession.save_profile()
+	show_map()
 
 
 func menu_panel_style() -> StyleBoxFlat:

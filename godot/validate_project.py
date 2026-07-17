@@ -36,6 +36,7 @@ REQUIRED = [
     "scripts/trick_ring.gd",
     "scripts/trail_boss.gd",
     "scripts/boss_hazard.gd",
+    "scripts/desktop_review_bar.gd",
     "scripts/review_notebook.gd",
     "scripts/review_registry.gd",
     "scripts/gameplay_auditor.gd",
@@ -97,6 +98,7 @@ boss = text("scripts/trail_boss.gd")
 enemy = text("scripts/enemy.gd")
 notebook = text("scripts/review_notebook.gd")
 registry = text("scripts/review_registry.gd")
+desktop_review = text("scripts/desktop_review_bar.gd")
 auditor = text("scripts/gameplay_auditor.gd")
 mechanics = text("scripts/mechanics_auditor.gd")
 harness = text("scripts/android_verification_harness.gd")
@@ -141,6 +143,12 @@ require(
         "world.restart_requested.connect",
         "world.advance_requested.connect",
         "AndroidVerificationHarness",
+        "--computer-review",
+        "--computer-review-audit",
+        "ensure_computer_review_action",
+        "COMPUTER REVIEW AUDIT PASS",
+        "COMPUTER REVIEW · IDS + NOTES",
+        "start_computer_review",
         "--mechanics-audit",
         "--debug-overlay-audit=",
         "NOTIFICATION_APPLICATION_PAUSED",
@@ -177,6 +185,10 @@ require(
         "auditor.complete",
         "PROCESS_MODE_PAUSABLE",
         "release_gameplay_inputs",
+        "should_show_touch_controls",
+        "build_desktop_review_bar",
+        "toggle_review_notebook",
+        "toggle_review_ids",
         "update_goal_presentation",
         "LOCKED · COMPLETE OBJECTIVES",
         "shape.size = Vector2(96, 1100)",
@@ -294,11 +306,27 @@ require(
     (
         "MAX_VISIBLE_BADGES := 4",
         'identifier := "S%d-%s%02d"',
+        "badge_style",
+        "badge_color",
+        "set_enabled",
         "distance_to_player",
         "position_surface_badge",
         "func audit",
     ),
     "review registry",
+)
+require(
+    desktop_review,
+    (
+        "class_name DesktopReviewBar",
+        "COMPUTER RUN",
+        "REVIEW MODE",
+        "F10 · IDS",
+        "N · NOTE",
+        "F1 · REVIEW",
+        "audit_layout",
+    ),
+    "desktop review bar",
 )
 require(
     auditor,

@@ -29,6 +29,7 @@ run_audit system --system-audit
 run_audit lifecycle --lifecycle-audit
 run_audit pause --pause-audit
 run_audit mechanics --mechanics-audit
+run_audit computer-review --computer-review-audit
 
 for stage in 0 1 2 3 4; do
 	run_audit "stage-$stage-geometry" "--geometry-audit=$stage"

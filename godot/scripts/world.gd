@@ -26,6 +26,7 @@ var game_over_overlay: GameOverOverlay
 var stage_complete_overlay: StageCompleteOverlay
 var goal_beacon: Sprite2D
 var goal_status_label: Label
+var desktop_review_bar: DesktopReviewBar
 var run_elapsed := 0.0
 var damage_taken := 0
 
@@ -46,7 +47,10 @@ func _ready() -> void:
 	var touch_layer := CanvasLayer.new()
 	touch_layer.layer = 20
 	add_child(touch_layer)
-	touch_layer.add_child(TouchControls.new())
+	if should_show_touch_controls():
+		touch_layer.add_child(TouchControls.new())
+	else:
+		build_desktop_review_bar(touch_layer)
 	var note_layer := CanvasLayer.new()
 	note_layer.layer = 30
 	add_child(note_layer)
@@ -57,6 +61,22 @@ func _ready() -> void:
 	auditor = GameplayAuditor.new()
 	add_child(auditor)
 	auditor.configure(self)
+
+
+func should_show_touch_controls() -> bool:
+	if OS.has_feature("android"):
+		return true
+	return "--touch-preview" in OS.get_cmdline_user_args()
+
+
+func build_desktop_review_bar(layer: CanvasLayer) -> void:
+	desktop_review_bar = DesktopReviewBar.new()
+	desktop_review_bar.review_toggled.connect(set_review_mode)
+	desktop_review_bar.ids_requested.connect(toggle_review_ids)
+	desktop_review_bar.note_requested.connect(toggle_review_notebook)
+	layer.add_child(desktop_review_bar)
+	desktop_review_bar.configure(review_registry, player, GameSession.review_mode)
+
 
 func spawn_player() -> void:
 	player = PLAYER_SCENE.instantiate() as AlaskaRunner
@@ -708,11 +728,15 @@ func show_stage_complete(previous_best: int) -> void:
 func _process(delta: float) -> void:
 	if not finished and is_instance_valid(player) and player.controls_enabled:
 		run_elapsed += delta
-	if Input.is_action_just_pressed("debug_note") and notebook and GameSession.review_mode and not pause_panel.visible:
-		notebook.toggle()
-		if notebook.panel.visible: release_gameplay_inputs()
-	if Input.is_action_just_pressed("debug_ids") and GameSession.review_mode:
-		review_registry.toggle()
+	if (
+		Input.is_action_just_pressed("debug_review")
+		and not OS.has_feature("android")
+	):
+		set_review_mode(not GameSession.review_mode)
+	if Input.is_action_just_pressed("debug_note") and not pause_panel.visible:
+		toggle_review_notebook()
+	if Input.is_action_just_pressed("debug_ids"):
+		toggle_review_ids()
 	if GameSession.review_mode:
 		review_registry.update(player)
 	update_goal_presentation()
@@ -731,6 +755,39 @@ func _process(delta: float) -> void:
 			boss_defeated,
 			player.global_position.x
 		)
+
+
+func set_review_mode(enabled: bool) -> void:
+	GameSession.review_mode = enabled
+	GameSession.save_profile()
+	review_registry.set_enabled(enabled)
+	if is_instance_valid(desktop_review_bar):
+		desktop_review_bar.set_active(enabled)
+	if not enabled and is_instance_valid(notebook) and notebook.panel.visible:
+		notebook.close()
+	announce("REVIEW MODE %s" % ("ON · IDS + NOTES" if enabled else "OFF"), 2, 1.8)
+
+
+func toggle_review_ids() -> void:
+	if not GameSession.review_mode:
+		set_review_mode(true)
+		review_registry.update(player)
+		announce("REVIEW IDS ON", 2, 1.4)
+		return
+	var visible := review_registry.toggle()
+	announce("REVIEW IDS %s" % ("ON" if visible else "OFF"), 2, 1.4)
+
+
+func toggle_review_notebook() -> void:
+	if pause_panel.visible:
+		return
+	if not GameSession.review_mode:
+		set_review_mode(true)
+	if not is_instance_valid(notebook):
+		return
+	notebook.toggle()
+	if notebook.panel.visible:
+		release_gameplay_inputs()
 
 
 func update_goal_presentation() -> void:

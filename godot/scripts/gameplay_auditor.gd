@@ -387,13 +387,16 @@ func run_debug_overlay() -> void:
 	stage.review_registry.audit(stage.player)
 	stage.hud.audit_layout()
 	stage.notebook.audit_layout()
+	if is_instance_valid(stage.desktop_review_bar):
+		stage.desktop_review_bar.audit_layout()
 	print(
-		"DEBUG OVERLAY AUDIT PASS stage=%d ids=compact visible_max=%d note_panel=%dx%d hud=legible" %
+		"DEBUG OVERLAY AUDIT PASS stage=%d ids=color-coded compact visible_max=%d note_panel=%dx%d hud=legible desktop_bar=%s" %
 		[
 			stage.stage_index,
 			ReviewRegistry.MAX_VISIBLE_BADGES,
 			roundi(stage.notebook.panel.size.x),
-			roundi(stage.notebook.panel.size.y)
+			roundi(stage.notebook.panel.size.y),
+			is_instance_valid(stage.desktop_review_bar)
 		]
 	)
 	stage.get_tree().quit(0)

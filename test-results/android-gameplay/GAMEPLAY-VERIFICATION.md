@@ -430,3 +430,26 @@ The earlier x86_64 commands and checksums in this report remain historical
 evidence of tests already performed; they are not current build instructions.
 Current validation explicitly rejects an `Android Emulator Debug` preset,
 `architectures/x86_64=true`, or an `x86_64-debug.apk` export path.
+
+## 26. Computer Review Mode and restored identifiers
+
+Desktop play now omits the Android touch overlay and provides a compact bottom
+toolbar. The toolbar shows keyboard controls during ordinary computer play and
+the nearest stable item ID during Review Mode. F1 toggles review, F10 toggles
+the four nearest color-coded ID pills, and N opens the 480×292 tagged notebook.
+The same actions are available as small toolbar buttons.
+
+The standard audit runner now includes `--computer-review-audit`. It verifies
+the desktop menu entry, no touch overlay, nearest `S1-` identifier, ID
+hide/show, notebook pause/close, and clean Review Mode exit.
+
+Evidence:
+
+```text
+after/audits-5.4.1/computer-review.log
+COMPUTER REVIEW AUDIT PASS · menu · no touch overlay · nearest ID · F1/F10/N flow
+```
+
+The existing five-stage traversal suite was repeated after the overlay changes
+and passed without script errors. No Android APK was compiled for this
+desktop/debug-tool follow-up.

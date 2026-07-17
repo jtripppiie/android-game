@@ -55,7 +55,13 @@ Examples of useful notes:
 The letters include: `PF` platform/slope, `AN` animal, `WT` water, `IC`
 breakable ice, `CP` checkpoint, `GO` finish, and `BOSS` boss. Press F10 with a
 keyboard to hide/show IDs. Press N to open the notebook. These shortcuts only
-work while Review Mode is enabled.
+affect review tools; on a computer, F1 toggles Review Mode and N/F10 can enable
+it when needed.
+
+On a computer, the main menu also offers `COMPUTER REVIEW · IDS + NOTES`.
+Phone buttons disappear, keyboard controls appear in a small bottom toolbar,
+and the nearest ID stays visible while reviewing. F1 turns the whole review
+system on or off.
 
 ## Controls
 
