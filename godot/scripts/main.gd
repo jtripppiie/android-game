@@ -3,6 +3,14 @@ extends Node
 var world: AlaskaStage
 var ui := CanvasLayer.new()
 var transition_locked := false
+var splash_root: Control
+var splash_prompt: Label
+var splash_skippable := false
+var splash_dismissing := false
+
+const SPLASH_MINIMUM_SECONDS := 1.25
+const SPLASH_TOTAL_SECONDS := 4.0
+const SPLASH_FADE_SECONDS := 0.35
 
 func _ready() -> void:
 	add_child(ui)
@@ -22,7 +30,77 @@ func _ready() -> void:
 		run_touch_audit.call_deferred()
 		return
 	if smoke_stage >= 0: start_stage(clampi(smoke_stage, 0, 4))
-	else: show_menu()
+	else: show_launch_splash()
+
+func show_launch_splash() -> void:
+	clear_ui()
+	splash_skippable = false
+	splash_dismissing = false
+	splash_root = Control.new()
+	splash_root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	splash_root.mouse_filter = Control.MOUSE_FILTER_STOP
+	ui.add_child(splash_root)
+	var art := TextureRect.new()
+	art.texture = load("res://assets/boot_splash.png")
+	art.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	art.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	splash_root.add_child(art)
+	var shade := ColorRect.new()
+	shade.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
+	shade.position = Vector2(0, -112)
+	shade.size = Vector2(1280, 112)
+	shade.color = Color(0.01, 0.04, 0.08, 0.58)
+	shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	splash_root.add_child(shade)
+	splash_prompt = Label.new()
+	splash_prompt.text = "TAP TO BEGIN"
+	splash_prompt.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
+	splash_prompt.position = Vector2(0, -88)
+	splash_prompt.size = Vector2(1280, 64)
+	splash_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	splash_prompt.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	splash_prompt.add_theme_font_size_override("font_size", 28)
+	splash_prompt.add_theme_color_override("font_color", Color("#fff0a8"))
+	splash_prompt.add_theme_constant_override("outline_size", 6)
+	splash_prompt.add_theme_color_override("font_outline_color", Color(0.01, 0.04, 0.08, 0.95))
+	splash_prompt.modulate.a = 0.0
+	splash_prompt.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	splash_root.add_child(splash_prompt)
+	reveal_splash_prompt.call_deferred()
+
+func reveal_splash_prompt() -> void:
+	await get_tree().create_timer(SPLASH_MINIMUM_SECONDS).timeout
+	if not is_instance_valid(splash_root) or splash_dismissing: return
+	splash_skippable = true
+	var prompt_tween := create_tween()
+	prompt_tween.tween_property(splash_prompt, "modulate:a", 1.0, 0.25)
+	await get_tree().create_timer(SPLASH_TOTAL_SECONDS - SPLASH_MINIMUM_SECONDS).timeout
+	dismiss_launch_splash()
+
+func _input(event: InputEvent) -> void:
+	if not is_instance_valid(splash_root) or not splash_skippable: return
+	if event is InputEventScreenTouch and event.pressed:
+		dismiss_launch_splash()
+		get_viewport().set_input_as_handled()
+	elif event is InputEventMouseButton and event.pressed:
+		dismiss_launch_splash()
+		get_viewport().set_input_as_handled()
+	elif event is InputEventKey and event.pressed and not event.echo:
+		dismiss_launch_splash()
+		get_viewport().set_input_as_handled()
+
+func dismiss_launch_splash() -> void:
+	if splash_dismissing or not is_instance_valid(splash_root): return
+	splash_dismissing = true
+	splash_skippable = false
+	var fade := create_tween()
+	fade.tween_property(splash_root, "modulate:a", 0.0, SPLASH_FADE_SECONDS)
+	await fade.finished
+	splash_root = null
+	splash_prompt = null
+	show_menu()
 
 func run_lifecycle_audit() -> void:
 	start_stage(0)

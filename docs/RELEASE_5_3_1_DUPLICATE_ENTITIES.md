@@ -115,3 +115,11 @@ the other stages and remains a pacing-review target even though it completed.
 An Android Studio Pixel 5 AVD was found, but this WSL session has no `/dev/kvm`.
 The software-emulation fallback did not finish booting, so no claim of emulator
 or physical-device visual playtesting is made in this record.
+
+Post-build splash correction: the first 5.3.1 candidate exposed that Godot's
+engine boot splash disappears as soon as loading completes—about one second on
+the test phone. The source now hands that image directly to a real in-game
+launch state. It remains for four seconds total, becomes skippable after 1.25
+seconds, displays `TAP TO BEGIN`, and fades into the menu over 0.35 seconds.
+Command-line audits bypass the launch state. This correction is source-only and
+must not be described as compiled until a later build is explicitly requested.

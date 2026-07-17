@@ -50,6 +50,8 @@ for marker in ("build_level", "checkpoint", "goal", "collectible", "enemy", "mov
 main_source = (root / "scripts/main.gd").read_text()
 for marker in ("dispose_world", "transition_locked", "remove_child(world)", "if transition_locked or is_instance_valid(world): return", "run_lifecycle_audit"):
     assert marker in main_source, marker
+for marker in ("show_launch_splash", "SPLASH_MINIMUM_SECONDS := 1.25", "SPLASH_TOTAL_SECONDS := 4.0", "TAP TO BEGIN", "dismiss_launch_splash"):
+    assert marker in main_source, marker
 for marker in ('Vector2(0, 82)', 'add_theme_constant_override("separation", 20)', 'add_theme_constant_override("separation", 12)'):
     assert marker in main_source, marker
 for marker in ("font_disabled_color", 'add_theme_stylebox_override("disabled"', "font_pressed_color"):
