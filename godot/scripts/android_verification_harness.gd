@@ -164,7 +164,7 @@ func apply_scenario() -> void:
 		"boss-attack":
 			activate_boss()
 			world.boss_node.state = TrailBoss.State.TELL
-			world.boss_node.state_timer = TrailBoss.TELL_SECONDS - 0.03
+			world.boss_node.state_timer = world.boss_node.tell_seconds() - 0.03
 			await wait_physics(4)
 		"boss-defeated":
 			defeat_boss()

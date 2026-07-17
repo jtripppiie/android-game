@@ -384,3 +384,33 @@ Remote push: `origin/main` through the evidence snapshot, confirmed 2026-07-17
 
 The baseline worktree remains independently buildable at the exact starting
 commit. APK binaries are build outputs and are not committed.
+
+## 24. Version 5.4.1 supplemental gameplay pass
+
+The follow-up gameplay refinement began at
+`09312de8e40c7ad69669a22df351d9e54ef8c442` and targeted movement intent,
+touch drift, wildlife contact, stage spacing, checkpoint grounding, boss
+telegraphs/pacing, HUD density, and objective clarity.
+
+All touch, system, lifecycle, pause, mechanics, geometry, debug-overlay, and
+autoplay audits passed in the final 5.4.1 source state. Per-stage evidence is
+stored under `after/audits-5.4.1/`. Traversal times were 24.11s, 22.40s,
+38.53s, 40.36s, and 25.53s for stages 0–4. Every run collected one key,
+completed two rescues, defeated one boss, and reached one goal.
+
+The ARM64 and x86_64 Android APKs compiled as versionCode 541/versionName 5.4.1.
+They passed package inspection, ABI inspection, v2 signature verification, and
+16 KiB page-aware alignment:
+
+| APK | Bytes | SHA-256 | Status |
+|---|---:|---|---|
+| ARM64 device | 95,036,246 | `f1ffb0ba445c46b42101d4be426f7406e4e720089dcee397c9523a3406d3f516` | PASS |
+| x86_64 emulator | 100,008,408 | `3649d1caed71a01df74ea11f59d0937925f02888719ab8c8969b20687e7ea5cd` | PASS |
+
+No new rendered Android session is claimed for 5.4.1: the final build host had
+no running ADB emulator, and the previously recorded SwiftShader limitation
+still applies. Physical-device visual, ergonomic, haptic, thermal, and
+long-session checks remain `NOT VERIFIED ON PHYSICAL DEVICE`.
+
+See `docs/RELEASE_5_4_1_GAMEPLAY_REFINEMENT.md` for the complete change and
+build record.

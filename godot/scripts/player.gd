@@ -12,7 +12,12 @@ const SPRINT_SPEED := 540.0
 const ACCELERATION := 3200.0
 const AIR_ACCELERATION := 1350.0
 const FRICTION := 2500.0
+const AIR_FRICTION := 360.0
 const GRAVITY := 1550.0
+const RISE_GRAVITY_SCALE := 0.92
+const APEX_GRAVITY_SCALE := 0.72
+const FALL_GRAVITY_SCALE := 1.18
+const MAX_FALL_SPEED := 1180.0
 const JUMP_SPEED := 900.0
 const COYOTE_TIME := 0.18
 const JUMP_BUFFER := 0.20
@@ -67,12 +72,22 @@ func _physics_process(delta: float) -> void:
 	combo_timer = maxf(0.0, combo_timer - delta)
 	if combo_timer <= 0.0: combo = 0
 	if ring_chain_timer <= 0.0: ring_chain = 0
+	var axis := Input.get_axis("move_left", "move_right")
+	# Read the current steering intent before dash. Previously a same-frame
+	# left+dash press launched in the runner's stale facing direction.
+	if not is_zero_approx(axis):
+		facing = signf(axis)
 	if is_on_floor():
 		coyote = COYOTE_TIME
 		air_jumps_left = 1
 	else:
 		coyote = maxf(0.0, coyote - delta)
-		velocity.y += GRAVITY * delta
+		var gravity_scale := RISE_GRAVITY_SCALE
+		if absf(velocity.y) < 120.0:
+			gravity_scale = APEX_GRAVITY_SCALE
+		elif velocity.y > 0.0:
+			gravity_scale = FALL_GRAVITY_SCALE
+		velocity.y = minf(MAX_FALL_SPEED, velocity.y + GRAVITY * gravity_scale * delta)
 	if Input.is_action_just_pressed("jump"): jump_buffer = JUMP_BUFFER
 	else: jump_buffer = maxf(0.0, jump_buffer - delta)
 	if jump_buffer > 0.0 and coyote > 0.0:
@@ -86,7 +101,6 @@ func _physics_process(delta: float) -> void:
 		action_feedback.emit("AIR JUMP")
 	if Input.is_action_just_released("jump") and velocity.y < -210.0:
 		velocity.y *= SHORT_JUMP_CUT
-	var axis := Input.get_axis("move_left", "move_right")
 	if Input.is_action_just_pressed("dash") and dash_cooldown <= 0.0:
 		dash_timer = DASH_SECONDS
 		dash_cooldown = DASH_COOLDOWN
@@ -104,10 +118,13 @@ func _physics_process(delta: float) -> void:
 	var target_speed := SPRINT_SPEED if Input.is_action_pressed("sprint") else WALK_SPEED
 	if ring_rush_timer > 0.0: target_speed *= 1.18
 	if axis != 0.0:
-		facing = signf(axis)
-		velocity.x = move_toward(velocity.x, axis * target_speed, (ACCELERATION if is_on_floor() else AIR_ACCELERATION) * delta)
+		var acceleration := ACCELERATION if is_on_floor() else AIR_ACCELERATION
+		if is_on_floor() and not is_zero_approx(velocity.x) and signf(velocity.x) != signf(axis):
+			acceleration *= 1.28
+		velocity.x = move_toward(velocity.x, axis * target_speed, acceleration * delta)
 	else:
-		velocity.x = move_toward(velocity.x, 0.0, FRICTION * delta)
+		var deceleration := FRICTION if is_on_floor() else AIR_FRICTION
+		velocity.x = move_toward(velocity.x, 0.0, deceleration * delta)
 	if Input.is_action_pressed("crouch") and is_on_floor(): velocity.x = move_toward(velocity.x, 0.0, FRICTION * 1.5 * delta)
 	if Input.is_action_pressed("fire") and fire_cooldown <= 0.0:
 		fire_cooldown = 0.20
@@ -117,8 +134,11 @@ func _physics_process(delta: float) -> void:
 		var impact_strength := 1.45 if stomp_impact_pending else 1.0 if absf(velocity.x) > 280.0 else 0.65
 		effects.emit_snow(impact_strength)
 		camera.add_trauma(0.30 if stomp_impact_pending else 0.16 if impact_strength >= 1.0 else 0.08)
+		if stomp_impact_pending:
+			action_feedback.emit("STOMP LANDING")
+		elif absf(velocity.x) > 280.0:
+			action_feedback.emit("PERFECT LAND")
 		stomp_impact_pending = false
-		action_feedback.emit("PERFECT LAND" if absf(velocity.x) > 280.0 else "LAND")
 	was_on_floor = is_on_floor()
 	if global_position.y > FALL_LIMIT_Y:
 		action_feedback.emit("ROUTE LOST · CHECKPOINT")

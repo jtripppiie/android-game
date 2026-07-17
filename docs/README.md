@@ -18,6 +18,9 @@ developer should normally need.
   Android bridge, migration, build, QA, signing, and recovery.
 - [5.4 production refactor](RELEASE_5_4_PRODUCTION_REFACTOR.md): architecture,
   gameplay, presentation, test harness, Android evidence, and limitations.
+- [5.4.1 gameplay refinement](RELEASE_5_4_1_GAMEPLAY_REFINEMENT.md): movement
+  feel, touch intent, collision fairness, boss pacing, HUD clarity, and stage
+  spacing.
 - [Versioning](VERSIONING.md): current version and release rules.
 - [Debug identifiers](DEBUG_ITEM_IDENTIFIERS.md): how to report a specific item.
 - [5.2 Review Mode](RELEASE_5_2_REVIEW_MODE.md): optional IDs and compact tagged notes.
@@ -38,6 +41,7 @@ developer should normally need.
 ## Current Godot release history
 
 - [5.4 production refactor](RELEASE_5_4_PRODUCTION_REFACTOR.md)
+- [5.4.1 gameplay refinement](RELEASE_5_4_1_GAMEPLAY_REFINEMENT.md)
 - [5.1 distinct boss encounters](RELEASE_5_1_BOSS_OVERHAUL.md)
 - [5.2 Review Mode](RELEASE_5_2_REVIEW_MODE.md)
 - [5.2.1 scale alignment](RELEASE_5_2_1_SCALE_ALIGNMENT.md)

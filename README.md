@@ -9,23 +9,25 @@ one distinct wildlife boss, and reach the trail beacon.
 ```text
 source: godot/
 engine: Godot 4.7.1
-versionCode: 540
-versionName: 5.4.0
+versionCode: 541
+versionName: 5.4.1
 package: com.jtripppiie.mooserush
-device APK: app/build/outputs/apk/debug/you-rush-alaska-5.4.0-debug.apk
-emulator APK: app/build/outputs/apk/debug/you-rush-alaska-5.4.0-x86_64-debug.apk
+device APK: app/build/outputs/apk/debug/you-rush-alaska-5.4.1-debug.apk
+emulator APK: app/build/outputs/apk/debug/you-rush-alaska-5.4.1-x86_64-debug.apk
 ```
 
 `app/src/main/` is the legacy Java game retained for rollback and save
 migration. It is not the current game and must not be used for production
 gameplay changes.
 
-Version 5.4.0 separates the player scene, presentation, camera, effects,
-verification, review IDs, and completion/game-over flows; fixes runner
-grounding to a measured subpixel contract; adds parallax, snow contact effects,
-soft terrain joins, a larger premium HUD and menu; strengthens profile backups;
-adds score/time/no-damage stars, saved touch sizing, and deterministic Android
-verification scenarios. The Android export is
+Version 5.4.1 adds more responsive reversal and air momentum, a much stronger
+short/full jump distinction, touch drift protection, exact enemy contact,
+stage-specific boss tells and fair recovery windows, grounded full-height
+checkpoints, safer objective/wildlife/boss spacing, a clearer HUD and exit
+beacon, and deeper fairness telemetry across all five stages. It builds on
+5.4.0's separated player scene, camera, effects, verification, review IDs,
+result flows, measured runner grounding, parallax, snow contact effects, soft
+terrain joins, profile backups, and score/time/no-damage stars. Android export is
 split by architecture so the ARM64 device APK no longer carries an unused
 x86_64 engine.
 
@@ -75,6 +77,7 @@ owner’s private release key.
 - [Technical maintenance](docs/TECHNICAL_MAINTENANCE.md)
 - [Privacy](docs/PRIVACY.md)
 - [5.4 release notes](docs/RELEASE_5_4_PRODUCTION_REFACTOR.md)
+- [5.4.1 gameplay refinement](docs/RELEASE_5_4_1_GAMEPLAY_REFINEMENT.md)
 
 Emulator/headless evidence does not replace testing touch ergonomics, haptics,
 speech recognition, interruptions, thermals, or performance on a physical

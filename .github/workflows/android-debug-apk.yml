@@ -79,7 +79,7 @@ jobs:
 
       - name: Inspect APK
         run: |
-          APK=app/build/outputs/apk/debug/you-rush-alaska-5.4.0-debug.apk
+          APK=app/build/outputs/apk/debug/you-rush-alaska-5.4.1-debug.apk
           test -f "$APK"
           sha256sum "$APK" | tee build/apk-sha256.txt
           "$ANDROID_HOME/build-tools/36.1.0/aapt" dump badging "$APK" | tee build/apk-badging.txt
@@ -89,9 +89,9 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: you-rush-alaska-5.4.0-arm64-debug
+          name: you-rush-alaska-5.4.1-arm64-debug
           path: |
-            app/build/outputs/apk/debug/you-rush-alaska-5.4.0-debug.apk
+            app/build/outputs/apk/debug/you-rush-alaska-5.4.1-debug.apk
             build/ci-audits/
             build/apk-*.txt
           if-no-files-found: warn

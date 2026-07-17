@@ -10,6 +10,7 @@ var attack_cooldown := 0.0
 var player: Node2D
 var art: Sprite2D
 var ledge_ray: RayCast2D
+var contact_area: Area2D
 
 func _ready() -> void:
 	origin_x = global_position.x
@@ -21,6 +22,18 @@ func _ready() -> void:
 	collision.shape = shape
 	collision.position = Vector2(0, -shape.size.y * 0.5)
 	add_child(collision)
+	contact_area = Area2D.new()
+	contact_area.name = "ContactSensor"
+	contact_area.collision_layer = 0
+	contact_area.collision_mask = 1
+	contact_area.add_to_group("enemy_contact_sensor")
+	var contact_collision := CollisionShape2D.new()
+	var contact_shape := RectangleShape2D.new()
+	contact_shape.size = shape.size + Vector2(8, 8)
+	contact_collision.shape = contact_shape
+	contact_collision.position = collision.position
+	contact_area.add_child(contact_collision)
+	add_child(contact_area)
 	art = Sprite2D.new()
 	var files := {"bear":"wildlife_bear_walk.png", "wolf":"wildlife_wolf_run.png", "eagle":"wildlife_eagle_fly.png", "salmon":"wildlife_salmon_swim.png"}
 	art.texture = load("res://assets/%s" % files.get(kind, "wildlife_wolf_run.png"))
@@ -78,16 +91,26 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 	art.frame = int(Time.get_ticks_msec() / (115.0 if absf(velocity.x) > speed * 1.2 else 155.0)) % 6
 	art.flip_h = direction > 0.0
-	if is_instance_valid(player) and global_position.distance_to(player.global_position) < (46.0 if kind == "bear" else 38.0):
-		if is_stomp_contact(player):
-			player.enemy_defeated(true)
-			queue_free()
-			return
-		player.take_hit(global_position.x)
+	resolve_player_contact()
 	if absf(global_position.x - origin_x) > patrol_distance:
 		var edge_side := signf(global_position.x - origin_x)
 		global_position.x = origin_x + edge_side * patrol_distance
 		direction = -edge_side
+
+
+func resolve_player_contact() -> void:
+	if not is_instance_valid(contact_area):
+		return
+	for body in contact_area.get_overlapping_bodies():
+		if not body is AlaskaRunner:
+			continue
+		var runner := body as AlaskaRunner
+		if is_stomp_contact(runner):
+			runner.enemy_defeated(true)
+			queue_free()
+			return
+		runner.take_hit(global_position.x)
+		return
 
 func is_stomp_contact(runner: AlaskaRunner) -> bool:
 	# A normal jump landing must read as a stomp, not an inexplicable death.

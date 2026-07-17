@@ -81,8 +81,8 @@ godot --headless --path godot --export-debug "Android Emulator Debug"
 ```
 
 The first preset is ARM64 and produces
-`app/build/outputs/apk/debug/you-rush-alaska-5.4.0-debug.apk`. The second is
-x86_64 and produces `you-rush-alaska-5.4.0-x86_64-debug.apk`. Keeping them
+`app/build/outputs/apk/debug/you-rush-alaska-5.4.1-debug.apk`. The second is
+x86_64 and produces `you-rush-alaska-5.4.1-x86_64-debug.apk`. Keeping them
 separate avoids shipping two large Godot engine libraries in one test APK.
 
 Inspect every handoff:

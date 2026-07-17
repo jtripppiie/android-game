@@ -76,6 +76,28 @@ func run(main_controller: Node) -> void:
 
 	player.respawn()
 	await settle_on_floor()
+	await physics_frames(18)
+	var reverse_dash_start := player.global_position.x
+	Input.action_press("move_left")
+	await tap("dash", 2)
+	assert(player.dash_timer > 0.0 and player.velocity.x < 0.0)
+	await physics_frames(6)
+	Input.action_release("move_left")
+	var reverse_dash_distance := reverse_dash_start - player.global_position.x
+	assert(reverse_dash_distance > 75.0)
+
+	player.respawn()
+	await settle_on_floor()
+	player.velocity.x = 500.0
+	player.queue_jump()
+	await physics_frames(2)
+	assert(not player.is_on_floor())
+	await physics_frames(10)
+	var preserved_air_speed := player.velocity.x
+	assert(preserved_air_speed > 350.0)
+
+	player.respawn()
+	await settle_on_floor()
 	await tap("jump", 2)
 	await physics_frames(7)
 	assert(player.queue_stomp())
@@ -105,8 +127,8 @@ func run(main_controller: Node) -> void:
 	assert(controller.get_tree().get_nodes_in_group("player").size() == 1)
 	assert(controller.get_tree().get_nodes_in_group("active_stage").size() == 1)
 	print(
-		"MECHANICS AUDIT PASS right=%.1f left=%.1f short_jump=%.1f full_jump=%.1f dash=%.1f air_jump=one third_jump=blocked stomp=true snowball=1 game_over=true clean_restart=true" %
-		[right_distance, left_distance, short_height, full_height, dash_distance]
+		"MECHANICS AUDIT PASS right=%.1f left=%.1f short_jump=%.1f full_jump=%.1f dash=%.1f reverse_dash=%.1f air_speed=%.1f air_jump=one third_jump=blocked stomp=true snowball=1 game_over=true clean_restart=true" %
+		[right_distance, left_distance, short_height, full_height, dash_distance, reverse_dash_distance, preserved_air_speed]
 	)
 	controller.get_tree().quit(0)
 

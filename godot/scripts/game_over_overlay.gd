@@ -27,7 +27,7 @@ func _ready() -> void:
 	rows.add_theme_constant_override("separation", 12)
 	add_child(rows)
 	var title := Label.new()
-	title.text = "EXPEDITION PAUSED"
+	title.text = "RUN ENDED"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_font_size_override("font_size", 30 if not GameSession.large_text else 34)
 	title.add_theme_color_override("font_color", Color("#fff0a8"))
@@ -35,7 +35,7 @@ func _ready() -> void:
 	title.add_theme_color_override("font_outline_color", Color("#071326"))
 	rows.add_child(title)
 	var explanation := Label.new()
-	explanation.text = "The trail got the better of this run.\nRestart cleanly or return to the map."
+	explanation.text = "No progress was erased.\nRestart the stage cleanly or return to the map."
 	explanation.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	explanation.add_theme_font_size_override("font_size", 19 if not GameSession.large_text else 22)
 	explanation.add_theme_color_override("font_color", Color("#f7fcff"))

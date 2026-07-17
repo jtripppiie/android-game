@@ -288,8 +288,8 @@ func run_touch_audit() -> void:
 	var review_note: Rect2 = controls.controls["debug_note"]
 	var review_ids: Rect2 = controls.controls["debug_ids"]
 	assert(jump.size == Vector2(132, 132))
-	var objective_hud := Rect2(446, 10, 608, 62)
-	var pause_hud := Rect2(1066, 10, 200, 62)
+	var objective_hud := Rect2(526, 10, 512, 74)
+	var pause_hud := Rect2(1050, 10, 216, 74)
 	assert(review_note.position.y >= 92.0 and review_ids.position.y >= 92.0)
 	assert(review_note.intersection(pause_hud).get_area() == 0.0)
 	assert(review_ids.intersection(objective_hud).get_area() == 0.0)
@@ -316,6 +316,17 @@ func run_touch_audit() -> void:
 	up_release.index = 3; up_release.position = dpad_up.get_center(); up_release.pressed = false
 	controls._input(up_release)
 	assert(not Input.is_action_pressed("jump"))
+	var shallow_drift := InputEventScreenTouch.new()
+	shallow_drift.index = 8
+	shallow_drift.position = controls.dpad_bounds.get_center() + Vector2(70, -20)
+	shallow_drift.pressed = true
+	controls._input(shallow_drift)
+	assert(Input.is_action_pressed("move_right") and not Input.is_action_pressed("jump"))
+	var shallow_release := InputEventScreenTouch.new()
+	shallow_release.index = 8
+	shallow_release.position = shallow_drift.position
+	shallow_release.pressed = false
+	controls._input(shallow_release)
 	var diagonal := InputEventScreenTouch.new()
 	diagonal.index = 4
 	diagonal.position = controls.dpad_bounds.get_center() + Vector2(52, -52)
@@ -371,7 +382,7 @@ func run_touch_audit() -> void:
 		assert(scaled_jump.intersection(scaled_fire).get_area() == 0.0)
 		assert(scaled_jump.intersection(scaled_dash).get_area() == 0.0)
 	GameSession.touch_scale = original_touch_scale
-	print("TOUCH AUDIT PASS · ownership · no cross-control drag · single dpad thumb · diagonal · drift")
+	print("TOUCH AUDIT PASS · ownership · deliberate vertical threshold · no cross-control drag · single dpad thumb · diagonal · drift")
 	get_tree().quit(0)
 
 func clear_ui() -> void:
@@ -425,7 +436,11 @@ func show_menu() -> void:
 		var button := add_button(panel, String(spec[0]), spec[1])
 		button.custom_minimum_size.y = 88
 	var status := Label.new()
-	status.text = "ALASKA 5.4.0 · STAGES %d/5 · LIFETIME %d" % [GameSession.unlocked_stage + 1, GameSession.total_score]
+	status.text = "ALASKA %s · STAGES %d/5 · LIFETIME %d" % [
+		GameSession.APP_VERSION,
+		GameSession.unlocked_stage + 1,
+		GameSession.total_score
+	]
 	status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	status.add_theme_font_size_override("font_size", 22)
 	status.add_theme_color_override("font_color", Color("#fff0a8"))

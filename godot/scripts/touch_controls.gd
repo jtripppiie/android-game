@@ -4,7 +4,8 @@ extends Control
 const SAFE_MARGIN := Vector2(30, 26)
 const DPAD_SIZE := 196.0
 const DPAD_DRIFT_MARGIN := 24.0
-const DPAD_DEAD_ZONE := 0.16
+const DPAD_HORIZONTAL_THRESHOLD := 0.18
+const DPAD_VERTICAL_THRESHOLD := 0.46
 const ACTION_DRIFT_MARGIN := 14.0
 const NO_DPAD_TOUCH := -999999
 const REVIEW_BUTTON_TOP := 92.0
@@ -111,14 +112,23 @@ func sync_actions() -> void:
 		if role == "dpad" and touch_id == dpad_touch_id and dpad_touch_contains(point):
 			var vector := dpad_input_vector(point)
 			dpad_vector = vector
-			if vector.x < -DPAD_DEAD_ZONE:
+			if vector.x < -DPAD_HORIZONTAL_THRESHOLD:
 				desired_actions["move_left"] = true
 				moving = true
-			elif vector.x > DPAD_DEAD_ZONE:
+			elif vector.x > DPAD_HORIZONTAL_THRESHOLD:
 				desired_actions["move_right"] = true
 				moving = true
-			if vector.y < -DPAD_DEAD_ZONE: desired_actions["jump"] = true
-			elif vector.y > DPAD_DEAD_ZONE: desired_actions["crouch"] = true
+			# Vertical actions require deliberate travel toward the top/bottom
+			# lobe. A small diagonal thumb drift used to trigger surprise jumps
+			# and stomps while the player was only trying to run.
+			var deliberate_vertical := (
+				absf(vector.y) >= DPAD_VERTICAL_THRESHOLD
+				and absf(vector.y) >= absf(vector.x) * 0.72
+			)
+			if deliberate_vertical and vector.y < 0.0:
+				desired_actions["jump"] = true
+			elif deliberate_vertical and vector.y > 0.0:
+				desired_actions["crouch"] = true
 			continue
 		elif role != "" and controls.has(role):
 			var hit_box: Rect2 = controls[role]

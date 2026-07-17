@@ -3,6 +3,7 @@ extends Node
 const PROFILE_PATH := "user://profile.cfg"
 const PROFILE_BACKUP_PATH := "user://profile-backup.cfg"
 const PROFILE_SCHEMA := 3
+const APP_VERSION := "5.4.1"
 const MAX_PHOTO_BYTES := 20 * 1024 * 1024
 const PHOTO_TEXTURE_SIZE := 96
 

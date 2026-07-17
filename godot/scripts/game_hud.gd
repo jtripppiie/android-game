@@ -71,7 +71,7 @@ func build_left_status() -> void:
 	runner_card = PanelContainer.new()
 	runner_card.name = "RunnerStatus"
 	runner_card.position = Vector2(14, 10)
-	runner_card.size = Vector2(430, CARD_HEIGHT)
+	runner_card.size = Vector2(500, CARD_HEIGHT)
 	runner_card.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	runner_card.add_theme_stylebox_override("panel", panel_style(
 		Color(0.018, 0.075, 0.115, 0.94),
@@ -82,10 +82,10 @@ func build_left_status() -> void:
 	))
 	root.add_child(runner_card)
 	var columns := HBoxContainer.new()
-	columns.add_theme_constant_override("separation", 16)
+	columns.add_theme_constant_override("separation", 14)
 	runner_card.add_child(columns)
 	health_label = readable_label(ui_font(23), Color("#fff4d2"))
-	health_label.custom_minimum_size = Vector2(134, 64)
+	health_label.custom_minimum_size = Vector2(120, 64)
 	health_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	columns.add_child(health_label)
 	var stats := VBoxContainer.new()
@@ -102,8 +102,8 @@ func build_left_status() -> void:
 func build_objective_status() -> void:
 	objective_card = PanelContainer.new()
 	objective_card.name = "ObjectiveStatus"
-	objective_card.position = Vector2(456, 10)
-	objective_card.size = Vector2(582, CARD_HEIGHT)
+	objective_card.position = Vector2(526, 10)
+	objective_card.size = Vector2(512, CARD_HEIGHT)
 	objective_card.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	objective_card.add_theme_stylebox_override("panel", panel_style(
 		Color(0.035, 0.075, 0.115, 0.95),
@@ -246,19 +246,19 @@ func update_snapshot(
 	var snapshot := [health, score, best_score, aurora, combo, player_state, route, has_key, rescues, boss_defeated]
 	if snapshot != last_snapshot:
 		last_snapshot = snapshot
-		health_label.text = "HEALTH %d/3" % health
+		health_label.text = "HP  %d/3" % health
 		health_label.add_theme_color_override(
 			"font_color",
 			Color("#fff4d2") if health >= 2 else Color("#ff9b86")
 		)
 		score_label.text = "SCORE %d  ·  BEST %d" % [score, best_score]
-		var combo_text := "x%d" % combo if combo > 1 else "x0"
+		var combo_text := "x%d" % combo if combo > 1 else "—"
 		var route_text := "MID" if route == "PRECISION" else route
-		state_label.text = "AUR %d    COMBO %s    %s · %s" % [
+		state_label.text = "RINGS %d  ·  %s  ·  %s%s" % [
 			aurora,
 			combo_text,
 			player_state.to_upper(),
-			route_text
+			"" if GameSession.large_text else " · " + route_text
 		]
 		objective_label.text = objective_text(has_key, rescues, boss_defeated)
 	last_world_x = world_x
@@ -271,11 +271,11 @@ func layout_for_viewport() -> void:
 		view = VIEW_SIZE
 	top_bar.size = Vector2(view.x, BAR_HEIGHT)
 	runner_card.position = Vector2(14, 10)
-	runner_card.size = Vector2(430, CARD_HEIGHT)
+	runner_card.size = Vector2(500, CARD_HEIGHT)
 	pause_button.position = Vector2(view.x - 230, 10)
 	pause_button.size = Vector2(216, CARD_HEIGHT)
-	objective_card.position = Vector2(456, 10)
-	objective_card.size = Vector2(maxf(360.0, pause_button.position.x - 470.0), CARD_HEIGHT)
+	objective_card.position = Vector2(526, 10)
+	objective_card.size = Vector2(maxf(360.0, pause_button.position.x - 540.0), CARD_HEIGHT)
 	progress_track.size = Vector2(view.x, PROGRESS_HEIGHT)
 	message_panel.position = Vector2((view.x - 600.0) * 0.5, 108)
 	last_progress_pixels = -1
@@ -372,6 +372,13 @@ func audit_layout() -> void:
 	assert(score_label.get_theme_font_size("font_size") >= 20)
 	assert(state_label.get_theme_font_size("font_size") >= 17)
 	assert(objective_label.get_theme_font_size("font_size") >= 21)
+	assert(runner_card.size.x >= 500.0 and health_label.custom_minimum_size.x >= 120.0)
+	update_snapshot(1, 999999, 999999, 99, 12, "sprint", "PRECISION", false, 2, false, stage_length * 0.5)
+	assert(health_label.text == "HP  1/3")
+	assert(score_label.text == "SCORE 999999  ·  BEST 999999")
+	assert(state_label.text.length() <= 42)
+	assert(objective_label.text == "KEY —    RESCUES 2/2    BOSS —")
+	assert(last_progress_pixels == roundi(progress_track.size.x * 0.5))
 	post_message("LOW", 1, 2.0)
 	post_message("URGENT", 3, 2.0)
 	assert(message_label.text == "URGENT")

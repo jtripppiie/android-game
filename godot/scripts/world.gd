@@ -24,6 +24,8 @@ var review_registry: ReviewRegistry
 var auditor: GameplayAuditor
 var game_over_overlay: GameOverOverlay
 var stage_complete_overlay: StageCompleteOverlay
+var goal_beacon: Sprite2D
+var goal_status_label: Label
 var run_elapsed := 0.0
 var damage_taken := 0
 
@@ -124,8 +126,8 @@ func build_midnight_sun() -> void:
 	moving_platform(Vector2(930, 390), Vector2(0, -100), 3.0)
 	launch_pad(Vector2(2320, 510)); trick_ring_line(Vector2(2400, 420))
 	supply_block(Vector2(3780, 468))
-	collectible(Vector2(1280, 440), "key"); collectible(Vector2(1900, 390), "survivor"); collectible(Vector2(4020, 460), "survivor")
-	enemy(Vector2(1460, 450), 130, "wolf"); enemy(Vector2(3300, 370), 150, "wolf")
+	collectible(Vector2(1180, 440), "key"); collectible(Vector2(1900, 390), "survivor"); collectible(Vector2(4020, 460), "survivor")
+	enemy(Vector2(1400, 450), 90, "wolf"); enemy(Vector2(3300, 370), 130, "wolf")
 	checkpoint(Vector2(2980, 370)); finalize_stage()
 
 func build_salmon_rush() -> void:
@@ -139,8 +141,8 @@ func build_salmon_rush() -> void:
 	for x in [820.0, 1480.0, 2180.0, 2940.0, 3640.0]:
 		var water := FreezableWater.new(); water.position = Vector2(x, 550); water.size = Vector2(120, 48); register_debug_item(water, "WT", "river"); add_child(water)
 	collectible(Vector2(1240, 440), "key"); collectible(Vector2(2500, 410), "survivor"); collectible(Vector2(3980, 400), "survivor")
-	enemy(Vector2(1800, 480), 110, "salmon"); enemy(Vector2(3280, 480), 110, "salmon")
-	checkpoint(Vector2(3100, 480)); finalize_stage()
+	enemy(Vector2(1800, 480), 100, "salmon"); enemy(Vector2(3400, 480), 100, "salmon")
+	checkpoint(Vector2(3140, 480)); finalize_stage()
 
 func build_moose_pass() -> void:
 	platform(Rect2(0, 540, 900, 180), Color("#e8f4f5"))
@@ -157,13 +159,12 @@ func build_moose_pass() -> void:
 	for data in [[740,465],[1440,345],[1980,430],[2470,355],[3420,485],[3990,385]]:
 		collectible(Vector2(data[0],data[1]), "coin")
 	collectible(Vector2(2590, 350), "key")
-	collectible(Vector2(2050, 370), "survivor")
+	collectible(Vector2(1990, 370), "survivor")
 	collectible(Vector2(4050, 390), "survivor")
-	checkpoint(Vector2(3300, 500))
+	checkpoint(Vector2(3350, 500))
 	enemy(Vector2(1520, 360), 120, "wolf")
-	enemy(Vector2(2350, 370), 155, "bear")
-	enemy(Vector2(3520, 500), 120, "wolf")
-	enemy(Vector2(4520, 460), 180, "bear")
+	enemy(Vector2(2240, 370), 80, "bear")
+	enemy(Vector2(3630, 500), 80, "wolf")
 	boss(Vector2(5160, 448))
 	goal(Vector2(5480, 450))
 	build_route_branches()
@@ -177,13 +178,16 @@ func build_dark_winter() -> void:
 	platform(Rect2(1420, 380, 420, 340), Color("#8eb9ca"))
 	platform(Rect2(1990, 520, 440, 200), Color("#a4cbd8"))
 	platform(Rect2(2600, 420, 430, 300), Color("#8eb9ca"))
-	platform(Rect2(3200, 540, 450, 180), Color("#a4cbd8"))
+	# The former 170 px convergence gap punished a checkpoint respawn that
+	# arrived while the vertical mover was out of phase. Keep the mover as the
+	# fast line, but make the 140 px ground transfer independently reliable.
+	platform(Rect2(3170, 540, 480, 180), Color("#a4cbd8"))
 	platform(Rect2(3820, 400, 430, 320), Color("#8eb9ca"))
 	platform(Rect2(4420, 510, 1290, 210), Color("#a4cbd8"))
 	moving_platform(Vector2(800, 360), Vector2(180, 0), 2.8); moving_platform(Vector2(3070, 330), Vector2(0, 150), 2.5)
 	collectible(Vector2(1600, 320), "key"); collectible(Vector2(2190, 460), "survivor"); collectible(Vector2(4000, 340), "survivor")
 	enemy(Vector2(3420, 480), 130, "wolf")
-	checkpoint(Vector2(2650, 350)); finalize_stage()
+	checkpoint(Vector2(2720, 350)); finalize_stage()
 
 func build_bear_country() -> void:
 	platform(Rect2(0, 540, 860, 180), Color("#eef6f7"))
@@ -195,9 +199,9 @@ func build_bear_country() -> void:
 	platform(Rect2(4280, 470, 1430, 250), Color("#eef6f7"))
 	launch_pad(Vector2(2160, 490)); trick_ring_line(Vector2(2250, 400)); moving_platform(Vector2(3380, 350), Vector2(220, 0), 2.4)
 	supply_block(Vector2(3680, 468))
-	collectible(Vector2(1520, 300), "key"); collectible(Vector2(2320, 440), "survivor"); collectible(Vector2(3800, 460), "survivor")
-	enemy(Vector2(1780, 300), 170, "bear"); enemy(Vector2(3050, 340), 180, "bear"); enemy(Vector2(4560, 410), 150, "wolf")
-	checkpoint(Vector2(2780, 330)); finalize_stage()
+	collectible(Vector2(1450, 300), "key"); collectible(Vector2(2320, 440), "survivor"); collectible(Vector2(3800, 460), "survivor")
+	enemy(Vector2(1740, 300), 90, "bear"); enemy(Vector2(3100, 340), 140, "bear")
+	checkpoint(Vector2(2760, 330)); finalize_stage()
 
 func finalize_stage() -> void:
 	boss(Vector2(5160, 448))
@@ -396,7 +400,9 @@ func enemy(at: Vector2, distance: float, kind: String) -> void:
 	add_child(foe)
 
 func boss(at: Vector2) -> void:
-	checkpoint(at + Vector2(-360, 0))
+	# Keep the checkpoint and ordinary wildlife out of the boss attack envelope.
+	# The old -360 position could respawn directly inside the polar bear lunge.
+	checkpoint(at + Vector2(-620, 0))
 	var encounter := TrailBoss.new()
 	encounter.add_to_group("stage_boss")
 	boss_node = encounter
@@ -484,7 +490,7 @@ func collect(body: Node, item: Area2D) -> void:
 	if item.get_meta("kind") == "key":
 		key_collected = true
 		player.chain_action(40)
-		announce("KEY FOUND · EXIT READY · +40", 3)
+		announce("KEY FOUND · +40", 3)
 	elif item.get_meta("kind") == "survivor":
 		survivors_found += 1
 		player.chain_action(60)
@@ -497,15 +503,23 @@ func collect(body: Node, item: Area2D) -> void:
 
 func checkpoint(at: Vector2) -> void:
 	var zone := Area2D.new()
+	zone.add_to_group("stage_checkpoint")
 	zone.position = at
+	# A checkpoint is progression insurance, not a precision collectible.
+	# Span the playable height so launch-pad arcs and high routes cannot sail
+	# over the trigger and silently respawn the player at the stage entrance.
 	register_debug_item(zone, "CP", "checkpoint")
 	var collision := CollisionShape2D.new()
 	var shape := RectangleShape2D.new()
-	shape.size = Vector2(80, 170)
+	shape.size = Vector2(96, 1100)
 	collision.shape = shape
+	collision.position.y = 360.0 - at.y
 	zone.add_child(collision)
 	zone.body_entered.connect(func(body):
-		if body == player: player.set_checkpoint(at + Vector2(0,-30)))
+		# Authored checkpoint markers sit roughly 60–70 px above their support.
+		# Respawn just above that support instead of dropping from the old
+		# airborne -30 offset, which could carry held input into the next gap.
+		if body == player: player.set_checkpoint(at + Vector2(0, 50)))
 	add_child(zone)
 	var marker := atlas_object_sprite(0, 0.24)
 	marker.position = at + Vector2(0, -38)
@@ -526,9 +540,16 @@ func goal(at: Vector2) -> void:
 	var beacon := atlas_object_sprite(1, 0.30)
 	beacon.position = at + Vector2(0, -24)
 	add_child(beacon)
-	var pulse := create_tween().set_loops()
-	pulse.tween_property(beacon, "modulate", Color(1.18, 1.12, 0.88), 0.55)
-	pulse.tween_property(beacon, "modulate", Color.WHITE, 0.55)
+	goal_beacon = beacon
+	goal_status_label = Label.new()
+	goal_status_label.position = at + Vector2(-110, -156)
+	goal_status_label.size = Vector2(220, 34)
+	goal_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	goal_status_label.add_theme_font_size_override("font_size", 19)
+	goal_status_label.add_theme_constant_override("outline_size", 5)
+	goal_status_label.add_theme_color_override("font_outline_color", Color("#071326"))
+	add_child(goal_status_label)
+	update_goal_presentation()
 
 func atlas_object_sprite(index: int, display_scale: float) -> Sprite2D:
 	var sprite := Sprite2D.new()
@@ -543,7 +564,14 @@ func atlas_object_sprite(index: int, display_scale: float) -> Sprite2D:
 func finish_level(body: Node) -> void:
 	if body != player or finished: return
 	if not key_collected or survivors_found < 2 or not boss_defeated:
-		announce("NEED KEY · %d RESCUES · BOSS %s" % [2 - survivors_found, "DONE" if boss_defeated else "ALIVE"], 3)
+		var missing: Array[String] = []
+		if not key_collected:
+			missing.append("KEY")
+		if survivors_found < 2:
+			missing.append("%d RESCUE%s" % [2 - survivors_found, "" if survivors_found == 1 else "S"])
+		if not boss_defeated:
+			missing.append("BOSS")
+		announce("EXIT LOCKED · NEED " + " · ".join(missing), 3)
 		return
 	finished = true
 	announce("LEVEL CLEAR · EXPEDITION COMPLETE", 5, 3.5)
@@ -687,6 +715,7 @@ func _process(delta: float) -> void:
 		review_registry.toggle()
 	if GameSession.review_mode:
 		review_registry.update(player)
+	update_goal_presentation()
 	if player and is_instance_valid(hud):
 		var route := "HIGH" if player.global_position.y < 350.0 else "LOW" if player.global_position.y > 575.0 else "PRECISION"
 		hud.update_snapshot(
@@ -702,6 +731,25 @@ func _process(delta: float) -> void:
 			boss_defeated,
 			player.global_position.x
 		)
+
+
+func update_goal_presentation() -> void:
+	if not is_instance_valid(goal_beacon) or not is_instance_valid(goal_status_label):
+		return
+	var ready := key_collected and survivors_found >= 2 and boss_defeated
+	if ready:
+		var pulse := (
+			1.0
+			if GameSession.reduced_motion
+			else 0.94 + sin(Time.get_ticks_msec() * 0.006) * 0.06
+		)
+		goal_beacon.modulate = Color(1.08, 1.02, 0.72, 1.0) * pulse
+		goal_status_label.text = "EXIT READY"
+		goal_status_label.add_theme_color_override("font_color", Color("#ffda79"))
+	else:
+		goal_beacon.modulate = Color(0.48, 0.63, 0.69, 0.72)
+		goal_status_label.text = "LOCKED · COMPLETE OBJECTIVES"
+		goal_status_label.add_theme_color_override("font_color", Color("#9fb9c2"))
 
 func announce(message: String, priority := 1, seconds := 2.4) -> void:
 	if is_instance_valid(hud): hud.post_message(message, priority, seconds)
