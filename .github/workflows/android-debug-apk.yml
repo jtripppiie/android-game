@@ -56,7 +56,7 @@ jobs:
 
       - name: Restore custom Android build template
         run: |
-          unzip -q \
+          unzip -oq \
             "$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable/android_source.zip" \
             -d godot/android/build
           git checkout -- \
