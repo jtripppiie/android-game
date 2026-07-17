@@ -10,6 +10,12 @@ Starting source commit:
 827ee0f615d16d54f1b37b6cba405990c97dec39
 ```
 
+Validated implementation commit:
+
+```text
+75d3233d1bbd886c834e66f60386dfacacc533b9
+```
+
 ## Release identity
 
 ```text

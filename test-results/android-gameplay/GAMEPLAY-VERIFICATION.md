@@ -481,4 +481,8 @@ All older local APK outputs were deleted, leaving only 5.4.2. Physical-device
 visuals, touch ergonomics, haptics, interruptions, thermals, and long-session
 behavior remain `NOT VERIFIED ON PHYSICAL DEVICE`.
 
+Starting commit: `827ee0f615d16d54f1b37b6cba405990c97dec39`
+
+Validated implementation commit: `75d3233d1bbd886c834e66f60386dfacacc533b9`
+
 See `docs/RELEASE_5_4_2_COMPUTER_REVIEW.md` for the release record.
