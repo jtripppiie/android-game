@@ -1,8 +1,8 @@
 class_name TouchControls
 extends Control
 
-const MIN_SIZE := Vector2(92, 78)
-const SAFE_MARGIN := Vector2(30, 26)
+const MIN_SIZE := Vector2(104, 84)
+const SAFE_MARGIN := Vector2(34, 30)
 
 var active_touches := {}
 var review_mode := false
@@ -20,13 +20,12 @@ func layout_controls() -> void:
 	if view.x < 600.0 or view.y < 360.0: view = get_viewport_rect().size
 	var bottom := view.y - SAFE_MARGIN.y
 	controls = {
-		"move_left": Rect2(Vector2(SAFE_MARGIN.x, bottom - 116), Vector2(104, 96)),
-		"move_right": Rect2(Vector2(SAFE_MARGIN.x + 116, bottom - 116), Vector2(104, 96)),
-		"crouch": Rect2(Vector2(SAFE_MARGIN.x + 58, bottom - 220), Vector2(104, 82)),
-		"jump": Rect2(Vector2(view.x - SAFE_MARGIN.x - 116, bottom - 126), Vector2(116, 106)),
-		"fire": Rect2(Vector2(view.x - SAFE_MARGIN.x - 226, bottom - 224), Vector2(104, 88)),
-		"sprint": Rect2(Vector2(view.x - SAFE_MARGIN.x - 342, bottom - 118), MIN_SIZE),
-		"dash": Rect2(Vector2(view.x - SAFE_MARGIN.x - 330, bottom - 218), MIN_SIZE)
+		"move_left": Rect2(Vector2(SAFE_MARGIN.x, bottom - 128), Vector2(124, 108)),
+		"move_right": Rect2(Vector2(SAFE_MARGIN.x + 136, bottom - 128), Vector2(124, 108)),
+		"crouch": Rect2(Vector2(SAFE_MARGIN.x + 78, bottom - 226), Vector2(104, 76)),
+		"jump": Rect2(Vector2(view.x - SAFE_MARGIN.x - 140, bottom - 144), Vector2(140, 124)),
+		"fire": Rect2(Vector2(view.x - SAFE_MARGIN.x - 258, bottom - 246), Vector2(112, 94)),
+		"dash": Rect2(Vector2(view.x - SAFE_MARGIN.x - 266, bottom - 126), MIN_SIZE)
 	}
 	if review_mode:
 		controls["debug_note"] = Rect2(Vector2(view.x - SAFE_MARGIN.x - 104, SAFE_MARGIN.y), Vector2(104, 52))
@@ -56,12 +55,18 @@ func action_at(point: Vector2) -> String:
 
 func sync_actions() -> void:
 	for action in controls: Input.action_release(action)
+	Input.action_release("sprint")
+	var moving := false
 	for action in active_touches.values():
-		if action != "": Input.action_press(action)
+		if action != "":
+			Input.action_press(action)
+			if action in ["move_left", "move_right"]: moving = true
+	if moving: Input.action_press("sprint")
 	queue_redraw()
 
 func _exit_tree() -> void:
 	for action in controls: Input.action_release(action)
+	Input.action_release("sprint")
 
 func _draw() -> void:
 	if controls.is_empty(): return
@@ -74,7 +79,7 @@ func _draw() -> void:
 		var fill := Color(1.0, 0.78, 0.20, 0.96) if active else Color(0.02, 0.10, 0.17, 0.88)
 		var border := Color("#fff0a8") if active else Color("#84d5e8")
 		draw_style_box(make_box(fill, border, 22), box)
-		var font_size := 30 if action in ["move_left", "move_right"] else 19
+		var font_size := 34 if action in ["move_left", "move_right"] else 22
 		var text_color := Color("#071326") if active else Color.WHITE
 		var baseline := box.position + Vector2(0, box.size.y * 0.62 + font_size * 0.25)
 		draw_string(ThemeDB.fallback_font, baseline, label_for(action), HORIZONTAL_ALIGNMENT_CENTER, box.size.x, font_size, text_color)

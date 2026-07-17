@@ -75,7 +75,7 @@ for marker in ("TrailBoss", "ReviewNotebook", "debug_note_context", "save_profil
     assert marker in world, marker
 for marker in ("combo_timer", "chain_action", "score"):
     assert marker in player, marker
-for marker in ("JUMP_SPEED := 750.0", "air_jumps_left := 1", '"AIR JUMP"', "capsule.height = 96.0", "Vector2(0, -90)"):
+for marker in ("JUMP_SPEED := 900.0", "SPRINT_SPEED := 540.0", "air_jumps_left := 1", '"AIR JUMP"', "capsule.height = 96.0", "Vector2(0, -90)"):
     assert marker in player, marker
 enemy_source = (root / "scripts/enemy.gd").read_text()
 for marker in ("wildlife_bear_walk.png", "wildlife_eagle_fly.png", "wildlife_salmon_swim.png"):

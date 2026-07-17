@@ -9,19 +9,18 @@ reaches the finish beacon.
 
 ```text
 engine: Godot 4.7.1
-versionCode: 522
-versionName: 5.2.2
+versionCode: 530
+versionName: 5.3.0
 package: com.jtripppiie.mooserush
-APK status: build pending
-last compiled APK: app/build/outputs/apk/debug/you-rush-alaska-5.2.1-debug.apk
+APK status: compiled and inspected
+APK: app/build/outputs/apk/debug/you-rush-alaska-5.3.0-debug.apk
 ```
 
-Version 5.2.2 replaces the broken fixed-coordinate mobile overlay with large,
+Version 5.3.0 replaces the broken fixed-coordinate mobile overlay with large,
 high-contrast, viewport-relative touch controls. Source validation, the
-multi-touch regression test, and a five-stage traversal passed. Its APK export
-is pending because the build environment could not start Gradle after two
-approval timeouts. Do not distribute a file labeled 5.2.2 until it has been
-compiled and inspected.
+multi-touch regression test, and a five-stage traversal passed. It also enlarges
+all menus and materially improves running acceleration, jump height, input
+buffering, and coyote time.
 
 ## Controls
 
@@ -66,16 +65,16 @@ local socket access for Gradle.
 Before handing over a build, complete
 [the device acceptance checklist](docs/DEVICE_ACCEPTANCE_CHECKLIST.md).
 
-## Last accepted APK
+## Current APK
 
-The most recent compiled and inspected package is
-`app/build/outputs/apk/debug/you-rush-alaska-5.2.1-debug.apk`.
+The current compiled and inspected package is
+`app/build/outputs/apk/debug/you-rush-alaska-5.3.0-debug.apk`.
 
 SHA-256:
 
 ```text
-5dc4884d683eafe192b8170474034f4a6fb02f93a4f08a2f3226b864677c66cf
+53b36d3ef69a3faa625fa0282d3dbb81b7f49640e948affe1000f3849ff91941
 ```
 
-Keep it as the rollback build until 5.2.2 is compiled and passes the physical
+Version 5.2.1 remains the local rollback while 5.3.0 completes the physical
 device checklist.

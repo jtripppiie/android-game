@@ -25,23 +25,23 @@ func run_touch_audit() -> void:
 	controls.layout_controls()
 	var right: Rect2 = controls.controls["move_right"]
 	var jump: Rect2 = controls.controls["jump"]
-	assert(jump.size == Vector2(116, 106))
+	assert(jump.size == Vector2(140, 124))
 	var move_press := InputEventScreenTouch.new()
 	move_press.index = 1; move_press.position = right.get_center(); move_press.pressed = true
 	controls._input(move_press)
 	var jump_press := InputEventScreenTouch.new()
 	jump_press.index = 2; jump_press.position = jump.get_center(); jump_press.pressed = true
 	controls._input(jump_press)
-	assert(Input.is_action_pressed("move_right") and Input.is_action_pressed("jump"))
+	assert(Input.is_action_pressed("move_right") and Input.is_action_pressed("sprint") and Input.is_action_pressed("jump"))
 	var jump_release := InputEventScreenTouch.new()
 	jump_release.index = 2; jump_release.position = jump.get_center(); jump_release.pressed = false
 	controls._input(jump_release)
-	assert(Input.is_action_pressed("move_right") and not Input.is_action_pressed("jump"))
+	assert(Input.is_action_pressed("move_right") and Input.is_action_pressed("sprint") and not Input.is_action_pressed("jump"))
 	var move_release := InputEventScreenTouch.new()
 	move_release.index = 1; move_release.position = right.get_center(); move_release.pressed = false
 	controls._input(move_release)
-	assert(not Input.is_action_pressed("move_right"))
-	print("TOUCH AUDIT PASS · responsive layout · simultaneous move+jump · independent release")
+	assert(not Input.is_action_pressed("move_right") and not Input.is_action_pressed("sprint"))
+	print("TOUCH AUDIT PASS · auto-run · simultaneous move+jump · independent release")
 	get_tree().quit(0)
 
 func clear_ui() -> void:
@@ -52,13 +52,14 @@ func show_menu() -> void:
 	clear_ui()
 	add_backdrop("background_midnight_sun.png")
 	var panel := VBoxContainer.new()
-	panel.position = Vector2(390, 110)
-	panel.size = Vector2(500, 500)
+	panel.position = Vector2(250, 54)
+	panel.size = Vector2(780, 612)
 	ui.add_child(panel)
 	var title := Label.new()
 	title.text = "YOU RUSH · ALASKA"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 42 if GameSession.large_text else 34)
+	title.add_theme_font_size_override("font_size", 54 if GameSession.large_text else 48)
+	title.custom_minimum_size.y = 92
 	title.add_theme_color_override("font_color", Color("#fff4d2"))
 	title.add_theme_constant_override("outline_size", 8)
 	title.add_theme_color_override("font_outline_color", Color(0.02, 0.08, 0.14, 0.9))
@@ -67,21 +68,23 @@ func show_menu() -> void:
 	add_button(panel, "CUSTOMIZE RUNNER", show_customize)
 	add_button(panel, "ACCESSIBILITY", show_accessibility)
 	var status := Label.new()
-	status.text = "ENGINE 5.0 · STAGES %d/5 · TOTAL %d" % [GameSession.unlocked_stage + 1, GameSession.total_score]
+	status.text = "ALASKA 5.3 · STAGES %d/5 · TOTAL %d" % [GameSession.unlocked_stage + 1, GameSession.total_score]
 	status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	status.add_theme_font_size_override("font_size", 22)
 	panel.add_child(status)
 
 func show_map() -> void:
 	clear_ui()
 	add_backdrop("background_dark_winter.png")
 	var panel := VBoxContainer.new()
-	panel.position = Vector2(250, 52)
-	panel.size = Vector2(780, 620)
+	panel.position = Vector2(170, 36)
+	panel.size = Vector2(940, 654)
 	ui.add_child(panel)
 	var title := Label.new()
 	title.text = "ALASKA EXPEDITION MAP"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 30)
+	title.add_theme_font_size_override("font_size", 40)
+	title.custom_minimum_size.y = 66
 	panel.add_child(title)
 	for index in range(GameSession.STAGES.size()):
 		var stage = GameSession.STAGES[index]
@@ -107,13 +110,14 @@ func show_customize() -> void:
 	clear_ui()
 	add_backdrop("background_midnight_sun.png")
 	var panel := VBoxContainer.new()
-	panel.position = Vector2(340, 130)
-	panel.size = Vector2(600, 450)
+	panel.position = Vector2(240, 72)
+	panel.size = Vector2(800, 576)
 	ui.add_child(panel)
 	var title := Label.new()
 	title.text = "CUSTOMIZE RUNNER"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 30)
+	title.add_theme_font_size_override("font_size", 42)
+	title.custom_minimum_size.y = 74
 	panel.add_child(title)
 	var status := Label.new()
 	status.text = "DEFAULT RUNNER" if GameSession.photo_path.is_empty() else "PHOTO READY · " + GameSession.photo_path.get_file()
@@ -127,16 +131,19 @@ func show_accessibility() -> void:
 	clear_ui()
 	add_backdrop("background_dark_winter.png")
 	var panel := VBoxContainer.new()
-	panel.position = Vector2(390, 100)
-	panel.size = Vector2(500, 520)
+	panel.position = Vector2(240, 42)
+	panel.size = Vector2(800, 636)
 	ui.add_child(panel)
 	var title := Label.new()
 	title.text = "ACCESSIBILITY"
-	title.add_theme_font_size_override("font_size", 30)
+	title.add_theme_font_size_override("font_size", 42)
+	title.custom_minimum_size.y = 68
 	panel.add_child(title)
 	for spec in [["MUTE AUDIO", "muted"], ["HAPTICS", "haptics"], ["LARGE TEXT", "large_text"], ["REDUCED MOTION", "reduced_motion"], ["HIGH CONTRAST", "high_contrast"], ["REVIEW MODE · IDS + NOTES", "review_mode"]]:
 		var toggle := CheckButton.new()
 		toggle.text = spec[0]
+		toggle.custom_minimum_size.y = 62
+		toggle.add_theme_font_size_override("font_size", 24)
 		toggle.button_pressed = GameSession.get(spec[1])
 		toggle.toggled.connect(func(value): GameSession.set(spec[1], value); GameSession.save_profile())
 		panel.add_child(toggle)
@@ -145,8 +152,8 @@ func show_accessibility() -> void:
 func add_button(parent: Control, label: String, callback: Callable) -> Button:
 	var button := Button.new()
 	button.text = label
-	button.custom_minimum_size = Vector2(0, 52)
-	button.add_theme_font_size_override("font_size", 20 if GameSession.large_text else 17)
+	button.custom_minimum_size = Vector2(0, 72)
+	button.add_theme_font_size_override("font_size", 28 if GameSession.large_text else 24)
 	button.add_theme_color_override("font_color", Color("#f7fcff"))
 	button.add_theme_color_override("font_hover_color", Color("#fff0a8"))
 	var normal := StyleBoxFlat.new()

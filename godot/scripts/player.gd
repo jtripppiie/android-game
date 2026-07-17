@@ -5,16 +5,16 @@ signal fired(origin: Vector2, direction: float)
 signal checkpoint_reached(position: Vector2)
 signal action_feedback(message: String)
 
-const WALK_SPEED := 260.0
-const SPRINT_SPEED := 430.0
-const ACCELERATION := 1800.0
-const AIR_ACCELERATION := 1050.0
-const FRICTION := 2100.0
-const GRAVITY := 1450.0
-const JUMP_SPEED := 750.0
-const COYOTE_TIME := 0.14
-const JUMP_BUFFER := 0.16
-const DASH_SPEED := 720.0
+const WALK_SPEED := 330.0
+const SPRINT_SPEED := 540.0
+const ACCELERATION := 3200.0
+const AIR_ACCELERATION := 1350.0
+const FRICTION := 2500.0
+const GRAVITY := 1550.0
+const JUMP_SPEED := 900.0
+const COYOTE_TIME := 0.18
+const JUMP_BUFFER := 0.20
+const DASH_SPEED := 780.0
 const DASH_SECONDS := 0.16
 const DASH_COOLDOWN := 0.70
 const STOMP_SPEED := 880.0
