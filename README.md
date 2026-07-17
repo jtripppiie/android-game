@@ -13,7 +13,6 @@ versionCode: 541
 versionName: 5.4.1
 package: com.jtripppiie.mooserush
 device APK: app/build/outputs/apk/debug/you-rush-alaska-5.4.1-debug.apk
-emulator APK: app/build/outputs/apk/debug/you-rush-alaska-5.4.1-x86_64-debug.apk
 ```
 
 `app/src/main/` is the legacy Java game retained for rollback and save
@@ -27,9 +26,8 @@ checkpoints, safer objective/wildlife/boss spacing, a clearer HUD and exit
 beacon, and deeper fairness telemetry across all five stages. It builds on
 5.4.0's separated player scene, camera, effects, verification, review IDs,
 result flows, measured runner grounding, parallax, snow contact effects, soft
-terrain joins, profile backups, and score/time/no-damage stars. Android export is
-split by architecture so the ARM64 device APK no longer carries an unused
-x86_64 engine.
+terrain joins, profile backups, and score/time/no-damage stars. Android export
+now produces one ARM64 device APK only.
 
 ## Controls
 
@@ -62,12 +60,10 @@ Build Tools 36.1.0, and NDK 29 are required.
 
 ```bash
 godot --headless --path godot --export-debug "Android Debug"
-godot --headless --path godot --export-debug "Android Emulator Debug"
 ```
 
-`Android Debug` is ARM64 for phones/tablets. `Android Emulator Debug` is
-x86_64 and is test-only. Both are debug-signed; a public release needs the
-owner’s private release key.
+`Android Debug` is the only APK preset and targets ARM64 phones/tablets. It is
+debug-signed; a public release needs the owner’s private release key.
 
 ## Documentation and evidence
 

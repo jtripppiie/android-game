@@ -143,6 +143,11 @@ Both APKs pass 16 KiB page-aware zip alignment and APK Signature Scheme v2
 verification. They use the established Godot debug certificate, not a private
 store signing key.
 
+The x86_64 row is retained only as historical verification evidence. After
+this build, the owner chose a single Android output: the ARM64 device APK. The
+`Android Emulator Debug` preset was removed and must not be used for current
+builds.
+
 ## Honest limitations
 
 - This pass compiled both Android APKs but did not claim a new rendered Android

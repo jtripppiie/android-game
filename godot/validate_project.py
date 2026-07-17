@@ -122,13 +122,14 @@ require(
         'version/name="5.4.1"',
         "you-rush-alaska-5.4.1-debug.apk",
         "architectures/arm64-v8a=true",
-        "architectures/x86_64=true",
-        'name="Android Emulator Debug"',
-        "you-rush-alaska-5.4.1-x86_64-debug.apk",
+        "architectures/x86_64=false",
         'package/unique_name="com.jtripppiie.mooserush"',
     ),
     "export preset",
 )
+assert 'name="Android Emulator Debug"' not in preset
+assert "architectures/x86_64=true" not in preset
+assert "x86_64-debug.apk" not in preset
 require(
     main,
     (

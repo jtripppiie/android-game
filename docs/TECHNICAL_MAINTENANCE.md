@@ -77,13 +77,13 @@ Build Tools 36.1.0, and NDK 29.0.14206865.
 
 ```bash
 godot --headless --path godot --export-debug "Android Debug"
-godot --headless --path godot --export-debug "Android Emulator Debug"
 ```
 
-The first preset is ARM64 and produces
-`app/build/outputs/apk/debug/you-rush-alaska-5.4.1-debug.apk`. The second is
-x86_64 and produces `you-rush-alaska-5.4.1-x86_64-debug.apk`. Keeping them
-separate avoids shipping two large Godot engine libraries in one test APK.
+This is the only Android APK preset. It targets ARM64 phones/tablets and
+produces
+`app/build/outputs/apk/debug/you-rush-alaska-5.4.1-debug.apk`.
+Do not add a separate x86_64/emulator APK unless the owner explicitly reverses
+this decision.
 
 Inspect every handoff:
 

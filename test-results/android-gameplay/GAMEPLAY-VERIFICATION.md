@@ -415,3 +415,18 @@ long-session checks remain `NOT VERIFIED ON PHYSICAL DEVICE`.
 See `docs/RELEASE_5_4_1_GAMEPLAY_REFINEMENT.md` for the complete change and
 build record. The 5.4.1 implementation commit is
 `761999be44c7585d78c498831bb24797fab9b042`.
+
+## 25. Single Android APK decision
+
+After the 5.4.1 verification build, the owner removed the separate emulator
+artifact from the production workflow. `godot/export_presets.cfg` now contains
+one Android preset:
+
+```text
+Android Debug → arm64-v8a → you-rush-alaska-5.4.1-debug.apk
+```
+
+The earlier x86_64 commands and checksums in this report remain historical
+evidence of tests already performed; they are not current build instructions.
+Current validation explicitly rejects an `Android Emulator Debug` preset,
+`architectures/x86_64=true`, or an `x86_64-debug.apk` export path.

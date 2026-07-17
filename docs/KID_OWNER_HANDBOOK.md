@@ -143,7 +143,7 @@ Java 17. Open `godot/project.godot`. In Godot choose **Project > Install Android
 Build Template** if `godot/android/build` is absent, then reapply/copy the native
 bridge files described in `docs/TECHNICAL_MAINTENANCE.md`. Choose **Project >
 Export > Android Debug > Export Project**. Use `Android Debug` for an ARM64
-phone or tablet. `Android Emulator Debug` is only for an x86_64 emulator.
+phone or tablet. It is the game's only Android APK export preset.
 
 The expected package is `com.jtripppiie.mooserush`, version code 540 or higher.
 Never lower the version code for a build meant to update an installed copy.

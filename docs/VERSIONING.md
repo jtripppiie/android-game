@@ -13,6 +13,8 @@ metadata: godot/export_presets.cfg
 
 Version 5.4.1 is the current compiled candidate. Version 5.4.0 remains the
 rollback until 5.4.1 passes real-device visual and gameplay acceptance.
+The project produces one ARM64 phone/tablet APK. There is no x86_64 emulator
+APK preset.
 
 The Java 4.2.2 project remains rollback/reference code. Its version fields in
 `app/build.gradle` do not describe the current Godot APK.
