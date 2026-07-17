@@ -41,7 +41,9 @@ func register(item: Node, prefix: String, description: String) -> void:
 	badge.add_theme_constant_override("outline_size", 3)
 	badge.add_theme_color_override("font_outline_color", Color(0.02, 0.06, 0.10, 0.95))
 	badge.add_theme_stylebox_override("normal", badge_style(category_color, false))
-	badge.visible = ids_visible
+	# Visibility is distance-filtered by update(); never flash every authored
+	# badge for one frame while a stage is entering Review Mode.
+	badge.visible = false
 	item.add_child(badge)
 
 

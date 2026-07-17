@@ -81,7 +81,7 @@ godot --headless --path godot --export-debug "Android Debug"
 
 This is the only Android APK preset. It targets ARM64 phones/tablets and
 produces
-`app/build/outputs/apk/debug/you-rush-alaska-5.4.1-debug.apk`.
+`app/build/outputs/apk/debug/you-rush-alaska-5.4.2-debug.apk`.
 Do not add a separate x86_64/emulator APK unless the owner explicitly reverses
 this decision.
 

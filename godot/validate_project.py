@@ -120,9 +120,9 @@ require(
 require(
     preset,
     (
-        'version/code=541',
-        'version/name="5.4.1"',
-        "you-rush-alaska-5.4.1-debug.apk",
+        'version/code=542',
+        'version/name="5.4.2"',
+        "you-rush-alaska-5.4.2-debug.apk",
         "architectures/arm64-v8a=true",
         "architectures/x86_64=false",
         'package/unique_name="com.jtripppiie.mooserush"',
@@ -287,7 +287,7 @@ require(
     session,
     (
         "PROFILE_SCHEMA := 3",
-        'APP_VERSION := "5.4.1"',
+        'APP_VERSION := "5.4.2"',
         "PROFILE_BACKUP_PATH",
         "backup_existing_profile",
         "completed_runs",

@@ -9,17 +9,20 @@ one distinct wildlife boss, and reach the trail beacon.
 ```text
 source: godot/
 engine: Godot 4.7.1
-versionCode: 541
-versionName: 5.4.1
+versionCode: 542
+versionName: 5.4.2
 package: com.jtripppiie.mooserush
-device APK: app/build/outputs/apk/debug/you-rush-alaska-5.4.1-debug.apk
+device APK: app/build/outputs/apk/debug/you-rush-alaska-5.4.2-debug.apk
 ```
 
 `app/src/main/` is the legacy Java game retained for rollback and save
 migration. It is not the current game and must not be used for production
 gameplay changes.
 
-Version 5.4.1 adds more responsive reversal and air momentum, a much stronger
+Version 5.4.2 adds the first-class Computer Review workflow, compact
+color-coded item identifiers, nearest-item context, tagged notes, desktop
+keyboard controls without a phone overlay, and dedicated regression coverage.
+It retains 5.4.1's more responsive reversal and air momentum, a much stronger
 short/full jump distinction, touch drift protection, exact enemy contact,
 stage-specific boss tells and fair recovery windows, grounded full-height
 checkpoints, safer objective/wildlife/boss spacing, a clearer HUD and exit
@@ -87,6 +90,7 @@ debug-signed; a public release needs the owner’s private release key.
 - [Privacy](docs/PRIVACY.md)
 - [5.4 release notes](docs/RELEASE_5_4_PRODUCTION_REFACTOR.md)
 - [5.4.1 gameplay refinement](docs/RELEASE_5_4_1_GAMEPLAY_REFINEMENT.md)
+- [5.4.2 computer review release](docs/RELEASE_5_4_2_COMPUTER_REVIEW.md)
 
 Emulator/headless evidence does not replace testing touch ergonomics, haptics,
 speech recognition, interruptions, thermals, or performance on a physical

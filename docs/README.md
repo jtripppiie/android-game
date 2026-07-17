@@ -21,6 +21,9 @@ developer should normally need.
 - [5.4.1 gameplay refinement](RELEASE_5_4_1_GAMEPLAY_REFINEMENT.md): movement
   feel, touch intent, collision fairness, boss pacing, HUD clarity, and stage
   spacing.
+- [5.4.2 computer review release](RELEASE_5_4_2_COMPUTER_REVIEW.md): desktop
+  gameplay, compact color-coded IDs, nearest-item context, tagged notes, and
+  dedicated regression coverage.
 - [Versioning](VERSIONING.md): current version and release rules.
 - [Debug identifiers](DEBUG_ITEM_IDENTIFIERS.md): how to report a specific item.
 - [Computer Review Mode](COMPUTER_REVIEW_MODE.md): run the production game with
@@ -44,6 +47,7 @@ developer should normally need.
 
 - [5.4 production refactor](RELEASE_5_4_PRODUCTION_REFACTOR.md)
 - [5.4.1 gameplay refinement](RELEASE_5_4_1_GAMEPLAY_REFINEMENT.md)
+- [5.4.2 computer review release](RELEASE_5_4_2_COMPUTER_REVIEW.md)
 - [5.1 distinct boss encounters](RELEASE_5_1_BOSS_OVERHAUL.md)
 - [5.2 Review Mode](RELEASE_5_2_REVIEW_MODE.md)
 - [5.2.1 scale alignment](RELEASE_5_2_1_SCALE_ALIGNMENT.md)

@@ -453,3 +453,32 @@ COMPUTER REVIEW AUDIT PASS · menu · no touch overlay · nearest ID · F1/F10/N
 The existing five-stage traversal suite was repeated after the overlay changes
 and passed without script errors. No Android APK was compiled for this
 desktop/debug-tool follow-up.
+
+## 27. Version 5.4.2 release verification
+
+The Computer Review and identifier work is now correctly versioned as
+versionCode 542/versionName 5.4.2. Before export, the complete standard suite
+was rerun and passed: validation, touch, system, lifecycle, pause, mechanics,
+Computer Review, geometry 0–4, debug overlay 0–4, and autoplay 0–4.
+
+The audit also found and fixed a one-frame identifier flash: badges registered
+while Review Mode was enabled could begin visible before the four-nearest
+filter ran. All badges now start hidden and only the distance-filtered update
+reveals them.
+
+Final APK:
+
+| APK | ABI | Bytes | SHA-256 | Status |
+|---|---|---:|---|---|
+| `you-rush-alaska-5.4.2-debug.apk` | arm64-v8a | 95,045,941 | `3d237191980b96be875f3150fee94adabcf730f7bf879a3c9df4d14b5fb09369` | PASS |
+
+Package inspection reports `com.jtripppiie.mooserush`, minimum SDK 24, target
+SDK 36, versionCode 542, and versionName 5.4.2. APK Signature Scheme v2 and
+16 KiB page-aware alignment both pass. The archive contains only
+`lib/arm64-v8a/libgodot_android.so`; it contains no x86_64 engine library.
+
+All older local APK outputs were deleted, leaving only 5.4.2. Physical-device
+visuals, touch ergonomics, haptics, interruptions, thermals, and long-session
+behavior remain `NOT VERIFIED ON PHYSICAL DEVICE`.
+
+See `docs/RELEASE_5_4_2_COMPUTER_REVIEW.md` for the release record.

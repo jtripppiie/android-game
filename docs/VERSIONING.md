@@ -5,14 +5,14 @@ The active Godot Android package is `com.jtripppiie.mooserush`.
 Current development version:
 
 ```text
-versionCode: 541
-versionName: 5.4.1
+versionCode: 542
+versionName: 5.4.2
 engine: Godot 4.7.1
 metadata: godot/export_presets.cfg
 ```
 
-Version 5.4.1 is the current compiled candidate. Version 5.4.0 remains the
-rollback until 5.4.1 passes real-device visual and gameplay acceptance.
+Version 5.4.2 is the current compiled candidate. Version 5.4.1 remains the
+rollback until 5.4.2 passes real-device visual and gameplay acceptance.
 The project produces one ARM64 phone/tablet APK. There is no x86_64 emulator
 APK preset.
 
