@@ -296,16 +296,29 @@ func platform(rect: Rect2, color: Color) -> void:
 		art.scale = Vector2(rect.size.x / art.texture.get_width(), 0.16)
 		body.add_child(art)
 	else:
-		var fill := Polygon2D.new()
-		fill.polygon = PackedVector2Array([Vector2.ZERO,Vector2(rect.size.x,0),rect.size,Vector2(0,rect.size.y)])
-		fill.color = color.darkened(0.15)
-		body.add_child(fill)
-		var cap := Sprite2D.new()
-		cap.texture = load("res://assets/%s" % ("route_platform_ice.png" if stage_index == 3 else "route_platform_snow.png"))
-		cap.position = Vector2(rect.size.x * 0.5, 18)
-		cap.scale = Vector2(rect.size.x / cap.texture.get_width(), 0.19)
-		body.add_child(cap)
+		build_snow_terrain(body, rect.size, color)
 	add_child(body)
+
+func build_snow_terrain(body: StaticBody2D, size: Vector2, stage_tint: Color) -> void:
+	# The former terrain was a flat color rectangle with a 49 px snow strip
+	# pasted across it. Use a complete snow/ice/rock cross-section so the whole
+	# visible platform communicates natural arctic terrain.
+	var source: Texture2D = load("res://assets/route_terrain_snow_v2.png")
+	var cropped := AtlasTexture.new()
+	cropped.atlas = source
+	# Remove transparent generation padding while retaining the uneven snowline.
+	cropped.region = Rect2(0, 72, 2176, 596)
+	var terrain := TextureRect.new()
+	terrain.texture = cropped
+	terrain.position = Vector2.ZERO
+	terrain.size = size
+	terrain.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	terrain.stretch_mode = TextureRect.STRETCH_SCALE
+	terrain.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	terrain.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	# Keep stages visually related without repainting the terrain as a flat slab.
+	terrain.modulate = Color.WHITE.lerp(stage_tint, 0.08)
+	body.add_child(terrain)
 
 func slope(points: PackedVector2Array, color: Color) -> void:
 	var body := StaticBody2D.new()
@@ -397,6 +410,9 @@ func trick_ring_line(at: Vector2) -> void:
 
 func _on_supply_block_opened(at: Vector2) -> void:
 	checkpoint_label.text = "SECRET CACHE · REWARD ARC"
+	call_deferred("spawn_supply_reward_arc", at)
+
+func spawn_supply_reward_arc(at: Vector2) -> void:
 	for offset in [-46.0, 0.0, 46.0]:
 		collectible(at + Vector2(offset, -52.0 - absf(offset) * 0.22), "coin")
 

@@ -23,6 +23,15 @@ Prompt summary: a long side-view packed snowbank platform with a thick wind-carv
 snow cap, compressed blue layers, and a dark solid icy underside, isolated on flat
 `#ff00ff`; no scenery, characters, text, or shadow.
 
+## `route_terrain_snow_v2.png`
+
+Prompt summary: a wide repeatable side-view terrain cross-section with accumulated
+white snow, compressed pale-blue layers, fractured glacial ice, and deep navy
+frozen rock, matched to the existing platform art and isolated on flat
+`#ff00ff`; explicitly no concrete, characters, objects, text, perspective,
+shadow, or oversized icicles. The built-in image generation tool created the
+source and the imagegen chroma-key helper produced the final alpha PNG.
+
 ## `route_platform_moving.png`
 
 Prompt summary: a side-view arctic cargo-sled platform with dark steel, runner

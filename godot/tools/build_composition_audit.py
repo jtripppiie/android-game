@@ -51,6 +51,7 @@ def label(draw: ImageDraw.ImageDraw, xy: tuple[int, int], text: str, fill: str =
 
 def build() -> None:
     runner = scaled(alpha_crop(frame(ASSETS / "runner_overhaul.png", 6, 3)), 0.34)
+    terrain_source = alpha_crop(Image.open(ASSETS / "route_terrain_snow_v2.png").convert("RGBA"))
     outputs = []
     for stage_index, (name, backdrop_name, boss_name, boss_scale, boss_frames, ground) in enumerate(STAGES):
         backdrop = Image.open(ASSETS / backdrop_name).convert("RGB")
@@ -59,9 +60,8 @@ def build() -> None:
         canvas = Image.alpha_composite(backdrop, veil)
         draw = ImageDraw.Draw(canvas, "RGBA")
 
-        draw.rectangle((0, ground, 1280, 720), fill=(26, 54, 67, 255))
-        draw.rectangle((0, ground, 1280, ground + 18), fill=(221, 241, 241, 255))
-        draw.line((0, ground, 1280, ground), fill=(255, 218, 121, 255), width=3)
+        terrain = terrain_source.resize((1280, 720 - ground), Image.Resampling.LANCZOS)
+        canvas.alpha_composite(terrain, (0, ground))
 
         boss = scaled(alpha_crop(frame(ASSETS / boss_name, boss_frames, 0)), boss_scale)
         # Sheets are authored left-facing; normal arena puts the player left.

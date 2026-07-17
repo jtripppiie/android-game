@@ -28,6 +28,16 @@ move-and-jump, drags outside the ring, and verifies that input remains active.
 The pause audit also clears held touches so movement cannot remain stuck after
 opening a menu or notebook.
 
+## Snow terrain reconstruction
+
+Main-route platforms no longer render as flat gray or pastel rectangles with a
+thin snow image stretched across the top. A new full-depth terrain asset layers
+accumulated snow, compressed blue ice, fractures, and dark frozen rock across
+the complete visible platform face. The renderer crops transparent source
+padding, fits the terrain to collision geometry, and applies only a restrained
+stage tint so the painted texture remains visible. Thin aerial ledges retain
+their lighter ice treatment so they remain readable as a different route type.
+
 ## Corrected defects
 
 - A completed stage called `GameSession.complete_stage` inside the world and
