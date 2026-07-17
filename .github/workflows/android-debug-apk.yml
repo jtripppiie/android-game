@@ -73,7 +73,9 @@ jobs:
           godot/tools/run_gameplay_audits.sh build/ci-audits
 
       - name: Export ARM64 debug APK
-        run: "$GODOT_BIN --headless --path godot --export-debug 'Android Debug'"
+        run: |
+          mkdir -p app/build/outputs/apk/debug
+          "$GODOT_BIN" --headless --path godot --export-debug "Android Debug"
 
       - name: Inspect APK
         run: |
