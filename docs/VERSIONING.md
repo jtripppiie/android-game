@@ -5,14 +5,14 @@ The active Godot Android package is `com.jtripppiie.mooserush`.
 Current development version:
 
 ```text
-versionCode: 530
-versionName: 5.3.0
+versionCode: 531
+versionName: 5.3.1
 engine: Godot 4.7.1
 metadata: godot/export_presets.cfg
 ```
 
-Version 5.3.0 is compiled and inspected. Version 5.2.1 remains the rollback
-artifact until 5.3.0 completes physical-device acceptance.
+Version 5.3.1 source is current. Version 5.3.0 remains the last compiled
+artifact until the 5.3.1 export and inspection finish.
 
 The Java 4.2.2 project remains rollback/reference code. Its version fields in
 `app/build.gradle` do not describe the current Godot APK.

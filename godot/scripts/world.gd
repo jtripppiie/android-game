@@ -35,6 +35,7 @@ var audit_last_x := 190.0
 var audit_last_progress_time := 0.0
 
 func _ready() -> void:
+	add_to_group("active_stage")
 	stage_index = GameSession.selected_stage
 	debug_ids_visible = GameSession.review_mode
 	for argument in OS.get_cmdline_user_args():
@@ -231,10 +232,10 @@ func build_route_branches() -> void:
 	add_child(water)
 	route_sign(Vector2(2070, 485), "FREEZE · JUMP · FALL")
 
-	# LOW: safer cave line, but a bear owns the exit and must be outplayed.
+	# LOW: safer cave line. Stage wildlife already guards the convergence; do
+	# not add another bear here or two large silhouettes stack in one view.
 	platform(Rect2(3320, 650, 620, 70), Color("#8cb9c4"))
 	platform(Rect2(3450, 595, 145, 24), Color("#b8dce3"))
-	enemy(Vector2(3820, 610), 115, "bear")
 	collectible(Vector2(3500, 550), "coin")
 
 	# Reunion: routes converge through moving footing before the final approach.

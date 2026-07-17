@@ -7,9 +7,9 @@ unreadable/unusable, the directional pad appeared absent, jumping felt
 pathetic, running felt poor, and menus rendered too small.
 
 The mobile layout now uses actual viewport dimensions and safe margins.
-Left/right controls are 124-by-108 pixels, Jump is 140-by-124, secondary
-controls are separated into consistent 104-pixel zones, and all buttons use
-opaque high-contrast fills, 3-pixel borders, and 22–34 pixel labels. Native
+The follow-up 5.3.1 source turns the left controls into a four-way D-pad and
+uses a 150-by-150 circular Jump control. Snow and Dash have distinct cyan and
+purple treatments rather than sharing one generic button style. Native
 multi-touch and synthesized mouse events share the same action map.
 
 Movement changes:

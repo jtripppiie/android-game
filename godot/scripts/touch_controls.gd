@@ -20,12 +20,13 @@ func layout_controls() -> void:
 	if view.x < 600.0 or view.y < 360.0: view = get_viewport_rect().size
 	var bottom := view.y - SAFE_MARGIN.y
 	controls = {
-		"move_left": Rect2(Vector2(SAFE_MARGIN.x, bottom - 128), Vector2(124, 108)),
-		"move_right": Rect2(Vector2(SAFE_MARGIN.x + 136, bottom - 128), Vector2(124, 108)),
-		"crouch": Rect2(Vector2(SAFE_MARGIN.x + 78, bottom - 226), Vector2(104, 76)),
-		"jump": Rect2(Vector2(view.x - SAFE_MARGIN.x - 140, bottom - 144), Vector2(140, 124)),
-		"fire": Rect2(Vector2(view.x - SAFE_MARGIN.x - 258, bottom - 246), Vector2(112, 94)),
-		"dash": Rect2(Vector2(view.x - SAFE_MARGIN.x - 266, bottom - 126), MIN_SIZE)
+		"move_left": Rect2(Vector2(SAFE_MARGIN.x, bottom - 142), Vector2(112, 104)),
+		"move_right": Rect2(Vector2(SAFE_MARGIN.x + 216, bottom - 142), Vector2(112, 104)),
+		"dpad_up": Rect2(Vector2(SAFE_MARGIN.x + 108, bottom - 246), Vector2(112, 104)),
+		"dpad_down": Rect2(Vector2(SAFE_MARGIN.x + 108, bottom - 104), Vector2(112, 76)),
+		"jump": Rect2(Vector2(view.x - SAFE_MARGIN.x - 150, bottom - 160), Vector2(150, 150)),
+		"fire": Rect2(Vector2(view.x - SAFE_MARGIN.x - 272, bottom - 278), Vector2(116, 116)),
+		"dash": Rect2(Vector2(view.x - SAFE_MARGIN.x - 286, bottom - 122), Vector2(118, 96))
 	}
 	if review_mode:
 		controls["debug_note"] = Rect2(Vector2(view.x - SAFE_MARGIN.x - 104, SAFE_MARGIN.y), Vector2(104, 52))
@@ -54,32 +55,36 @@ func action_at(point: Vector2) -> String:
 	return ""
 
 func sync_actions() -> void:
-	for action in controls: Input.action_release(action)
+	for action in controls: Input.action_release(input_action_for(action))
 	Input.action_release("sprint")
 	var moving := false
 	for action in active_touches.values():
 		if action != "":
-			Input.action_press(action)
+			Input.action_press(input_action_for(action))
 			if action in ["move_left", "move_right"]: moving = true
 	if moving: Input.action_press("sprint")
 	queue_redraw()
 
 func _exit_tree() -> void:
-	for action in controls: Input.action_release(action)
+	for action in controls: Input.action_release(input_action_for(action))
 	Input.action_release("sprint")
 
 func _draw() -> void:
 	if controls.is_empty(): return
-	var left_group: Rect2 = controls["move_left"]
-	var right_group: Rect2 = controls["move_right"]
-	draw_style_box(make_box(Color(0.01, 0.04, 0.08, 0.64), Color(0.55, 0.92, 1.0, 0.55), 24), left_group.merge(right_group).grow(10))
+	var dpad_bounds: Rect2 = controls["move_left"]
+	for direction in ["move_right", "dpad_up", "dpad_down"]:
+		dpad_bounds = dpad_bounds.merge(controls[direction])
+	draw_style_box(make_box(Color(0.01, 0.04, 0.08, 0.82), Color("#84d5e8"), 32), dpad_bounds.grow(12))
+	draw_circle(dpad_bounds.get_center(), 34.0, Color(0.12, 0.30, 0.38, 0.96))
 	for action in controls:
 		var box: Rect2 = controls[action]
 		var active: bool = action in active_touches.values()
-		var fill := Color(1.0, 0.78, 0.20, 0.96) if active else Color(0.02, 0.10, 0.17, 0.88)
-		var border := Color("#fff0a8") if active else Color("#84d5e8")
-		draw_style_box(make_box(fill, border, 22), box)
-		var font_size := 34 if action in ["move_left", "move_right"] else 22
+		var fill := control_color(action, active)
+		var border := Color.WHITE if active else control_border(action)
+		var radius := 75 if action == "jump" else 58 if action == "fire" else 24
+		draw_style_box(make_box(fill, border, radius), box)
+		var font_size := 34 if action in ["move_left", "move_right", "dpad_up", "dpad_down"] else 22
+		if action == "jump": font_size = 25
 		var text_color := Color("#071326") if active else Color.WHITE
 		var baseline := box.position + Vector2(0, box.size.y * 0.62 + font_size * 0.25)
 		draw_string(ThemeDB.fallback_font, baseline, label_for(action), HORIZONTAL_ALIGNMENT_CENTER, box.size.x, font_size, text_color)
@@ -95,10 +100,29 @@ func make_box(color: Color, border: Color, radius: int) -> StyleBoxFlat:
 func label_for(action: String) -> String:
 	if action == "move_left": return "◀"
 	if action == "move_right": return "▶"
-	if action == "crouch": return "CROUCH"
+	if action == "dpad_up": return "▲"
+	if action == "dpad_down": return "▼"
 	if action == "jump": return "JUMP"
-	if action == "fire": return "FIRE"
+	if action == "fire": return "SNOW"
 	if action == "dash": return "DASH"
 	if action == "debug_note": return "NOTE"
 	if action == "debug_ids": return "IDS"
 	return "RUN"
+
+func input_action_for(control: String) -> String:
+	if control == "dpad_up": return "jump"
+	if control == "dpad_down": return "crouch"
+	return control
+
+func control_color(action: String, active: bool) -> Color:
+	if action == "jump": return Color("#ffe27a") if active else Color(0.78, 0.43, 0.06, 0.96)
+	if action == "fire": return Color("#baf6ff") if active else Color(0.02, 0.38, 0.52, 0.96)
+	if action == "dash": return Color("#e1c4ff") if active else Color(0.34, 0.17, 0.52, 0.96)
+	if action in ["debug_note", "debug_ids"]: return Color(0.03, 0.12, 0.18, 0.94)
+	return Color(0.02, 0.10, 0.17, 0.94)
+
+func control_border(action: String) -> Color:
+	if action == "jump": return Color("#fff0a8")
+	if action == "fire": return Color("#84eaff")
+	if action == "dash": return Color("#d7adff")
+	return Color("#84d5e8")

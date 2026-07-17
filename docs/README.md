@@ -22,6 +22,7 @@ developer should normally need.
 - [5.2.1 Scale alignment](RELEASE_5_2_1_SCALE_ALIGNMENT.md): measured sprite, ground-line, hitbox, and jump corrections.
 - [5.2.2 Touch controls](RELEASE_5_2_2_TOUCH_CONTROLS.md): responsive, readable mobile controls and multi-touch regression test.
 - [5.3 controls, movement, and menus](RELEASE_5_3_CONTROLS_MOVEMENT_MENU.md): phone-scale controls, stronger running/jumping, and full-size menus.
+- [5.3.1 duplicate entities](RELEASE_5_3_1_DUPLICATE_ENTITIES.md): single-world lifecycle and removal of the extra route bear.
 - [Generated assets](GENERATED_ASSETS.md): asset provenance and transparency.
 - [Wildlife scale contract](WILDLIFE_SCALE_CONTRACT.md): gameplay silhouette
   hierarchy.

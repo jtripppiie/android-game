@@ -42,11 +42,15 @@ touch = (root / "scripts/touch_controls.gd").read_text()
 assert 'run/main_scene="res://scenes/main.tscn"' in project
 for marker in ("build_level", "checkpoint", "goal", "collectible", "enemy", "moving_platform", "survivor"):
     assert marker in world, marker
+main_source = (root / "scripts/main.gd").read_text()
+for marker in ("dispose_world", "transition_locked", "remove_child(world)", "if transition_locked or is_instance_valid(world): return", "run_lifecycle_audit"):
+    assert marker in main_source, marker
+assert 'enemy(Vector2(3820, 610), 115, "bear")' not in world
 for state in ("idle", "run", "sprint", "crouch", "jump", "fall", "dash", "stomp"):
     assert f'"{state}"' in player, state
 for action in ("move_left", "move_right", "crouch", "jump", "fire", "sprint", "dash"):
     assert f'"{action}"' in touch, action
-for marker in ("layout_controls", "SAFE_MARGIN", "InputEventScreenTouch", "InputEventMouseButton", "Color(0.02, 0.10, 0.17, 0.88)"):
+for marker in ("layout_controls", "SAFE_MARGIN", "InputEventScreenTouch", "InputEventMouseButton", "dpad_up", "dpad_down", "input_action_for", "control_color", 'return "SNOW"'):
     assert marker in touch, marker
 
 image = Image.open(root / "assets/runner_overhaul.png")

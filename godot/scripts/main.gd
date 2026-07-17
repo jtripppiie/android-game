@@ -2,21 +2,41 @@ extends Node
 
 var world: AlaskaStage
 var ui := CanvasLayer.new()
+var transition_locked := false
 
 func _ready() -> void:
 	add_child(ui)
 	var smoke_stage := -1
 	var touch_audit := false
+	var lifecycle_audit := false
 	for argument in OS.get_cmdline_user_args():
 		if argument.begins_with("--stage-smoke="): smoke_stage = int(argument.get_slice("=", 1))
 		elif argument.begins_with("--autoplay-audit="): smoke_stage = int(argument.get_slice("=", 1))
 		elif argument.begins_with("--visual-audit="): smoke_stage = int(argument.get_slice("=", 1))
 		elif argument == "--touch-audit": touch_audit = true
+		elif argument == "--lifecycle-audit": lifecycle_audit = true
+	if lifecycle_audit:
+		run_lifecycle_audit.call_deferred()
+		return
 	if touch_audit:
 		run_touch_audit.call_deferred()
 		return
 	if smoke_stage >= 0: start_stage(clampi(smoke_stage, 0, 4))
 	else: show_menu()
+
+func run_lifecycle_audit() -> void:
+	start_stage(0)
+	await get_tree().process_frame
+	assert(get_tree().get_nodes_in_group("player").size() == 1)
+	assert(get_tree().get_nodes_in_group("active_stage").size() == 1)
+	show_map()
+	await get_tree().process_frame
+	start_stage(1)
+	await get_tree().process_frame
+	assert(get_tree().get_nodes_in_group("player").size() == 1)
+	assert(get_tree().get_nodes_in_group("active_stage").size() == 1)
+	print("LIFECYCLE AUDIT PASS · map transition · one world · one runner")
+	get_tree().quit(0)
 
 func run_touch_audit() -> void:
 	var controls := TouchControls.new()
@@ -25,7 +45,8 @@ func run_touch_audit() -> void:
 	controls.layout_controls()
 	var right: Rect2 = controls.controls["move_right"]
 	var jump: Rect2 = controls.controls["jump"]
-	assert(jump.size == Vector2(140, 124))
+	var dpad_up: Rect2 = controls.controls["dpad_up"]
+	assert(jump.size == Vector2(150, 150))
 	var move_press := InputEventScreenTouch.new()
 	move_press.index = 1; move_press.position = right.get_center(); move_press.pressed = true
 	controls._input(move_press)
@@ -41,14 +62,23 @@ func run_touch_audit() -> void:
 	move_release.index = 1; move_release.position = right.get_center(); move_release.pressed = false
 	controls._input(move_release)
 	assert(not Input.is_action_pressed("move_right") and not Input.is_action_pressed("sprint"))
-	print("TOUCH AUDIT PASS · auto-run · simultaneous move+jump · independent release")
+	var up_press := InputEventScreenTouch.new()
+	up_press.index = 3; up_press.position = dpad_up.get_center(); up_press.pressed = true
+	controls._input(up_press)
+	assert(Input.is_action_pressed("jump"))
+	var up_release := InputEventScreenTouch.new()
+	up_release.index = 3; up_release.position = dpad_up.get_center(); up_release.pressed = false
+	controls._input(up_release)
+	assert(not Input.is_action_pressed("jump"))
+	print("TOUCH AUDIT PASS · four-way dpad · auto-run · simultaneous move+jump")
 	get_tree().quit(0)
 
 func clear_ui() -> void:
 	for child in ui.get_children(): child.queue_free()
 
 func show_menu() -> void:
-	if is_instance_valid(world): world.queue_free()
+	dispose_world()
+	transition_locked = false
 	clear_ui()
 	add_backdrop("background_midnight_sun.png")
 	var panel := VBoxContainer.new()
@@ -74,6 +104,8 @@ func show_menu() -> void:
 	panel.add_child(status)
 
 func show_map() -> void:
+	dispose_world()
+	transition_locked = false
 	clear_ui()
 	add_backdrop("background_dark_winter.png")
 	var panel := VBoxContainer.new()
@@ -95,16 +127,25 @@ func show_map() -> void:
 	add_button(panel, "BACK", show_menu)
 
 func start_stage(index: int) -> void:
+	if transition_locked or is_instance_valid(world): return
+	transition_locked = true
 	GameSession.selected_stage = index
 	clear_ui()
 	world = AlaskaStage.new()
 	world.stage_completed.connect(_on_stage_completed)
 	world.exit_requested.connect(show_map)
 	add_child(world)
+	transition_locked = false
 
 func _on_stage_completed(stage: int, score: int) -> void:
 	GameSession.complete_stage(stage, score)
 	show_map()
+
+func dispose_world() -> void:
+	if not is_instance_valid(world): return
+	if world.get_parent() == self: remove_child(world)
+	world.queue_free()
+	world = null
 
 func show_customize() -> void:
 	clear_ui()

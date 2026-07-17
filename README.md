@@ -9,18 +9,18 @@ reaches the finish beacon.
 
 ```text
 engine: Godot 4.7.1
-versionCode: 530
-versionName: 5.3.0
+versionCode: 531
+versionName: 5.3.1
 package: com.jtripppiie.mooserush
-APK status: compiled and inspected
-APK: app/build/outputs/apk/debug/you-rush-alaska-5.3.0-debug.apk
+APK status: build pending
+APK: app/build/outputs/apk/debug/you-rush-alaska-5.3.1-debug.apk
 ```
 
-Version 5.3.0 replaces the broken fixed-coordinate mobile overlay with large,
-high-contrast, viewport-relative touch controls. Source validation, the
-multi-touch regression test, and a five-stage traversal passed. It also enlarges
-all menus and materially improves running acceleration, jump height, input
-buffering, and coyote time.
+Version 5.3.1 contains the 5.3 control/movement overhaul and fixes duplicated
+stage worlds/runners after map transitions plus an extra stacked Moose Pass
+bear. It includes high-contrast viewport-relative touch controls, automatic
+mobile running, higher jumping, and full-size menus. Source validation, touch
+and lifecycle regression tests, and a five-stage traversal passed.
 
 ## Controls
 

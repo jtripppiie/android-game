@@ -40,12 +40,11 @@ Repeat for 0 through 4. Android export requires the matching Godot 4.7.1 binary,
 templates, Java 17, SDK/target 36, and Gradle network cache. Inspect the result:
 
 ```bash
-aapt dump badging app/build/outputs/apk/debug/you-rush-alaska-5.3.0-debug.apk
-apksigner verify --verbose app/build/outputs/apk/debug/you-rush-alaska-5.3.0-debug.apk
+aapt dump badging app/build/outputs/apk/debug/you-rush-alaska-5.3.1-debug.apk
+apksigner verify --verbose app/build/outputs/apk/debug/you-rush-alaska-5.3.1-debug.apk
 ```
 
-Version 5.3.0 passed package/version and v2 signature inspection. Version 5.2.1
-remains the rollback artifact during physical-device acceptance.
+Version 5.3.0 remains the rollback while 5.3.1 is exported and inspected.
 
 ## Release rules
 
