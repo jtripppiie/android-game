@@ -58,9 +58,18 @@ func _physics_process(delta: float) -> void:
 	art.frame = int(Time.get_ticks_msec() / (115.0 if absf(velocity.x) > speed * 1.2 else 155.0)) % 6
 	art.flip_h = direction > 0.0
 	if is_instance_valid(player) and global_position.distance_to(player.global_position) < (46.0 if kind == "bear" else 38.0):
-		if player.velocity.y > 520.0 and player.global_position.y < global_position.y - 12.0:
+		if is_stomp_contact(player):
 			player.enemy_defeated(true)
 			queue_free()
 			return
 		player.take_hit(global_position.x)
 	if absf(global_position.x - origin_x) > patrol_distance: direction *= -1.0
+
+func is_stomp_contact(runner: AlaskaRunner) -> bool:
+	# A normal jump landing must read as a stomp, not an inexplicable death.
+	# Permit the late apex as well as descent; side/underside contact still hurts.
+	return (
+		not runner.is_on_floor()
+		and runner.global_position.y <= global_position.y - 18.0
+		and runner.velocity.y >= -180.0
+	)

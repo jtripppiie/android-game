@@ -186,6 +186,7 @@ func respawn() -> void:
 	invulnerability = 1.2
 	velocity = Vector2.ZERO
 	global_position = spawn_point
+	action_feedback.emit("TRAIL RECOVERY · TRY AGAIN")
 
 func chain_action(base_score: int) -> void:
 	combo += 1

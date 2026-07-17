@@ -30,6 +30,7 @@ required = [
     "assets/wildlife_bear_walk.png", "assets/wildlife_eagle_fly.png",
     "assets/wildlife_moose_walk.png", "assets/wildlife_polar_bear_walk.png",
     "assets/wildlife_salmon_swim.png", "assets/wildlife_wolf_run.png",
+    "tools/build_composition_audit.py",
 ]
 missing = [name for name in required if not (root / name).is_file()]
 if missing:
@@ -50,6 +51,8 @@ for marker in ('Vector2(0, 82)', 'add_theme_constant_override("separation", 20)'
 for marker in ("font_disabled_color", 'add_theme_stylebox_override("disabled"', "font_pressed_color"):
     assert marker in main_source, marker
 assert 'enemy(Vector2(3820, 610), 115, "bear")' not in world
+for marker in ("enemy_spawn_positions", "REFUSED STACKED WILDLIFE", "distance_to(at) < 420.0"):
+    assert marker in world, marker
 for state in ("idle", "run", "sprint", "crouch", "jump", "fall", "dash", "stomp"):
     assert f'"{state}"' in player, state
 for action in ("move_left", "move_right", "crouch", "jump", "fire", "sprint", "dash"):
@@ -88,13 +91,18 @@ for marker in ("JUMP_SPEED := 900.0", "SPRINT_SPEED := 540.0", "air_jumps_left :
 enemy_source = (root / "scripts/enemy.gd").read_text()
 for marker in ("wildlife_bear_walk.png", "wildlife_eagle_fly.png", "wildlife_salmon_swim.png"):
     assert marker in enemy_source, marker
+for marker in ("is_stomp_contact", "runner.velocity.y >= -180.0", "not runner.is_on_floor()"):
+    assert marker in enemy_source, marker
 boss = (root / "scripts/trail_boss.gd").read_text()
 for marker in ("TELL_SECONDS", "RECOVER_SECONDS", "ARMORED", "WEAK · FIRE"):
     assert marker in boss, marker
 for marker in ("wildlife_moose_walk.png", "wildlife_polar_bear_walk.png", "boss_laser_emitter.png"):
     assert marker in boss, marker
+assert "player.global_position.x > global_position.x" in boss
+assert "art.flip_h = true" not in boss
 for marker in ("SUN FLARE", "SALMON SPLASH", "ANTLER SHOCKWAVE", "FEATHER SPREAD", "SNOW BARRAGE"):
     assert marker in boss, marker
+assert "0.30, 1.05, 0.62, 0.58, 0.90" in boss
 boss_hazard = (root / "scripts/boss_hazard.gd").read_text()
 for marker in ("class_name BossHazard", "fall_acceleration", "_on_body_entered", "trail_objects_atlas.png"):
     assert marker in boss_hazard, marker

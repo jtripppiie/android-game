@@ -39,3 +39,25 @@ Readability follow-up: every gameplay action retains an internal label (`JUMP`,
 on both its orange and bright pressed states; other actions use white on dark
 cyan/purple. Menu pressed, focused, and disabled states now have explicit text,
 fill, and border colors instead of inheriting ambiguous theme defaults.
+
+Jump-contact follow-up: the previous stomp rule required downward speed above
+520 pixels/second, so an ordinary jump landing near its apex could damage the
+runner. An airborne runner now stomps when approaching an animal from at least
+18 pixels above and moving downward or within 180 pixels/second of the apex.
+Side and underside collisions still cause damage. Respawning now reports
+`TRAIL RECOVERY · TRY AGAIN` rather than silently appearing to die from a jump.
+
+Boss-facing follow-up: every wildlife sheet is authored facing left, but the
+boss loop previously forced `flip_h = true` on every frame. This visibly turned
+Salmon away from the player. Boss artwork now faces the player's live position;
+with the normal player-left/boss-right arena layout, Salmon, Moose, Eagle, and
+Polar Bear retain their authored left-facing orientation.
+
+Visual composition review measured the Salmon boss at roughly 197-by-81 pixels
+against a 105-by-180 runner, making it read like an ordinary fish. Its boss-only
+scale increases from 0.58 to 1.05 (roughly 357-by-147 in the audit frame), with
+its waterline offset recalibrated. Ordinary salmon enemies remain small.
+
+Future enemy spawns are rejected when authored within 420 pixels of an existing
+wildlife spawn in the same stage. This prevents another shared route layer from
+silently stacking patrols into one encounter.

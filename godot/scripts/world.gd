@@ -17,6 +17,7 @@ var best_score := 0
 var notebook: ReviewNotebook
 var debug_item_counter := 0
 var debug_category_counters := {}
+var enemy_spawn_positions: Array[Vector2] = []
 var debug_ids_visible := false
 var stage_index := 0
 var autoplay_audit := false
@@ -306,6 +307,11 @@ func slope(points: PackedVector2Array, color: Color) -> void:
 	add_child(body)
 
 func enemy(at: Vector2, distance: float, kind: String) -> void:
+	for existing in enemy_spawn_positions:
+		if existing.distance_to(at) < 420.0:
+			push_error("REFUSED STACKED WILDLIFE · %s at %s near %s" % [kind, at, existing])
+			return
+	enemy_spawn_positions.append(at)
 	var foe := TrailEnemy.new()
 	foe.position = at
 	foe.patrol_distance = distance

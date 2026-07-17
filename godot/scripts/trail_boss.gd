@@ -77,7 +77,9 @@ func _physics_process(delta: float) -> void:
 	queue_redraw()
 	if is_instance_valid(art):
 		art.frame = int(Time.get_ticks_msec() / 145.0) % maxi(1, art.hframes)
-		art.flip_h = true
+		# Wildlife sheets are authored facing left. Face the player instead of
+		# universally mirroring every boss (which turned Salmon away).
+		art.flip_h = is_instance_valid(player) and player.global_position.x > global_position.x
 
 func snowball_hit(_projectile: Node) -> void:
 	if state != State.RECOVER:
@@ -119,9 +121,9 @@ func build_art() -> void:
 	var files := ["boss_laser_emitter.png", "wildlife_salmon_swim.png", "wildlife_moose_walk.png", "wildlife_eagle_fly.png", "wildlife_polar_bear_walk.png"]
 	art.texture = load("res://assets/%s" % files[boss_variant])
 	art.hframes = 1 if boss_variant == 0 else 6
-	var scales := [0.30, 0.58, 0.62, 0.58, 0.90]
+	var scales := [0.30, 1.05, 0.62, 0.58, 0.90]
 	art.scale = Vector2.ONE * scales[boss_variant]
-	art.position.y = [-30.0, -6.0, -31.0, -74.0, -82.0][boss_variant]
+	art.position.y = [-30.0, -69.0, -31.0, -74.0, -82.0][boss_variant]
 	add_child(art)
 
 func launch_variant_attack() -> void:
