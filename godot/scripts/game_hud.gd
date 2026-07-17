@@ -284,6 +284,9 @@ func clear_messages() -> void:
 	message_panel.visible = false
 
 func _process(delta: float) -> void:
+	# The HUD remains interactive while paused, but gameplay feedback should not
+	# expire while the player is reading a pause menu or writing a field note.
+	if get_tree().paused: return
 	if message_time_left <= 0.0: return
 	message_time_left = maxf(0.0, message_time_left - delta)
 	if message_time_left > 0.0:

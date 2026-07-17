@@ -170,12 +170,7 @@ func build_moose_pass() -> void:
 	build_route_branches()
 	# This vertical slice is deliberately authored. The old directed layer
 	# stacked extra geometry and enemies over the same spaces.
-	var title := Label.new()
-	title.text = "CHUGACH RUN · FIND THE KEY · REACH THE RESCUE BEACON"
-	title.position = Vector2(120, 92)
-	title.add_theme_font_size_override("font_size", 24)
-	title.add_theme_color_override("font_color", Color("#fff1b8"))
-	add_child(title)
+	announce("MOOSE PASS · FIND KEY · RESCUE 2 · REACH BOSS", 2, 3.2)
 
 func build_dark_winter() -> void:
 	platform(Rect2(0, 550, 780, 170), Color("#8eb9ca"))
@@ -208,12 +203,7 @@ func build_bear_country() -> void:
 func finalize_stage() -> void:
 	boss(Vector2(5160, 448))
 	goal(Vector2(5480, 450))
-	var title := Label.new()
-	title.text = "%s · KEY · 2 RESCUES · %s" % [GameSession.STAGES[stage_index].name, GameSession.STAGES[stage_index].boss]
-	title.position = Vector2(120, 92)
-	title.add_theme_font_size_override("font_size", 24)
-	title.add_theme_color_override("font_color", Color("#fff1b8"))
-	add_child(title)
+	announce("%s · FIND KEY · RESCUE 2 · REACH BOSS" % GameSession.STAGES[stage_index].name, 2, 3.2)
 
 func build_route_branches() -> void:
 	# HIGH: moving-platform chain with the best reward line and aerial exposure.
@@ -804,35 +794,78 @@ func register_debug_item(item: Node, prefix: String, label: String) -> void:
 		var badge := Label.new()
 		badge.name = "DebugId"
 		badge.text = String(item.get_meta("debug_id"))
-		badge.position = Vector2(-48, -82)
-		badge.add_theme_font_size_override("font_size", 12)
+		badge.position = Vector2(-110, -62)
+		badge.size = Vector2(220, 30)
+		badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		badge.add_theme_font_size_override("font_size", 16)
 		badge.add_theme_color_override("font_color", Color("#ffda79"))
-		badge.add_theme_constant_override("outline_size", 4)
+		badge.add_theme_constant_override("outline_size", 5)
 		badge.add_theme_color_override("font_outline_color", Color(0.02, 0.06, 0.10, 0.95))
 		badge.visible = debug_ids_visible
 		item.add_child(badge)
 
 func update_debug_labels() -> void:
 	if not is_instance_valid(player): return
-	var nearest: Node2D
-	var nearest_distance := INF
+	var candidates: Array[Dictionary] = []
 	for item in get_tree().get_nodes_in_group("debug_item"):
 		if not item is Node2D: continue
 		var distance := debug_distance_to_player(item)
 		var badge := item.get_node_or_null("DebugId") as Label
 		if badge:
-			badge.visible = debug_ids_visible and distance <= 760.0
+			badge.visible = false
 			badge.modulate = Color.WHITE
 			badge.scale = Vector2.ONE
-		if distance < nearest_distance:
-			nearest = item
-			nearest_distance = distance
-	if debug_ids_visible and is_instance_valid(nearest):
-		var nearest_badge := nearest.get_node_or_null("DebugId") as Label
-		if nearest_badge:
-			nearest_badge.visible = true
-			nearest_badge.modulate = Color("#4ddbb8")
-			nearest_badge.scale = Vector2.ONE * 1.14
+			position_surface_badge(item, badge)
+		if distance <= 760.0:
+			candidates.append({"item": item, "distance": distance})
+	if not debug_ids_visible: return
+	candidates.sort_custom(func(a: Dictionary, b: Dictionary): return float(a.distance) < float(b.distance))
+	var visible_count := mini(5, candidates.size())
+	for index in range(visible_count):
+		var candidate: Dictionary = candidates[index]
+		var candidate_item := candidate.item as Node2D
+		var candidate_badge := candidate_item.get_node_or_null("DebugId") as Label
+		if candidate_badge:
+			candidate_badge.visible = true
+			if index == 0:
+				candidate_badge.modulate = Color("#4ddbb8")
+				candidate_badge.scale = Vector2.ONE * 1.12
+
+func position_surface_badge(item: Node2D, badge: Label) -> void:
+	if not item.has_meta("surface_start"): return
+	var nearest_world_x := clampf(
+		player.global_position.x,
+		float(item.get_meta("surface_start")),
+		float(item.get_meta("surface_end"))
+	)
+	var surface_world_y := float(item.get_meta("surface_y"))
+	badge.position = Vector2(
+		nearest_world_x - item.global_position.x - badge.size.x * 0.5,
+		surface_world_y - item.global_position.y - 62.0
+	)
+
+func audit_debug_overlay() -> void:
+	debug_ids_visible = true
+	update_debug_labels()
+	var visible_badges := 0
+	var followed_surface := false
+	for item in get_tree().get_nodes_in_group("debug_item"):
+		if not item is Node2D: continue
+		var badge := item.get_node_or_null("DebugId") as Label
+		if badge == null: continue
+		assert(badge.get_theme_font_size("font_size") >= 16)
+		if badge.visible: visible_badges += 1
+		if item.has_meta("surface_start"):
+			var start := float(item.get_meta("surface_start"))
+			var finish := float(item.get_meta("surface_end"))
+			if player.global_position.x >= start and player.global_position.x <= finish:
+				var badge_world_center: float = item.global_position.x + badge.position.x + badge.size.x * 0.5
+				assert(absf(badge_world_center - player.global_position.x) <= 1.0)
+				followed_surface = true
+	assert(visible_badges > 0 and visible_badges <= 5)
+	assert(followed_surface)
+	debug_ids_visible = false
+	update_debug_labels()
 
 func debug_note_context() -> String:
 	var visible: Array[String] = []

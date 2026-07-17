@@ -5,13 +5,18 @@ const SAFE_MARGIN := Vector2(34, 30)
 const DPAD_SIZE := 180.0
 const DPAD_DRIFT_MARGIN := 24.0
 const DPAD_DEAD_ZONE := 0.16
+const ACTION_DRIFT_MARGIN := 14.0
+const NO_DPAD_TOUCH := -999999
+const REVIEW_BUTTON_TOP := 92.0
 
 var active_touches := {}
+var touch_roles := {}
 var review_mode := false
 var controls := {}
 var dpad_bounds := Rect2()
 var dpad_vector := Vector2.ZERO
 var touch_pressed_actions := {}
+var dpad_touch_id := NO_DPAD_TOUCH
 
 func _ready() -> void:
 	add_to_group("touch_controls")
@@ -39,25 +44,40 @@ func layout_controls() -> void:
 		"dash": Rect2(Vector2(view.x - SAFE_MARGIN.x - 238, bottom - 106), Vector2(98, 76))
 	}
 	if review_mode:
-		controls["debug_note"] = Rect2(Vector2(view.x - SAFE_MARGIN.x - 104, SAFE_MARGIN.y), Vector2(104, 52))
-		controls["debug_ids"] = Rect2(Vector2(view.x - SAFE_MARGIN.x - 218, SAFE_MARGIN.y), Vector2(104, 52))
+		controls["debug_note"] = Rect2(Vector2(view.x - SAFE_MARGIN.x - 104, REVIEW_BUTTON_TOP), Vector2(104, 52))
+		controls["debug_ids"] = Rect2(Vector2(view.x - SAFE_MARGIN.x - 218, REVIEW_BUTTON_TOP), Vector2(104, 52))
 	queue_redraw()
 
 func _input(event: InputEvent) -> void:
 	if event is InputEventScreenTouch:
-		if event.pressed: active_touches[event.index] = event.position
-		else: active_touches.erase(event.index)
+		if event.pressed: begin_touch(event.index, event.position)
+		else: end_touch(event.index)
 		sync_actions()
 	elif event is InputEventScreenDrag:
-		active_touches[event.index] = event.position
-		sync_actions()
+		if active_touches.has(event.index):
+			active_touches[event.index] = event.position
+			sync_actions()
 	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
-		if event.pressed: active_touches[-1] = event.position
-		else: active_touches.erase(-1)
+		if event.pressed: begin_touch(-1, event.position)
+		else: end_touch(-1)
 		sync_actions()
 	elif event is InputEventMouseMotion and -1 in active_touches and Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
 		active_touches[-1] = event.position
 		sync_actions()
+
+func begin_touch(touch_id: int, point: Vector2) -> void:
+	var role := action_at(point)
+	if role.is_empty(): return
+	if role == "dpad":
+		if dpad_touch_id != NO_DPAD_TOUCH: return
+		dpad_touch_id = touch_id
+	active_touches[touch_id] = point
+	touch_roles[touch_id] = role
+
+func end_touch(touch_id: int) -> void:
+	active_touches.erase(touch_id)
+	touch_roles.erase(touch_id)
+	if dpad_touch_id == touch_id: dpad_touch_id = NO_DPAD_TOUCH
 
 func action_at(point: Vector2) -> String:
 	if dpad_touch_contains(point): return "dpad"
@@ -70,8 +90,10 @@ func sync_actions() -> void:
 	var desired_actions := {}
 	var moving := false
 	dpad_vector = Vector2.ZERO
-	for point in active_touches.values():
-		if dpad_touch_contains(point):
+	for touch_id in active_touches:
+		var point: Vector2 = active_touches[touch_id]
+		var role := String(touch_roles.get(touch_id, ""))
+		if role == "dpad" and touch_id == dpad_touch_id and dpad_touch_contains(point):
 			var vector := dpad_input_vector(point)
 			dpad_vector = vector
 			if vector.x < -DPAD_DEAD_ZONE:
@@ -83,10 +105,10 @@ func sync_actions() -> void:
 			if vector.y < -DPAD_DEAD_ZONE: desired_actions["jump"] = true
 			elif vector.y > DPAD_DEAD_ZONE: desired_actions["crouch"] = true
 			continue
-		var action := action_at(point)
-		if action != "":
-			desired_actions[input_action_for(action)] = true
-			if action in ["move_left", "move_right"]: moving = true
+		elif role != "" and controls.has(role):
+			var hit_box: Rect2 = controls[role]
+			if hit_box.grow(ACTION_DRIFT_MARGIN).has_point(point):
+				desired_actions[input_action_for(role)] = true
 	if moving: desired_actions["sprint"] = true
 	apply_touch_action_changes(desired_actions)
 	queue_redraw()
@@ -102,6 +124,8 @@ func apply_touch_action_changes(desired_actions: Dictionary) -> void:
 
 func release_all_touches() -> void:
 	active_touches.clear()
+	touch_roles.clear()
+	dpad_touch_id = NO_DPAD_TOUCH
 	sync_actions()
 
 func _exit_tree() -> void:

@@ -78,6 +78,10 @@ below the display, so they do not overwrite the objective list.
 If **Large Text** is enabled from Accessibility, HUD and review-note text grows
 without moving the three top sections into each other.
 
+Each finger stays assigned to the button where it first touched. Sliding a JUMP
+finger toward another button will never turn it into DASH or movement. The
+first thumb on the round D-pad owns it until that thumb is lifted.
+
 - Left/right: move
 - Run: sprint
 - Jump: jump; release early for a shorter jump

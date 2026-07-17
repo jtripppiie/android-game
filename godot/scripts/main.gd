@@ -124,6 +124,14 @@ func run_lifecycle_audit() -> void:
 	world.hud.audit_layout()
 	assert(is_instance_valid(world.notebook))
 	world.notebook.audit_layout()
+	world.audit_debug_overlay()
+	assert(is_instance_valid(world.boss_node))
+	assert(not world.boss_node.activated)
+	var dormant_boss_timer := world.boss_node.state_timer
+	for frame in range(4):
+		await get_tree().physics_frame
+	assert(is_equal_approx(world.boss_node.state_timer, dormant_boss_timer))
+	assert(get_tree().get_nodes_in_group("boss_hazard").is_empty())
 	var first_runner := get_tree().get_first_node_in_group("player") as AlaskaRunner
 	first_runner.ring_chain = 4
 	first_runner.ring_chain_timer = 1.0
@@ -146,6 +154,7 @@ func run_system_audit() -> void:
 	var old_unlocked := GameSession.unlocked_stage
 	var old_total := GameSession.total_score
 	var old_best := GameSession.best_scores.duplicate()
+	var old_muted := GameSession.muted
 	GameSession.unlocked_stage = 0
 	GameSession.total_score = 0
 	GameSession.best_scores = [0, 0, 0, 0, 0]
@@ -160,15 +169,33 @@ func run_system_audit() -> void:
 	assert(current_screen == "menu" and ui.get_child_count() == 2)
 	show_map()
 	assert(current_screen == "map" and ui.get_child_count() == 2)
+	var map_panel := ui.get_child(1) as VBoxContainer
+	var stage_two_button := map_panel.get_child(2) as Button
+	assert(not stage_two_button.disabled)
+	stage_two_button.pressed.emit()
+	assert(current_screen == "stage")
+	assert(GameSession.selected_stage == 1)
+	assert(is_instance_valid(world) and world.stage_index == 1)
+	show_map()
 	show_customize()
 	assert(current_screen == "customize" and ui.get_child_count() == 2)
 	show_accessibility()
 	assert(current_screen == "accessibility" and ui.get_child_count() == 2)
+	var accessibility_panel := ui.get_child(1) as VBoxContainer
+	var mute_toggle := accessibility_panel.get_child(1) as CheckButton
+	mute_toggle.toggled.emit(not old_muted)
+	assert(GameSession.muted == not old_muted)
+	mute_toggle.toggled.emit(old_muted)
+	assert(GameSession.muted == old_muted)
+	assert(FeedbackService.profile_for("LAND") == Vector3.ZERO)
+	assert(FeedbackService.profile_for("HIT · COMBO LOST").z >= 50.0)
+	assert(FeedbackService.profile_for("BOSS WINDUP").x > 0.0)
+	assert(FeedbackService.profile_for("BOSS WINDUP").z == 0.0)
 	GameSession.unlocked_stage = old_unlocked
 	GameSession.total_score = old_total
 	GameSession.best_scores = old_best
 	GameSession.save_profile()
-	print("SYSTEM AUDIT PASS · score ownership · immediate UI replacement · screen flow")
+	print("SYSTEM AUDIT PASS · score ownership · bound map/accessibility actions · immediate UI replacement")
 	get_tree().quit(0)
 
 func run_pause_audit() -> void:
@@ -180,12 +207,15 @@ func run_pause_audit() -> void:
 		await get_tree().physics_frame
 	var moving_x := world.player.global_position.x
 	assert(moving_x > 190.0)
+	world.hud.post_message("PAUSE CLOCK", 2, 4.0)
+	var paused_message_time := world.hud.message_time_left
 	world.toggle_pause_panel()
 	assert(get_tree().paused and world.pause_panel.visible)
 	assert(not Input.is_action_pressed("move_right"))
 	for frame in range(12):
 		await get_tree().process_frame
 	assert(is_equal_approx(world.player.global_position.x, moving_x))
+	assert(is_equal_approx(world.hud.message_time_left, paused_message_time))
 	world.resume_run()
 	Input.action_press("move_right")
 	Input.action_press("sprint")
@@ -201,11 +231,19 @@ func run_touch_audit() -> void:
 	var controls := TouchControls.new()
 	controls.size = Vector2(1280, 720)
 	add_child(controls)
+	controls.review_mode = true
 	controls.layout_controls()
 	var right: Rect2 = controls.controls["move_right"]
 	var jump: Rect2 = controls.controls["jump"]
 	var dpad_up: Rect2 = controls.controls["dpad_up"]
+	var review_note: Rect2 = controls.controls["debug_note"]
+	var review_ids: Rect2 = controls.controls["debug_ids"]
 	assert(jump.size == Vector2(124, 124))
+	var objective_hud := Rect2(446, 10, 608, 62)
+	var pause_hud := Rect2(1066, 10, 200, 62)
+	assert(review_note.position.y >= 92.0 and review_ids.position.y >= 92.0)
+	assert(review_note.intersection(pause_hud).get_area() == 0.0)
+	assert(review_ids.intersection(objective_hud).get_area() == 0.0)
 	var move_press := InputEventScreenTouch.new()
 	move_press.index = 1; move_press.position = right.get_center(); move_press.pressed = true
 	controls._input(move_press)
@@ -243,7 +281,37 @@ func run_touch_audit() -> void:
 	var diagonal_release := InputEventScreenTouch.new()
 	diagonal_release.index = 4; diagonal_release.position = drift.position; diagonal_release.pressed = false
 	controls._input(diagonal_release)
-	print("TOUCH AUDIT PASS · circular dpad · diagonal input · drift margin · simultaneous move+jump")
+	var owned_jump := InputEventScreenTouch.new()
+	owned_jump.index = 5; owned_jump.position = jump.get_center(); owned_jump.pressed = true
+	controls._input(owned_jump)
+	assert(Input.is_action_pressed("jump"))
+	var cross_drag := InputEventScreenDrag.new()
+	cross_drag.index = 5
+	cross_drag.position = controls.dpad_bounds.get_center() + Vector2(52, 0)
+	controls._input(cross_drag)
+	assert(not Input.is_action_pressed("jump") and not Input.is_action_pressed("move_right"))
+	var cross_release := InputEventScreenTouch.new()
+	cross_release.index = 5; cross_release.position = cross_drag.position; cross_release.pressed = false
+	controls._input(cross_release)
+	var first_dpad := InputEventScreenTouch.new()
+	first_dpad.index = 6
+	first_dpad.position = controls.dpad_bounds.get_center() + Vector2(52, 0)
+	first_dpad.pressed = true
+	controls._input(first_dpad)
+	var competing_dpad := InputEventScreenTouch.new()
+	competing_dpad.index = 7
+	competing_dpad.position = controls.dpad_bounds.get_center() + Vector2(-52, 0)
+	competing_dpad.pressed = true
+	controls._input(competing_dpad)
+	assert(Input.is_action_pressed("move_right") and not Input.is_action_pressed("move_left"))
+	var first_release := InputEventScreenTouch.new()
+	first_release.index = 6; first_release.position = first_dpad.position; first_release.pressed = false
+	controls._input(first_release)
+	assert(not Input.is_action_pressed("move_right") and not Input.is_action_pressed("move_left"))
+	var competing_release := InputEventScreenTouch.new()
+	competing_release.index = 7; competing_release.position = competing_dpad.position; competing_release.pressed = false
+	controls._input(competing_release)
+	print("TOUCH AUDIT PASS · ownership · no cross-control drag · single dpad thumb · diagonal · drift")
 	get_tree().quit(0)
 
 func clear_ui() -> void:
@@ -303,7 +371,7 @@ func show_map() -> void:
 		var stage = GameSession.STAGES[index]
 		var unlocked := index <= GameSession.unlocked_stage
 		var label := "%d · %s · BEST %d%s" % [index + 1, stage.name, GameSession.best_scores[index], "" if unlocked else " · LOCKED"]
-		var button := add_button(panel, label, func(): start_stage(index))
+		var button := add_button(panel, label, start_stage.bind(index))
 		button.disabled = not unlocked
 	add_button(panel, "BACK", show_menu)
 
@@ -372,9 +440,17 @@ func show_accessibility() -> void:
 		toggle.custom_minimum_size.y = 66
 		toggle.add_theme_font_size_override("font_size", 25)
 		toggle.button_pressed = GameSession.get(spec[1])
-		toggle.toggled.connect(func(value): GameSession.set(spec[1], value); GameSession.save_profile())
+		toggle.toggled.connect(set_accessibility.bind(String(spec[1])))
 		panel.add_child(toggle)
 	add_button(panel, "BACK", show_menu)
+
+func set_accessibility(value: bool, property_name: String) -> void:
+	var allowed := ["muted", "haptics", "large_text", "reduced_motion", "high_contrast", "review_mode"]
+	if property_name not in allowed:
+		push_error("Refused unknown accessibility property: %s" % property_name)
+		return
+	GameSession.set(property_name, value)
+	GameSession.save_profile()
 
 func add_button(parent: Control, label: String, callback: Callable) -> Button:
 	var button := Button.new()

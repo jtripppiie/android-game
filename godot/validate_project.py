@@ -55,12 +55,17 @@ for marker in ('version/code=532', 'version/name="5.3.2"', 'you-rush-alaska-5.3.
 for marker in ("build_level", "checkpoint", "goal", "collectible", "enemy", "moving_platform", "survivor"):
     assert marker in world, marker
 main_source = (root / "scripts/main.gd").read_text()
+feedback_source = (root / "scripts/feedback_service.gd").read_text()
 for marker in ("dispose_world", "transition_locked", "remove_child(world)", "ui.remove_child(child)", "if transition_locked or is_instance_valid(world): return", "run_lifecycle_audit"):
     assert marker in main_source, marker
 for marker in ("show_launch_splash", "SPLASH_MINIMUM_SECONDS := 1.25", "SPLASH_TOTAL_SECONDS := 4.0", "TAP TO BEGIN", "dismiss_launch_splash"):
     assert marker in main_source, marker
 for marker in ("current_screen", "_unhandled_input", "NOTIFICATION_APPLICATION_PAUSED", "pause_for_background", "run_system_audit", "SYSTEM AUDIT PASS", "run_pause_audit", "PAUSE AUDIT PASS"):
     assert marker in main_source, marker
+for marker in ("start_stage.bind(index)", "set_accessibility.bind", "func set_accessibility", "Refused unknown accessibility property"):
+    assert marker in main_source, marker
+for marker in ("profile_for", "PERFECT LAND", '"BOSS" in upper', "return Vector3.ZERO"):
+    assert marker in feedback_source, marker
 assert world.count("GameSession.complete_stage") == 0
 assert "func _on_stage_completed(stage: int, score: int) -> void:\n\tGameSession.complete_stage(stage, score)" in main_source
 for marker in ('Vector2(0, 82)', 'add_theme_constant_override("separation", 20)', 'add_theme_constant_override("separation", 12)'):
@@ -79,12 +84,15 @@ for marker in ("ring_chain = 0", "ring_chain_timer = 0.0", "ring_rush_timer = 0.
     assert marker in player, marker
 for action in ("move_left", "move_right", "crouch", "jump", "fire", "sprint", "dash"):
     assert f'"{action}"' in touch, action
-for marker in ("layout_controls", "SAFE_MARGIN", "InputEventScreenTouch", "InputEventMouseButton", "dpad_up", "dpad_down", "input_action_for", "control_color", "control_text_color", "release_all_touches", "dpad_touch_contains", "dpad_input_vector", "draw_dpad_arrow", "apply_touch_action_changes", "touch_pressed_actions", "DPAD_DRIFT_MARGIN", 'return "SNOW"'):
+for marker in ("layout_controls", "SAFE_MARGIN", "InputEventScreenTouch", "InputEventMouseButton", "dpad_up", "dpad_down", "input_action_for", "control_color", "control_text_color", "release_all_touches", "dpad_touch_contains", "dpad_input_vector", "draw_dpad_arrow", "apply_touch_action_changes", "touch_pressed_actions", "touch_roles", "begin_touch", "end_touch", "dpad_touch_id", "ACTION_DRIFT_MARGIN", "DPAD_DRIFT_MARGIN", "REVIEW_BUTTON_TOP := 92.0", 'return "SNOW"'):
     assert marker in touch, marker
 for marker in ("build_snow_terrain", "build_snow_slope", "route_terrain_snow_v2.png", "AtlasTexture", "STRETCH_SCALE", "mapped_uv", "crest_shadow"):
     assert marker in world, marker
 for marker in ('set_deferred("monitoring", false)', 'set_deferred("monitorable", false)'):
     assert marker in boss, marker
+for marker in ("activated := false", "activation_distance := 780.0", "if not activated:", "BOSS AHEAD"):
+    assert marker in boss, marker
+assert 'title.position = Vector2(120, 92)' not in world
 for marker in ("update_snapshot", "objective_text", "post_message", "message_queue", "audit_layout", "ui_font", "StageProgressFill"):
     assert marker in hud, marker
 for marker in ("QUICK_NOTES", "apply_quick_note", "undo_last_note", "recent_note_summary", "audit_layout", "note_font"):
@@ -116,7 +124,7 @@ assert "build_directed_encounters()" not in world
 for marker in ("run_autoplay_audit", "audit_target_objective", "audit_jump_needed", "AUTOPLAY PASS", "capture_visual_audit", "run_geometry_audit", "GEOMETRY AUDIT PASS", "main_route_surface"):
     assert marker in world, marker
 assert "save_profile()\n\tif autoplay_audit" not in world
-for marker in ("TrailBoss", "ReviewNotebook", "debug_note_context", "boss_defeated", "update_debug_labels", "debug_category_counters"):
+for marker in ("TrailBoss", "ReviewNotebook", "debug_note_context", "boss_defeated", "update_debug_labels", "debug_category_counters", "position_surface_badge", "visible_count := mini(5", "audit_debug_overlay"):
     assert marker in world, marker
 for marker in ('register_debug_item(zone, "CP"', 'register_debug_item(zone, "GO"', 'register_debug_item(ice, "IC"', "debug_distance_to_player"):
     assert marker in world, marker
@@ -169,7 +177,7 @@ bridge_source = (root / "scripts/android_bridge.gd").read_text()
 for marker in ('has_signal("voice_note_result")', 'has_method("readLegacyProfile")', 'has_method("isVoiceNoteAvailable")'):
     assert marker in bridge_source, marker
 feedback_source = (root / "scripts/feedback_service.gd").read_text()
-assert "if GameSession.haptics:" in feedback_source
+assert "if GameSession.haptics and vibration_ms > 0:" in feedback_source
 assert "GameSession.haptics and not GameSession.reduced_motion" not in feedback_source
 projectile = (root / "scripts/projectile.gd").read_text()
 assert 'has_method("snowball_hit")' in projectile

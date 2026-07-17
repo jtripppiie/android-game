@@ -14,11 +14,48 @@ func _ready() -> void:
 	player.play()
 
 func cue(message: String) -> void:
-	if not GameSession.muted:
-		var frequency := 760.0 if "WEAK" in message or "RESCUE" in message else 520.0 if "HIT" in message else 340.0
-		push_tone(frequency, 0.055)
-	if GameSession.haptics:
-		Input.vibrate_handheld(42 if "HIT" in message else 24)
+	var profile := profile_for(message)
+	var frequency := profile.x
+	var seconds := profile.y
+	var vibration_ms := roundi(profile.z)
+	if not GameSession.muted and frequency > 0.0 and seconds > 0.0:
+		push_tone(frequency, seconds)
+	if GameSession.haptics and vibration_ms > 0:
+		Input.vibrate_handheld(vibration_ms)
+
+func profile_for(message: String) -> Vector3:
+	var upper := message.to_upper()
+	if "HIT" in upper or "ROUTE LOST" in upper or "CURRENT" in upper:
+		return Vector3(240.0, 0.085, 55.0)
+	if (
+		"LEVEL CLEAR" in upper
+		or "DEFEATED" in upper
+		or "KEY FOUND" in upper
+		or "RESCUE" in upper
+		or "WEAK" in upper
+	):
+		return Vector3(760.0, 0.070, 34.0)
+	if (
+		"CHECKPOINT" in upper
+		or "SECRET CACHE" in upper
+		or "AURORA LAUNCH" in upper
+		or "PERFECT LAND" in upper
+	):
+		return Vector3(620.0, 0.045, 18.0)
+	if (
+		"BOSS" in upper
+		or "ARMORED" in upper
+		or "SUN FLARE" in upper
+		or "SALMON SPLASH" in upper
+		or "SHOCKWAVE" in upper
+		or "FEATHER" in upper
+		or "SNOW BARRAGE" in upper
+	):
+		return Vector3(440.0, 0.040, 0.0)
+	# Ordinary LAND, AIR JUMP, DASH, ring, and combo updates already have
+	# animation and on-screen feedback. Keeping them silent prevents a constant
+	# buzz/beep loop during normal traversal.
+	return Vector3.ZERO
 
 func push_tone(frequency: float, seconds: float) -> void:
 	if not is_instance_valid(player): return

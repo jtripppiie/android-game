@@ -18,6 +18,8 @@ var rest_position := Vector2.ZERO
 var target_x := 0.0
 var player: AlaskaRunner
 var art: Sprite2D
+var activated := false
+var activation_distance := 780.0
 
 func _ready() -> void:
 	rest_position = position
@@ -50,12 +52,19 @@ func _ready() -> void:
 	name_label.add_theme_constant_override("outline_size", 5)
 	name_label.add_theme_color_override("font_outline_color", Color("#071326"))
 	add_child(name_label)
-	feedback.emit("BOSS · READ THE TELL · FIRE DURING RECOVERY")
 	queue_redraw()
 
 func _physics_process(delta: float) -> void:
 	if state == State.DEFEATED: return
 	if not is_instance_valid(player): player = get_tree().get_first_node_in_group("player") as AlaskaRunner
+	if not activated:
+		if is_instance_valid(player) and absf(player.global_position.x - global_position.x) <= activation_distance:
+			activated = true
+			state = State.TELL
+			state_timer = 0.0
+			feedback.emit("BOSS AHEAD · READ THE TELL · FIRE WHEN WEAK")
+		else:
+			return
 	state_timer += delta
 	if state == State.TELL:
 		var tell_motion := Vector2(sin(state_timer * 18.0) * 5.0, 0.0)

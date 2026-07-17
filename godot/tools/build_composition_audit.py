@@ -100,6 +100,40 @@ def draw_hud(draw: ImageDraw.ImageDraw, stage_index: int) -> None:
     draw.text((640, 116), "CHECKPOINT SAVED", anchor="mm", font=normal, fill="#fff4d2")
 
 
+def draw_review_overlay(draw: ImageDraw.ImageDraw) -> None:
+    """Add the optional review controls and bounded identifier sample."""
+    button_font = ImageFont.load_default(size=17)
+    id_font = ImageFont.load_default(size=16)
+    for bounds, text in [
+        ((1028, 92, 1132, 144), "IDS"),
+        ((1142, 92, 1246, 144), "NOTE"),
+    ]:
+        draw.rounded_rectangle(bounds, radius=12, fill=(8, 31, 46, 242), outline="#84d5e8", width=2)
+        center = ((bounds[0] + bounds[2]) // 2, (bounds[1] + bounds[3]) // 2)
+        draw.text(center, text, anchor="mm", font=button_font, fill="white")
+    identifiers = [
+        ((164, 284), "MOOSE-PASS-PF-2", "#4ddbb8"),
+        ((214, 356), "MOOSE-PASS-PU-1", "#ffda79"),
+        ((770, 278), "MOOSE-PASS-BOSS-1", "#ffda79"),
+    ]
+    for position, text_value, color in identifiers:
+        text_bounds = draw.textbbox(position, text_value, font=id_font, anchor="mm", stroke_width=3)
+        draw.rounded_rectangle(
+            (text_bounds[0] - 7, text_bounds[1] - 4, text_bounds[2] + 7, text_bounds[3] + 4),
+            radius=6,
+            fill=(3, 13, 22, 220),
+        )
+        draw.text(
+            position,
+            text_value,
+            anchor="mm",
+            font=id_font,
+            fill=color,
+            stroke_width=3,
+            stroke_fill="#071326",
+        )
+
+
 def build() -> None:
     runner = scaled(alpha_crop(frame(ASSETS / "runner_overhaul.png", 6, 3)), 0.34)
     terrain_source = alpha_crop(Image.open(ASSETS / "route_terrain_snow_v2.png").convert("RGBA"))
@@ -155,6 +189,12 @@ def build() -> None:
         output = OUT / f"stage-{stage_index + 1}-{name.lower().replace(' ', '-')}.png"
         canvas.convert("RGB").save(output, quality=95)
         outputs.append(output)
+        if stage_index == 2:
+            review_canvas = canvas.copy()
+            draw_review_overlay(ImageDraw.Draw(review_canvas, "RGBA"))
+            review_output = OUT / "review-mode-overlay.png"
+            review_canvas.convert("RGB").save(review_output, quality=95)
+            outputs.append(review_output)
     print("\n".join(str(path) for path in outputs))
 
 
