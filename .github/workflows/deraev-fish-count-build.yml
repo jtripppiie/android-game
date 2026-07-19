@@ -19,10 +19,29 @@ jobs:
       - name: Reconstruct Android project
         shell: bash
         run: |
-          cat fish-src.part-* | base64 --decode > /tmp/deraev-fish-count.tar.gz
+          set -euxo pipefail
+          ls -la fish-src.part-*
+          wc -c fish-src.part-*
+          python3 - <<'PY'
+          import base64
+          import glob
+          import hashlib
+          from pathlib import Path
+
+          parts = sorted(glob.glob('fish-src.part-*'))
+          encoded = b''.join(Path(path).read_bytes().strip() for path in parts)
+          archive = base64.b64decode(encoded, validate=True)
+          digest = hashlib.sha256(archive).hexdigest()
+          print('Archive SHA-256:', digest)
+          expected = '25cdec1bdfbf332b6e8e2d2cd3b7f5d1dcae847703740f15dddaed6b6d5b5376'
+          if digest != expected:
+              raise SystemExit(f'Archive checksum mismatch: expected {expected}, got {digest}')
+          Path('/tmp/deraev-fish-count.tar.gz').write_bytes(archive)
+          PY
           mkdir -p /tmp/deraev-fish-count
-          tar -xzf /tmp/deraev-fish-count.tar.gz -C /tmp/deraev-fish-count --strip-components=1
+          tar -xvzf /tmp/deraev-fish-count.tar.gz -C /tmp/deraev-fish-count --strip-components=1
           test -f /tmp/deraev-fish-count/settings.gradle.kts
+          find /tmp/deraev-fish-count -maxdepth 3 -type f | sort
 
       - name: Set up Java 17
         uses: actions/setup-java@v4
@@ -69,7 +88,10 @@ jobs:
           if [ -d /tmp/deraev-fish-count/app/build/reports/tests ]; then
             cp -R /tmp/deraev-fish-count/app/build/reports/tests /tmp/deraev-artifact/test-reports
           fi
-          cp /tmp/deraev-fish-count/README.md /tmp/deraev-artifact/README.md
+          if [ -f /tmp/deraev-fish-count/README.md ]; then
+            cp /tmp/deraev-fish-count/README.md /tmp/deraev-artifact/README.md
+          fi
+          find /tmp/deraev-artifact -maxdepth 4 -type f -print
 
       - name: Upload APK and test reports
         if: always()
