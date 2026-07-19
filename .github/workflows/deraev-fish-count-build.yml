@@ -1,0 +1,81 @@
+name: Build DeRaeve Fish Count APK
+
+on:
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Reconstruct Android project
+        shell: bash
+        run: |
+          cat fish-src.part-* | base64 --decode > /tmp/deraev-fish-count.tar.gz
+          mkdir -p /tmp/deraev-fish-count
+          tar -xzf /tmp/deraev-fish-count.tar.gz -C /tmp/deraev-fish-count --strip-components=1
+          test -f /tmp/deraev-fish-count/settings.gradle.kts
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle 9.6
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.6.0'
+
+      - name: Inspect live ADF&G JSON response
+        shell: bash
+        continue-on-error: true
+        run: |
+          curl --fail --location --silent --show-error \
+            'https://www.adfg.alaska.gov/sf/FishCounts/index.cfm?ADFG=export.JSON&countLocationID=40&speciesID=420&year=2026%2C2025%2C2024%2C2023%2C2022' \
+            --output /tmp/adfg-live.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p = Path('/tmp/adfg-live.json')
+          print(p.read_text(errors='replace')[:1200])
+          try:
+              payload = json.loads(p.read_text())
+              print('Top-level JSON type:', type(payload).__name__)
+          except Exception as exc:
+              print('JSON inspection failed:', exc)
+          PY
+
+      - name: Run unit tests
+        run: gradle -p /tmp/deraev-fish-count --no-daemon testDebugUnitTest
+
+      - name: Assemble debug APK
+        run: gradle -p /tmp/deraev-fish-count --no-daemon assembleDebug
+
+      - name: Collect build outputs
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p /tmp/deraev-artifact
+          find /tmp/deraev-fish-count/app/build/outputs/apk -type f -name '*.apk' -exec cp {} /tmp/deraev-artifact/ \; 2>/dev/null || true
+          if [ -d /tmp/deraev-fish-count/app/build/reports/tests ]; then
+            cp -R /tmp/deraev-fish-count/app/build/reports/tests /tmp/deraev-artifact/test-reports
+          fi
+          cp /tmp/deraev-fish-count/README.md /tmp/deraev-artifact/README.md
+
+      - name: Upload APK and test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: deraev-fish-count-debug
+          path: /tmp/deraev-artifact
+          if-no-files-found: error
+          retention-days: 14
