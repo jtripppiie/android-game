@@ -41,6 +41,8 @@ jobs:
           mkdir -p /tmp/deraev-fish-count
           tar -xvzf /tmp/deraev-fish-count.tar.gz -C /tmp/deraev-fish-count --strip-components=1
           test -f /tmp/deraev-fish-count/settings.gradle.kts
+          sed -i 's/version "9.4.0"/version "9.3.0"/' /tmp/deraev-fish-count/build.gradle.kts
+          grep -n 'com.android.application' /tmp/deraev-fish-count/build.gradle.kts
           find /tmp/deraev-fish-count -maxdepth 3 -type f | sort
 
       - name: Set up Java 17
@@ -49,10 +51,10 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Set up Gradle 9.6
+      - name: Set up Gradle 9.5
         uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: '9.6.0'
+          gradle-version: '9.5.0'
 
       - name: Inspect live ADF&G JSON response
         shell: bash
