@@ -33,7 +33,7 @@ jobs:
           archive = base64.b64decode(encoded, validate=True)
           digest = hashlib.sha256(archive).hexdigest()
           print('Archive SHA-256:', digest)
-          expected = '25cdec1bdfbf332b6e8e2d2cd3b7f5d1dcae847703740f15dddaed6b6d5b5376'
+          expected = '9ea2bb4121785a51a44ec5d54b76795662bd923d1194e478b4191cc8aaa35cde'
           if digest != expected:
               raise SystemExit(f'Archive checksum mismatch: expected {expected}, got {digest}')
           Path('/tmp/deraev-fish-count.tar.gz').write_bytes(archive)
