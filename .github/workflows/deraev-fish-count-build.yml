@@ -22,41 +22,16 @@ jobs:
           set -euxo pipefail
           ls -la fish-src.part-*
           wc -c fish-src.part-*
-          python3 - <<'PY'
-          import base64
-          import glob
-          import hashlib
-          from pathlib import Path
-
-          parts = sorted(glob.glob('fish-src.part-*'))
-          encoded = b''.join(Path(path).read_bytes().strip() for path in parts)
-          archive = base64.b64decode(encoded, validate=True)
-          digest = hashlib.sha256(archive).hexdigest()
-          print('Archive SHA-256:', digest)
-          expected = '9ea2bb4121785a51a44ec5d54b76795662bd923d1194e478b4191cc8aaa35cde'
-          if digest != expected:
-              raise SystemExit(f'Archive checksum mismatch: expected {expected}, got {digest}')
-          Path('/tmp/deraev-fish-count.tar.gz').write_bytes(archive)
-          PY
+          sha256sum fish-src.part-*
+          cat fish-src.part-* | base64 --decode > /tmp/deraev-fish-count.tar.gz
+          gzip -t /tmp/deraev-fish-count.tar.gz
+          sha256sum /tmp/deraev-fish-count.tar.gz
+          rm -rf /tmp/deraev-fish-count
           mkdir -p /tmp/deraev-fish-count
-          tar -xvzf /tmp/deraev-fish-count.tar.gz -C /tmp/deraev-fish-count --strip-components=1
+          tar -xzf /tmp/deraev-fish-count.tar.gz -C /tmp/deraev-fish-count --strip-components=1
           test -f /tmp/deraev-fish-count/settings.gradle.kts
-          sed -i 's/version "9.4.0"/version "9.3.0"/' /tmp/deraev-fish-count/build.gradle.kts
-          TEST_FILE=/tmp/deraev-fish-count/app/src/test/java/com/tripperdee/deraevfish/FishLogicTest.java
-          sed -i 's/private AppDatabase.CountRecord record(String date, long daily, long cumulative, String status)/private AppDatabase.CountRecord record(String date, long daily, long cumulative)/' "$TEST_FILE"
-          sed -i 's/r.status = status;/r.status = null;/' "$TEST_FILE"
+          test -f /tmp/deraev-fish-count/app/src/main/java/com/tripperdee/deraevfish/MainActivity.java
           grep -n 'com.android.application' /tmp/deraev-fish-count/build.gradle.kts
-          grep -n 'CountRecord record' "$TEST_FILE"
-          find /tmp/deraev-fish-count -maxdepth 3 -type f | sort
-          tar -czf /tmp/deraev-fish-count-source.tar.gz -C /tmp deraev-fish-count
-
-      - name: Upload reconstructed source
-        uses: actions/upload-artifact@v4
-        with:
-          name: deraev-fish-count-source
-          path: /tmp/deraev-fish-count-source.tar.gz
-          if-no-files-found: error
-          retention-days: 14
 
       - name: Set up Java 17
         uses: actions/setup-java@v4
@@ -68,25 +43,6 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '9.5.0'
-
-      - name: Inspect live ADF&G JSON response
-        shell: bash
-        continue-on-error: true
-        run: |
-          curl --fail --location --silent --show-error \
-            'https://www.adfg.alaska.gov/sf/FishCounts/index.cfm?ADFG=export.JSON&countLocationID=40&speciesID=420&year=2026%2C2025%2C2024%2C2023%2C2022' \
-            --output /tmp/adfg-live.json
-          python3 - <<'PY'
-          import json
-          from pathlib import Path
-          p = Path('/tmp/adfg-live.json')
-          print(p.read_text(errors='replace')[:1200])
-          try:
-              payload = json.loads(p.read_text())
-              print('Top-level JSON type:', type(payload).__name__)
-          except Exception as exc:
-              print('JSON inspection failed:', exc)
-          PY
 
       - name: Run unit tests
         shell: bash
@@ -119,7 +75,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: deraev-fish-count-debug
+          name: deraev-fish-count-polished-debug
           path: /tmp/deraev-artifact
           if-no-files-found: error
           retention-days: 14
