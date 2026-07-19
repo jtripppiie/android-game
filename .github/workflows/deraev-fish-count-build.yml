@@ -48,6 +48,15 @@ jobs:
           grep -n 'com.android.application' /tmp/deraev-fish-count/build.gradle.kts
           grep -n 'CountRecord record' "$TEST_FILE"
           find /tmp/deraev-fish-count -maxdepth 3 -type f | sort
+          tar -czf /tmp/deraev-fish-count-source.tar.gz -C /tmp deraev-fish-count
+
+      - name: Upload reconstructed source
+        uses: actions/upload-artifact@v4
+        with:
+          name: deraev-fish-count-source
+          path: /tmp/deraev-fish-count-source.tar.gz
+          if-no-files-found: error
+          retention-days: 14
 
       - name: Set up Java 17
         uses: actions/setup-java@v4
