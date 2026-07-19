@@ -74,10 +74,17 @@ jobs:
           PY
 
       - name: Run unit tests
-        run: gradle -p /tmp/deraev-fish-count --no-daemon testDebugUnitTest
+        shell: bash
+        run: |
+          mkdir -p /tmp/deraev-artifact
+          set -o pipefail
+          gradle -p /tmp/deraev-fish-count --no-daemon --stacktrace testDebugUnitTest 2>&1 | tee /tmp/deraev-artifact/gradle-test.log
 
       - name: Assemble debug APK
-        run: gradle -p /tmp/deraev-fish-count --no-daemon assembleDebug
+        shell: bash
+        run: |
+          set -o pipefail
+          gradle -p /tmp/deraev-fish-count --no-daemon --stacktrace assembleDebug 2>&1 | tee /tmp/deraev-artifact/gradle-assemble.log
 
       - name: Collect build outputs
         if: always()
