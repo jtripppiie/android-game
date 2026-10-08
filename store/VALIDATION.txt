@@ -16,12 +16,14 @@ PASS: Chromium player race and builder test ride, removed C shortcut,
 PASS: listing character limits and required icon/feature graphic dimensions.
 PASS: git diff --check.
 
-NOT VERIFIED: upload-key signing path (no publisher key supplied), Play ingestion,
+NOT VERIFIED: Play ingestion,
 physical Android operation, 16 KB runtime execution, sustained phone performance,
 human difficulty testing or Play pre-launch report. Alignment is not a runtime test.
 The test APK is debug-signed release code, NOT the production upload artifact.
 Privacy policy is live at https://tripperdeelabs.com/moto-thrash/privacy/.
-No Play Store upload, production release or key creation occurred.
+The final AAB is now signed with the existing TripperDeeLabs upload key; see
+SIGNED-RELEASE.txt for certificate and artifact fingerprints. No Play Store upload,
+production release or key creation occurred.
 Old browser previews were replaced with six new local web-launch screenshots
 by user request. Their source is documented in screenshots/README.txt; these do
 not establish physical Android behavior.

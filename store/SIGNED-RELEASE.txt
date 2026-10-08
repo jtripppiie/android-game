@@ -1,0 +1,36 @@
+SIGNED RELEASE — 2026-10-08
+
+App: Moto Thrash: Retro Racing
+Package: com.tripperdeelabs.motothrash (new Play submission)
+Version: 1.0.0 / version code 1
+Bundle: build/moto-thrash-release.aab
+Minimum Android: 7.0 (API 24)
+Target Android: 16 (API 36)
+Architecture: arm64-v8a
+Publisher: TripperDeeLabs
+Support: feedback@tripperdeelabs.com
+Privacy: https://tripperdeelabs.com/moto-thrash/privacy/
+Website: https://tripperdeelabs.com/
+Intended US price: $0.99, paid app
+Suggested category: Game / Racing
+No ads, in-app purchases, account requirement, or in-game data collection/sharing.
+Offline single-player racing, with AI opponents; spectator mode removed.
+
+Signed with the existing TripperDeeLabs upload key. No new key was generated.
+PASS: jarsigner signature verification and bundletool validation.
+PASS: embedded signer certificate matches the configured upload certificate.
+PASS: game payload byte-for-byte identical to the validated unsigned release.
+PASS: manifest confirms expected package, version and API 36 target.
+The certificate is self-signed, as is normal for an Android upload key.
+
+Select Play App Signing in the new app's Play Console setup. The upload
+certificate identifies uploads; Play's app-signing certificate may be different.
+Use a new version code for every subsequent uploaded build.
+
+Six 1920x1080 screenshots come from the local web launch, at the user's request.
+Still pending: physical-device testing, Play pre-launch checks, account-specific
+production access/testing, content-rating and audience questionnaires, and actual
+submission. This signed artifact is ready for upload, not a claim of Play approval.
+
+AAB SHA-256: b8e0e4097aa350f3ae9fc8b6d1dddabdd72c4eea2a603f66947c4e0509591c15
+Upload certificate SHA-256: 7303d87b72f8dd04f2ad5b020c7768de89da8649992651118b53787384949057

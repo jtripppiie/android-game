@@ -1,6 +1,7 @@
 MOTO THRASH: RETRO RACING — RELEASE HANDOFF
 
 Prepared locally:
+- SIGNED AAB: build/moto-thrash-release.aab; see SIGNED-RELEASE.txt for verification.
 - Version name 1.0.0, version code 1; retain com.tripperdeelabs.motothrash.
 - API 36, arm64, release Gradle AAB preset.
 - tools/build_android_release.py creates an isolated unsigned or upload-signed build.

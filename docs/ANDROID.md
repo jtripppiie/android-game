@@ -56,3 +56,7 @@ The game now includes a menu Privacy notice. Dialog input is isolated from the m
 Privacy policy published and verified over HTTPS on October 8, 2026. Website commit: `6f8c851`.
 
 The package ID is now `com.tripperdeelabs.motothrash`, explicitly authorized for a fresh Play submission. Computer spectator mode and builder CPU tests were removed; normal AI opponents remain. The campaign automation driver now lives under `tests/` and is excluded from exports.
+
+## Signed upload bundle
+
+`build/moto-thrash-release.aab` was signed with the existing TripperDeeLabs upload key on October 8, 2026. Signature verification, bundletool validation, manifest checks and certificate matching passed. The signed payload matches the tested unsigned build. This supersedes the earlier unsigned-only signing status above. See `store/SIGNED-RELEASE.txt` for fingerprints and Console details. No Play upload or physical-device testing has occurred.
