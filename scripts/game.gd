@@ -294,7 +294,7 @@ func _input(event: InputEvent) -> void:
             stage = (stage + 1) % (unlocked + 1)
             _prepare_preview()
     if event is InputEventScreenTouch:
-        var point := event.position
+        var point: Vector2 = event.position
         if event.pressed:
             _on_pointer_down(point, event.index)
         else:
@@ -432,7 +432,7 @@ func _draw_tracks() -> void:
             draw_rect(Rect2(dash_x, y + 8, 12, 2), DIRT_LIGHT)
             draw_rect(Rect2(dash_x + 21, y - 7, 5, 2), DIRT_DARK)
     draw_rect(Rect2(0, 250, 480, 20), DIRT_DARK)
-    var goal_x := Rules.TRACK_LENGTHS[stage] - distance + BIKE_X
+    var goal_x: float = float(Rules.TRACK_LENGTHS[stage]) - distance + BIKE_X
     if goal_x >= -15.0 and goal_x < 500.0:
         for lane in range(4):
             for j in range(2):

@@ -12,7 +12,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Import project headlessly
-        run: godot --headless --editor --path . --import --quit
+        run: |
+          godot --headless --editor --path . --import --quit > /tmp/dirt-rush-import.log 2>&1
+          cat /tmp/dirt-rush-import.log
+          if grep -E "SCRIPT ERROR|Parse Error|Failed to load script" /tmp/dirt-rush-import.log; then exit 1; fi
       - name: Test race rules
         run: godot --headless --path . --script res://tests/race_rules_test.gd
       - name: Startup smoke test
