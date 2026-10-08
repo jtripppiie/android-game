@@ -4,6 +4,7 @@ extends Node2D
 
 const Rules = preload("res://scripts/race_rules.gd")
 const Builder = preload("res://scripts/track_builder.gd")
+const Scenery = preload("res://scripts/retro_scenery.gd")
 const SIZE := Vector2(480.0, 270.0)
 const BIKE_X := 124.0
 const STICK_CENTER := Vector2(65.0, 226.0)
@@ -63,6 +64,8 @@ var message_timer := 0.0
 var dust_timer := 0.0
 var visual_time := 0.0
 var sparks: Array[Dictionary] = []
+var rivals: Array[Dictionary] = []
+var race_place := 1
 
 # Same interaction model as Captain Quack: floating thumbstick displacement,
 # normalized to a circular radius, paired with an independent held action.
@@ -111,6 +114,7 @@ func _start_race() -> void:
     message_timer = 0.0
     medal = ""
     new_record = false
+    _reset_rivals()
     mode = "race"
     queue_redraw()
 
@@ -177,6 +181,7 @@ func _race_step(dt: float) -> void:
 
     var last_distance := distance
     distance += speed * dt
+    _step_rivals(dt)
     if crash_timer <= 0.0:
         _check_features(last_distance, distance)
 
@@ -453,7 +458,9 @@ func _draw() -> void:
     if mode != "menu":
         _draw_particles()
     if mode != "editor":
+        _draw_rivals()
         _draw_bike()
+    Scenery.front(self, distance, _theme_index())
     if mode == "race" or mode == "pause":
         _draw_hud()
         _draw_touch_controls()
@@ -471,30 +478,11 @@ func _draw() -> void:
             _panel(Rect2(162, 51, 156, 25), INK, txt_color)
             _center_text(message, 64, 13, txt_color)
 
+func _theme_index() -> int:
+    return custom_slot if custom_race or mode == "editor" else stage
+
 func _draw_background() -> void:
-    var theme_idx: int = custom_slot if custom_race or mode == "editor" else stage
-    var sky: Color = SKY[theme_idx]
-    var hills: Color = HILLS[theme_idx]
-    draw_rect(Rect2(0, 0, SIZE.x, 115), sky)
-    var sun_x := 379.0 - fposmod(distance * 0.06, 400.0)
-    draw_rect(Rect2(sun_x, 48, 28, 28), YELLOW if theme_idx != 4 else Color("#dee6fd"))
-    if theme_idx == 4:
-        for i in range(15):
-            var sx := float((i * 73 + 13) % 477)
-            var sy := float((i * 29 + 16) % 88)
-            draw_rect(Rect2(sx, sy, 2, 2), CREAM)
-    for i in range(-2, 9):
-        var x := float(i) * 80.0 - fposmod(distance * 0.09, 80.0)
-        draw_colored_polygon(PackedVector2Array([
-            Vector2(x - 40, 104), Vector2(x + 2, 67),
-            Vector2(x + 32, 91), Vector2(x + 60, 104)
-        ]), hills)
-        draw_rect(Rect2(x + 1, 68, 5, 7), Color("#e4ddc7") if theme_idx in [2, 5] else hills.lightened(0.2))
-    draw_rect(Rect2(0, 100, 480, 14), hills.darkened(0.14))
-    for i in range(-2, 17):
-        var shrub_x := float(i) * 37.0 - fposmod(distance * 0.2, 37.0)
-        draw_rect(Rect2(shrub_x, 94, 6, 6), Color("#3b8b77") if theme_idx != 4 else Color("#677394"))
-        draw_rect(Rect2(shrub_x + 2, 90, 2, 8), hills.darkened(0.24))
+    Scenery.paint(self, _theme_index(), distance, visual_time)
 
 func _draw_tracks() -> void:
     draw_rect(Rect2(0, 104, 480, 151), DIRT_DARK)
@@ -508,6 +496,7 @@ func _draw_tracks() -> void:
             draw_rect(Rect2(dash_x, y + 8, 12, 2), DIRT_LIGHT)
             draw_rect(Rect2(dash_x + 21, y - 7, 5, 2), DIRT_DARK)
     draw_rect(Rect2(0, 250, 480, 20), DIRT_DARK)
+    Scenery.texture_track(self, distance, _theme_index())
     var goal_x: float = _course_length() - distance + BIKE_X
     if goal_x >= -15.0 and goal_x < 500.0:
         for lane in range(4):
@@ -547,35 +536,99 @@ func _draw_features() -> void:
                 draw_rect(Rect2(sx - 10, fy + 1, 9, 2), Color("#c2905c"))
                 draw_rect(Rect2(sx + 5, fy, 5, 2), Color("#c2905c"))
 
+func _reset_rivals() -> void:
+    rivals.clear()
+    for i in range(3):
+        rivals.append({
+            "x": -42.0 - i * 27.0,
+            "lane": float([0, 1, 3][i]),
+            "speed": 108.0 + float(i * 11) + float(stage % 3 * 4),
+            "h": 0.0,
+            "jump_v": 0.0,
+            "next_shift": 2.0 + float(i * 2),
+            "last_ramp": -1
+        })
+    race_place = 1
+
+func _step_rivals(dt: float) -> void:
+    race_place = 1
+    for i in range(rivals.size()):
+        var r: Dictionary = rivals[i]
+        var rx: float = float(r["x"])
+        var lane: float = float(r["lane"])
+        var pace: float = 114.0 + float(i * 10) + float(stage % 3 * 3)
+        pace += sin(elapsed * 0.45 + float(i * 2)) * 13.0
+        r["speed"] = move_toward(float(r["speed"]), pace, dt * 18.0)
+        r["x"] = rx + float(r["speed"]) * dt
+        r["next_shift"] = float(r["next_shift"]) - dt
+        if float(r["next_shift"]) <= 0.0:
+            # Deliberately keep a recognizable rider on each lane most of the time.
+            r["lane"] = float(posmod(i + int(elapsed / 12.0), 4))
+            r["next_shift"] = 7.0 + float(i)
+        if float(r["h"]) > 0.0 or float(r["jump_v"]) > 0.0:
+            r["h"] = maxf(0.0, float(r["h"]) + float(r["jump_v"]) * dt)
+            r["jump_v"] = float(r["jump_v"]) - 420.0 * dt
+            if float(r["h"]) <= 0.0:
+                r["jump_v"] = 0.0
+        else:
+            for j in range(features.size()):
+                var feature: Dictionary = features[j]
+                if absf(float(feature["x"]) - float(r["x"])) < 6.0 and int(feature["lane"]) == int(r["lane"]) and int(r["last_ramp"]) != j:
+                    if str(feature["kind"]) in ["ramp", "big_ramp", "whoops"]:
+                        r["jump_v"] = 215.0 if str(feature["kind"]) == "big_ramp" else 155.0
+                        r["h"] = 1.0
+                    r["last_ramp"] = j
+                    break
+        if float(r["x"]) > distance:
+            race_place += 1
+        rivals[i] = r
+
+func _draw_rivals() -> void:
+    for i in range(rivals.size()):
+        var r: Dictionary = rivals[i]
+        var px: float = BIKE_X + float(r["x"]) - distance
+        if px < -34.0 or px > 520.0:
+            continue
+        var floor_y: float = Rules.lane_y(float(r["lane"]))
+        var color: Color = [Color("#347de3"), Color("#4db96c"), Color("#e9bc3d")][i]
+        draw_rect(Rect2(px - 18, floor_y + 3, 38, 3), Color(0.09, 0.07, 0.09, 0.28))
+        _draw_pixel_bike(Vector2(px, floor_y - float(r["h"])), color, color.lightened(0.35), 0.0, 0.84)
+
 func _draw_bike() -> void:
     var ground_y := Rules.lane_y(lane_position)
-    # Small low-resolution elliptical contact shadow.
-    draw_rect(Rect2(BIKE_X - 22, ground_y + 4, 43, 4), Color(0.14, 0.12, 0.13, 0.45))
-    draw_set_transform(Vector2(BIKE_X, ground_y - altitude), bike_tilt, Vector2.ONE)
-    # Exhaust + square pixel wheels.
-    draw_rect(Rect2(-26, -12, 9, 4), INK)
-    draw_circle(Vector2(-14, 0), 8, INK)
-    draw_circle(Vector2(15, 0), 8, INK)
-    draw_circle(Vector2(-14, 0), 4, Color("#8a9ba6"))
-    draw_circle(Vector2(15, 0), 4, Color("#8a9ba6"))
-    draw_rect(Rect2(-18, -3, 5, 6), INK)
-    draw_rect(Rect2(13, -3, 5, 6), INK)
-    # Original orange bike: tank, fork, seat, and blocky fenders.
+    draw_rect(Rect2(BIKE_X - 21, ground_y + 4, 43, 4), Color(0.1, 0.09, 0.1, 0.33))
+    _draw_pixel_bike(Vector2(BIKE_X, ground_y - altitude), Color("#e7473c"), CREAM, bike_tilt, 1.0)
+
+func _draw_pixel_bike(center: Vector2, body: Color, suit: Color, pitch: float, scale_factor: float) -> void:
+    draw_set_transform(center, pitch, Vector2(scale_factor, scale_factor))
+    # Pixelated wheels, tire hubs, fork and angled bodywork. All original shapes.
+    for wheel in [-16.0, 17.0]:
+        draw_rect(Rect2(wheel - 7, -6, 14, 14), Color("#171c27"))
+        draw_rect(Rect2(wheel - 5, -7, 10, 16), Color("#191e25"))
+        draw_rect(Rect2(wheel - 4, -4, 8, 9), Color("#a6a3a0"))
+        draw_rect(Rect2(wheel - 2, -2, 4, 5), Color("#28323e"))
+        draw_rect(Rect2(wheel - 1, -5, 2, 12), Color("#d5ced0"))
+    draw_line(Vector2(-16, 0), Vector2(-6, -12), Color("#aabdc9"), 2.0)
+    draw_line(Vector2(17, 0), Vector2(10, -15), Color("#bec3c4"), 2.0)
+    draw_line(Vector2(-6, -12), Vector2(10, -15), Color("#252a32"), 3.0)
+    draw_rect(Rect2(-25, -12, 9, 3), body)
+    draw_rect(Rect2(16, -13, 9, 3), body)
     draw_colored_polygon(PackedVector2Array([
-        Vector2(-17, -8), Vector2(-9, -17), Vector2(9, -14),
-        Vector2(17, -7), Vector2(7, -4), Vector2(-10, -4)
-    ]), RED)
-    draw_rect(Rect2(-16, -17, 18, 3), INK)
-    draw_rect(Rect2(5, -12, 13, 3), YELLOW)
-    draw_line(Vector2(7, -12), Vector2(15, -1), INK, 2.0)
-    # Rider: boot, pants, torso, helmet, visor, hands.
-    draw_rect(Rect2(-8, -13, 10, 6), Color("#233451"))
-    draw_rect(Rect2(-4, -20, 11, 10), Color("#f4c04e"))
-    draw_rect(Rect2(2, -18, 10, 3), Color("#f3d0a2"))
-    draw_rect(Rect2(-6, -31, 13, 12), Color("#e8f1ee"))
-    draw_rect(Rect2(-4, -33, 11, 3), CYAN)
-    draw_rect(Rect2(3, -27, 7, 4), INK)
-    draw_rect(Rect2(-10, -11, 8, 4), INK)
+        Vector2(-16, -14), Vector2(-7, -20), Vector2(6, -20),
+        Vector2(17, -14), Vector2(8, -9), Vector2(-7, -8)
+    ]), body)
+    draw_rect(Rect2(-9, -18, 8, 4), Color("#ffffff"))
+    draw_rect(Rect2(-12, -22, 15, 3), Color("#182b38"))
+    draw_rect(Rect2(-1, -21, 4, 7), Color("#2a3444"))
+    # Boot, bent leg, gloved grip, vest and recognizable helmet silhouette.
+    draw_rect(Rect2(-10, -12, 12, 4), Color("#353945"))
+    draw_rect(Rect2(-6, -17, 6, 7), suit.darkened(0.22))
+    draw_rect(Rect2(0, -24, 9, 14), suit)
+    draw_rect(Rect2(5, -25, 12, 4), Color("#202b3a"))
+    draw_rect(Rect2(0, -35, 14, 11), suit)
+    draw_rect(Rect2(2, -37, 12, 4), body)
+    draw_rect(Rect2(10, -32, 8, 4), Color("#161e31"))
+    draw_rect(Rect2(0, -35, 2, 8), body)
     draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 func _draw_particles() -> void:
@@ -587,40 +640,51 @@ func _draw_particles() -> void:
         draw_rect(Rect2(pos.x, pos.y, 3, 3), color)
 
 func _draw_hud() -> void:
-    draw_rect(Rect2(0, 0, 480, 39), INK)
-    _draw_checkers(Rect2(0, 0, 48, 5), 5.0)
-    _draw_checkers(Rect2(432, 34, 48, 5), 5.0)
-    draw_rect(Rect2(0, 38, 480, 2), YELLOW)
-    _text("DIRT RUSH", Vector2(9, 15), 14, YELLOW)
-    _text(("CUSTOM %d" % (custom_slot + 1)) if custom_race else ("%d/6  %s" % [stage + 1, Rules.TRACK_NAMES[stage]]), Vector2(10, 30), 11, CREAM)
-    _text("%04.1fs" % elapsed, Vector2(270, 17), 14, CREAM)
-    _text("%d MPH" % int(speed * 0.45), Vector2(341, 30), 11, CREAM)
-    draw_rect(Rect2(264, 27, 63, 6), DIRT_DARK)
-    draw_rect(Rect2(264, 27, 63 * clampf(distance / _course_length(), 0.0, 1.0), 6), CYAN)
-    draw_rect(Rect2(370, 8, 76, 8), DIRT_DARK)
-    draw_rect(Rect2(370, 8, 76 * heat / 100.0, 8), RED if heat > 75.0 else YELLOW)
-    _text("HEAT", Vector2(370, 28), 11, CREAM)
+    draw_rect(Rect2(0, 0, 480, 39), Color("#101523"))
+    _draw_checkers(Rect2(0, 0, 36, 5), 5.0)
+    _draw_checkers(Rect2(450, 34, 30, 5), 5.0)
+    draw_rect(Rect2(0, 38, 480, 2), Color("#ee6749"))
+    _text("DIRT", Vector2(7, 22), 21, CREAM)
+    _text("RUSH", Vector2(50, 22), 21, Color("#f0614a"))
+    draw_rect(Rect2(103, 5, 1, 30), Color("#526171"))
+    _text("TIME", Vector2(110, 13), 10, Color("#a9bccc"))
+    _text("%05.1f" % elapsed, Vector2(108, 30), 17, CREAM)
+    draw_rect(Rect2(182, 5, 1, 30), Color("#526171"))
+    _text("COURSE", Vector2(191, 13), 10, Color("#a9bccc"))
+    _text(("BUILD %d" % (custom_slot + 1)) if custom_race else Rules.TRACK_NAMES[stage], Vector2(190, 29), 12, YELLOW)
+    draw_rect(Rect2(305, 5, 1, 30), Color("#526171"))
+    _text("HEAT", Vector2(312, 13), 10, Color("#a9bccc"))
+    draw_rect(Rect2(312, 18, 68, 9), Color("#3b4151"))
+    for i in range(10):
+        var active := float(i + 1) * 10.0 <= heat
+        var tint := Color("#63db71") if i < 5 else (Color("#ffd15c") if i < 8 else Color("#f2594a"))
+        draw_rect(Rect2(314.0 + i * 6.4, 20, 5, 5), tint if active else Color("#1e2938"))
     if overheated:
-        _text("HOT", Vector2(406, 28), 11, RED)
-    draw_rect(Rect2(453, 5, 23, 25), Color("#263a4f"))
-    draw_rect(Rect2(460, 10, 3, 13), CREAM)
-    draw_rect(Rect2(466, 10, 3, 13), CREAM)
-    _text("CRASH %d" % crash_count, Vector2(340, 14), 9, CREAM)
+        _text("!", Vector2(380, 27), 13, RED)
+    draw_rect(Rect2(395, 5, 1, 30), Color("#526171"))
+    _text("PLACE", Vector2(403, 13), 10, Color("#a9bccc"))
+    _text("%d / 4" % race_place, Vector2(405, 29), 16, CREAM)
+    # Thin course progress strip across the bottom of the instrument panel.
+    draw_rect(Rect2(108, 34, 278, 2), Color("#4a5663"))
+    draw_rect(Rect2(108, 34, 278 * clampf(distance / _course_length(), 0, 1), 2), Color("#f0ca5e"))
+    draw_rect(Rect2(451, 6, 27, 26), Color("#334256"))
+    draw_rect(Rect2(459, 11, 3, 15), CREAM)
+    draw_rect(Rect2(467, 11, 3, 15), CREAM)
 
 func _draw_touch_controls() -> void:
-    # Translucent low-resolution controls remain visible for discoverability.
-    draw_circle(STICK_CENTER, 37, Color(0.07, 0.13, 0.20, 0.50))
-    draw_arc(STICK_CENTER, 37, 0, TAU, 40, Color("#b4e0df"), 2.0)
-    draw_line(STICK_CENTER + Vector2(0, -29), STICK_CENTER + Vector2(0, 29), Color("#608b91"), 1.0)
-    draw_line(STICK_CENTER + Vector2(-29, 0), STICK_CENTER + Vector2(29, 0), Color("#608b91"), 1.0)
-    draw_circle(STICK_CENTER + stick_visual * 22.0, 14, Color("#a7e7d9"))
-    draw_circle(STICK_CENTER + stick_visual * 22.0, 7, Color("#4b8291"))
+    # Original low-contrast analog glass, large enough for two thumbs.
+    draw_circle(STICK_CENTER, 39, Color(0.05, 0.09, 0.14, 0.48))
+    draw_arc(STICK_CENTER, 38, 0, TAU, 40, Color("#dce8e3"), 1.4)
+    for dir in [Vector2(0, -1), Vector2(1, 0), Vector2(0, 1), Vector2(-1, 0)]:
+        var p: Vector2 = STICK_CENTER + dir * 30.0
+        draw_rect(Rect2(p.x - 2, p.y - 2, 4, 4), Color("#d3d7d4"))
+    draw_circle(STICK_CENTER + stick_visual * 23.0, 15, Color(0.74, 0.77, 0.79, 0.72))
+    draw_circle(STICK_CENTER + stick_visual * 23.0, 10, Color(0.88, 0.87, 0.83, 0.47))
     var pushed := boost_touch_id != -1 or Input.is_action_pressed("boost")
-    draw_circle(BOOST_CENTER, 39, Color(0.25, 0.13, 0.10, 0.78))
-    draw_circle(BOOST_CENTER, 34, Color("#b63f3e") if pushed and not overheated else Color("#a26842"))
-    draw_arc(BOOST_CENTER, 39, 0, TAU, 40, YELLOW if not overheated else RED, 3.0)
-    _center_at("BOOST", BOOST_CENTER + Vector2(0, 4), 14, CREAM)
-    _text("STEER", Vector2(44, 269), 9, CREAM)
+    draw_circle(BOOST_CENTER, 41, Color(0.10, 0.09, 0.15, 0.55))
+    draw_circle(BOOST_CENTER, 35, Color("#e9433d") if pushed and not overheated else Color("#b94740"))
+    draw_arc(BOOST_CENTER, 40, 0, TAU, 42, Color("#f0c4b9"), 2.0)
+    _center_at("BOOST", BOOST_CENTER + Vector2(0, 5), 17, CREAM)
 
 func _draw_menu() -> void:
     draw_rect(Rect2(0, 0, 480, 270), Color(0.04, 0.08, 0.13, 0.64))
