@@ -1,0 +1,61 @@
+MOTO THRASH: RETRO RACING — RELEASE HANDOFF
+
+Prepared locally:
+- Version name 1.0.0, version code 1; retain com.tripperdeelabs.dirtrush.
+- API 36, arm64, release Gradle AAB preset.
+- tools/build_android_release.py creates an isolated unsigned or upload-signed build.
+- English listing copy and release notes in en-US/.
+- In-game Privacy button explains local storage and no telemetry.
+- privacy-policy.html mirrors https://tripperdeelabs.com/moto-thrash/privacy/.
+- Publisher: TripperDeeLabs. Support: feedback@tripperdeelabs.com.
+
+Signing:
+Use your existing upload key if the package already exists in Play Console.
+Do not replace it or change the package ID without checking the existing app.
+For a new app, create and securely back up an upload key outside this repository;
+use Play App Signing. Do not send private keys/passwords through chat.
+Set MOTO_UPLOAD_KEYSTORE, MOTO_UPLOAD_ALIAS and MOTO_UPLOAD_PASSWORD locally,
+then run: python3 tools/build_android_release.py --sign
+Godot must have its matching templates, JDK 17 and Android SDK configured.
+Optional --godot and --templates select local installations.
+Unsigned validation build: omit --sign. Never upload the unsigned bundle.
+Validate the signed output with bundletool validate and jarsigner -verify;
+install APKs generated from that exact bundle before distributing it.
+Increase version code for every subsequent Play upload.
+
+Console answers to review against the FINAL signed build:
+- App type: Game. Suggested category: Racing.
+- Paid app: intended US base price $0.99; choose markets/local prices in Console.
+- Ads: No. In-app purchases: No. Login/app access: no restrictions.
+- Data safety: source audit finds no app data collection/sharing, network SDKs,
+  analytics or account system. Recheck packaged permissions/dependencies before
+  submitting. Support email is separate from the game.
+- Content rating: complete the IARC questionnaire honestly; motorcycle crashes,
+  lava/crocodile hazards and spooky spectators exist, with no gore in game art.
+  Do not invent a rating or describe it as suitable for every age.
+- Target audience: publisher must choose intended age groups; no assumption made.
+- Privacy URL: https://tripperdeelabs.com/moto-thrash/privacy/
+  Verified publicly accessible over HTTPS on 2026-10-08.
+- Support email: feedback@tripperdeelabs.com; developer: TripperDeeLabs.
+- Developer website: https://tripperdeelabs.com/
+
+Release gates still requiring real hardware/account access:
+1. Install signed-bundle APKs on phones; test both landscape orientations, cutouts,
+   multitouch, Bluetooth/headphone audio, suspend/resume, save/relaunch, low-end
+   performance and longer sessions. Test a 16 KB page-size Android environment.
+2. Run an internal test and review Play's pre-launch report. Recruit human players
+   to assess difficulty and touch accuracy; CPU completion is not a fun test.
+3. If required for the developer account, finish the closed test and request
+   production access (new personal accounts: 12 testers for 14 continuous days).
+4. Capture final screenshots from the Android build; browser captures in this
+   package are clearly labeled previews, not proof of Android device testing.
+5. Review asset/name provenance in docs/IP-REVIEW.md; no formal trademark search
+   or rights clearance has been completed.
+6. Review declarations, pricing, countries and release notes, then submit in Console.
+
+Official references (checked 2026-10-08):
+https://developer.android.com/google/play/requirements/target-sdk
+https://developer.android.com/guide/practices/page-sizes
+https://support.google.com/googleplay/android-developer/answer/9866151
+https://support.google.com/googleplay/android-developer/answer/10144311
+https://support.google.com/googleplay/android-developer/answer/14151465

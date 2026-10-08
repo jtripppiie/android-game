@@ -1,217 +1,476 @@
 extends RefCounted
-## Original procedural 480x270 scenery. Designed for nearest-neighbor scaling.
-## No image downloads, engine-time randomness, or copied course artwork.
+## Original pixel art. Terrain, sprites and lettering share a fixed pixel grid.
+const Terrain = preload("res://scripts/terrain.gd")
+const Pixel = preload("res://scripts/pixel_font.gd")
+const Rules = preload("res://scripts/race_rules.gd")
+const SURFACE_SHEET = preload("res://assets/sprites/track-surfaces-v1.png")
+const HAZARD_SHEET = preload("res://assets/sprites/jump-hazards-v1.png")
+const FAN_SHEET = preload("res://assets/sprites/stadium-fans-v1.png")
+const EXTRA_FAN_SHEET = preload("res://assets/sprites/stadium-fans-v2.png")
+const HUMAN_FAN_SHEET = preload("res://assets/sprites/stadium-people-v1.png")
+const FAN_COUNT := 32
+const EXTRA_FAN_X := [0,374,724,1086,1448]
+const EXTRA_FAN_Y := [0,376,704,1086]
+const FAN_REGIONS := [Rect2i(0,0,458,444),Rect2i(458,0,429,444),Rect2i(887,0,443,444),Rect2i(1330,0,444,444),Rect2i(0,444,443,443),Rect2i(443,444,462,443),Rect2i(905,444,425,443),Rect2i(1330,444,444,443)]
+const TREE_SHEET = preload("res://assets/sprites/trackside-trees-v1.png")
+const TREE_THEME_VARIANTS := [[3,7,5],[4,0,7],[0,1,6],[3,5,7],[1,6,5],[2,7,0]]
+const RIDER_SHEET = preload("res://assets/sprites/moto-rider-sheet-v1.png")
+# Explicit atlas regions preserve the generated recovery poses across uneven gutters.
+const RIDER_REGIONS := [Rect2i(0,0,444,444),Rect2i(444,0,443,444),Rect2i(887,0,443,444),Rect2i(1330,0,444,444),Rect2i(0,444,444,443),Rect2i(444,444,477,443),Rect2i(921,444,409,443),Rect2i(1330,444,444,443)]
+const RIDER_BASELINES := [411.0,411.0,411.0,411.0,393.0,389.0,385.0,397.0]
+const GRASS := ["#9bcb43","#75ac51","#47906c","#c1bd53","#384d8e","#669791"]
+const ROAD := ["#cf943c","#d99252","#b9a260","#ca8860","#8d98ae","#d2a965"]
+const WALL := ["#75602a","#78503b","#5a633e","#87553c","#465275","#65644b"]
+static var bike_sprites: Dictionary = {}
+static var road_textures: Dictionary = {}
+static var crowds: Dictionary = {}
+static var fan_images: Dictionary = {}
+static var fan_lineups: Dictionary = {}
+static var landscape_textures: Dictionary = {}
+static var tree_sprites: Dictionary = {}
+static var tree_sources: Dictionary = {}
+static var tree_layouts: Dictionary = {}
+static var surface_sprites: Dictionary = {}
+static var grass_textures: Dictionary = {}
+static var hazard_sprites: Dictionary = {}
 
-const SKIES := [
-    [Color("#48a5e7"), Color("#9edbf8")],
-    [Color("#5a9bd6"), Color("#c9e9f6")],
-    [Color("#60b8ee"), Color("#c8e7ff")],
-    [Color("#ed946c"), Color("#f9cb89")],
-    [Color("#132659"), Color("#4663a1")],
-    [Color("#5f9acb"), Color("#bbd9e6")]
-]
-const FAR_MOUNTAINS := [
-    Color("#a17fb9"), Color("#8a9bc1"), Color("#7d9ba9"),
-    Color("#c07d99"), Color("#50538f"), Color("#8c9cbb")
-]
-const CLOSE_MOUNTAINS := [
-    Color("#dd9b7c"), Color("#638c83"), Color("#6c9691"),
-    Color("#bd7166"), Color("#303867"), Color("#60837c")
-]
+static func poly(c: CanvasItem, points: Array, color: Color) -> void:
+    c.draw_colored_polygon(PackedVector2Array(points),color)
 
-static func paint(c: CanvasItem, stage: int, scroll: float, tick: float) -> void:
-    var theme := clampi(stage, 0, 5)
-    var night := theme == 4
-    for stripe in range(13):
-        var k := float(stripe) / 13.0
-        c.draw_rect(Rect2(0, stripe * 8, 480, 9), SKIES[theme][0].lerp(SKIES[theme][1], k))
-    if night:
-        c.draw_circle(Vector2(384.0 - fposmod(scroll * 0.012, 100.0), 27), 13, Color("#f9ecc7"))
-        c.draw_circle(Vector2(380.0 - fposmod(scroll * 0.012, 100.0), 24), 3, Color("#e0d5ba"))
-        for i in range(34):
-            var x := float((i * 71 + 13) % 478)
-            var y := float((i * 31 + 6) % 66)
-            c.draw_rect(Rect2(x, y, 1 + int(i % 3 == 0), 1), Color("#f2eef0"))
+static func oval(c: CanvasItem, center: Vector2, radius: Vector2, color: Color) -> void:
+    c.draw_rect(Rect2(roundf(center.x-radius.x),roundf(center.y-1),roundf(radius.x*2),2),color)
+    c.draw_rect(Rect2(roundf(center.x-radius.x+2),roundf(center.y-2),roundf(radius.x*2-4),4),color)
+
+static func _stick_fan(pose: int) -> Image:
+    var image := Image.create(28,22,false,Image.FORMAT_RGBA8)
+    image.fill(Color.TRANSPARENT)
+    var ink: Color=[Color("#cfbd91"),Color("#a2bec3"),Color("#b6c291"),Color("#d5a18c")][pose]
+    for y in range(-4,5):
+        for x in range(-4,5):
+            if x*x+y*y<=18: image.set_pixel(14+x,5+y,ink)
+    var face := Color("#172539")
+    image.set_pixel(12,4,face)
+    image.set_pixel(16,4,face)
+    for point in [Vector2i(12,6),Vector2i(13,7),Vector2i(14,7),Vector2i(15,7),Vector2i(16,6)]: image.set_pixelv(point,face)
+    var hip := Vector2i(13,15)
+    _fan_line(image,Vector2i(14,9),hip,ink)
+    _fan_line(image,Vector2i(14,10),Vector2i(9,12),ink)
+    _fan_line(image,Vector2i(9,12),Vector2i(7,6) if pose in [0,3] else Vector2i(7,15),ink)
+    _fan_line(image,Vector2i(14,10),Vector2i(19,12),ink)
+    _fan_line(image,Vector2i(19,12),Vector2i(22,5) if pose in [0,1] else Vector2i(23,10),ink)
+    _fan_line(image,hip,Vector2i(10,18),ink)
+    _fan_line(image,Vector2i(10,18),Vector2i(7,18) if pose==2 else Vector2i(8,21),ink)
+    _fan_line(image,hip,Vector2i(17,18),ink)
+    _fan_line(image,Vector2i(17,18),Vector2i(22,16) if pose==3 else Vector2i(19,21),ink)
+    return image
+
+static func _fan_line(image: Image, a: Vector2i, b: Vector2i, color: Color) -> void:
+    var steps := maxi(absi(b.x-a.x),absi(b.y-a.y))
+    for step in range(steps+1):
+        image.set_pixelv(Vector2i(Vector2(a).lerp(Vector2(b),float(step)/maxi(1,steps)).round()),color)
+
+static func _fan_image(variant: int) -> Image:
+    if fan_images.has(variant): return fan_images[variant]
+    var source: Image
+    if variant<8:
+        source=FAN_SHEET.get_image().get_region(FAN_REGIONS[variant])
+    elif variant<20:
+        var col := (variant-8)%4
+        var row := (variant-8)/4
+        var region := Rect2i(EXTRA_FAN_X[col],EXTRA_FAN_Y[row],EXTRA_FAN_X[col+1]-EXTRA_FAN_X[col],EXTRA_FAN_Y[row+1]-EXTRA_FAN_Y[row])
+        source=EXTRA_FAN_SHEET.get_image().get_region(region)
+    elif variant<28:
+        var sheet := HUMAN_FAN_SHEET.get_image()
+        var col := (variant-20)%4
+        var row := (variant-20)/4
+        var left := roundi(col*sheet.get_width()/4.0)
+        var right := roundi((col+1)*sheet.get_width()/4.0)
+        var top := roundi(row*sheet.get_height()/2.0)
+        var bottom := roundi((row+1)*sheet.get_height()/2.0)
+        source=sheet.get_region(Rect2i(left,top,right-left,bottom-top))
     else:
-        var sun_x := 415.0 - fposmod(scroll * 0.025, 190.0)
-        c.draw_rect(Rect2(sun_x, 18, 15, 15), Color("#f6db98"))
-        c.draw_rect(Rect2(sun_x + 3, 21, 9, 9), Color("#fff3c2"))
-    for i in range(-1, 7):
-        var cx := float(i * 104 + (i * 23) % 29) - fposmod(scroll * 0.025, 104.0)
-        var cy := 13.0 + float((i * 17) % 23)
-        _cloud(c, Vector2(cx, cy), night)
-    # Two independently scrolling mountain silhouettes for an NES-era parallax feel.
-    for i in range(-2, 9):
-        var x := float(i * 92) - fposmod(scroll * 0.049, 92.0)
-        var y := 61.0 + float((i * 11 + 7) % 13)
-        _mountain(c, x, y, FAR_MOUNTAINS[theme], night, 1.0)
-    for i in range(-2, 9):
-        var x := float(i * 89 + 27) - fposmod(scroll * 0.095, 89.0)
-        var y := 83.0 + float((i * 7 + 3) % 8)
-        _mountain(c, x, y, CLOSE_MOUNTAINS[theme], night, 0.63)
-    # Blue water and its dithered highlights stay behind the racing lanes.
-    var water_color := Color("#346398") if night else Color("#63bada")
-    c.draw_rect(Rect2(0, 87, 480, 17), water_color)
-    c.draw_rect(Rect2(0, 88, 480, 2), water_color.lightened(0.23))
-    for i in range(44):
-        var wave_x := fposmod(float(i * 23) - scroll * 0.12, 495.0) - 8.0
-        c.draw_rect(Rect2(wave_x, 91 + i % 4 * 3, 7 + i % 3 * 3, 1), Color("#b2e8e9") if not night else Color("#94add5"))
-    c.draw_rect(Rect2(0, 102, 480, 3), Color("#528b69") if theme in [1, 2, 5] else Color("#a98756"))
-    for i in range(-1, 24):
-        var x := float(i * 24 + (i * 17) % 11) - fposmod(scroll * 0.20, 24.0)
-        if theme in [1, 2, 5]:
-            _pine(c, Vector2(x, 103), (i * 5) % 9 + 9, night)
-        else:
-            if i % 4 == 0:
-                _shrub(c, Vector2(x, 102), night)
-            elif i % 6 == 0:
-                _cactus(c, Vector2(x, 102), night, 1.0)
-    for i in range(-2, 11):
-        var wx := float(i * 73 + 18) - fposmod(scroll * 0.29, 73.0)
-        if theme in [1, 2, 5]:
-            if i % 2 == 0:
-                _pine(c, Vector2(wx, 109), 22 + i % 3 * 5, night)
-            else:
-                _tree(c, Vector2(wx, 107), night)
-        else:
-            if i % 4 == 2:
-                _cactus(c, Vector2(wx, 110), night, 1.15)
-            elif i % 2 == 0:
-                _tree(c, Vector2(wx, 108), night)
-    if theme in [0, 3]:
-        var wind_x := 354.0 - fposmod(scroll * 0.13, 690.0)
-        _windmill(c, wind_x, 102.0)
-        _house(c, wind_x + 65.0, 102.0, night)
-    if theme == 4:
-        var tower_x := 116.0 - fposmod(scroll * 0.13, 650.0)
-        _tower(c, tower_x, 102.0)
-        _house(c, tower_x + 225.0, 102.0, true)
+        source=_stick_fan(variant-28)
+    for y in range(source.get_height()):
+        for x in range(source.get_width()):
+            if source.get_pixel(x,y).a<0.08: source.set_pixel(x,y,Color.TRANSPARENT)
+    var image := source.get_region(source.get_used_rect())
+    var scale := minf(28.0/image.get_width(),22.0/image.get_height())
+    if variant>=20 and variant<28:
+        # Keep faces and clothing, but use a chunky arcade pixel grid.
+        image.resize(maxi(1,roundi(image.get_width()*scale/2)),maxi(1,roundi(image.get_height()*scale/2)),Image.INTERPOLATE_NEAREST)
+        for y in range(image.get_height()):
+            for x in range(image.get_width()):
+                var pixel := image.get_pixel(x,y)
+                pixel.a=1.0 if pixel.a>=0.5 else 0.0
+                image.set_pixel(x,y,pixel)
+        image.resize(image.get_width()*2,image.get_height()*2,Image.INTERPOLATE_NEAREST)
+    else:
+        image.resize(maxi(1,roundi(image.get_width()*scale)),maxi(1,roundi(image.get_height()*scale)),Image.INTERPOLATE_BILINEAR)
+    # A restrained stadium palette: slightly darker, less candy-colored fans.
+    for y in range(image.get_height()):
+        for x in range(image.get_width()):
+            var color := image.get_pixel(x,y)
+            var gray := color.r*0.299+color.g*0.587+color.b*0.114
+            var muted := color.lerp(Color(gray,gray,gray,color.a),0.18).darkened(0.16)
+            image.set_pixel(x,y,muted)
+    fan_images[variant]=image
+    return image
 
-static func texture_track(c: CanvasItem, scroll: float, theme: int) -> void:
-    # Original multi-band dirt, embedded ruts, grit, and puddle hints.
-    var step := floori(scroll / 12.0)
-    for lane in range(4):
-        var floor_y := 109.0 + float(lane) * 33.0
-        for i in range(44):
-            var seed := i + step + lane * 123
-            var x := float(i * 12) - fposmod(scroll, 12.0)
-            var dy := float((seed * 19 + lane * 7) % 18)
-            var col := Color("#b57c4e") if seed % 3 == 0 else Color("#53352f")
-            c.draw_rect(Rect2(x, floor_y - 9 + dy, 2 + seed % 3, 1), col)
-            if seed % 13 == 0:
-                c.draw_rect(Rect2(x + 3, floor_y + 12, 7, 2), Color("#382e2e"))
-        c.draw_rect(Rect2(0, floor_y + 15, 480, 2), Color("#49312b"))
-        c.draw_rect(Rect2(0, floor_y - 12, 480, 2), Color("#c18a55"))
-    # Pixel dust patches: low opacity, do not disguise gameplay obstacles.
-    for i in range(13):
-        var px := fposmod(float(i * 73) - scroll * 0.96, 540.0) - 20.0
-        var py := 117.0 + float(i % 4) * 33.0
-        c.draw_rect(Rect2(px, py, 19, 2), Color("#bf8651"))
-        c.draw_rect(Rect2(px + 5, py + 2, 9, 1), Color("#51352d"))
+static func _fan_variant(index: int, course_seed: int) -> int:
+    # Deal from a shuffled roster so every design appears before cycling again.
+    var cycle := floori(float(index)/FAN_COUNT)
+    var key := "%d/%d" % [course_seed,cycle]
+    if not fan_lineups.has(key):
+        if fan_lineups.size()>=128: fan_lineups.clear()
+        var lineup: Array[int]=[]
+        for variant in range(FAN_COUNT): lineup.append(variant)
+        var rng := RandomNumberGenerator.new()
+        rng.seed=absi(hash("lineup/"+key))
+        for i in range(FAN_COUNT-1,0,-1):
+            var j := rng.randi_range(0,i)
+            var swap := lineup[i]
+            lineup[i]=lineup[j]
+            lineup[j]=swap
+        fan_lineups[key]=lineup
+    return fan_lineups[key][posmod(index,FAN_COUNT)]
 
-static func front(c: CanvasItem, scroll: float, stage: int) -> void:
-    c.draw_rect(Rect2(0, 255, 480, 15), Color("#8b5b35") if stage != 4 else Color("#433f59"))
-    for i in range(-2, 16):
-        var x := float(i * 38) - fposmod(scroll * 0.65, 38.0)
-        if i % 3 == 0:
-            _shrub(c, Vector2(x, 266), stage == 4)
-        if i % 5 == 0:
-            c.draw_rect(Rect2(x + 18, 258, 9, 6), Color("#858080"))
-            c.draw_rect(Rect2(x + 19, 258, 5, 2), Color("#c3b69d"))
-    # Foreground fence, lower than the rider and behind the thumb controls.
-    for i in range(-2, 14):
-        var fx := float(i * 44) - fposmod(scroll * 0.70, 44.0)
-        c.draw_rect(Rect2(fx, 243, 4, 27), Color("#4c3430"))
-        c.draw_rect(Rect2(fx + 1, 242, 3, 22), Color("#916142"))
-        c.draw_rect(Rect2(fx - 5, 250, 49, 3), Color("#ad7950"))
-        c.draw_rect(Rect2(fx - 5, 257, 49, 3), Color("#674332"))
+static func _crowd(frame: int, section: int = 0, course_seed: int = 0) -> ImageTexture:
+    var key := "%d/%d/%d" % [course_seed,section,posmod(frame,4)]
+    if crowds.has(key): return crowds[key]
+    # Keep a long session's scrolling scenery cache bounded.
+    if crowds.size()>=128: crowds.clear()
+    var image := Image.create(384,48,false,Image.FORMAT_RGBA8)
+    image.fill(Color("#263b50"))
+    var rng := RandomNumberGenerator.new()
+    rng.seed=absi(hash("fans/%d/%d" % [course_seed,section]))
+    for row in range(2):
+        image.fill_rect(Rect2i(0,row*24,384,24),Color("#345066") if row==0 else Color("#294257"))
+        for col in range(10):
+            var variant := _fan_variant(section*20+row*10+col,course_seed)
+            var fan: Image=_fan_image(variant).duplicate()
+            if rng.randf()<0.5: fan.flip_x()
+            var phase := posmod(frame+rng.randi_range(0,3),4)
+            var bob := 1 if phase in [1,2] else 0
+            var x := roundi(col*38.4+(38.4-fan.get_width())/2)
+            var y := row*24+23-fan.get_height()-bob
+            image.blend_rect(fan,Rect2i(Vector2i.ZERO,fan.get_size()),Vector2i(x,y))
+        image.fill_rect(Rect2i(0,row*24+23,384,1),Color("#93b6b7"))
+    var texture := ImageTexture.create_from_image(image)
+    crowds[key]=texture
+    return texture
 
-static func _cloud(c: CanvasItem, p: Vector2, night: bool) -> void:
-    var shade := Color("#777cb8") if night else Color("#dbf1f1")
-    var white := Color("#999bd5") if night else Color("#f8ffff")
-    c.draw_rect(Rect2(p.x, p.y + 7, 33, 5), shade)
-    c.draw_rect(Rect2(p.x + 5, p.y + 4, 23, 8), shade)
-    c.draw_rect(Rect2(p.x + 12, p.y, 10, 12), white)
-    c.draw_rect(Rect2(p.x + 2, p.y + 10, 38, 3), shade)
+static func _tree_sprite(variant: int, height: int) -> ImageTexture:
+    var key := variant*100+height
+    if tree_sprites.has(key): return tree_sprites[key]
+    if not tree_sources.has(variant):
+        var sheet := TREE_SHEET.get_image()
+        var col := variant%4
+        var row := variant/4
+        var left := roundi(col*sheet.get_width()/4.0)
+        var right := roundi((col+1)*sheet.get_width()/4.0)
+        var top := roundi(row*sheet.get_height()/2.0)
+        var bottom := roundi((row+1)*sheet.get_height()/2.0)
+        var source := sheet.get_region(Rect2i(left,top,right-left,bottom-top))
+        for y in range(source.get_height()):
+            for x in range(source.get_width()):
+                var pixel := source.get_pixel(x,y)
+                pixel.a=0.0 if pixel.a<0.05 else pixel.a
+                source.set_pixel(x,y,pixel)
+        tree_sources[variant]=source.get_region(source.get_used_rect())
+    var image: Image=tree_sources[variant].duplicate()
+    var width := maxi(1,roundi(image.get_width()*float(height)/image.get_height()))
+    image.resize(width*2,height*2,Image.INTERPOLATE_BILINEAR)
+    var texture := ImageTexture.create_from_image(image)
+    tree_sprites[key]=texture
+    return texture
 
-static func _mountain(c: CanvasItem, x: float, y: float, color: Color, night: bool, scale: float) -> void:
-    var h := 30.0 * scale
-    var w := 64.0 * scale
-    c.draw_colored_polygon(PackedVector2Array([
-        Vector2(x - w / 2, y + 32), Vector2(x + 8 * scale, y - h),
-        Vector2(x + w, y + 32)
-    ]), color)
-    c.draw_colored_polygon(PackedVector2Array([
-        Vector2(x + 8 * scale, y - h), Vector2(x + 17 * scale, y - h + 12 * scale),
-        Vector2(x + 28 * scale, y + 32), Vector2(x + 4 * scale, y + 32)
-    ]), color.darkened(0.15))
-    c.draw_colored_polygon(PackedVector2Array([
-        Vector2(x + 8 * scale, y - h), Vector2(x, y - h + 12 * scale),
-        Vector2(x + 7 * scale, y - h + 9 * scale),
-        Vector2(x + 14 * scale, y - h + 13 * scale)
-    ]), Color("#b0bde3") if night else Color("#e9ccbf"))
+static func _tree_layout(theme: int, foreground: bool, chunk: int, course_seed: int) -> Array:
+    var key := "%d/%s/%d/%d" % [theme,str(foreground),chunk,course_seed]
+    if tree_layouts.has(key): return tree_layouts[key]
+    var rng := RandomNumberGenerator.new()
+    rng.seed=absi(key.hash())
+    var variants: Array=TREE_THEME_VARIANTS[clampi(theme,0,5)]
+    var trees: Array=[]
+    var x := rng.randf_range(20,55)
+    while x<290:
+        trees.append({"x":x,"variant":variants[rng.randi_range(0,variants.size()-1)],"height":rng.randi_range(24,30) if foreground else rng.randi_range(23,28),"flip":rng.randf()<0.5})
+        x+=rng.randf_range(48,94) if foreground else rng.randf_range(48,100)
+    tree_layouts[key]=trees
+    return trees
 
-static func _pine(c: CanvasItem, at: Vector2, height: int, night: bool) -> void:
-    var dark := Color("#213b56") if night else Color("#245f4d")
-    var light := Color("#305579") if night else Color("#3d976a")
-    c.draw_rect(Rect2(at.x - 1, at.y - height, 3, height + 1), Color("#493b38"))
-    for level in range(3):
-        var yy := at.y - float(height) + level * float(height) / 5.0
-        var ww := float(height) / 3.0 + level * 2.3
-        c.draw_colored_polygon(PackedVector2Array([
-            Vector2(at.x, yy), Vector2(at.x - ww, yy + height * 0.38),
-            Vector2(at.x + ww, yy + height * 0.38)
-        ]), dark if level % 2 == 0 else light)
+static func _tree_row(c: CanvasItem, scroll: float, theme: int, foreground: bool, course_seed: int) -> void:
+    var travel := scroll if foreground else scroll*0.65
+    var first := floori(travel/320.0)-1
+    for chunk in range(first,first+4):
+        for tree in _tree_layout(theme,foreground,chunk,course_seed):
+            var texture := _tree_sprite(int(tree["variant"]),int(tree["height"]))
+            var size := Vector2(texture.get_size())/2.0
+            var x := chunk*320.0+float(tree["x"])-travel
+            var base := 242.0 if foreground else 110.0
+            var tint := Color("#8e9cb9") if theme==4 else Color.WHITE
+            var rect := Rect2(Vector2(x-size.x/2,base-size.y),size)
+            if bool(tree["flip"]):
+                rect.position.x+=rect.size.x
+                rect.size.x= -rect.size.x
+            c.draw_texture_rect(texture,rect,false,tint)
 
-static func _tree(c: CanvasItem, at: Vector2, night: bool) -> void:
-    var leaf := Color("#31486d") if night else Color("#3a7653")
-    var highlight := Color("#51749a") if night else Color("#78a64b")
-    c.draw_rect(Rect2(at.x, at.y - 20, 4, 22), Color("#714935"))
-    for ox in [-10, -4, 2, 8]:
-        c.draw_rect(Rect2(at.x + ox, at.y - 30 + abs(ox) / 3, 11, 14), leaf)
-    c.draw_rect(Rect2(at.x - 8, at.y - 29, 8, 7), highlight)
-    c.draw_rect(Rect2(at.x + 5, at.y - 25, 10, 5), highlight)
+static func _landscape(theme: int) -> ImageTexture:
+    if landscape_textures.has(theme): return landscape_textures[theme]
+    var image := Image.create(256,40,false,Image.FORMAT_RGBA8)
+    image.fill(Color.TRANSPARENT)
+    var grass := Color(GRASS[theme])
+    var far := grass.lerp(Color("#55758a"),0.35)
+    var near := grass.darkened(0.23)
+    for x in range(256):
+        var ridge := 16+int(5*sin(x*TAU/128.0)+3*sin(x*TAU/64.0))
+        image.fill_rect(Rect2i(x,ridge,1,40-ridge),far)
+        var lower := 28+int(3*sin(x*TAU/128.0+1.2))
+        image.fill_rect(Rect2i(x,lower,1,40-lower),grass.darkened(0.08))
+    var texture := ImageTexture.create_from_image(image)
+    landscape_textures[theme]=texture
+    return texture
 
-static func _shrub(c: CanvasItem, at: Vector2, night: bool) -> void:
-    var green := Color("#35496c") if night else Color("#4b8056")
-    var light := Color("#547d88") if night else Color("#7cad57")
-    c.draw_rect(Rect2(at.x - 5, at.y - 8, 13, 8), green)
-    c.draw_rect(Rect2(at.x - 3, at.y - 10, 7, 5), light)
-    c.draw_rect(Rect2(at.x + 5, at.y - 4, 6, 4), green)
+static func dust(c: CanvasItem, at: Vector2, travel: float, tint: Color, strength: float) -> void:
+    for i in range(5):
+        var phase := fposmod(travel*0.09+i*0.21,1.0)
+        var size := 1+int(phase*3)
+        var p := (at+Vector2(-12-phase*24,-2-phase*7+sin(i*2.1)*2)).round()
+        c.draw_rect(Rect2(p,Vector2(size*2,size)),Color(tint, (1-phase)*0.28*strength))
 
-static func _cactus(c: CanvasItem, at: Vector2, night: bool, scale: float) -> void:
-    var color := Color("#33546b") if night else Color("#398b64")
-    c.draw_rect(Rect2(at.x, at.y - 20 * scale, 4 * scale, 21 * scale), color)
-    c.draw_rect(Rect2(at.x - 5 * scale, at.y - 15 * scale, 6 * scale, 3 * scale), color)
-    c.draw_rect(Rect2(at.x - 5 * scale, at.y - 21 * scale, 3 * scale, 9 * scale), color)
-    c.draw_rect(Rect2(at.x + 3 * scale, at.y - 13 * scale, 7 * scale, 3 * scale), color)
-    c.draw_rect(Rect2(at.x + 8 * scale, at.y - 20 * scale, 3 * scale, 10 * scale), color)
+static func paint(c: CanvasItem, stage: int, scroll: float, tick: float, race_layout: bool = false, course_seed: int = 0) -> void:
+    var theme := clampi(stage,0,5)
+    c.draw_rect(Rect2(0,0,480,270),Color(GRASS[theme]))
+    var crowd_scroll := scroll*0.15
+    var first_crowd := floori(crowd_scroll/192.0)
+    var crowd_y := 32.0 if race_layout else 0.0
+    var crowd_height := 24.0 if race_layout else 32.0
+    for section in range(first_crowd,first_crowd+4):
+        c.draw_texture_rect(_crowd(int(tick*5),section,course_seed),Rect2(floorf(section*192.0-crowd_scroll),crowd_y,192,crowd_height),false)
+    var banner_y := 56.0 if race_layout else 35.0
+    c.draw_rect(Rect2(0,banner_y,480,13 if race_layout else 16),Color("#315a91") if theme!=4 else Color("#30345b"))
+    c.draw_rect(Rect2(0,banner_y-1,480,1),Color("#fff1d5"))
+    Pixel.text(c,"MOTO THRASH / MOTO CLUB",Vector2(9,banner_y+4 if race_layout else 42),1,Color("#fff5d9"))
+    # Cached silhouettes move slower than the track to give the stadium depth.
+    for i in range(-1,3):
+        c.draw_texture(_landscape(theme),Vector2(i*256-floorf(fposmod(scroll*0.22,256)),70))
+    # Match the foreground turf, moving with the upper tree row.
+    var grass_scroll := scroll*0.65
+    var first_grass_chunk := floori(grass_scroll/320.0)
+    for chunk in range(first_grass_chunk,first_grass_chunk+3):
+        var variant := posmod(hash("upper/%d/%d" % [course_seed,chunk]),8)
+        c.draw_texture_rect_region(_grass_texture(theme,variant),Rect2(floorf(chunk*320.0-grass_scroll),96,320,16),Rect2(0,4,320,16))
+    c.draw_rect(Rect2(0,109,480,3),Color(GRASS[theme]).darkened(0.24))
+    _tree_row(c,scroll,theme,false,course_seed)
 
-static func _windmill(c: CanvasItem, x: float, ground: float) -> void:
-    var beam := Color("#6d4e3b")
-    c.draw_line(Vector2(x, ground), Vector2(x + 6, ground - 39), beam, 2.0)
-    c.draw_line(Vector2(x + 16, ground), Vector2(x + 8, ground - 39), beam, 2.0)
-    for j in range(3):
-        c.draw_rect(Rect2(x + 2, ground - 10 - j * 9, 13, 2), beam)
-    var hub := Vector2(x + 7, ground - 42)
-    for j in range(8):
-        var angle := float(j) * TAU / 8.0
-        c.draw_line(hub, hub + Vector2(cos(angle), sin(angle)) * 10.0, Color("#775c53"), 2.0)
-    c.draw_circle(hub, 3, Color("#3a3238"))
+static func texture_track(c: CanvasItem, _scroll: float, theme: int) -> void:
+    c.draw_rect(Rect2(0,113,480,112),Color(WALL[clampi(theme,0,5)]))
 
-static func _house(c: CanvasItem, x: float, ground: float, night: bool) -> void:
-    c.draw_rect(Rect2(x, ground - 17, 29, 17), Color("#ddc09d") if not night else Color("#756779"))
-    c.draw_colored_polygon(PackedVector2Array([
-        Vector2(x - 3, ground - 17), Vector2(x + 14, ground - 27),
-        Vector2(x + 32, ground - 17)
-    ]), Color("#b9614b"))
-    c.draw_rect(Rect2(x + 6, ground - 12, 7, 6), Color("#ffda7e") if night else Color("#5c7794"))
-    c.draw_rect(Rect2(x + 19, ground - 9, 5, 9), Color("#71534b"))
+static func _road_texture(theme: int, grade: int) -> ImageTexture:
+    var key := theme*3+grade+1
+    if road_textures.has(key): return road_textures[key]
+    var base := Color(ROAD[clampi(theme,0,5)])
+    if grade > 0:
+        base = Color("#e9bd8e") if theme!=4 else Color("#abbcd3")
+    elif grade < 0:
+        base = base.darkened(0.17)
+    var image := Image.create(128,26,false,Image.FORMAT_RGBA8)
+    image.fill(base)
+    var rng := RandomNumberGenerator.new()
+    rng.seed = 6351+theme
+    # Small contrasting grains and paired tire ruts, kept below the obstacle contrast.
+    for i in range(135):
+        var x := rng.randi_range(0,126)
+        var y := rng.randi_range(2,23)
+        var shade := base.darkened(0.10) if i%3 else base.lightened(0.14)
+        image.set_pixel(x,y,shade)
+        if i%5==0: image.set_pixel(x+1,y,shade)
+    for y in [7,17]:
+        for x in range(0,128,16):
+            image.fill_rect(Rect2i(x,y,9,1),base.darkened(0.075))
+            image.fill_rect(Rect2i(x+2,y+1,6,1),base.lightened(0.06))
+    # Small sunlit stones and alternating shade pixels add depth without blur.
+    for i in range(18):
+        var px := rng.randi_range(1,124)
+        var py := rng.randi_range(3,21)
+        image.fill_rect(Rect2i(px,py,2,1),base.lightened(0.23))
+        image.set_pixel(px+1,py+1,base.darkened(0.24))
+    for x in range(0,128,2):
+        image.set_pixel(x,1,base.lightened(0.12))
+        image.set_pixel(x+1,24,base.darkened(0.16))
+    image.fill_rect(Rect2i(0,0,128,1),base.lightened(0.2))
+    image.fill_rect(Rect2i(0,25,128,1),base.darkened(0.1))
+    var texture := ImageTexture.create_from_image(image)
+    road_textures[key] = texture
+    return texture
 
-static func _tower(c: CanvasItem, x: float, ground: float) -> void:
-    c.draw_rect(Rect2(x + 5, ground - 33, 20, 11), Color("#453c50"))
-    c.draw_rect(Rect2(x + 8, ground - 31, 4, 4), Color("#ffce67"))
-    c.draw_rect(Rect2(x + 18, ground - 31, 4, 4), Color("#ffce67"))
-    for dx in [7.0, 22.0]:
-        c.draw_line(Vector2(x + dx, ground - 22), Vector2(x + dx - 3, ground), Color("#7e6655"), 2.0)
-    c.draw_line(Vector2(x + 4, ground - 10), Vector2(x + 24, ground - 21), Color("#765850"), 1.0)
+static func track_lane(c: CanvasItem, samples: PackedFloat32Array, distance: float, lane: int, theme: int) -> void:
+    var base := Rules.lane_y(lane)
+    var earth := Color(ROAD[clampi(theme,0,5)])
+    var wall := Color(WALL[clampi(theme,0,5)])
+    var offset := floorf(distance)-124.0
+    var previous := Terrain.cached_height(samples,offset-8)
+    for x in range(-8,488,8):
+        var next := Terrain.cached_height(samples,offset+x+8)
+        var current := Terrain.cached_height(samples,offset+x) if x == -8 else previous
+        if current>0 or next>0:
+            poly(c,[Vector2(x,base+13-current),Vector2(x+8,base+13-next),Vector2(x+8,base+14),Vector2(x,base+14)],wall)
+            # Exposed compacted-earth strata on the near face of each bank.
+            for depth in [5.0,12.0,21.0,31.0]:
+                if minf(current,next)>depth:
+                    c.draw_line(Vector2(x,base+13-current+depth),Vector2(x+8,base+13-next+depth),wall.lightened(0.10 if int(depth)%2 else 0.04),1)
+            if minf(current,next)>10 and posmod(int(offset+x),24)<8:
+                var stone := Vector2(x+3,base+19-minf(current,next)).round()
+                c.draw_rect(Rect2(stone,Vector2(3,1)),wall.lightened(0.24))
+                c.draw_rect(Rect2(stone+Vector2(1,1),Vector2(3,1)),wall.darkened(0.15))
+            c.draw_line(Vector2(x,base+13-current),Vector2(x+8,base+13-next),earth.lightened(0.28),1)
+        var grade := 1 if next-current>0.5 else (-1 if next-current< -0.5 else 0)
+        var points := PackedVector2Array([Vector2(x,base-13-current),Vector2(x+8,base-13-next),Vector2(x+8,base+13-next),Vector2(x,base+13-current)])
+        var uv0 := (offset+x)/128.0
+        var uv1 := (offset+x+8)/128.0
+        c.draw_polygon(points,PackedColorArray([Color.WHITE]),PackedVector2Array([Vector2(uv0,0),Vector2(uv1,0),Vector2(uv1,1),Vector2(uv0,1)]),_road_texture(theme,grade))
+        c.draw_line(Vector2(x,base-13-current),Vector2(x+8,base-13-next),earth.lightened(0.30),1)
+        previous = next
+    # Dashed lane center lines follow the elevation, instead of lying beneath ramps.
+    for i in range(-1,34):
+        var x := i*16-floorf(fposmod(distance,16.0))
+        var world_x := x+distance-124
+        var h0 := Terrain.cached_height(samples,world_x)
+        var h1 := Terrain.cached_height(samples,world_x+7)
+        c.draw_line(Vector2(x,base+11-h0),Vector2(x+7,base+11-h1),wall,1)
+    var start_x := 144.0-distance
+    if start_x > -8 and start_x <480:
+        c.draw_rect(Rect2(start_x,base-13,3,26),Color("#fff2cd"))
+        c.draw_line(Vector2(start_x-37,base+8),Vector2(start_x,base+8),Color("#f3d69a"),1)
+
+static func _grass_texture(theme: int, variant: int) -> ImageTexture:
+    var key := theme*8+variant
+    if grass_textures.has(key): return grass_textures[key]
+    var image := Image.create(320,48,false,Image.FORMAT_RGBA8)
+    var base := Color(GRASS[theme]).darkened(0.08)
+    image.fill(base)
+    var rng := RandomNumberGenerator.new()
+    rng.seed=7219+key*137
+    # Broken turf patches, rather than a flat green strip or evenly spaced dots.
+    for i in range(170):
+        var x := rng.randi_range(0,309)
+        var y := rng.randi_range(2,43)
+        var width := rng.randi_range(4,11)
+        var shade := base.lightened(0.065) if i%3==0 else base.darkened(0.07)
+        image.fill_rect(Rect2i(x+2,y,width-2,1),shade)
+        image.fill_rect(Rect2i(x,y+1,width,2),shade)
+        image.fill_rect(Rect2i(x+1,y+3,width-2,1),shade)
+    # Short angular blades with darker roots and a sunlit tip.
+    for i in range(310):
+        var x := rng.randi_range(2,316)
+        var y := rng.randi_range(4,46)
+        var height := rng.randi_range(1,3)
+        image.fill_rect(Rect2i(x-1,y,4,1),base.darkened(0.20))
+        image.fill_rect(Rect2i(x,y-height,1,height),base.lightened(0.18))
+        image.set_pixel(x-1,y-1,base.lightened(0.09))
+        image.set_pixel(x+2,y-2,base.darkened(0.13))
+        if i%4==0: image.set_pixel(x+1,y-height,base.lightened(0.26))
+    # Ragged soil-to-grass transition along the track shoulder.
+    for x in range(320):
+        var depth := rng.randi_range(1,3)
+        image.fill_rect(Rect2i(x,0,1,depth),base.darkened(0.26))
+        if x%3==0: image.set_pixel(x,depth,base.lightened(0.20))
+    var texture := ImageTexture.create_from_image(image)
+    grass_textures[key]=texture
+    return texture
+
+static func front(c: CanvasItem, scroll: float, stage: int, course_seed: int = 0) -> void:
+    var theme := clampi(stage,0,5)
+    var first := floori(scroll/320.0)
+    for chunk in range(first,first+3):
+        var variant := posmod(hash("%d/%d" % [course_seed,chunk]),8)
+        c.draw_texture(_grass_texture(theme,variant),Vector2(floorf(chunk*320.0-scroll),225))
+    _tree_row(c,scroll,stage,true,course_seed)
+
+static func bike(c: CanvasItem, center: Vector2, body: Color, _suit: Color, pitch: float, size: float, _spin: float, _tick: float, _number: int = 7, view_transform: Transform2D = Transform2D.IDENTITY, pose: int = 0) -> void:
+    var frame := clampi(pose,0,7)
+    var key := body.to_html()+str(frame)
+    if not bike_sprites.has(key):
+        bike_sprites[key] = _rider_sprite(body,frame)
+    var texture: ImageTexture = bike_sprites[key]
+    # Move with the track, but never stretch the illustrated rider vertically.
+    var direction := Vector2(cos(pitch),sin(pitch))
+    var projected := view_transform.x*direction.x+view_transform.y*direction.y
+    c.draw_set_transform_matrix(Transform2D(snappedf(projected.angle(),PI/24),Vector2(size,size),0,(view_transform*center).round()))
+    var anchor := Vector2(texture.get_width()/4.0,roundf(RIDER_BASELINES[frame]/8.0)-5)
+    c.draw_texture_rect(texture,Rect2(-anchor,Vector2(texture.get_size())/2.0),false)
+    c.draw_set_transform_matrix(view_transform)
+
+static func _rider_sprite(body: Color, frame: int) -> ImageTexture:
+    # The PNG is the source of all rider artwork. This only prepares atlas frames.
+    var region: Rect2i = RIDER_REGIONS[clampi(frame,0,7)]
+    var image := RIDER_SHEET.get_image().get_region(region)
+    image.resize(roundi(region.size.x/4.0),roundi(region.size.y/4.0),Image.INTERPOLATE_BILINEAR)
+    var rival := body.to_html(false) != "ee754c"
+    for y in range(image.get_height()):
+        for x in range(image.get_width()):
+            var pixel := image.get_pixel(x,y)
+            if pixel.a < 0.05:
+                image.set_pixel(x,y,Color.TRANSPARENT)
+                continue
+            # Recolor only the saturated orange paint/jersey, keeping cream and metal.
+            if rival and pixel.h<0.105 and pixel.s>0.55 and pixel.r>pixel.b*1.5:
+                pixel=Color.from_hsv(body.h,clampf(pixel.s*0.85,0.5,0.95),pixel.v,pixel.a)
+            image.set_pixel(x,y,pixel)
+    return ImageTexture.create_from_image(image)
+
+static func _surface_sprite(kind: String) -> ImageTexture:
+    if surface_sprites.has(kind): return surface_sprites[kind]
+    var column := ["oil","mud","boost"].find(kind)
+    var source := SURFACE_SHEET.get_image()
+    var left := roundi(column*source.get_width()/3.0)
+    var right := roundi((column+1)*source.get_width()/3.0)
+    var image := source.get_region(Rect2i(left,0,right-left,source.get_height()))
+    for y in range(image.get_height()):
+        for x in range(image.get_width()):
+            var pixel := image.get_pixel(x,y)
+            if pixel.a<0.05: image.set_pixel(x,y,Color.TRANSPARENT)
+    image=image.get_region(image.get_used_rect())
+    image.resize(96,36,Image.INTERPOLATE_BILINEAR)
+    var texture := ImageTexture.create_from_image(image)
+    surface_sprites[kind]=texture
+    return texture
+
+static func _hazard_sprite(kind: String) -> ImageTexture:
+    if hazard_sprites.has(kind): return hazard_sprites[kind]
+    var index := Rules.JUMP_HAZARDS.find(kind)
+    var col := index%3
+    var row := index/3
+    var edges: Array = [0,640,1435,2172] if row==0 else [0,740,1380,2172]
+    var source := HAZARD_SHEET.get_image().get_region(Rect2i(edges[col],row*362,edges[col+1]-edges[col],362))
+    for y in range(source.get_height()):
+        for x in range(source.get_width()):
+            if source.get_pixel(x,y).a<0.08: source.set_pixel(x,y,Color.TRANSPARENT)
+    var image := source.get_region(source.get_used_rect())
+    var height := Rules.hazard_clearance(kind)+6 if kind in ["car","bus"] else 18.0
+    image.resize(int(Rules.hazard_width(kind)*2),int(height*2),Image.INTERPOLATE_BILINEAR)
+    var texture := ImageTexture.create_from_image(image)
+    hazard_sprites[kind]=texture
+    return texture
+
+static func obstacle(c: CanvasItem, kind: String, x: float, y: float, _seed: int) -> void:
+    if kind in Rules.JUMP_HAZARDS:
+        var texture := _hazard_sprite(kind)
+        var size := Vector2(texture.get_size())/2
+        c.draw_texture_rect(texture,Rect2(Vector2(x-size.x/2,y+6-size.y),size),false)
+    elif kind=="jump_ramp":
+        c.draw_rect(Rect2(x-4,y-16,2,16),Color("#172539"))
+        c.draw_rect(Rect2(x-2,y-16,12,7),Color("#f7cb5e"))
+        c.draw_rect(Rect2(x+2,y-16,3,7),Color("#172539"))
+    elif kind in ["oil","mud","boost"]:
+        c.draw_texture_rect(_surface_sprite(kind),Rect2(x-24,y-9,48,18),false)
+    elif kind=="rock":
+        # Builder's legacy rock tool is now an unambiguous striped safety barrier.
+        c.draw_rect(Rect2(x-12,y-9,25,8),Color("#f7e5b8"))
+        for i in range(4):
+            poly(c,[Vector2(x-11+i*6,y-9),Vector2(x-7+i*6,y-9),Vector2(x-11+i*6,y-1),Vector2(x-15+i*6,y-1)],Color("#df7347"))
+        c.draw_rect(Rect2(x-10,y-1,3,6),Color("#584427"))
+        c.draw_rect(Rect2(x+8,y-1,3,6),Color("#584427"))
+
+static func crash(c: CanvasItem, at: Vector2, body: Color, remaining: float, view_transform: Transform2D = Transform2D.IDENTITY) -> void:
+    var pose := 4 if remaining>0.72 else (5 if remaining>0.45 else (6 if remaining>0.18 else 7))
+    bike(c,at,body,Color.WHITE,0,1,0,0,7,view_transform,pose)

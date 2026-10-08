@@ -1,12 +1,13 @@
-; Dirt Rush -- original retro motocross arcade game
+; Moto Thrash -- original retro motocross arcade game
 ; Godot 4.x, landscape mobile, no external assets required.
 config_version=5
 
 [application]
-config/name="Dirt Rush"
+config/name="Moto Thrash: Retro Racing"
+config/icon="res://assets/icon.svg"
 run/main_scene="res://scenes/game.tscn"
 config/features=PackedStringArray("4.3", "GL Compatibility")
-config/description="An original pocket-sized retro dirt bike racer."
+config/description="Pixel motocross. Race 24 tracks, master big jumps, and build your own courses."
 
 [display]
 window/size/viewport_width=480

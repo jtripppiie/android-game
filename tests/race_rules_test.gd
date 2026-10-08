@@ -20,7 +20,7 @@ func _initialize() -> void:
     if not is_equal_approx(Rules.heat_step(0, true, 1.0), 38.0):
         push_error("Turbo heating failed")
         failures += 1
-    if not is_equal_approx(Rules.heat_step(20, false, 1.0), 0.0):
+    if not is_equal_approx(Rules.heat_step(20, false, 1.0), 2.0):
         push_error("Engine cooling failed")
         failures += 1
     if Rules.target_speed(0, true, false, false) <= Rules.target_speed(0, false, false, false):

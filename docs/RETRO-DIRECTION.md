@@ -1,12 +1,12 @@
-# Dirt Rush: Retro Arcade Direction
+# Moto Thrash: Retro Arcade Direction
 
-Dirt Rush is an original NES-era-inspired pocket motocross racer, not a Nintendo game.
+Moto Thrash is an original NES-era-inspired pocket motocross racer, not a Nintendo game.
 
 ## Must-feel-familiar mechanics
 - Four instantly readable parallel dirt lanes, short races and a visible timer.
 - Ramps, back-to-back jumps, leaning in the air, overheating turbo, and quick crashes.
 - Track builder accessible directly from the title screen: place hazards, test, tweak, repeat.
-- Smooth Captain Quack-like left thumbstick paired with one large right BOOST button.
+- Smooth analog left thumbstick paired with a compact right BOOST button.
 - Low-resolution readable pixel graphics, restrained palette, simple checkerboard racing motifs.
 - Brief start countdown, obvious finish line, repeatable personal best chasing.
 

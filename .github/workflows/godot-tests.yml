@@ -8,7 +8,7 @@ jobs:
   godot-tests:
     runs-on: ubuntu-latest
     container:
-      image: barichello/godot-ci:4.4.1
+      image: barichello/godot-ci:4.6.2
     steps:
       - uses: actions/checkout@v4
       - name: Import project headlessly
@@ -16,9 +16,13 @@ jobs:
           godot --headless --editor --path . --import --quit > /tmp/dirt-rush-import.log 2>&1
           cat /tmp/dirt-rush-import.log
           if grep -E "SCRIPT ERROR|Parse Error|Failed to load script" /tmp/dirt-rush-import.log; then exit 1; fi
-      - name: Test race rules
-        run: godot --headless --path . --script res://tests/race_rules_test.gd
-      - name: Test custom track builder
-        run: godot --headless --path . --script res://tests/track_builder_test.gd
+      - name: Test gameplay, all 24 courses, controls, persistence and sprites
+        timeout-minutes: 15
+        run: |
+          for test in tests/*_test.gd; do
+            timeout 300 godot --headless --path . --script "$test" > /tmp/game-test.log 2>&1
+            cat /tmp/game-test.log
+            if grep -E "SCRIPT ERROR|Parse Error|Assertion failed" /tmp/game-test.log; then exit 1; fi
+          done
       - name: Startup smoke test
         run: godot --headless --path . --quit-after 12

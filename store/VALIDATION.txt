@@ -1,0 +1,26 @@
+RELEASE CANDIDATE VALIDATION — 2026-10-08
+
+Build: Godot 4.6.2, release template, version 1.0.0 / code 1.
+Package: com.tripperdeelabs.dirtrush. Android min SDK 24, target SDK 36.
+Manifest: no uses-permission entries; backup disabled; no debuggable flag.
+
+PASS: bundletool 1.18.3 validate (unsigned release AAB).
+PASS: universal test APK generated from that AAB with the LOCAL DEBUG KEY.
+PASS: apksigner verify on the generated test APK.
+PASS: zipalign -c -P 16 4 on the generated test APK.
+PASS: both arm64 native libraries have ELF LOAD alignment 0x4000.
+PASS: focused release gameplay test, including privacy dialog input isolation,
+      Android Back, boost lifecycle, suspend, precise finish and builder records.
+PASS: Chromium menu/privacy/race/builder/Stunt Show flow with no page errors.
+PASS: listing character limits and required icon/feature graphic dimensions.
+PASS: git diff --check.
+
+NOT VERIFIED: upload-key signing path (no publisher key supplied), Play ingestion,
+physical Android operation, 16 KB runtime execution, sustained phone performance,
+human difficulty testing or Play pre-launch report. Alignment is not a runtime test.
+The test APK is debug-signed release code, NOT the production upload artifact.
+No store upload, production release, privacy hosting, or key creation occurred.
+
+SHA-256:
+f3e0a715e7479af522357936388d61594ca2aeb4da2cbc92cd10a6530212bb8f  build/moto-thrash-unsigned.aab
+2c60d3b5a2fd5209cab365c434e0725fb23317c8ace1487f29eb8fda9c0ec10f  build/moto-thrash-release-test.apk

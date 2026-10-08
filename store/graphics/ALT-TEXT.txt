@@ -1,0 +1,6 @@
+icon.png: A gold lightning bolt inside a teal motorcycle wheel on a dark background.
+feature-graphic.png: Moto Thrash Retro Racing title with a lightning wheel and diagonal racing stripes.
+
+Both are original vector compositions based on assets/icon.svg. No external logos,
+fonts or artwork are bundled. The feature graphic uses the system DejaVu Sans font.
+Icon: 512x512 RGBA PNG. Feature graphic: 1024x500 RGB PNG.

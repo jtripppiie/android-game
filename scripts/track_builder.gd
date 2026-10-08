@@ -1,12 +1,15 @@
 extends RefCounted
-## Offline track-builder data model with three saved course slots.
-const COURSE_LENGTH := 2400.0
-const SLOT_COUNT := 3
+## Offline track-builder data model with six saved course slots.
+const COURSE_LENGTH := 4000.0
+const SLOT_COUNT := 6
 const PAGE_STEP := 400.0
-const PAGE_COUNT := 6
+const PAGE_COUNT := 10
 const CELL := 40.0
-const MAX_FEATURES := 120
-const KINDS := ["ramp", "big_ramp", "rock", "mud", "whoops"]
+const MAX_FEATURES := 200
+const Rules = preload("res://scripts/race_rules.gd")
+const KINDS := ["ramp", "big_ramp", "rock", "mud", "whoops", "tabletop", "boost", "oil", "jump_ramp", "water", "river", "crocs", "lava", "car", "bus"]
+const TOOLS := ["ramp", "big_ramp", "tabletop", "whoops", "mud", "boost", "rock", "oil", "jump_ramp", "water", "river", "crocs", "lava", "car", "bus", "erase"]
+const LABELS := ["RAMP", "HIGH", "TABLE", "BUMPS", "MUD", "BOOST", "BLOCK", "OIL", "JUMP", "WATER", "RIVER", "CROCS", "LAVA", "CAR", "BUS", "ERASE"]
 
 static func snap_x(world_x: float) -> float:
     return clampf(roundf(world_x / CELL) * CELL, 120.0, COURSE_LENGTH - 80.0)
@@ -63,6 +66,16 @@ static func edit(items: Array, kind: String, world_x: float, lane: int) -> Array
 
 static func for_race(raw: Variant) -> Array[Dictionary]:
     var result := sanitize(raw)
+    var approaches: Array[Dictionary]=[]
+    for feature in result:
+        if str(feature["kind"]) in Rules.JUMP_HAZARDS:
+            var lip := float(feature["x"])-80.0
+            var supplied := false
+            for other in result:
+                if int(other["lane"])==int(feature["lane"]) and absf(float(other["x"])-lip)<1 and str(other["kind"])=="jump_ramp": supplied=true
+            if not supplied: approaches.append({"x":lip,"lane":feature["lane"],"kind":"jump_ramp"})
+    result.append_array(approaches)
+    result.sort_custom(func(a: Dictionary,b: Dictionary)->bool:return float(a["x"])<float(b["x"]))
     for i in range(result.size()):
         result[i]["used"] = false
     return result

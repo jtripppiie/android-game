@@ -17,3 +17,6 @@ android/plugins/
 *.der
 *.p12
 local.properties
+
+# Python tool bytecode
+__pycache__/
