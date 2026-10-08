@@ -40,3 +40,7 @@ godot --headless --path . --script res://tests/race_rules_test.gd
 ## Commercial note
 
 Keep the game visually and mechanically distinct from Nintendo's Excitebike; don't use third-party sprites, audio, copied tracks or Nintendo branding. Check the final game's store name and potential trademarks before release. The payment price is configured in the store, not in Godot.
+
+## Install on Android (testing)
+
+The `Android test APK` GitHub Actions workflow creates a debug build on each push to the `dirt-rush` branch. Open the workflow run, download the `dirt-rush-android-debug-apk` artifact, extract the ZIP, and install the APK on an Android phone. This uses disposable debug signing, **not** a Play Store release signature.

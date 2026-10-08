@@ -1,0 +1,35 @@
+name: Android test APK
+
+on:
+  push:
+    branches: [dirt-rush]
+  workflow_dispatch:
+
+jobs:
+  android-debug:
+    runs-on: ubuntu-latest
+    container:
+      image: barichello/godot-ci:4.4.1
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure debug signing
+        run: |
+          mkdir -p build /root/.android
+          keytool -genkeypair -noprompt -keystore /root/.android/debug.keystore \
+            -alias androiddebugkey -storepass android -keypass android \
+            -keyalg RSA -keysize 2048 -validity 3650 \
+            -dname "CN=Android Debug,O=TripperDeeLabs,C=US"
+      - name: Import Godot resources
+        run: godot --headless --editor --path . --import --quit
+      - name: Export installable Android debug APK
+        env:
+          GODOT_ANDROID_KEYSTORE_DEBUG_PATH: /root/.android/debug.keystore
+          GODOT_ANDROID_KEYSTORE_DEBUG_USER: androiddebugkey
+          GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD: android
+        run: godot --headless --path . --export-debug "Android Debug" build/dirt-rush-debug.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dirt-rush-android-debug-apk
+          path: build/dirt-rush-debug.apk
+          if-no-files-found: error
+          retention-days: 14
