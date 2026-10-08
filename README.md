@@ -44,3 +44,9 @@ Keep the game visually and mechanically distinct from Nintendo's Excitebike; don
 ## Install on Android (testing)
 
 The `Android test APK` GitHub Actions workflow creates a debug build on each push to the `dirt-rush` branch. Open the workflow run, download the `dirt-rush-android-debug-apk` artifact, extract the ZIP, and install the APK on an Android phone. This uses disposable debug signing, **not** a Play Store release signature.
+
+## Build your own track
+
+From the main menu tap **TRACK BUILDER**. Choose one of three local, saved course slots. Move through six areas with the arrows; select RAMP, HIGH (tall jump), ROCK, MUD, BUMPS (whoops), or ERASE; and tap any of the four lanes to place or replace an obstacle on the 40-pixel grid. Chain ramps, create high jumps, and design obstacle courses with up to 120 objects per track. Press UNDO, press CLEAR twice to empty a track, or TEST RIDE to play it. The best time for each custom track is saved on the device.
+
+Keyboard controls in the builder: Left/Right changes area, Tab changes custom track slot, 1-6 selects a tool, Z undoes, Enter tests the course, and Escape returns to the main menu. No accounts, cloud storage, or borrowed game assets.

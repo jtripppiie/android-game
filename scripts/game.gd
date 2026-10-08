@@ -3,6 +3,7 @@ extends Node2D
 ## Single 480 x 270 canvas + procedural graphics: no downloaded art or IP.
 
 const Rules = preload("res://scripts/race_rules.gd")
+const Builder = preload("res://scripts/track_builder.gd")
 const SIZE := Vector2(480.0, 270.0)
 const BIKE_X := 124.0
 const STICK_CENTER := Vector2(65.0, 226.0)
@@ -27,11 +28,19 @@ const YELLOW := Color("#f7cb5e")
 const RED := Color("#ed6a5c")
 const CYAN := Color("#82e5d5")
 
-var mode := "menu" # menu, race, pause, finish
+var mode := "menu" # menu, race, pause, finish, editor
 var stage := 0
 var unlocked := 0
 var best_times: Array[float] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 var features: Array[Dictionary] = []
+var custom_courses: Array = [[], [], []]
+var custom_times: Array[float] = [0.0, 0.0, 0.0]
+var custom_slot := 0
+var custom_race := false
+var edit_page := 0
+var edit_tool := "ramp"
+var undo_stack: Array = []
+var clear_confirm := false
 var distance := 0.0
 var speed := 110.0
 var elapsed := 0.0
@@ -70,7 +79,7 @@ func _ready() -> void:
     set_physics_process(true)
 
 func _prepare_preview() -> void:
-    features = Rules.generate_features(stage)
+    features = Builder.for_race(custom_courses[custom_slot]) if custom_race else Rules.generate_features(stage)
     distance = 0.0
     speed = 110.0
     lane_position = 1.5
@@ -177,7 +186,7 @@ func _race_step(dt: float) -> void:
         dust_timer = 0.0
         _spawn_dust(BIKE_X - 16.0, Rules.lane_y(lane_position) - 1.0, CYAN if boost_active else DIRT_LIGHT)
     _update_particles(dt)
-    if distance >= Rules.TRACK_LENGTHS[stage]:
+    if distance >= _course_length():
         _finish_race()
 
 func _check_features(old_x: float, new_x: float) -> void:
@@ -194,13 +203,19 @@ func _check_features(old_x: float, new_x: float) -> void:
         feature["used"] = true
         features[i] = feature
         match str(feature["kind"]):
-            "ramp":
+            "ramp", "big_ramp":
                 if altitude < 8.0:
-                    jump_velocity = 172.0 + speed * 0.11
+                    jump_velocity = (235.0 if str(feature["kind"]) == "big_ramp" else 172.0) + speed * 0.11
                     altitude = maxf(altitude, 1.0)
                     bike_tilt = -0.17
                     message = "AIR TIME!"
                     message_timer = 0.7
+            "whoops":
+                if altitude < 6.0:
+                    jump_velocity = 92.0
+                    altitude = 1.0
+                    message = "WHOOPS!"
+                    message_timer = 0.35
             "rock":
                 if altitude < 12.0:
                     _crash("WIPEOUT!")
@@ -244,14 +259,21 @@ func _update_particles(dt: float) -> void:
 
 func _finish_race() -> void:
     mode = "finish"
-    distance = Rules.TRACK_LENGTHS[stage]
-    medal = Rules.medal_for(elapsed, stage, crash_count)
-    var previous: float = best_times[stage]
-    new_record = previous <= 0.0 or elapsed < previous
-    if new_record:
-        best_times[stage] = elapsed
-    if stage + 1 > unlocked:
-        unlocked = mini(stage + 1, Rules.TRACK_COUNT - 1)
+    distance = _course_length()
+    if custom_race:
+        medal = "CUSTOM FINISH"
+        var old_best: float = custom_times[custom_slot]
+        new_record = old_best <= 0.0 or elapsed < old_best
+        if new_record:
+            custom_times[custom_slot] = elapsed
+    else:
+        medal = Rules.medal_for(elapsed, stage, crash_count)
+        var previous: float = best_times[stage]
+        new_record = previous <= 0.0 or elapsed < previous
+        if new_record:
+            best_times[stage] = elapsed
+        if stage + 1 > unlocked:
+            unlocked = mini(stage + 1, Rules.TRACK_COUNT - 1)
     _save_progress()
     _clear_controls()
 
@@ -262,12 +284,19 @@ func _load_progress() -> void:
     unlocked = clampi(int(cfg.get_value("progress", "unlocked", 0)), 0, Rules.TRACK_COUNT - 1)
     for i in range(Rules.TRACK_COUNT):
         best_times[i] = maxf(0.0, float(cfg.get_value("records", str(i), 0.0)))
+    for i in range(Builder.SLOT_COUNT):
+        var saved: Variant = cfg.get_value("builder", "slot_%d" % i, [])
+        custom_courses[i] = Builder.sanitize(saved)
+        custom_times[i] = maxf(0.0, float(cfg.get_value("builder", "best_%d" % i, 0.0)))
 
 func _save_progress() -> void:
     var cfg := ConfigFile.new()
     cfg.set_value("progress", "unlocked", unlocked)
     for i in range(Rules.TRACK_COUNT):
         cfg.set_value("records", str(i), best_times[i])
+    for i in range(Builder.SLOT_COUNT):
+        cfg.set_value("builder", "slot_%d" % i, Builder.sanitize(custom_courses[i]))
+        cfg.set_value("builder", "best_%d" % i, custom_times[i])
     if cfg.save(SAVE_FILE) != OK:
         push_warning("Could not save Dirt Rush progress")
 
@@ -281,7 +310,35 @@ func _input(event: InputEvent) -> void:
                 mode = "race"
             elif mode == "finish":
                 mode = "menu"
+                custom_race = false
                 _prepare_preview()
+            elif mode == "editor":
+                _builder_back()
+            queue_redraw()
+            return
+        if mode == "editor":
+            if event.keycode == KEY_LEFT:
+                _set_edit_page(-1)
+            elif event.keycode == KEY_RIGHT:
+                _set_edit_page(1)
+            elif event.keycode == KEY_TAB:
+                _set_editor_slot(1)
+            elif event.keycode == KEY_Z:
+                _builder_undo()
+            elif event.keycode == KEY_1:
+                edit_tool = "ramp"
+            elif event.keycode == KEY_2:
+                edit_tool = "big_ramp"
+            elif event.keycode == KEY_3:
+                edit_tool = "rock"
+            elif event.keycode == KEY_4:
+                edit_tool = "mud"
+            elif event.keycode == KEY_5:
+                edit_tool = "whoops"
+            elif event.keycode == KEY_6:
+                edit_tool = "erase"
+            elif event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER:
+                _builder_test()
             queue_redraw()
             return
         if event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER:
@@ -311,6 +368,9 @@ func _input(event: InputEvent) -> void:
         _set_stick(event.position)
 
 func _on_pointer_down(point: Vector2, pointer_id: int) -> void:
+    if mode == "editor":
+        _click_editor(point)
+        return
     if mode != "race":
         _click_menu(point)
         return
@@ -338,24 +398,33 @@ func _set_stick(point: Vector2) -> void:
 
 func _click_menu(point: Vector2) -> void:
     if mode == "menu":
-        if Rect2(165, 177, 150, 30).has_point(point):
+        if Rect2(165, 153, 150, 29).has_point(point):
+            custom_race = false
             _start_race()
-        elif Rect2(118, 213, 44, 28).has_point(point):
+        elif Rect2(165, 190, 150, 29).has_point(point):
+            _open_editor()
+        elif Rect2(118, 223, 44, 26).has_point(point):
             stage = maxi(0, stage - 1)
             _prepare_preview()
-        elif Rect2(318, 213, 44, 28).has_point(point):
+        elif Rect2(318, 223, 44, 26).has_point(point):
             stage = mini(unlocked, stage + 1)
             _prepare_preview()
     elif mode == "pause":
         if Rect2(159, 151, 162, 28).has_point(point):
             mode = "race"
         elif Rect2(159, 190, 162, 28).has_point(point):
-            mode = "menu"
-            _prepare_preview()
+            if custom_race:
+                _open_editor()
+            else:
+                mode = "menu"
+                _prepare_preview()
     elif mode == "finish":
         if Rect2(156, 174, 168, 28).has_point(point):
-            stage = mini(unlocked, stage + 1)
-            _start_race()
+            if custom_race:
+                _open_editor()
+            else:
+                stage = mini(unlocked, stage + 1)
+                _start_race()
         elif Rect2(156, 211, 168, 28).has_point(point):
             _start_race()
 
@@ -364,8 +433,12 @@ func _primary_action() -> void:
         "menu": _start_race()
         "pause": mode = "race"
         "finish":
-            stage = mini(unlocked, stage + 1)
-            _start_race()
+            if custom_race:
+                _open_editor()
+            else:
+                stage = mini(unlocked, stage + 1)
+                _start_race()
+        "editor": _builder_test()
 
 func _notification(what: int) -> void:
     if what == NOTIFICATION_APPLICATION_PAUSED or what == NOTIFICATION_WM_WINDOW_FOCUS_OUT:
@@ -379,7 +452,8 @@ func _draw() -> void:
     _draw_features()
     if mode != "menu":
         _draw_particles()
-    _draw_bike()
+    if mode != "editor":
+        _draw_bike()
     if mode == "race" or mode == "pause":
         _draw_hud()
         _draw_touch_controls()
@@ -387,6 +461,7 @@ func _draw() -> void:
         "menu": _draw_menu()
         "pause": _draw_pause()
         "finish": _draw_finish()
+        "editor": _draw_editor()
     if mode == "race":
         if countdown > 0.0:
             _text("%d" % maxi(1, int(ceilf(countdown))), Vector2(220, 94), 42, YELLOW)
@@ -397,12 +472,13 @@ func _draw() -> void:
             _center_text(message, 64, 13, txt_color)
 
 func _draw_background() -> void:
-    var sky: Color = SKY[stage]
-    var hills: Color = HILLS[stage]
+    var theme_idx: int = custom_slot if custom_race or mode == "editor" else stage
+    var sky: Color = SKY[theme_idx]
+    var hills: Color = HILLS[theme_idx]
     draw_rect(Rect2(0, 0, SIZE.x, 115), sky)
     var sun_x := 379.0 - fposmod(distance * 0.06, 400.0)
-    draw_rect(Rect2(sun_x, 48, 28, 28), YELLOW if stage != 4 else Color("#dee6fd"))
-    if stage == 4:
+    draw_rect(Rect2(sun_x, 48, 28, 28), YELLOW if theme_idx != 4 else Color("#dee6fd"))
+    if theme_idx == 4:
         for i in range(15):
             var sx := float((i * 73 + 13) % 477)
             var sy := float((i * 29 + 16) % 88)
@@ -413,11 +489,11 @@ func _draw_background() -> void:
             Vector2(x - 40, 104), Vector2(x + 2, 67),
             Vector2(x + 32, 91), Vector2(x + 60, 104)
         ]), hills)
-        draw_rect(Rect2(x + 1, 68, 5, 7), Color("#e4ddc7") if stage in [2, 5] else hills.lightened(0.2))
+        draw_rect(Rect2(x + 1, 68, 5, 7), Color("#e4ddc7") if theme_idx in [2, 5] else hills.lightened(0.2))
     draw_rect(Rect2(0, 100, 480, 14), hills.darkened(0.14))
     for i in range(-2, 17):
         var shrub_x := float(i) * 37.0 - fposmod(distance * 0.2, 37.0)
-        draw_rect(Rect2(shrub_x, 94, 6, 6), Color("#3b8b77") if stage != 4 else Color("#677394"))
+        draw_rect(Rect2(shrub_x, 94, 6, 6), Color("#3b8b77") if theme_idx != 4 else Color("#677394"))
         draw_rect(Rect2(shrub_x + 2, 90, 2, 8), hills.darkened(0.24))
 
 func _draw_tracks() -> void:
@@ -432,7 +508,7 @@ func _draw_tracks() -> void:
             draw_rect(Rect2(dash_x, y + 8, 12, 2), DIRT_LIGHT)
             draw_rect(Rect2(dash_x + 21, y - 7, 5, 2), DIRT_DARK)
     draw_rect(Rect2(0, 250, 480, 20), DIRT_DARK)
-    var goal_x: float = float(Rules.TRACK_LENGTHS[stage]) - distance + BIKE_X
+    var goal_x: float = _course_length() - distance + BIKE_X
     if goal_x >= -15.0 and goal_x < 500.0:
         for lane in range(4):
             for j in range(2):
@@ -452,6 +528,16 @@ func _draw_features() -> void:
                 ]), YELLOW)
                 draw_line(Vector2(sx - 19, fy + 5), Vector2(sx + 13, fy - 11), INK, 2.0)
                 draw_rect(Rect2(sx + 13, fy - 11, 8, 3), CREAM)
+            "big_ramp":
+                draw_colored_polygon(PackedVector2Array([
+                    Vector2(sx - 25, fy + 5), Vector2(sx + 8, fy - 20),
+                    Vector2(sx + 26, fy - 20), Vector2(sx + 26, fy + 5)
+                ]), Color("#ff996a"))
+                draw_line(Vector2(sx - 25, fy + 5), Vector2(sx + 8, fy - 20), INK, 2.0)
+                draw_rect(Rect2(sx + 8, fy - 20, 18, 3), CREAM)
+            "whoops":
+                for step in range(3):
+                    draw_rect(Rect2(sx - 18 + step * 12, fy - 5 - (step % 2) * 3, 10, 9), YELLOW)
             "rock":
                 draw_rect(Rect2(sx - 8, fy - 5, 14, 10), Color("#3b4557"))
                 draw_rect(Rect2(sx - 5, fy - 9, 9, 5), Color("#64717b"))
@@ -504,11 +590,11 @@ func _draw_hud() -> void:
     draw_rect(Rect2(0, 0, 480, 39), INK)
     draw_rect(Rect2(0, 38, 480, 2), YELLOW)
     _text("DIRT RUSH", Vector2(9, 15), 14, YELLOW)
-    _text("%d/6  %s" % [stage + 1, Rules.TRACK_NAMES[stage]], Vector2(10, 30), 11, CREAM)
+    _text(("CUSTOM %d" % (custom_slot + 1)) if custom_race else ("%d/6  %s" % [stage + 1, Rules.TRACK_NAMES[stage]]), Vector2(10, 30), 11, CREAM)
     _text("%04.1fs" % elapsed, Vector2(270, 17), 14, CREAM)
     _text("%d MPH" % int(speed * 0.45), Vector2(341, 30), 11, CREAM)
     draw_rect(Rect2(264, 27, 63, 6), DIRT_DARK)
-    draw_rect(Rect2(264, 27, 63 * clampf(distance / Rules.TRACK_LENGTHS[stage], 0.0, 1.0), 6), CYAN)
+    draw_rect(Rect2(264, 27, 63 * clampf(distance / _course_length(), 0.0, 1.0), 6), CYAN)
     draw_rect(Rect2(370, 8, 76, 8), DIRT_DARK)
     draw_rect(Rect2(370, 8, 76 * heat / 100.0, 8), RED if heat > 75.0 else YELLOW)
     _text("HEAT", Vector2(370, 28), 11, CREAM)
@@ -536,15 +622,16 @@ func _draw_touch_controls() -> void:
 
 func _draw_menu() -> void:
     draw_rect(Rect2(0, 0, 480, 270), Color(0.04, 0.08, 0.13, 0.64))
-    _panel(Rect2(99, 41, 282, 210), INK, YELLOW)
-    _center_text("DIRT RUSH", 84, 34, YELLOW)
-    _center_text("PIXEL MOTOCROSS", 106, 13, CYAN)
-    _center_text("4 LANES  /  6 TRACKS  /  TURBO", 132, 11, CREAM)
-    _center_text("LEAN IN AIR  -  LAND CLEAN", 150, 11, CREAM)
-    _button(Rect2(165, 177, 150, 30), "START RACE", YELLOW)
-    _button(Rect2(118, 213, 44, 28), "<", CYAN)
-    _button(Rect2(318, 213, 44, 28), ">", CYAN)
-    _center_text("%d  %s" % [stage + 1, Rules.TRACK_NAMES[stage]], 234, 11, CREAM)
+    _panel(Rect2(99, 28, 282, 228), INK, YELLOW)
+    _center_text("DIRT RUSH", 71, 34, YELLOW)
+    _center_text("PIXEL MOTOCROSS", 96, 13, CYAN)
+    _center_text("4 LANES / 6 RACES / TURBO", 117, 11, CREAM)
+    _center_text("LEAN IN AIR - LAND CLEAN", 137, 11, CREAM)
+    _button(Rect2(165, 153, 150, 29), "START RACE", YELLOW)
+    _button(Rect2(165, 190, 150, 29), "TRACK BUILDER", CYAN)
+    _button(Rect2(118, 223, 44, 26), "<", CYAN)
+    _button(Rect2(318, 223, 44, 26), ">", CYAN)
+    _center_text("%d  %s" % [stage + 1, Rules.TRACK_NAMES[stage]], 243, 11, CREAM)
     _text("LEFT STICK: MOVE / LEAN    RIGHT: BOOST", Vector2(105, 264), 10, CREAM)
 
 func _draw_pause() -> void:
@@ -552,7 +639,7 @@ func _draw_pause() -> void:
     _panel(Rect2(118, 83, 244, 150), INK, CYAN)
     _center_text("PAUSED", 128, 27, YELLOW)
     _button(Rect2(159, 151, 162, 28), "RESUME", YELLOW)
-    _button(Rect2(159, 190, 162, 28), "TRACK SELECT", CYAN)
+    _button(Rect2(159, 190, 162, 28), "EDIT TRACK" if custom_race else "TRACK SELECT", CYAN)
 
 func _draw_finish() -> void:
     draw_rect(Rect2(0, 0, 480, 270), Color(0.04, 0.08, 0.13, 0.78))
@@ -564,9 +651,38 @@ func _draw_finish() -> void:
     if new_record:
         _center_text("NEW PERSONAL BEST!", 161, 13, YELLOW)
     else:
-        _center_text("BEST  %.2fs" % best_times[stage], 161, 13, CREAM)
-    _button(Rect2(156, 174, 168, 28), "NEXT TRACK" if stage < Rules.TRACK_COUNT - 1 else "RACE AGAIN", YELLOW)
+        var best: float = custom_times[custom_slot] if custom_race else best_times[stage]
+        _center_text("BEST  %.2fs" % best, 161, 13, CREAM)
+    _button(Rect2(156, 174, 168, 28), "EDIT TRACK" if custom_race else ("NEXT TRACK" if stage < Rules.TRACK_COUNT - 1 else "RACE AGAIN"), YELLOW)
     _button(Rect2(156, 211, 168, 28), "RETRY", CYAN)
+
+func _draw_editor() -> void:
+    # Track and obstacles are the actual live game rendering.
+    draw_rect(Rect2(0, 0, 480, 35), INK)
+    draw_rect(Rect2(0, 34, 480, 2), YELLOW)
+    _text("BUILD A TRACK", Vector2(8, 21), 19, YELLOW)
+    _button(Rect2(252, 2, 27, 28), "<", CYAN)
+    _text("SLOT %d/3" % (custom_slot + 1), Vector2(296, 21), 15, CREAM)
+    _button(Rect2(445, 2, 32, 28), ">", CYAN)
+    _button(Rect2(4, 40, 56, 25), "BACK", CYAN)
+    _button(Rect2(65, 40, 34, 25), "<", CYAN)
+    _text("AREA %d/6" % (edit_page + 1), Vector2(107, 57), 12, CREAM)
+    _button(Rect2(192, 40, 34, 25), ">", CYAN)
+    _button(Rect2(233, 40, 59, 25), "UNDO", CYAN)
+    _button(Rect2(298, 40, 74, 25), "CONFIRM" if clear_confirm else "CLEAR", RED)
+    _button(Rect2(378, 40, 97, 25), "TEST RIDE", YELLOW)
+    for lane in range(Rules.LANE_COUNT):
+        var y := Rules.lane_y(float(lane))
+        draw_line(Vector2(8, y + 9), Vector2(472, y + 9), Color(CREAM.r, CREAM.g, CREAM.b, 0.12), 1.0)
+    draw_rect(Rect2(0, 224, 480, 46), INK)
+    _text("TAP A LANE TO PLACE / REPLACE ANY TILE", Vector2(8, 234), 10, CREAM)
+    var labels := ["RAMP", "HIGH", "ROCK", "MUD", "BUMPS", "ERASE"]
+    var tools := ["ramp", "big_ramp", "rock", "mud", "whoops", "erase"]
+    for i in range(6):
+        var x := float(i) * 80.0 + 2.0
+        var rect := Rect2(x, 240, 76, 27)
+        _panel(rect, Color("#35465a"), YELLOW if edit_tool == tools[i] else CYAN.darkened(0.45))
+        _center_at(labels[i], rect.position + Vector2(38, 18), 12, CREAM)
 
 func _button(rect: Rect2, caption: String, border: Color) -> void:
     _panel(rect, Color("#334354"), border)
@@ -584,3 +700,106 @@ func _center_text(content: String, y: float, size: int, tint: Color) -> void:
 
 func _center_at(content: String, center: Vector2, size: int, tint: Color) -> void:
     draw_string(font, Vector2(center.x - 90, center.y), content, HORIZONTAL_ALIGNMENT_CENTER, 180, size, tint)
+
+func _course_length() -> float:
+    return Builder.COURSE_LENGTH if custom_race or mode == "editor" else float(Rules.TRACK_LENGTHS[stage])
+
+func _open_editor() -> void:
+    _clear_controls()
+    custom_race = false
+    mode = "editor"
+    edit_page = 0
+    edit_tool = "ramp"
+    undo_stack.clear()
+    clear_confirm = false
+    _preview_editor()
+
+func _preview_editor() -> void:
+    features = Builder.for_race(custom_courses[custom_slot])
+    distance = float(edit_page) * Builder.PAGE_STEP + BIKE_X
+    queue_redraw()
+
+func _set_editor_slot(offset: int) -> void:
+    custom_slot = posmod(custom_slot + offset, Builder.SLOT_COUNT)
+    edit_page = 0
+    undo_stack.clear()
+    clear_confirm = false
+    _preview_editor()
+
+func _set_edit_page(offset: int) -> void:
+    edit_page = clampi(edit_page + offset, 0, Builder.PAGE_COUNT - 1)
+    clear_confirm = false
+    _preview_editor()
+
+func _builder_test() -> void:
+    custom_race = true
+    _start_race()
+
+func _builder_back() -> void:
+    custom_race = false
+    mode = "menu"
+    _prepare_preview()
+
+func _builder_undo() -> void:
+    clear_confirm = false
+    if undo_stack.is_empty():
+        return
+    custom_courses[custom_slot] = undo_stack.pop_back()
+    _save_progress()
+    _preview_editor()
+
+func _builder_place(point: Vector2) -> void:
+    clear_confirm = false
+    var lane := clampi(roundi((point.y - 110.0) / 33.0), 0, Rules.LANE_COUNT - 1)
+    var x := float(edit_page) * Builder.PAGE_STEP + point.x
+    var old: Array = custom_courses[custom_slot]
+    var updated := Builder.edit(old, edit_tool, x, lane)
+    if updated == Builder.sanitize(old):
+        return
+    undo_stack.append(old.duplicate(true))
+    if undo_stack.size() > 20:
+        undo_stack.pop_front()
+    custom_courses[custom_slot] = updated
+    _save_progress()
+    _preview_editor()
+
+func _builder_clear() -> void:
+    if not clear_confirm:
+        clear_confirm = true
+        queue_redraw()
+        return
+    clear_confirm = false
+    var old: Array = custom_courses[custom_slot]
+    if old.is_empty():
+        return
+    undo_stack.append(old.duplicate(true))
+    if undo_stack.size() > 20:
+        undo_stack.pop_front()
+    custom_courses[custom_slot] = []
+    _save_progress()
+    _preview_editor()
+
+func _click_editor(point: Vector2) -> void:
+    if Rect2(252, 2, 27, 28).has_point(point):
+        _set_editor_slot(-1)
+    elif Rect2(445, 2, 32, 28).has_point(point):
+        _set_editor_slot(1)
+    elif Rect2(4, 40, 56, 25).has_point(point):
+        _builder_back()
+    elif Rect2(65, 40, 34, 25).has_point(point):
+        _set_edit_page(-1)
+    elif Rect2(192, 40, 34, 25).has_point(point):
+        _set_edit_page(1)
+    elif Rect2(233, 40, 59, 25).has_point(point):
+        _builder_undo()
+    elif Rect2(298, 40, 74, 25).has_point(point):
+        _builder_clear()
+    elif Rect2(378, 40, 97, 25).has_point(point):
+        _builder_test()
+    elif point.y >= 239.0:
+        var selected: int = clampi(int(point.x / 80.0), 0, 5)
+        edit_tool = ["ramp", "big_ramp", "rock", "mud", "whoops", "erase"][selected]
+        clear_confirm = false
+    elif point.y >= 93.0 and point.y <= 223.0 and point.x >= 8.0 and point.x <= 472.0:
+        _builder_place(point)
+    queue_redraw()

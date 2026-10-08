@@ -18,5 +18,7 @@ jobs:
           if grep -E "SCRIPT ERROR|Parse Error|Failed to load script" /tmp/dirt-rush-import.log; then exit 1; fi
       - name: Test race rules
         run: godot --headless --path . --script res://tests/race_rules_test.gd
+      - name: Test custom track builder
+        run: godot --headless --path . --script res://tests/track_builder_test.gd
       - name: Startup smoke test
         run: godot --headless --path . --quit-after 12
