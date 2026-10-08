@@ -588,6 +588,8 @@ func _draw_particles() -> void:
 
 func _draw_hud() -> void:
     draw_rect(Rect2(0, 0, 480, 39), INK)
+    _draw_checkers(Rect2(0, 0, 48, 5), 5.0)
+    _draw_checkers(Rect2(432, 34, 48, 5), 5.0)
     draw_rect(Rect2(0, 38, 480, 2), YELLOW)
     _text("DIRT RUSH", Vector2(9, 15), 14, YELLOW)
     _text(("CUSTOM %d" % (custom_slot + 1)) if custom_race else ("%d/6  %s" % [stage + 1, Rules.TRACK_NAMES[stage]]), Vector2(10, 30), 11, CREAM)
@@ -623,12 +625,14 @@ func _draw_touch_controls() -> void:
 func _draw_menu() -> void:
     draw_rect(Rect2(0, 0, 480, 270), Color(0.04, 0.08, 0.13, 0.64))
     _panel(Rect2(99, 28, 282, 228), INK, YELLOW)
+    _draw_checkers(Rect2(102, 31, 275, 5), 5.0)
+    _draw_checkers(Rect2(102, 248, 275, 5), 5.0)
     _center_text("DIRT RUSH", 71, 34, YELLOW)
-    _center_text("PIXEL MOTOCROSS", 96, 13, CYAN)
-    _center_text("4 LANES / 6 RACES / TURBO", 117, 11, CREAM)
-    _center_text("LEAN IN AIR - LAND CLEAN", 137, 11, CREAM)
-    _button(Rect2(165, 153, 150, 29), "START RACE", YELLOW)
-    _button(Rect2(165, 190, 150, 29), "TRACK BUILDER", CYAN)
+    _center_text("RETRO MOTO ARCADE", 96, 13, CYAN)
+    _center_text("4 LANES / JUMPS / TURBO", 117, 11, CREAM)
+    _center_text("BEAT THE CLOCK. BUILD A TRACK.", 137, 11, CREAM)
+    _button(Rect2(165, 153, 150, 29), "RACE!", YELLOW)
+    _button(Rect2(165, 190, 150, 29), "BUILD TRACK", CYAN)
     _button(Rect2(118, 223, 44, 26), "<", CYAN)
     _button(Rect2(318, 223, 44, 26), ">", CYAN)
     _center_text("%d  %s" % [stage + 1, Rules.TRACK_NAMES[stage]], 243, 11, CREAM)
@@ -660,7 +664,8 @@ func _draw_editor() -> void:
     # Track and obstacles are the actual live game rendering.
     draw_rect(Rect2(0, 0, 480, 35), INK)
     draw_rect(Rect2(0, 34, 480, 2), YELLOW)
-    _text("BUILD A TRACK", Vector2(8, 21), 19, YELLOW)
+    _text("TRACK BUILDER", Vector2(8, 21), 18, YELLOW)
+    _draw_checkers(Rect2(0, 34, 480, 4), 4.0)
     _button(Rect2(252, 2, 27, 28), "<", CYAN)
     _text("SLOT %d/3" % (custom_slot + 1), Vector2(296, 21), 15, CREAM)
     _button(Rect2(445, 2, 32, 28), ">", CYAN)
@@ -683,6 +688,11 @@ func _draw_editor() -> void:
         var rect := Rect2(x, 240, 76, 27)
         _panel(rect, Color("#35465a"), YELLOW if edit_tool == tools[i] else CYAN.darkened(0.45))
         _center_at(labels[i], rect.position + Vector2(38, 18), 12, CREAM)
+
+func _draw_checkers(area: Rect2, cell: float) -> void:
+    for row in range(int(ceilf(area.size.y / cell))):
+        for col in range(int(ceilf(area.size.x / cell))):
+            draw_rect(Rect2(area.position + Vector2(float(col) * cell, float(row) * cell), Vector2(cell, cell)), CREAM if (row + col) % 2 == 0 else INK)
 
 func _button(rect: Rect2, caption: String, border: Color) -> void:
     _panel(rect, Color("#334354"), border)
