@@ -31,7 +31,7 @@ static func paint(c: CanvasItem, stage: int, scroll: float, tick: float) -> void
         for i in range(34):
             var x := float((i * 71 + 13) % 478)
             var y := float((i * 31 + 6) % 66)
-            c.draw_rect(Rect2(x, y, 1 + (i % 3 == 0), 1), Color("#f2eef0"))
+            c.draw_rect(Rect2(x, y, 1 + int(i % 3 == 0), 1), Color("#f2eef0"))
     else:
         var sun_x := 415.0 - fposmod(scroll * 0.025, 190.0)
         c.draw_rect(Rect2(sun_x, 18, 15, 15), Color("#f6db98"))
