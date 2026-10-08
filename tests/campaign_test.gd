@@ -1,6 +1,6 @@
 extends SceneTree
 
-const Game = preload("res://scripts/game.gd")
+const Game = preload("res://tests/campaign_driver.gd")
 
 func _initialize() -> void:
     call_deferred("_run")
@@ -12,8 +12,8 @@ func _run() -> void:
     game.unlocked = 0
     game.best_times.fill(0.0)
     # Exercise the actual menu button and the full race physics on every course.
-    game._click_menu(Vector2(240, 191))
-    assert(game.computer_mode and game.mode == "race")
+    game._primary_action()
+    assert(game.mode == "race")
     for stage in range(Game.Rules.TRACK_COUNT):
         assert(game.stage == stage)
         assert(game.distance == 0.0 and game.lane_position == 2.0)
@@ -35,11 +35,12 @@ func _run() -> void:
             frames += 1
         assert(game.mode == "finish", "Computer must finish every track")
         assert(boosted, "Computer should use boost")
-        assert(game.unlocked == 0 and game.best_times[stage] == 0.0)
-        assert(not game.new_record)
+        assert(game.best_times[stage] > 0.0)
+        assert(game.new_record)
         print("Computer course %d: %.2fs, place %d/4, %d crashes" % [stage + 1, game.elapsed, game.race_place, game.crash_count])
-        game._primary_action()
-    assert(game.stage == 0 and game.computer_mode)
+        if stage < Game.Rules.TRACK_COUNT-1: game._primary_action()
+    game._start_race()
+    assert(game.stage == 23)
     var pause := InputEventKey.new()
     pause.keycode = KEY_P
     pause.pressed = true
@@ -52,7 +53,7 @@ func _run() -> void:
     assert(game.mode == "race")
     game.mode = "menu"
     game._primary_action()
-    assert(not game.computer_mode and game.mode == "race")
+    assert(game.mode == "race")
     game.free()
-    print("Computer mode tests passed")
+    print("Automated campaign input tests passed")
     quit()

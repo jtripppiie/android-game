@@ -8,6 +8,11 @@ func _run() -> void:
     var game=Game.new()
     root.add_child(game)
     game.set_physics_process(false)
+    var old_shortcut := InputEventKey.new()
+    old_shortcut.keycode = KEY_C
+    old_shortcut.pressed = true
+    game._input(old_shortcut)
+    assert(game.mode == "menu", "Removed computer shortcut must not launch a race")
     game._show_privacy()
     assert(game._active_dialog() != null)
     var enter := InputEventKey.new()

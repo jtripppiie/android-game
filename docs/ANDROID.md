@@ -4,7 +4,7 @@ The game uses a 480×270 logical layout rendered at window resolution, with a fi
 
 1. Install Godot 4.6.2 and its matching **Android export templates**.
 2. Configure the Android SDK and JDK 17 in Editor Settings. Install SDK platforms 35 and 36 and build tools 35.0.1 and 36.0.0. The engine's Gradle template compiles with 35 while the export target override is 36; verify the produced manifest, rather than assuming the template default is the release target.
-3. Use the checked-in Android Debug or Android Release preset, retaining package ID `com.tripperdeelabs.dirtrush`. Install the Android build template through the editor or `--install-android-build-template` alongside the export command.
+3. Use the checked-in Android Debug or Android Release preset, using the new package ID `com.tripperdeelabs.motothrash`. Install the Android build template through the editor or `--install-android-build-template` alongside the export command.
 4. Generate a debug APK, install on a physical Android device, and check touch behavior, both landscape directions, edge cutouts, framerate, and suspend/resume.
 5. The project includes an original SVG launcher icon and synthesized sound effects. Prepare final adaptive icon artwork and store screenshots; inspect launcher masking on actual devices.
 6. Before release, test each track and the unlock/save system; verify no stuck boost after interruptions and no loss of progress.
@@ -47,10 +47,12 @@ Requirements checked against [Google Play target API requirements](https://devel
 
 ## Store preparation — October 8, 2026
 
-Release presets now use version 1.0.0 (code 1). `store/en-US/` contains listing text and release notes. `store/graphics/` contains a 512px RGBA icon and 1024×500 RGB feature graphic rendered from the existing vector identity. `store/browser-previews/` contains four 1920×1080 previews; replace these with verified Android captures before submission. `store/privacy-policy.html` mirrors the policy at https://tripperdeelabs.com/moto-thrash/privacy/. Publisher: TripperDeeLabs; support: feedback@tripperdeelabs.com.
+Release presets now use version 1.0.0 (code 1). `store/en-US/` contains listing text and release notes. `store/graphics/` contains a 512px RGBA icon and 1024×500 RGB feature graphic rendered from the existing vector identity. The browser previews have been removed. `store/android-screenshots/` documents the required Android captures; these are still pending because no phone is attached. `store/privacy-policy.html` mirrors the policy at https://tripperdeelabs.com/moto-thrash/privacy/. Publisher: TripperDeeLabs; support: feedback@tripperdeelabs.com.
 
 The game now includes a menu Privacy notice. Dialog input is isolated from the menu, and Android Back closes an open privacy/credits dialog before navigating the game. This is covered by the release gameplay test.
 
 `tools/build_android_release.py` exports in a temporary project and keeps upload credentials out of tracked presets. The unsigned AAB has passed bundletool validation. The manifest has version 1.0.0/code 1, min SDK 24, target SDK 36, no requested permissions, and backup disabled. Unsigned bundles are not upload artifacts. See `store/RELEASE-CHECKLIST.txt` for the signing and Console handoff.
 
 Privacy policy published and verified over HTTPS on October 8, 2026. Website commit: `6f8c851`.
+
+The package ID is now `com.tripperdeelabs.motothrash`, explicitly authorized for a fresh Play submission. Computer spectator mode and builder CPU tests were removed; normal AI opponents remain. The campaign automation driver now lives under `tests/` and is excluded from exports.

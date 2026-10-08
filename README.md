@@ -17,10 +17,6 @@ The on-screen pad and boost button remain visible during human play in both the 
 
 **Desktop/testing:** WASD or arrow keys to steer, Space or Shift for boost, P/Esc for pause, M to toggle sound, Enter to start/advance, R to restart.
 
-## Watch the computer
-
-Choose **WATCH COMPUTER** on the main menu or press **C** to watch an AI rider race the selected course. It steers, boosts, avoids obstacles, and balances jumps using the normal race physics. Press **P/Esc** or click pause to pause/resume; use **TRACK SELECT** from the pause menu to exit. At the finish, choose **NEXT TRACK** to watch the next course or **RETRY** to replay. Computer runs do not save personal bests or unlock player courses. Choose **RACE NOW** or press **Enter** in the main menu to play yourself.
-
 ## Development status
 
 The menu's **STUNT SHOW** button opens a separate bus-jump competition. Set 1–20 buses, a LOW/MID/HIGH ramp, and FAST/FASTER/MAX run-up speed, then choose BUILD + JUMP. The lane is locked for this event; left/right balances the bike in the air and boost adds speed. A wider stadium camera keeps long jumps visible. Clean landings earn 100 points per bus plus a distance bonus; failed attempts earn no points. Best score, most buses cleared, and setup preferences are saved locally, separately from campaign and custom-track records. The HIGH/MAX setup can clear all 20 buses; smaller setups are not guaranteed to clear long lines. EDIT STUNT returns to setup and RETRY repeats the same attempt. Validate with `tests/stunt_show_test.gd`.
@@ -58,19 +54,19 @@ The `Android test APK` GitHub Actions workflow creates a debug build on each pus
 
 ## Build your own track
 
-From the main menu tap **TRACK BUILDER**. Choose one of six local, saved course slots. Select a tool, then click/tap the track to place it; this is tap-to-place, not drag-and-drop. Move through ten areas with the arrows. The TOOLS 1/2 button switches between two pages: RAMP, HIGH, TABLE, BUMPS, MUD, BOOST, BLOCK, OIL; then JUMP, WATER, RIVER, CROCS, LAVA, CAR, BUS, ERASE. Tap a lane to place or replace an obstacle on the 40-pixel grid. Jump hazards automatically include an approach ramp 80 units before them, visible in the editor and test ride; erase the hazard to remove its automatic ramp. Keep room around jumps when designing a course. There are up to 200 placed objects per track. Press UNDO, press CLEAR twice to empty a track, TEST RIDE to play it, or CPU TEST to watch the computer try your layout. The best time for each custom track is saved on the device.
+From the main menu tap **TRACK BUILDER**. Choose one of six local, saved course slots. Select a tool, then click/tap the track to place it; this is tap-to-place, not drag-and-drop. Move through ten areas with the arrows. The TOOLS 1/2 button switches between two pages: RAMP, HIGH, TABLE, BUMPS, MUD, BOOST, BLOCK, OIL; then JUMP, WATER, RIVER, CROCS, LAVA, CAR, BUS, ERASE. Tap a lane to place or replace an obstacle on the 40-pixel grid. Jump hazards automatically include an approach ramp 80 units before them, visible in the editor and test ride; erase the hazard to remove its automatic ramp. Keep room around jumps when designing a course. There are up to 200 placed objects per track. Press UNDO, press CLEAR twice to empty a track, TEST RIDE to play it. The best time for each custom track is saved on the device.
 
-Keyboard controls in the builder: Left/Right changes area, Tab changes custom track slot, 1-8 selects a tool on the current page, 9 switches tool pages, Z undoes, Enter tests the course, C starts a computer test, and Escape returns to the main menu. No accounts, cloud storage, or borrowed game assets.
+Keyboard controls in the builder: Left/Right changes area, Tab changes custom track slot, 1-8 selects a tool on the current page, 9 switches tool pages, Z undoes, Enter tests the course, and Escape returns to the main menu. No accounts, cloud storage, or borrowed game assets.
 
 ## Design references
 
 The height-based lanes and ground/air/recovery state separation were informed by reading [matildeopbravo/excitebike](https://github.com/matildeopbravo/excitebike). [HashNuke/excite-bike](https://github.com/HashNuke/excite-bike) is an early track-layout prototype. [PostRockFTW/ExcitingBike](https://github.com/PostRockFTW/ExcitingBike) was useful for per-lane height tables and sprite state separation, and [Fytex/ExciteBike-LI1](https://github.com/Fytex/ExciteBike-LI1) for terrain-aligned and crash rendering. Their source and assets were inspected as references; this project's terrain, pixel sprites and bitmap alphabet are original implementations.
 
-Additional checks: `godot --headless --path . --script res://tests/terrain_test.gd` and `godot --headless --path . --script res://tests/computer_mode_test.gd`.
+Additional checks: `godot --headless --path . --script res://tests/terrain_test.gd` and `godot --headless --path . --script res://tests/campaign_test.gd`.
 
 The campaign increases course length, tightens recovery straights, introduces table tops and alternating routes, and raises rival pace across Rookie, Club, Pro and Legend cups. Medals and personal bests provide replay targets. Existing custom layouts are retained; expanded-course records use a fresh versioned table so old short-course times do not become unbeatable.
 
-Validation also includes `tests/touch_controls_test.gd` for simultaneous steering/boost and `tests/content_audio_test.gd` for generated PCM, saved campaign progress, six custom slots and computer test rides.
+Validation also includes `tests/touch_controls_test.gd` for simultaneous steering/boost and `tests/content_audio_test.gd` for generated PCM, saved campaign progress, six custom slots and player test rides.
 
 The menu CREDITS button includes the running Godot engine license and its bundled third-party copyright/license notices, available offline. See [asset and IP review](docs/IP-REVIEW.md) for the review scope and release follow-ups.
 

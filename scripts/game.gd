@@ -34,7 +34,6 @@ const RED := Color("#ed6a5c")
 const CYAN := Color("#82e5d5")
 
 var mode := "menu" # menu, race, pause, finish, editor
-var computer_mode := false
 var stunt_race := false
 var stunt_bus_count := 5
 var stunt_ramp_setting := 0
@@ -47,8 +46,6 @@ var stunt_success := false
 var stunt_score := 0
 var stunt_best_score := 0
 var stunt_best_buses := 0
-var computer_cooling := false
-var computer_lane := 2
 var stage := 0
 var unlocked := 0
 var best_times: Array[float] = []
@@ -146,8 +143,6 @@ func _clear_controls() -> void:
 func _start_race() -> void:
     _prepare_preview()
     elapsed = 0.0
-    computer_cooling = false
-    computer_lane = 2
     lane_velocity = 0.0
     heat = 0.0
     overheated = false
@@ -199,13 +194,6 @@ func _race_step(dt: float) -> void:
     if touch_vector.length() > joystick.length():
         joystick = touch_vector
     var boost_pressed: bool = Input.is_action_pressed("boost") or boost_touch_id != -1
-    if computer_mode:
-        joystick = _computer_steering()
-        if heat >= 85.0:
-            computer_cooling = true
-        elif heat <= 30.0:
-            computer_cooling = false
-        boost_pressed = not computer_cooling
     boost_active = boost_pressed and not overheated and crash_timer <= 0.0
     heat = Rules.heat_step(heat, boost_active, dt)
     if heat >= Rules.HEAT_MAX:
@@ -293,7 +281,7 @@ func _race_step(dt: float) -> void:
 
 func _update_ground_stunt(joystick: Vector2, dt: float) -> void:
     var flat := absf(Terrain.slope_at(features,distance,lane_position))<0.04
-    if stunt_race or computer_mode or airborne or crash_timer>0 or speed<65 or not flat:
+    if stunt_race or airborne or crash_timer>0 or speed<65 or not flat:
         stunt_angle=0.0
         stunt_strain=0.0
         stunt_active=false
@@ -312,55 +300,8 @@ func _update_ground_stunt(joystick: Vector2, dt: float) -> void:
     if stunt_strain>=1.0:
         _crash("LOST BALANCE")
 
-# Look ahead through the same course and use the same controls and physics as a player.
-func _computer_steering() -> Vector2:
-    var best_score := INF
-    var chosen := computer_lane
-    var lookahead := maxf(180.0, speed * 1.3)
-    for lane in range(Rules.LANE_COUNT):
-        var score := absf(float(lane) - lane_position) * 0.8
-        if lane != computer_lane:
-            score += 0.35
-        var terrain_gap := absf(Terrain.height_at(features,distance,lane)-Terrain.height_at(features,distance,lane_position))
-        score += terrain_gap * 0.5
-        for feature in features:
-            var ahead := float(feature["x"]) - distance
-            if bool(feature["used"]) or ahead < -12.0 or ahead > lookahead:
-                continue
-            var urgency := 1.0 - maxf(ahead, 0.0) / lookahead
-            var feature_lane := float(feature["lane"])
-            var kind := str(feature["kind"])
-            if int(feature_lane) == lane:
-                if kind in ["rock","mud","oil","whoops"] or kind in Rules.JUMP_HAZARDS:
-                    score += (12.0 if kind == "rock" else 5.0) * (0.3 + urgency)
-                elif ahead > 35.0:
-                    score -= 1.8 * urgency
-            # Avoid crossing a dangerous lane just as its obstacle reaches the bike.
-            if kind == "rock" and ahead < speed * (absf(feature_lane - lane_position) / 2.3 + 0.2):
-                if feature_lane >= minf(lane_position, float(lane)) and feature_lane <= maxf(lane_position, float(lane)):
-                    score += 8.0
-        if score < best_score:
-            best_score = score
-            chosen = lane
-    computer_lane = chosen
-    var vertical := clampf((float(chosen) - lane_position) * 4.0 - lane_velocity * 0.5, -1.0, 1.0)
-    var horizontal := 1.0
-    if airborne:
-        var landing_tilt := -atan(Terrain.slope_at(features,distance+speed*0.12,lane_position))
-        horizontal = clampf((landing_tilt-bike_tilt) * 5.0, -1.0, 1.0)
-    return Vector2(horizontal, vertical)
-
-func _start_computer_race() -> void:
-    stunt_race=false
-    computer_mode = true
-    custom_race = false
-    _start_race()
-
 func _next_stage() -> void:
-    if computer_mode:
-        stage = (stage + 1) % Rules.TRACK_COUNT
-    else:
-        stage = mini(unlocked, stage + 1)
+    stage = mini(unlocked, stage + 1)
 
 func _check_features(old_x: float, new_x: float) -> void:
     for i in range(features.size()):
@@ -457,11 +398,6 @@ func _finish_race() -> void:
     mode = "finish"
     sound.cue("finish")
     distance = _course_length()
-    if computer_mode:
-        medal = "COMPUTER FINISH"
-        new_record = false
-        _clear_controls()
-        return
     if custom_race:
         medal = "CUSTOM FINISH"
         var old_best: float = custom_times[custom_slot]
@@ -575,8 +511,6 @@ func _input(event: InputEvent) -> void:
                 edit_tool=Builder.TOOLS[edit_palette*8+event.keycode-KEY_1]
             elif event.keycode==KEY_9:
                 edit_palette=1-edit_palette
-            elif event.keycode==KEY_C:
-                _builder_test(true)
             elif event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER:
                 _builder_test()
             queue_redraw()
@@ -586,9 +520,6 @@ func _input(event: InputEvent) -> void:
             return
         if event.keycode == KEY_R and mode == "race":
             _start_race()
-            return
-        if mode == "menu" and event.keycode == KEY_C:
-            _start_computer_race()
             return
         if mode == "menu" and event.keycode == KEY_TAB:
             stage = (stage + 1) % (unlocked + 1)
@@ -682,10 +613,10 @@ func _on_pointer_down(point: Vector2, pointer_id: int) -> void:
     if point.distance_to(Vector2(460, 15)) < 18.0:
         mode = "pause"
         _clear_controls()
-    elif not computer_mode and move_touch_id == -1 and point.y > 32.0 and point.distance_to(STICK_CENTER) < 48.0:
+    elif move_touch_id == -1 and point.y > 32.0 and point.distance_to(STICK_CENTER) < 48.0:
         move_touch_id = pointer_id
         _set_stick(point)
-    elif not computer_mode and boost_touch_id == -1 and point.y > 32.0 and point.distance_to(BOOST_CENTER) < 48.0:
+    elif boost_touch_id == -1 and point.y > 32.0 and point.distance_to(BOOST_CENTER) < 48.0:
         boost_touch_id = pointer_id
     queue_redraw()
 
@@ -703,15 +634,12 @@ func _set_stick(point: Vector2) -> void:
 
 func _click_menu(point: Vector2) -> void:
     if mode == "menu":
-        if Rect2(24, 176, 137, 31).has_point(point):
+        if Rect2(24, 176, 207, 31).has_point(point):
             stunt_race=false
-            computer_mode = false
             stage = mini(stage, unlocked)
             custom_race = false
             _start_race()
-        elif Rect2(171, 176, 137, 31).has_point(point):
-            _start_computer_race()
-        elif Rect2(318, 176, 137, 31).has_point(point):
+        elif Rect2(249, 176, 207, 31).has_point(point):
             _open_editor()
         elif Rect2(118, 223, 44, 26).has_point(point):
             stage = maxi(0, stage - 1)
@@ -748,7 +676,6 @@ func _primary_action() -> void:
     match mode:
         "menu":
             stunt_race=false
-            computer_mode = false
             custom_race = false
             stage = mini(stage, unlocked)
             _start_race()
@@ -1019,9 +946,6 @@ func _boost_state() -> String:
     return "READY"
 
 func _draw_touch_controls() -> void:
-    if computer_mode:
-        Pixel.text(self,"COMPUTER DEMO",Vector2(12,72),1,Color("#283a3e"))
-        return
     Pixel.text(self,"LEFT/RIGHT: BALANCE / HOLD: BOOST" if stunt_race else "PAD: STEER / LEAN / DOWN-DIAGONAL: BALANCE",Vector2(12,72),1,Color("#283a3e"))
     if stunt_active:
         var label := "WHEELIE" if stunt_angle<0 else "FRONT WHEELIE"
@@ -1067,14 +991,13 @@ func _draw_menu() -> void:
     Pixel.text(self,Rules.CUP_NAMES[stage/6],Vector2(190,137),1,Color("#f8ecd2"))
     Pixel.text(self,"MEDAL: "+(best_medals[stage] if best_medals[stage]!="" else "NONE"),Vector2(190,151),1,Color("#f6d585"))
     Scenery.bike(self,Vector2(102,143),Color("#ee754c"),CREAM,-0.16,1.5,visual_time,visual_time)
-    _button(Rect2(24,176,137,31),"RACE NOW",YELLOW)
-    _button(Rect2(171,176,137,31),"WATCH COMPUTER",CYAN)
-    _button(Rect2(318,176,137,31),"TRACK BUILDER",Color("#a7b6ab"))
+    _button(Rect2(24,176,207,31),"RACE NOW",YELLOW)
+    _button(Rect2(249,176,207,31),"TRACK BUILDER",Color("#a7b6ab"))
     _button(Rect2(118,223,44,26),"<",CYAN)
     _button(Rect2(318,223,44,26),">",CYAN)
     _panel(Rect2(162,223,156,26),INK,CYAN)
     _center_text("%02d / %s" % [stage+1,Rules.TRACK_NAMES[stage]],240,10,CREAM)
-    Pixel.text(self,"ENTER: RACE   C: COMPUTER   TAB: COURSE",Vector2(129,258),1,CREAM)
+    Pixel.text(self,"ENTER: RACE   TAB: COURSE",Vector2(129,258),1,CREAM)
 
 func _draw_pause() -> void:
     draw_rect(Rect2(0, 0, 480, 270), Color(0.04, 0.08, 0.13, 0.72))
@@ -1094,9 +1017,7 @@ func _draw_finish() -> void:
     _center_text(medal, 98, 23, CYAN)
     _center_text("TIME   %.2fs" % elapsed, 120, 17, CREAM)
     _center_text("PLACE %d/4 / CRASHES %d" % [race_place,crash_count], 141, 12, CREAM)
-    if computer_mode:
-        _center_text("DEMO RUN / NO RECORDS SAVED", 161, 12, CYAN)
-    elif new_record:
+    if new_record:
         _center_text("NEW PERSONAL BEST!", 161, 13, YELLOW)
     else:
         var best: float = custom_times[custom_slot] if custom_race else best_times[stage]
@@ -1107,14 +1028,12 @@ func _draw_finish() -> void:
 func _open_stunt_setup() -> void:
     stunt_race=true
     custom_race=false
-    computer_mode=false
     mode="stunt_setup"
     _prepare_preview()
 
 func _start_stunt() -> void:
     stunt_race=true
     custom_race=false
-    computer_mode=false
     _save_progress()
     _start_race()
 
@@ -1217,7 +1136,6 @@ func _draw_editor() -> void:
     _button(Rect2(233, 40, 59, 25), "UNDO", CYAN)
     _button(Rect2(298, 40, 74, 25), "CONFIRM" if clear_confirm else "CLEAR", RED)
     _button(Rect2(378, 40, 97, 25), "TEST RIDE", YELLOW)
-    _button(Rect2(378, 72, 97, 23), "CPU TEST", CYAN)
     for lane in range(Rules.LANE_COUNT):
         var y := Rules.lane_y(float(lane))
         draw_line(Vector2(8, y + 9), Vector2(472, y + 9), Color(CREAM.r, CREAM.g, CREAM.b, 0.12), 1.0)
@@ -1275,7 +1193,6 @@ func _course_length() -> float:
 
 func _open_editor() -> void:
     stunt_race=false
-    computer_mode = false
     _clear_controls()
     custom_race = false
     mode = "editor"
@@ -1304,8 +1221,7 @@ func _set_edit_page(offset: int) -> void:
     clear_confirm = false
     _preview_editor()
 
-func _builder_test(watch: bool = false) -> void:
-    computer_mode=watch
+func _builder_test() -> void:
     custom_race = true
     _start_race()
 
@@ -1373,8 +1289,6 @@ func _click_editor(point: Vector2) -> void:
         _builder_clear()
     elif Rect2(378, 40, 97, 25).has_point(point):
         _builder_test()
-    elif Rect2(378,72,97,23).has_point(point):
-        _builder_test(true)
     elif Rect2(374,224,102,15).has_point(point):
         edit_palette=1-edit_palette
     elif point.y >= 239.0:

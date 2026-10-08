@@ -42,17 +42,17 @@ func _run() -> void:
         assert(loaded.custom_courses[slot]==game.custom_courses[slot])
         assert(loaded.custom_times[slot]==24.0+slot)
     loaded.custom_slot=5
-    loaded._builder_test(true)
+    loaded._builder_test()
     for frame in range(60*120):
         loaded._physics_process(1.0/60.0)
         if loaded.mode=="finish": break
-    assert(loaded.mode=="finish" and loaded.computer_mode and loaded.custom_race)
-    assert(loaded.custom_times[5]==29.0, "Spectator runs cannot replace player records")
+    assert(loaded.mode=="finish" and loaded.custom_race)
+    assert(loaded.custom_times[5] <= 29.0, "A slower test ride must preserve the existing best")
     loaded._primary_action()
     assert(loaded.mode=="editor")
     if had_save: original.save(Game.SAVE_FILE)
     else: DirAccess.remove_absolute(ProjectSettings.globalize_path(Game.SAVE_FILE))
     game.free()
     loaded.free()
-    print("Audio PCM, 24-course progress, six-slot persistence and custom CPU ride: PASS")
+    print("Audio PCM, 24-course progress, six-slot persistence and custom player ride: PASS")
     quit()
