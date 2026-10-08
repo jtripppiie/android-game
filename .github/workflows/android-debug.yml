@@ -17,8 +17,8 @@ jobs:
           mkdir -p "$HOME/.config/godot" "$HOME/.local/share/godot/export_templates"
           cp /root/.config/godot/editor_settings-4.4.tres "$HOME/.config/godot/"
           ln -s /root/.local/share/godot/export_templates/4.4.1.stable "$HOME/.local/share/godot/export_templates/4.4.1.stable"
-      - name: Install Android SDK 35 tools
-        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+      - name: Install Android SDK 34 tools
+        run: sdkmanager "platforms;android-34" "build-tools;34.0.0"
       - name: Configure debug signing
         run: |
           mkdir -p build /root/.android
