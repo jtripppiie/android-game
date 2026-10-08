@@ -1,0 +1,19 @@
+name: Godot smoke and rules
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  godot-tests:
+    runs-on: ubuntu-latest
+    container:
+      image: barichello/godot-ci:4.4.1
+    steps:
+      - uses: actions/checkout@v4
+      - name: Import project headlessly
+        run: godot --headless --editor --path . --import --quit
+      - name: Test race rules
+        run: godot --headless --path . --script res://tests/race_rules_test.gd
+      - name: Startup smoke test
+        run: godot --headless --path . --quit-after 12

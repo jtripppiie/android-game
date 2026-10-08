@@ -1,97 +1,42 @@
-# You Rush: Alaska
+# DIRT RUSH 🏍️
 
-You Rush is a local-first Android platform runner built with Godot 4.7.1. Five
-authored Alaska stages ask the player to find a key, rescue two people, defeat
-one distinct wildlife boss, and reach the trail beacon.
+**Original retro motocross time-trial game for Android, made in Godot 4.**
 
-## Current production source
+Dirt Rush is a compact, entirely original, 8-bit-inspired arcade racer with smooth analog thumbstick movement based on the *control feel* of Captain Quack Cosmic Adventures. The artwork, course names, code, gameplay logic, and procedurally generated courses are original; no Nintendo or Excitebike assets, tracks, names, or music are used.
 
-```text
-source: godot/
-engine: Godot 4.7.1
-versionCode: 542
-versionName: 5.4.2
-package: com.jtripppiie.mooserush
-device APK: app/build/outputs/apk/debug/you-rush-alaska-5.4.2-debug.apk
-```
+## Play
 
-`app/src/main/` is the legacy Java game retained for rollback and save
-migration. It is not the current game and must not be used for production
-gameplay changes.
+- **Left virtual joystick:** up/down changes between four track lanes. Left brakes on the ground; right speeds up. While airborne, left/right leans the bike to stabilize your landing.
+- **Right BOOST button:** hold for turbo; release to cool your engine. An overheated engine must cool before boost reactivates.
+- Hit ramps for air, avoid rocks, recover from crashes, and finish the time trial.
+- 6 increasingly challenging courses with seeded layouts, local best times, unlock progression, and medals.
+- Pause/resume. No login, ads, analytics, network requests, or purchases in the game.
 
-Version 5.4.2 adds the first-class Computer Review workflow, compact
-color-coded item identifiers, nearest-item context, tagged notes, desktop
-keyboard controls without a phone overlay, and dedicated regression coverage.
-It retains 5.4.1's more responsive reversal and air momentum, a much stronger
-short/full jump distinction, touch drift protection, exact enemy contact,
-stage-specific boss tells and fair recovery windows, grounded full-height
-checkpoints, safer objective/wildlife/boss spacing, a clearer HUD and exit
-beacon, and deeper fairness telemetry across all five stages. It builds on
-5.4.0's separated player scene, camera, effects, verification, review IDs,
-result flows, measured runner grounding, parallax, snow contact effects, soft
-terrain joins, profile backups, and score/time/no-damage stars. Android export
-now produces one ARM64 device APK only.
+**Desktop/testing:** WASD or arrow keys to steer, Space or Shift for boost, P/Esc for pause, Enter to start/advance, R to restart.
 
-## Controls
+## Development status
 
-- Left/right: move; touch movement automatically sprints.
-- Jump: release early for a short jump; tap once more in air for one air jump.
-- Dash: short horizontal burst.
-- Crouch while airborne: stomp.
-- Snow: throw a snowball.
-- Pause: freeze the run; restart and Exit to Map are explicit choices.
-- Review Mode: optional compact IDs and field notes, hidden in normal play.
-- Computer Review: real desktop play with keyboard controls, a compact nearest-
-  ID toolbar, F1 Review Mode, F10 IDs, and N notes.
+Playable first-pass Godot source. It needs physical-device QA, final sound/music, store art, accessibility review, and signed Android release testing before commercial launch. The intention is a **$0.99, one-time paid download**, not an in-app purchase.
 
-## Validate
+## Run locally
 
-Use the exact supported audit suite:
+1. Open this folder using **Godot 4.3+** (Godot 4.4/4.5/4.6 recommended).
+2. Press **F6** on `scenes/game.tscn`, or **F5** for the project.
+3. Android export requires Android SDK, Java SDK, and Godot's Android export templates; see [Android notes](docs/ANDROID.md).
+
+The whole first version is drawn programmatically with pixel-sized shapes in a 480×270 canvas. There are no external graphics or fonts to install.
+
+## Project layout
+
+- `scripts/game.gd` — main game loop, retro drawing, controls, HUD, persistence.
+- `scripts/race_rules.gd` — repeatable track generation, heat and speed logic.
+- `scenes/game.tscn` — tiny scene entry point.
+- `tests/race_rules_test.gd` — headless logic test; see command below.
 
 ```bash
-python3 godot/validate_project.py
-GODOT_BIN=/path/to/godot godot/tools/run_gameplay_audits.sh
+godot --headless --path . --script res://tests/race_rules_test.gd
 ```
 
-The script runs touch, system, lifecycle, pause, mechanics, geometry,
-debug-overlay, and autoplay audits for stages 0–4. A successful process exit
-alone is not enough: the validator also rejects script failures found in
-Godot’s output.
+## Commercial note
 
-## Run and review on a computer
-
-```bash
-godot --path godot -- --computer-review
-```
-
-This runs the production game without phone controls. Use A/D, Space, Shift,
-E, S, and F to play; F1 toggles Review Mode, F10 toggles nearby color-coded
-IDs, and N opens the compact tagged notebook.
-
-## Build Android
-
-Godot 4.7.1 with matching export templates, Java 17, Android SDK/target 36,
-Build Tools 36.1.0, and NDK 29 are required.
-
-```bash
-godot --headless --path godot --export-debug "Android Debug"
-```
-
-`Android Debug` is the only APK preset and targets ARM64 phones/tablets. It is
-debug-signed; a public release needs the owner’s private release key.
-
-## Documentation and evidence
-
-- [Gameplay verification](test-results/android-gameplay/GAMEPLAY-VERIFICATION.md)
-- [Kid owner handbook](docs/KID_OWNER_HANDBOOK.md)
-- [Computer Review Mode](docs/COMPUTER_REVIEW_MODE.md)
-- [Device acceptance checklist](docs/DEVICE_ACCEPTANCE_CHECKLIST.md)
-- [Technical maintenance](docs/TECHNICAL_MAINTENANCE.md)
-- [Privacy](docs/PRIVACY.md)
-- [5.4 release notes](docs/RELEASE_5_4_PRODUCTION_REFACTOR.md)
-- [5.4.1 gameplay refinement](docs/RELEASE_5_4_1_GAMEPLAY_REFINEMENT.md)
-- [5.4.2 computer review release](docs/RELEASE_5_4_2_COMPUTER_REVIEW.md)
-
-Emulator/headless evidence does not replace testing touch ergonomics, haptics,
-speech recognition, interruptions, thermals, or performance on a physical
-Android device.
+Keep the game visually and mechanically distinct from Nintendo's Excitebike; don't use third-party sprites, audio, copied tracks or Nintendo branding. Check the final game's store name and potential trademarks before release. The payment price is configured in the store, not in Godot.
