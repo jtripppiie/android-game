@@ -22,7 +22,9 @@ human difficulty testing or Play pre-launch report. Alignment is not a runtime t
 The test APK is debug-signed release code, NOT the production upload artifact.
 Privacy policy is live at https://tripperdeelabs.com/moto-thrash/privacy/.
 No Play Store upload, production release or key creation occurred.
-Browser screenshots were removed. Android phone screenshots are still pending.
+Old browser previews were replaced with six new local web-launch screenshots
+by user request. Their source is documented in screenshots/README.txt; these do
+not establish physical Android behavior.
 Package identity changed by explicit request for a NEW Play submission.
 Automated campaign driver exists only under tests/ and is excluded from the AAB.
 

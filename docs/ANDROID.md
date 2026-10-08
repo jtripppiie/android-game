@@ -47,7 +47,7 @@ Requirements checked against [Google Play target API requirements](https://devel
 
 ## Store preparation — October 8, 2026
 
-Release presets now use version 1.0.0 (code 1). `store/en-US/` contains listing text and release notes. `store/graphics/` contains a 512px RGBA icon and 1024×500 RGB feature graphic rendered from the existing vector identity. The browser previews have been removed. `store/android-screenshots/` documents the required Android captures; these are still pending because no phone is attached. `store/privacy-policy.html` mirrors the policy at https://tripperdeelabs.com/moto-thrash/privacy/. Publisher: TripperDeeLabs; support: feedback@tripperdeelabs.com.
+Release presets now use version 1.0.0 (code 1). `store/en-US/` contains listing text and release notes. `store/graphics/` contains a 512px RGBA icon and 1024×500 RGB feature graphic rendered from the existing vector identity. The original browser previews were replaced, at the user's request, with six fresh 1920×1080 local-launch captures in `store/screenshots/`, showing player-controlled gameplay without computer-demo labels. These are web-build captures; verify visual parity with the final Android release. `store/privacy-policy.html` mirrors the policy at https://tripperdeelabs.com/moto-thrash/privacy/. Publisher: TripperDeeLabs; support: feedback@tripperdeelabs.com.
 
 The game now includes a menu Privacy notice. Dialog input is isolated from the menu, and Android Back closes an open privacy/credits dialog before navigating the game. This is covered by the release gameplay test.
 
