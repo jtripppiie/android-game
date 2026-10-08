@@ -2,8 +2,8 @@ extends RefCounted
 ## Pure, deterministic race calculations. Kept apart from input and drawing for tests.
 
 const TRACK_NAMES := [
-    "DUST BOWL", "SUNSET SCRAMBLE", "PINE RIDGE",
-    "CANYON KICK", "MIDNIGHT MUD", "FINAL LAP"
+    "DESERT DASH", "SUNSET RUN", "FOREST RUN",
+    "CANYON KICK", "MOON RIDGE", "FINAL LAP"
 ]
 const TRACK_LENGTHS := [2100.0, 2450.0, 2800.0, 3200.0, 3550.0, 4000.0]
 const TRACK_SEEDS := [4102, 9811, 5062, 7733, 6629, 8471]

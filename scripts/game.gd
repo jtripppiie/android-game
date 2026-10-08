@@ -512,29 +512,50 @@ func _draw_features() -> void:
         match str(feature["kind"]):
             "ramp":
                 draw_colored_polygon(PackedVector2Array([
-                    Vector2(sx - 19, fy + 5), Vector2(sx + 13, fy - 11),
-                    Vector2(sx + 21, fy - 11), Vector2(sx + 21, fy + 5)
-                ]), YELLOW)
-                draw_line(Vector2(sx - 19, fy + 5), Vector2(sx + 13, fy - 11), INK, 2.0)
-                draw_rect(Rect2(sx + 13, fy - 11, 8, 3), CREAM)
+                    Vector2(sx - 24, fy + 6), Vector2(sx + 7, fy - 10),
+                    Vector2(sx + 23, fy - 10), Vector2(sx + 25, fy + 6)
+                ]), Color("#442e2b"))
+                draw_colored_polygon(PackedVector2Array([
+                    Vector2(sx - 23, fy + 5), Vector2(sx + 7, fy - 9),
+                    Vector2(sx + 21, fy - 9), Vector2(sx + 23, fy + 5)
+                ]), Color("#b77945"))
+                draw_line(Vector2(sx - 22, fy + 4), Vector2(sx + 7, fy - 9), Color("#e9b471"), 2.0)
+                draw_rect(Rect2(sx + 7, fy - 10, 15, 3), Color("#ebc084"))
+                draw_rect(Rect2(sx + 4, fy - 1, 3, 2), Color("#715038"))
             "big_ramp":
                 draw_colored_polygon(PackedVector2Array([
-                    Vector2(sx - 25, fy + 5), Vector2(sx + 8, fy - 20),
-                    Vector2(sx + 26, fy - 20), Vector2(sx + 26, fy + 5)
-                ]), Color("#ff996a"))
-                draw_line(Vector2(sx - 25, fy + 5), Vector2(sx + 8, fy - 20), INK, 2.0)
-                draw_rect(Rect2(sx + 8, fy - 20, 18, 3), CREAM)
+                    Vector2(sx - 29, fy + 6), Vector2(sx + 9, fy - 21),
+                    Vector2(sx + 27, fy - 21), Vector2(sx + 29, fy + 6)
+                ]), Color("#4b302d"))
+                draw_colored_polygon(PackedVector2Array([
+                    Vector2(sx - 27, fy + 5), Vector2(sx + 9, fy - 20),
+                    Vector2(sx + 26, fy - 20), Vector2(sx + 27, fy + 5)
+                ]), Color("#b07646"))
+                draw_line(Vector2(sx - 27, fy + 4), Vector2(sx + 9, fy - 20), Color("#f0b86e"), 2.0)
+                draw_rect(Rect2(sx + 9, fy - 21, 17, 3), Color("#efd1a0"))
+                draw_rect(Rect2(sx - 3, fy - 2, 7, 2), Color("#744530"))
             "whoops":
                 for step in range(3):
-                    draw_rect(Rect2(sx - 18 + step * 12, fy - 5 - (step % 2) * 3, 10, 9), YELLOW)
+                    var xx: float = sx - 20.0 + float(step) * 13.0
+                    draw_colored_polygon(PackedVector2Array([
+                        Vector2(xx, fy + 6), Vector2(xx + 5, fy - 4 - float(step % 2) * 3),
+                        Vector2(xx + 12, fy + 6)
+                    ]), Color("#a46d41"))
+                    draw_line(Vector2(xx + 1, fy + 4), Vector2(xx + 5, fy - 3 - float(step % 2) * 3), Color("#e0a96d"), 2.0)
             "rock":
-                draw_rect(Rect2(sx - 8, fy - 5, 14, 10), Color("#3b4557"))
-                draw_rect(Rect2(sx - 5, fy - 9, 9, 5), Color("#64717b"))
-                draw_rect(Rect2(sx - 2, fy - 8, 4, 3), Color("#9ba0a2"))
+                if int(float(feature["x"]) / 40.0) % 3 == 0:
+                    for t in range(2):
+                        draw_rect(Rect2(sx - 10 + t * 9, fy - 10, 12, 10), Color("#20252c"))
+                        draw_circle(Vector2(sx - 4 + t * 9, fy - 5), 3, Color("#52585b"))
+                else:
+                    draw_rect(Rect2(sx - 8, fy - 5, 14, 10), Color("#3b4557"))
+                    draw_rect(Rect2(sx - 5, fy - 9, 9, 5), Color("#64717b"))
+                    draw_rect(Rect2(sx - 2, fy - 8, 4, 3), Color("#9ba0a2"))
             "mud":
-                draw_rect(Rect2(sx - 13, fy + 2, 25, 5), Color("#302a38"))
-                draw_rect(Rect2(sx - 10, fy + 1, 9, 2), Color("#c2905c"))
-                draw_rect(Rect2(sx + 5, fy, 5, 2), Color("#c2905c"))
+                draw_rect(Rect2(sx - 17, fy + 1, 32, 6), Color("#3b2c2a"))
+                draw_rect(Rect2(sx - 13, fy + 2, 27, 2), Color("#867079"))
+                draw_rect(Rect2(sx - 6, fy + 2, 8, 1), Color("#aac1bc"))
+                draw_rect(Rect2(sx + 7, fy + 3, 5, 1), Color("#b2c3c8"))
 
 func _reset_rivals() -> void:
     rivals.clear()
